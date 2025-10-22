@@ -1,0 +1,37 @@
+# Secrets
+.env
+.env.local
+*.pem
+*.key
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Data & Logs
+*.log
+*.sqlite
+*.db
+data/
+logs/
+
+# ML/Training
+*.pkl
+*.h5
+models/*.pth
+*.joblib
+
+# OS
+.DS_Store
+Thumbs.db
