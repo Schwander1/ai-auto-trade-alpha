@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/dylanneuenschwander/projects/ai-auto-trade-alpha/mlruns/0/b986940c5c4d434facc84216c0829cdb/artifacts
+end_time: 1761260965686
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: b986940c5c4d434facc84216c0829cdb
+run_name: xgb_optimized_v1
+run_uuid: b986940c5c4d434facc84216c0829cdb
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1761260965681
+status: 4
+tags: []
+user_id: dylanneuenschwander

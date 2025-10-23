@@ -3,43 +3,40 @@ version: '3.8'
 services:
   clickhouse:
     image: clickhouse/clickhouse-server:latest
-    container_name: argo-clickhouse
+    container_name: clickhouse-server
     ports:
       - "8123:8123"
       - "9000:9000"
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
     environment:
       CLICKHOUSE_DB: trading_db
       CLICKHOUSE_USER: default
-      CLICKHOUSE_PASSWORD: ""
-    volumes:
-      - clickhouse_data:/var/lib/clickhouse
+      CLICKHOUSE_PASSWORD: "password123"
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
     networks:
-      - argo-network
+      - trading-network
 
   redis:
     image: redis:7-alpine
-    container_name: argo-redis
+    container_name: redis-cache
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
-    command: redis-server --appendonly yes
     networks:
-      - argo-network
+      - trading-network
 
   mlflow:
     image: ghcr.io/mlflow/mlflow:latest
-    container_name: argo-mlflow
+    container_name: mlflow-server
     ports:
       - "5000:5000"
-    environment:
-      MLFLOW_BACKEND_STORE_URI: sqlite:////mlflow/mlflow.db
-      MLFLOW_DEFAULT_ARTIFACT_ROOT: /mlflow/artifacts
     volumes:
       - mlflow_data:/mlflow
-    command: mlflow server --host 0.0.0.0 --port 5000
+    command: mlflow server --host 0.0.0.0 --backend-store-uri sqlite:///mlflow/mlflow.db --default-artifact-root /mlflow/artifacts
     networks:
-      - argo-network
+      - trading-network
 
 volumes:
   clickhouse_data:
@@ -47,5 +44,5 @@ volumes:
   mlflow_data:
 
 networks:
-  argo-network:
+  trading-network:
     driver: bridge
