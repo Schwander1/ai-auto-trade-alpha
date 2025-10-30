@@ -1,0 +1,100 @@
+63856:C 29 Oct 2025 13:41:38.626 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+63856:C 29 Oct 2025 13:41:38.627 # Redis version=6.2.18, bits=64, commit=00000000, modified=0, pid=63856, just started
+63856:C 29 Oct 2025 13:41:38.627 # Configuration loaded
+63856:M 29 Oct 2025 13:41:38.628 * Increased maximum number of open files to 10032 (it was originally set to 2560).
+63856:M 29 Oct 2025 13:41:38.628 * monotonic clock: POSIX clock_gettime
+63856:M 29 Oct 2025 13:41:38.630 * Running mode=standalone, port=6379.
+63856:M 29 Oct 2025 13:41:38.630 # Server initialized
+63856:M 29 Oct 2025 13:41:38.631 * DB loaded from append only file: 0.000 seconds
+63856:M 29 Oct 2025 13:41:38.631 * Ready to accept connections
+63856:M 29 Oct 2025 13:47:05.863 * 10 changes in 300 seconds. Saving...
+63856:M 29 Oct 2025 13:47:05.866 * Background saving started by pid 67991
+67991:C 29 Oct 2025 13:47:05.871 * DB saved on disk
+63856:M 29 Oct 2025 13:47:05.969 * Background saving terminated with success
+63856:M 29 Oct 2025 13:52:06.065 * 10 changes in 300 seconds. Saving...
+63856:M 29 Oct 2025 13:52:06.067 * Background saving started by pid 69483
+69483:C 29 Oct 2025 13:52:06.069 * DB saved on disk
+63856:M 29 Oct 2025 13:52:06.170 * Background saving terminated with success
+63856:M 29 Oct 2025 14:02:55.367 * 10 changes in 300 seconds. Saving...
+63856:M 29 Oct 2025 14:02:55.369 * Background saving started by pid 72177
+72177:C 29 Oct 2025 14:02:55.370 * DB saved on disk
+63856:M 29 Oct 2025 14:02:55.469 * Background saving terminated with success
+903:C 29 Oct 2025 17:42:21.001 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+903:C 29 Oct 2025 17:42:21.002 # Redis version=6.2.18, bits=64, commit=00000000, modified=0, pid=903, just started
+903:C 29 Oct 2025 17:42:21.002 # Configuration loaded
+903:M 29 Oct 2025 17:42:21.002 * Increased maximum number of open files to 10032 (it was originally set to 2560).
+903:M 29 Oct 2025 17:42:21.002 * monotonic clock: POSIX clock_gettime
+903:M 29 Oct 2025 17:42:21.004 * Running mode=standalone, port=6379.
+903:M 29 Oct 2025 17:42:21.005 # Server initialized
+903:M 29 Oct 2025 17:42:21.005 * DB loaded from append only file: 0.000 seconds
+903:M 29 Oct 2025 17:42:21.005 * Ready to accept connections
+903:M 29 Oct 2025 17:47:22.058 * 10 changes in 300 seconds. Saving...
+903:M 29 Oct 2025 17:47:22.061 * Background saving started by pid 1294
+1294:C 29 Oct 2025 17:47:22.063 * DB saved on disk
+903:M 29 Oct 2025 17:47:22.164 * Background saving terminated with success
+2672:C 29 Oct 2025 18:48:54.630 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+2672:C 29 Oct 2025 18:48:54.630 # Redis version=6.2.18, bits=64, commit=00000000, modified=0, pid=2672, just started
+2672:C 29 Oct 2025 18:48:54.630 # Configuration loaded
+2672:M 29 Oct 2025 18:48:54.631 * Increased maximum number of open files to 10032 (it was originally set to 2560).
+2672:M 29 Oct 2025 18:48:54.631 * monotonic clock: POSIX clock_gettime
+2672:M 29 Oct 2025 18:48:54.632 # Warning: Could not create server TCP listening socket 127.0.0.1:6379: bind: Address already in use
+2672:M 29 Oct 2025 18:48:54.632 # Failed listening on port 6379 (TCP), aborting.
+3734:C 29 Oct 2025 18:50:10.694 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+3734:C 29 Oct 2025 18:50:10.694 # Redis version=6.2.18, bits=64, commit=00000000, modified=0, pid=3734, just started
+3734:C 29 Oct 2025 18:50:10.695 # Configuration loaded
+3734:M 29 Oct 2025 18:50:10.695 * Increased maximum number of open files to 10032 (it was originally set to 2560).
+3734:M 29 Oct 2025 18:50:10.695 * monotonic clock: POSIX clock_gettime
+3734:M 29 Oct 2025 18:50:10.695 # Warning: Could not create server TCP listening socket 127.0.0.1:6379: bind: Address already in use
+3734:M 29 Oct 2025 18:50:10.695 # Failed listening on port 6379 (TCP), aborting.
+5655:C 29 Oct 2025 18:52:10.828 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+5655:C 29 Oct 2025 18:52:10.828 # Redis version=6.2.18, bits=64, commit=00000000, modified=0, pid=5655, just started
+5655:C 29 Oct 2025 18:52:10.829 # Configuration loaded
+5655:M 29 Oct 2025 18:52:10.829 * Increased maximum number of open files to 10032 (it was originally set to 2560).
+5655:M 29 Oct 2025 18:52:10.829 * monotonic clock: POSIX clock_gettime
+5655:M 29 Oct 2025 18:52:10.829 # Warning: Could not create server TCP listening socket 127.0.0.1:6379: bind: Address already in use
+5655:M 29 Oct 2025 18:52:10.830 # Failed listening on port 6379 (TCP), aborting.
+903:M 29 Oct 2025 20:59:27.915 # User requested shutdown...
+903:M 29 Oct 2025 20:59:27.916 * Calling fsync() on the AOF file.
+903:M 29 Oct 2025 20:59:27.916 * Saving the final RDB snapshot before exiting.
+903:M 29 Oct 2025 20:59:27.919 * DB saved on disk
+903:M 29 Oct 2025 20:59:27.920 * Removing the pid file.
+903:M 29 Oct 2025 20:59:27.920 # Redis is now ready to exit, bye bye...
+11203:C 29 Oct 2025 20:59:29.950 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+11203:C 29 Oct 2025 20:59:29.950 # Redis version=6.2.18, bits=64, commit=00000000, modified=0, pid=11203, just started
+11203:C 29 Oct 2025 20:59:29.950 # Configuration loaded
+11203:M 29 Oct 2025 20:59:29.951 * Increased maximum number of open files to 10032 (it was originally set to 2560).
+11203:M 29 Oct 2025 20:59:29.951 * monotonic clock: POSIX clock_gettime
+11203:M 29 Oct 2025 20:59:29.952 * Running mode=standalone, port=6379.
+11203:M 29 Oct 2025 20:59:29.952 # Server initialized
+11203:M 29 Oct 2025 20:59:29.953 * DB loaded from append only file: 0.001 seconds
+11203:M 29 Oct 2025 20:59:29.953 * Ready to accept connections
+11203:M 29 Oct 2025 21:03:18.229 # User requested shutdown...
+11203:M 29 Oct 2025 21:03:18.230 * Calling fsync() on the AOF file.
+11203:M 29 Oct 2025 21:03:18.230 * Removing the pid file.
+11203:M 29 Oct 2025 21:03:18.230 # Redis is now ready to exit, bye bye...
+11840:C 29 Oct 2025 21:03:20.250 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+11840:C 29 Oct 2025 21:03:20.250 # Redis version=6.2.18, bits=64, commit=00000000, modified=0, pid=11840, just started
+11840:C 29 Oct 2025 21:03:20.250 # Configuration loaded
+11840:M 29 Oct 2025 21:03:20.250 * Increased maximum number of open files to 10032 (it was originally set to 2560).
+11840:M 29 Oct 2025 21:03:20.251 * monotonic clock: POSIX clock_gettime
+11840:M 29 Oct 2025 21:03:20.252 * Running mode=standalone, port=6379.
+11840:M 29 Oct 2025 21:03:20.252 # Server initialized
+11840:M 29 Oct 2025 21:03:20.253 * DB loaded from append only file: 0.001 seconds
+11840:M 29 Oct 2025 21:03:20.253 * Ready to accept connections
+11840:M 29 Oct 2025 21:03:33.132 # User requested shutdown...
+11840:M 29 Oct 2025 21:03:33.142 * Calling fsync() on the AOF file.
+11840:M 29 Oct 2025 21:03:33.142 * Removing the pid file.
+11840:M 29 Oct 2025 21:03:33.143 # Redis is now ready to exit, bye bye...
+11947:C 29 Oct 2025 21:03:35.164 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+11947:C 29 Oct 2025 21:03:35.164 # Redis version=6.2.18, bits=64, commit=00000000, modified=0, pid=11947, just started
+11947:C 29 Oct 2025 21:03:35.164 # Configuration loaded
+11947:M 29 Oct 2025 21:03:35.165 * Increased maximum number of open files to 10032 (it was originally set to 2560).
+11947:M 29 Oct 2025 21:03:35.165 * monotonic clock: POSIX clock_gettime
+11947:M 29 Oct 2025 21:03:35.167 * Running mode=standalone, port=6379.
+11947:M 29 Oct 2025 21:03:35.167 # Server initialized
+11947:M 29 Oct 2025 21:03:35.167 * DB loaded from append only file: 0.001 seconds
+11947:M 29 Oct 2025 21:03:35.167 * Ready to accept connections
+11947:M 29 Oct 2025 21:08:36.051 * 10 changes in 300 seconds. Saving...
+11947:M 29 Oct 2025 21:08:36.056 * Background saving started by pid 13194
+13194:C 29 Oct 2025 21:08:36.064 * DB saved on disk
+11947:M 29 Oct 2025 21:08:36.159 * Background saving terminated with success

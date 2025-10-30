@@ -1,0 +1,20 @@
+columns substreams version: 1
+9 columns:
+1 substreams for column `timestamp`:
+	timestamp
+1 substreams for column `symbol`:
+	symbol
+1 substreams for column `quantity`:
+	quantity
+1 substreams for column `avg_cost`:
+	avg_cost
+1 substreams for column `current_price`:
+	current_price
+1 substreams for column `market_value`:
+	market_value
+1 substreams for column `unrealized_pnl`:
+	unrealized_pnl
+1 substreams for column `weight_pct`:
+	weight_pct
+1 substreams for column `sector`:
+	sector

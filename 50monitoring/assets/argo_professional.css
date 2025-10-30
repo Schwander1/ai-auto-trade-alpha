@@ -1,0 +1,153 @@
+/* ARGO Capital Professional Design System */
+:root {
+  /* Brand Colors */
+  --argo-primary-dark: #1B1B1B;
+  --argo-primary-main: #2C2C2C;
+  --argo-primary-light: #404040;
+
+  --argo-accent-green: #00FF88;
+  --argo-accent-red: #FF4444;
+  --argo-accent-blue: #0088FF;
+  --argo-accent-gold: #FFD700;
+
+  --argo-bg-primary: #0A0A0A;
+  --argo-bg-secondary: #1A1A1A;
+  --argo-border: #333333;
+
+  /* Professional Typography */
+  --argo-text-primary: #FFFFFF;
+  --argo-text-secondary: #B0B0B0;
+  --argo-text-muted: #707070;
+
+  /* Font Families */
+  --argo-font-primary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --argo-font-mono: 'SF Mono', 'Monaco', 'Cascadia Code', monospace;
+
+  /* Font Sizes */
+  --argo-text-xs: 0.75rem;    /* 12px */
+  --argo-text-sm: 0.875rem;   /* 14px */
+  --argo-text-base: 1rem;     /* 16px */
+  --argo-text-lg: 1.125rem;   /* 18px */
+  --argo-text-xl: 1.25rem;    /* 20px */
+  --argo-text-2xl: 1.5rem;    /* 24px */
+  --argo-text-3xl: 2rem;      /* 32px */
+
+  /* Spacing System */
+  --argo-space-xs: 0.25rem;   /* 4px */
+  --argo-space-sm: 0.5rem;    /* 8px */
+  --argo-space-md: 1rem;      /* 16px */
+  --argo-space-lg: 1.5rem;    /* 24px */
+  --argo-space-xl: 2rem;      /* 32px */
+
+  /* Shadows */
+  --argo-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
+  --argo-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --argo-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+/* ARGO Capital Professional Design System */
+:root {
+  --argo-primary-dark: #1B1B1B;
+  --argo-primary-main: #2C2C2C;
+  --argo-accent-green: #00FF88;
+  --argo-accent-red: #FF4444;
+  --argo-accent-blue: #0088FF;
+  --argo-accent-gold: #FFD700;
+  --argo-bg-primary: #0A0A0A;
+  --argo-bg-secondary: #1A1A1A;
+  --argo-text-primary: #FFFFFF;
+  --argo-space-sm: 0.5rem;
+  --argo-space-lg: 1.5rem;
+}
+
+.argo-btn-primary {
+  background: var(--argo-accent-green);
+  color: var(--argo-primary-dark);
+  padding: var(--argo-space-sm) var(--argo-space-lg);
+  border-radius: 0.5rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.argo-btn-primary:hover {
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+  transform: translateY(-1px);
+}
+
+.profit { color: var(--argo-accent-green) !important; }
+.loss { color: var(--argo-accent-red) !important; }
+.neutral { color: var(--argo-accent-blue) !important; }
+.premium { color: var(--argo-accent-gold) !important; }
+
+@keyframes argo-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.argo-loading { animation: argo-pulse 2s infinite; }
+
+/* Add this to complete your existing file: */
+
+/* Component Styles */
+.argo-btn-primary {
+  background: var(--argo-accent-green);
+  color: var(--argo-primary-dark);
+  padding: var(--argo-space-sm) var(--argo-space-lg);
+  border-radius: 0.5rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.argo-btn-primary:hover {
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+  transform: translateY(-1px);
+}
+
+.argo-card {
+  background: var(--argo-bg-secondary);
+  border: 1px solid var(--argo-border);
+  border-radius: 0.75rem;
+  padding: var(--argo-space-lg);
+  box-shadow: var(--argo-shadow-md);
+}
+
+/* Financial Status Classes */
+.profit { 
+  color: var(--argo-accent-green) !important; 
+  font-weight: 600;
+}
+
+.loss { 
+  color: var(--argo-accent-red) !important; 
+  font-weight: 600;
+}
+
+.neutral { 
+  color: var(--argo-accent-blue) !important; 
+}
+
+.premium { 
+  color: var(--argo-accent-gold) !important; 
+  font-weight: 600;
+}
+
+/* Professional Animations */
+@keyframes argo-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.argo-loading { 
+  animation: argo-pulse 2s infinite; 
+}
+
+.argo-fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+

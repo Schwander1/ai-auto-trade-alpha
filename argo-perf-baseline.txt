@@ -1,0 +1,19 @@
+=== ARGO PERFORMANCE BASELINE ===
+Time: Thu Oct 30 01:18:58 AM EDT 2025
+Server: 2a01:4ff:f0:c3cd::1
+CPU cores: 4
+Memory total: 15Gi
+Disk space: 150G
+Network: 10Gbit enterprise connection
+
+--- DISK PERFORMANCE TEST ---
+Sequential write (1GB): 1.1 GB/s
+
+--- CPU PERFORMANCE TEST ---
+CPU benchmark (single-thread):  1422.15 events/sec
+CPU benchmark (multi-thread):  3127.11 events/sec
+
+--- SYSTEM STATUS ---
+Load average:  1.58, 0.92, 0.37
+Memory usage: 9.5%
+=== END BASELINE ===

@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+    kubectl.kubernetes.io/last-applied-configuration: "{\"apiVersion\":\"apps/v1\",\"kind\":\"Deployment\",\"metadata\":{\"annotations\":{},\"name\":\"argo-bulletproof-dashboard\",\"namespace\":\"argo-trading\"},\"spec\":{\"replicas\":1,\"selector\":{\"matchLabels\":{\"app\":\"argo-bulletproof\"}},\"template\":{\"metadata\":{\"labels\":{\"app\":\"argo-bulletproof\"}},\"spec\":{\"containers\":[{\"command\":[\"/bin/bash\",\"-c\",\"pip
+      install streamlit pandas numpy requests redis\\necho \\\"import streamlit as
+      st\\nimport os\\nst.title('\U0001F680 ARGO Trading System - LIVE ON KUBERNETES!')\\nst.success('✅
+      Infrastructure Migration Complete!')\\nst.write('Server IP: 178.156.194.174')\\nst.write('Kubernetes
+      Pod: Running')\\nst.write('Database: Connected')\\nalpaca_key = os.getenv('ALPACA_API_KEY',
+      'Not set')\\nst.write(f'Alpaca API Key: {alpaca_key[:8]}...')\\nst.balloons()\\n\\\"
+      \\u003e app.py\\nstreamlit run app.py --server.port=8501 --server.address=0.0.0.0\\n\"],\"env\":[{\"name\":\"ALPACA_API_KEY\",\"valueFrom\":{\"secretKeyRef\":{\"key\":\"alpaca-api-key\",\"name\":\"trading-secrets\"}}},{\"name\":\"ALPACA_SECRET_KEY\",\"valueFrom\":{\"secretKeyRef\":{\"key\":\"alpaca-secret-key\",\"name\":\"trading-secrets\"}}}],\"image\":\"python:3.11-slim\",\"name\":\"streamlit\",\"ports\":[{\"containerPort\":8501}],\"resources\":{\"limits\":{\"cpu\":\"200m\",\"memory\":\"512Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"256Mi\"}}}]}}}}\n"
+  creationTimestamp: "2025-10-30T06:09:36Z"
+  generation: 1
+  name: argo-bulletproof-dashboard
+  namespace: argo-trading
+  resourceVersion: "3184"
+  uid: 731089ec-8113-47fe-9ca7-dfdd5d1534f2
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: argo-bulletproof
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: argo-bulletproof
+    spec:
+      containers:
+      - command:
+        - /bin/bash
+        - -c
+        - "pip install streamlit pandas numpy requests redis\necho \"import streamlit
+          as st\nimport os\nst.title('\U0001F680 ARGO Trading System - LIVE ON KUBERNETES!')\nst.success('✅
+          Infrastructure Migration Complete!')\nst.write('Server IP: 178.156.194.174')\nst.write('Kubernetes
+          Pod: Running')\nst.write('Database: Connected')\nalpaca_key = os.getenv('ALPACA_API_KEY',
+          'Not set')\nst.write(f'Alpaca API Key: {alpaca_key[:8]}...')\nst.balloons()\n\"
+          > app.py\nstreamlit run app.py --server.port=8501 --server.address=0.0.0.0\n"
+        env:
+        - name: ALPACA_API_KEY
+          valueFrom:
+            secretKeyRef:
+              key: alpaca-api-key
+              name: trading-secrets
+        - name: ALPACA_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              key: alpaca-secret-key
+              name: trading-secrets
+        image: python:3.11-slim
+        imagePullPolicy: IfNotPresent
+        name: streamlit
+        ports:
+        - containerPort: 8501
+          protocol: TCP
+        resources:
+          limits:
+            cpu: 200m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 256Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30

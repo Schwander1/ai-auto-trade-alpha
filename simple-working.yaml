@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: argo-simple-dashboard
+  namespace: argo-trading
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: argo-simple
+  template:
+    metadata:
+      labels:
+        app: argo-simple
+    spec:
+      containers:
+      - name: streamlit
+        image: argo-working:v1
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8501
+        env:
+        - name: ALPACA_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: trading-secrets
+              key: alpaca-api-key
+        command:
+        - streamlit
+        - hello
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "50m"
+          limits:
+            memory: "256Mi"
+            cpu: "100m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: argo-simple-dashboard
+  namespace: argo-trading
+spec:
+  selector:
+    app: argo-simple
+  ports:
+  - port: 8501
+    targetPort: 8501
+  type: LoadBalancer

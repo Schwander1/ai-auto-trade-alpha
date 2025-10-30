@@ -1,0 +1,20 @@
+columns substreams version: 1
+9 columns:
+1 substreams for column `timestamp`:
+	timestamp
+1 substreams for column `symbol`:
+	symbol
+1 substreams for column `price`:
+	price
+1 substreams for column `volume`:
+	volume
+1 substreams for column `high`:
+	high
+1 substreams for column `low`:
+	low
+1 substreams for column `open`:
+	open
+1 substreams for column `close`:
+	close
+1 substreams for column `source`:
+	source

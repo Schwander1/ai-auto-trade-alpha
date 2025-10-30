@@ -1,0 +1,11 @@
+file:///Users/dylanneuenschwander/projects/ARGO-Master-Unified/60integrations/websocket_server_argo.js:12
+const wss = new WebSocket.Server({ 
+            ^
+
+TypeError: WebSocket.Server is not a constructor
+    at file:///Users/dylanneuenschwander/projects/ARGO-Master-Unified/60integrations/websocket_server_argo.js:12:13
+    at ModuleJob.run (node:internal/modules/esm/module_job:377:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:691:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v24.10.0

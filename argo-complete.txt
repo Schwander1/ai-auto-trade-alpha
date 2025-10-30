@@ -1,0 +1,9 @@
+ARGO ENTERPRISE INFRASTRUCTURE - READY
+======================================
+Server: 178.156.194.174
+ArgoCD: http://178.156.194.174:8080
+Username: admin
+Password: BV1vMrArEiu3iHth
+
+Status: INFRASTRUCTURE COMPLETE ✅
+Next: Deploy your trading containers

@@ -1,0 +1,3160 @@
+✅ Redis connected
+🚀 ARGO Capital WebSocket Server: Starting...
+✅ ARGO Capital WebSocket Server: OPERATIONAL on port 8580
+🔗 Ready for dashboard connections at ws://localhost:8580
+📊 Real-time portfolio and trading signal streaming enabled
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+💓 ARGO WebSocket Health: 0 active connections
+✅ Redis connected
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+💓 ARGO WebSocket Health: 0 active connections
+✅ Redis connected
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+💓 ARGO WebSocket Health: 0 active connections
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+💓 ARGO WebSocket Health: 0 active connections
+✅ Redis connected
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+💓 ARGO WebSocket Health: 0 active connections
+✅ Redis connected
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+💓 ARGO WebSocket Health: 0 active connections
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+💓 ARGO WebSocket Health: 0 active connections
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+✅ Redis connected
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+Redis Client Error: AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'ECONNREFUSED',
+  [errors]: [
+    Error: connect ECONNREFUSED ::1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '::1',
+      port: 6379
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:6379
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -61,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 6379
+    }
+  ]
+}
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+💓 ARGO WebSocket Health: 0 active connections
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+Redis Client Error: SocketClosedUnexpectedlyError: Socket closed unexpectedly
+    at Socket.<anonymous> (/Users/dylanneuenschwander/projects/ARGO-Master-Unified/node_modules/@redis/client/dist/lib/client/socket.js:222:33)
+    at Object.onceWrapper (node:events:623:26)
+    at Socket.emit (node:events:508:28)
+    at TCP.<anonymous> (node:net:346:12)
+✅ Redis connected
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections
+💓 ARGO WebSocket Health: 0 active connections

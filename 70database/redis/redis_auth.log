@@ -1,0 +1,89 @@
+98630:C 29 Oct 2025 12:11:07.918 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+98630:C 29 Oct 2025 12:11:07.919 # Redis version=6.2.18, bits=64, commit=00000000, modified=0, pid=98630, just started
+98630:C 29 Oct 2025 12:11:07.919 # Configuration loaded
+98630:M 29 Oct 2025 12:11:07.919 * Increased maximum number of open files to 10032 (it was originally set to 2560).
+98630:M 29 Oct 2025 12:11:07.919 * monotonic clock: POSIX clock_gettime
+98630:M 29 Oct 2025 12:11:07.924 * Running mode=standalone, port=6379.
+98630:M 29 Oct 2025 12:11:07.924 # Server initialized
+98630:M 29 Oct 2025 12:11:07.924 * Ready to accept connections
+98630:signal-handler (1761757896) Received SIGTERM scheduling shutdown...
+98630:M 29 Oct 2025 12:11:37.009 # User requested shutdown...
+98630:M 29 Oct 2025 12:11:37.009 * Calling fsync() on the AOF file.
+98630:M 29 Oct 2025 12:11:37.009 * Saving the final RDB snapshot before exiting.
+98630:M 29 Oct 2025 12:11:37.010 * DB saved on disk
+98630:M 29 Oct 2025 12:11:37.010 # Redis is now ready to exit, bye bye...
+98802:C 29 Oct 2025 12:11:48.093 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+98802:C 29 Oct 2025 12:11:48.093 # Redis version=6.2.18, bits=64, commit=00000000, modified=0, pid=98802, just started
+98802:C 29 Oct 2025 12:11:48.093 # Configuration loaded
+98802:M 29 Oct 2025 12:11:48.094 * Increased maximum number of open files to 10032 (it was originally set to 2560).
+98802:M 29 Oct 2025 12:11:48.094 * monotonic clock: POSIX clock_gettime
+98802:M 29 Oct 2025 12:11:48.097 * Running mode=standalone, port=6379.
+98802:M 29 Oct 2025 12:11:48.097 # Server initialized
+98802:M 29 Oct 2025 12:11:48.097 * Ready to accept connections
+98802:signal-handler (1761757928) Received SIGTERM scheduling shutdown...
+98802:M 29 Oct 2025 12:12:08.702 # User requested shutdown...
+98802:M 29 Oct 2025 12:12:08.703 * Calling fsync() on the AOF file.
+98802:M 29 Oct 2025 12:12:08.703 * Saving the final RDB snapshot before exiting.
+98802:M 29 Oct 2025 12:12:08.704 * DB saved on disk
+98802:M 29 Oct 2025 12:12:08.704 # Redis is now ready to exit, bye bye...
+98936:C 29 Oct 2025 12:12:15.895 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+98936:C 29 Oct 2025 12:12:15.895 # Redis version=6.2.18, bits=64, commit=00000000, modified=0, pid=98936, just started
+98936:C 29 Oct 2025 12:12:15.895 # Configuration loaded
+98936:M 29 Oct 2025 12:12:15.896 * Increased maximum number of open files to 10032 (it was originally set to 2560).
+98936:M 29 Oct 2025 12:12:15.896 * monotonic clock: POSIX clock_gettime
+98936:M 29 Oct 2025 12:12:15.897 * Running mode=standalone, port=6379.
+98936:M 29 Oct 2025 12:12:15.897 # Server initialized
+98936:M 29 Oct 2025 12:12:15.897 * Ready to accept connections
+99011:C 29 Oct 2025 12:12:28.588 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+99011:C 29 Oct 2025 12:12:28.589 # Redis version=6.2.18, bits=64, commit=00000000, modified=0, pid=99011, just started
+99011:C 29 Oct 2025 12:12:28.589 # Configuration loaded
+99011:M 29 Oct 2025 12:12:28.589 * Increased maximum number of open files to 10032 (it was originally set to 2560).
+99011:M 29 Oct 2025 12:12:28.589 * monotonic clock: POSIX clock_gettime
+99011:M 29 Oct 2025 12:12:28.590 # Warning: Could not create server TCP listening socket 127.0.0.1:6379: bind: Address already in use
+99011:M 29 Oct 2025 12:12:28.590 # Failed listening on port 6379 (TCP), aborting.
+99104:C 29 Oct 2025 12:12:56.965 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+99104:C 29 Oct 2025 12:12:56.965 # Redis version=6.2.18, bits=64, commit=00000000, modified=0, pid=99104, just started
+99104:C 29 Oct 2025 12:12:56.965 # Configuration loaded
+99104:M 29 Oct 2025 12:12:56.966 * Increased maximum number of open files to 10032 (it was originally set to 2560).
+99104:M 29 Oct 2025 12:12:56.966 * monotonic clock: POSIX clock_gettime
+99104:M 29 Oct 2025 12:12:56.966 # Warning: Could not create server TCP listening socket 127.0.0.1:6379: bind: Address already in use
+99104:M 29 Oct 2025 12:12:56.966 # Failed listening on port 6379 (TCP), aborting.
+98936:signal-handler (1761758006) Received SIGTERM scheduling shutdown...
+98936:M 29 Oct 2025 12:13:26.476 # User requested shutdown...
+98936:M 29 Oct 2025 12:13:26.476 * Calling fsync() on the AOF file.
+98936:M 29 Oct 2025 12:13:26.476 * Saving the final RDB snapshot before exiting.
+98936:M 29 Oct 2025 12:13:26.478 * DB saved on disk
+98936:M 29 Oct 2025 12:13:26.478 # Redis is now ready to exit, bye bye...
+99334:C 29 Oct 2025 12:13:26.597 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+99334:C 29 Oct 2025 12:13:26.598 # Redis version=6.2.18, bits=64, commit=00000000, modified=0, pid=99334, just started
+99334:C 29 Oct 2025 12:13:26.598 # Configuration loaded
+99334:M 29 Oct 2025 12:13:26.598 * Increased maximum number of open files to 10032 (it was originally set to 2560).
+99334:M 29 Oct 2025 12:13:26.598 * monotonic clock: POSIX clock_gettime
+99334:M 29 Oct 2025 12:13:26.600 * Running mode=standalone, port=6379.
+99334:M 29 Oct 2025 12:13:26.600 # Server initialized
+99334:M 29 Oct 2025 12:13:26.600 * DB loaded from append only file: 0.000 seconds
+99334:M 29 Oct 2025 12:13:26.600 * Ready to accept connections
+99334:signal-handler (1761758103) Received SIGTERM scheduling shutdown...
+99334:M 29 Oct 2025 12:15:03.257 # User requested shutdown...
+99334:M 29 Oct 2025 12:15:03.257 * Calling fsync() on the AOF file.
+99334:M 29 Oct 2025 12:15:03.257 * Saving the final RDB snapshot before exiting.
+99334:M 29 Oct 2025 12:15:03.258 * DB saved on disk
+99334:M 29 Oct 2025 12:15:03.258 # Redis is now ready to exit, bye bye...
+99884:C 29 Oct 2025 12:15:09.285 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+99884:C 29 Oct 2025 12:15:09.285 # Redis version=6.2.18, bits=64, commit=00000000, modified=0, pid=99884, just started
+99884:C 29 Oct 2025 12:15:09.285 # Configuration loaded
+99884:M 29 Oct 2025 12:15:09.285 * Increased maximum number of open files to 10032 (it was originally set to 2560).
+99884:M 29 Oct 2025 12:15:09.285 * monotonic clock: POSIX clock_gettime
+99884:M 29 Oct 2025 12:15:09.287 * Running mode=standalone, port=6379.
+99884:M 29 Oct 2025 12:15:09.287 # Server initialized
+99884:M 29 Oct 2025 12:15:09.287 * Ready to accept connections
+99884:M 29 Oct 2025 12:30:10.080 * 1 changes in 900 seconds. Saving...
+99884:M 29 Oct 2025 12:30:10.083 * Background saving started by pid 2070
+2070:C 29 Oct 2025 12:30:10.084 * DB saved on disk
+99884:M 29 Oct 2025 12:30:10.184 * Background saving terminated with success
+99884:signal-handler (1761763256) Received SIGTERM scheduling shutdown...
+99884:M 29 Oct 2025 13:40:56.259 # User requested shutdown...
+99884:M 29 Oct 2025 13:40:56.260 * Calling fsync() on the AOF file.
+99884:M 29 Oct 2025 13:40:56.260 * Saving the final RDB snapshot before exiting.
+99884:M 29 Oct 2025 13:40:56.264 * DB saved on disk
+99884:M 29 Oct 2025 13:40:56.264 # Redis is now ready to exit, bye bye...

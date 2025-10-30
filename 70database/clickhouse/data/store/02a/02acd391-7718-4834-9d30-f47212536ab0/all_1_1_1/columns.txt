@@ -1,0 +1,11 @@
+columns format version: 1
+9 columns:
+`timestamp` DateTime
+`symbol` String
+`quantity` Float64
+`avg_cost` Float64
+`current_price` Float64
+`market_value` Float64
+`unrealized_pnl` Float64
+`weight_pct` Float64
+`sector` String

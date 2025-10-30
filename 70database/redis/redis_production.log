@@ -1,0 +1,21 @@
+98345:C 29 Oct 2025 12:08:22.334 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+98345:C 29 Oct 2025 12:08:22.334 # Redis version=6.2.18, bits=64, commit=00000000, modified=0, pid=98345, just started
+98345:C 29 Oct 2025 12:08:22.334 # Configuration loaded
+98345:M 29 Oct 2025 12:08:22.334 * Increased maximum number of open files to 10032 (it was originally set to 2560).
+98345:M 29 Oct 2025 12:08:22.334 * monotonic clock: POSIX clock_gettime
+98345:M 29 Oct 2025 12:08:22.335 * Running mode=standalone, port=6379.
+98345:M 29 Oct 2025 12:08:22.335 # Server initialized
+98345:M 29 Oct 2025 12:08:22.336 * Ready to accept connections
+98445:C 29 Oct 2025 12:08:51.950 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+98445:C 29 Oct 2025 12:08:51.950 # Redis version=6.2.18, bits=64, commit=00000000, modified=0, pid=98445, just started
+98445:C 29 Oct 2025 12:08:51.950 # Configuration loaded
+98445:M 29 Oct 2025 12:08:51.950 * Increased maximum number of open files to 10032 (it was originally set to 2560).
+98445:M 29 Oct 2025 12:08:51.950 * monotonic clock: POSIX clock_gettime
+98445:M 29 Oct 2025 12:08:51.951 # Warning: Could not create server TCP listening socket 127.0.0.1:6379: bind: Address already in use
+98445:M 29 Oct 2025 12:08:51.951 # Failed listening on port 6379 (TCP), aborting.
+98345:signal-handler (1761757859) Received SIGTERM scheduling shutdown...
+98345:M 29 Oct 2025 12:10:59.162 # User requested shutdown...
+98345:M 29 Oct 2025 12:10:59.163 * Calling fsync() on the AOF file.
+98345:M 29 Oct 2025 12:10:59.163 * Saving the final RDB snapshot before exiting.
+98345:M 29 Oct 2025 12:10:59.164 * DB saved on disk
+98345:M 29 Oct 2025 12:10:59.164 # Redis is now ready to exit, bye bye...

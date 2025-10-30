@@ -1,0 +1,16 @@
+columns substreams version: 1
+7 columns:
+1 substreams for column `timestamp`:
+	timestamp
+1 substreams for column `symbol`:
+	symbol
+1 substreams for column `signal`:
+	signal
+1 substreams for column `strength`:
+	strength
+1 substreams for column `confidence`:
+	confidence
+1 substreams for column `pricetarget`:
+	pricetarget
+1 substreams for column `modelversion`:
+	modelversion

@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: argo-enhanced-scheduler-real
+  namespace: argo-trading
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: argo-enhanced-real
+  template:
+    metadata:
+      labels:
+        app: argo-enhanced-real
+    spec:
+      volumes:
+      - name: argo-code
+        hostPath:
+          path: /root
+          type: Directory
+      containers:
+      - name: scheduler
+        image: python:3.11-slim
+        volumeMounts:
+        - name: argo-code
+          mountPath: /app
+        workingDir: /app
+        env:
+        - name: ALPACA_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: trading-secrets
+              key: alpaca-api-key
+        - name: ALPACA_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: trading-secrets
+              key: alpaca-secret-key
+        - name: REDIS_HOST
+          value: "redis-cluster"
+        - name: CLICKHOUSE_HOST
+          value: "clickhouse-server"
+        command:
+        - /bin/bash
+        - -c
+        - |
+          pip install alpaca-trade-api redis pandas numpy requests schedule clickhouse-connect yfinance scikit-learn python-dotenv
+          echo "🚀 Starting ARGO Enhanced Scheduler..."
+          echo "📁 Files available:"
+          ls -la *.py | head -5
+          python auto_scheduler_enhanced.py
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"

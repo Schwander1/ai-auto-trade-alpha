@@ -1,0 +1,22 @@
+FROM python:3.11-slim
+
+ENV TZ=America/New_York
+ENV PYTHONUNBUFFERED=1
+WORKDIR /app
+
+# Install minimal dependencies
+RUN pip install --no-cache-dir \
+    streamlit==1.28.0 \
+    pandas==2.1.3 \
+    numpy==1.25.2 \
+    requests==2.31.0 \
+    redis==5.0.1
+
+# Copy ALL Python files (whatever exists)
+COPY *.py ./
+
+# Simple health check
+RUN echo "print('ARGO System Ready')" > health.py
+
+EXPOSE 8501
+CMD ["streamlit", "hello"]

@@ -1,0 +1,19 @@
+Processing configuration file 'config/cleanaltports.xml'.
+Code: 107. DB::Exception: Configuration file config/cleanaltports.xml doesn't exist and there is no embedded config. (FILE_DOESNT_EXIST), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x00000001155ea3bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010a08752c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x0000000104c6e4d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x0000000104c6e0e8
+4. DB::Exception::Exception<String const&>(int, FormatStringHelperImpl<std::type_identity<String const&>::type>, String const&) @ 0x00000001058f447c
+5. DB::ConfigProcessor::processConfig(bool*, zkutil::ZooKeeperNodeCache*, std::shared_ptr<Poco::Event> const&, bool) @ 0x0000000112533860
+6. DB::ConfigProcessor::loadConfig(bool, bool) @ 0x000000011253527c
+7. BaseDaemon::reloadConfiguration() @ 0x000000010cca0b54
+8. BaseDaemon::initialize(Poco::Util::Application&) @ 0x000000010cca1c04
+9. DB::Server::initialize(Poco::Util::Application&) @ 0x000000010a4c56c8
+10. Poco::Util::Application::run() @ 0x00000001156e28ac
+11. DB::Server::run() @ 0x000000010a4c5560
+12. mainEntryClickHouseServer(int, char**) @ 0x000000010a4c2ec8
+13. main @ 0x0000000104c6781c
+14. start @ 0x0000000185e45d54
+ (version 25.9.4.58 (official build))

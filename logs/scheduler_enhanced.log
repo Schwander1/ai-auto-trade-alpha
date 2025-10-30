@@ -1,0 +1,130 @@
+2025-10-28 11:57:42,102 - INFO - Enhanced scheduler started with robust error handling
+2025-10-28 11:59:09,534 - INFO - Enhanced scheduler started with robust error handling
+2025-10-28 14:46:42,389 - INFO - Enhanced scheduler started with robust error handling
+2025-10-28 14:47:43,889 - INFO - API call successful on attempt 1
+2025-10-28 14:47:43,891 - INFO - Market check: OPEN
+2025-10-28 14:47:43,996 - INFO - API call successful on attempt 1
+2025-10-28 14:47:43,996 - INFO - Portfolio: $100000
+2025-10-28 14:49:14,743 - INFO - API call successful on attempt 1
+2025-10-28 14:49:14,743 - INFO - Market check: OPEN
+2025-10-28 14:49:14,849 - INFO - API call successful on attempt 1
+2025-10-28 14:49:14,849 - INFO - Portfolio: $100000
+2025-10-28 14:50:15,639 - INFO - API call successful on attempt 1
+2025-10-28 14:50:15,640 - INFO - Market check: OPEN
+2025-10-28 14:50:15,749 - INFO - API call successful on attempt 1
+2025-10-28 14:50:15,749 - INFO - Portfolio: $100000
+2025-10-28 14:50:53,895 - INFO - Enhanced scheduler started with robust error handling
+2025-10-28 14:51:54,708 - INFO - API call successful on attempt 1
+2025-10-28 14:51:54,709 - INFO - Market check: OPEN
+2025-10-28 14:51:54,815 - INFO - API call successful on attempt 1
+2025-10-28 14:51:54,815 - INFO - Portfolio: $100000
+2025-10-28 14:52:55,719 - INFO - API call successful on attempt 1
+2025-10-28 14:52:55,720 - INFO - Market check: OPEN
+2025-10-28 14:52:55,821 - INFO - API call successful on attempt 1
+2025-10-28 14:52:55,821 - INFO - Portfolio: $100000
+2025-10-28 14:53:56,935 - INFO - API call successful on attempt 1
+2025-10-28 14:53:56,937 - INFO - Market check: OPEN
+2025-10-28 14:53:57,076 - INFO - API call successful on attempt 1
+2025-10-28 14:53:57,076 - INFO - Portfolio: $100000
+2025-10-28 15:16:39,035 - INFO - Enhanced scheduler started with robust error handling
+2025-10-28 15:17:39,897 - INFO - API call successful on attempt 1
+2025-10-28 15:17:39,904 - INFO - Market check: CLOSED
+2025-10-28 15:18:40,722 - INFO - API call successful on attempt 1
+2025-10-28 15:18:40,724 - INFO - Market check: CLOSED
+2025-10-28 15:19:41,842 - INFO - API call successful on attempt 1
+2025-10-28 15:19:41,844 - INFO - Market check: CLOSED
+2025-10-28 15:21:12,654 - INFO - API call successful on attempt 1
+2025-10-28 15:21:12,657 - INFO - Market check: CLOSED
+2025-10-28 15:21:42,663 - INFO - Starting data collection...
+2025-10-28 15:22:13,376 - INFO - API call successful on attempt 1
+2025-10-28 15:22:13,377 - INFO - Market check: CLOSED
+2025-10-28 15:23:14,173 - INFO - API call successful on attempt 1
+2025-10-28 15:23:14,173 - INFO - Market check: CLOSED
+2025-10-28 15:24:15,009 - INFO - API call successful on attempt 1
+2025-10-28 15:24:15,009 - INFO - Market check: CLOSED
+2025-10-28 15:25:15,820 - INFO - API call successful on attempt 1
+2025-10-28 15:25:15,821 - INFO - Market check: CLOSED
+2025-10-28 15:26:16,600 - INFO - API call successful on attempt 1
+2025-10-28 15:26:16,601 - INFO - Market check: CLOSED
+2025-10-28 15:26:46,607 - INFO - Generating trading signals...
+2025-10-28 15:26:46,608 - INFO - Starting data collection...
+2025-10-28 15:27:17,810 - INFO - API call successful on attempt 1
+2025-10-28 15:27:17,812 - INFO - Market check: CLOSED
+2025-10-28 15:28:18,770 - INFO - API call successful on attempt 1
+2025-10-28 15:28:18,771 - INFO - Market check: CLOSED
+2025-10-28 15:29:20,685 - INFO - API call successful on attempt 1
+2025-10-28 15:29:20,686 - INFO - Market check: CLOSED
+2025-10-28 15:30:21,851 - INFO - API call successful on attempt 1
+2025-10-28 15:30:21,852 - INFO - Market check: CLOSED
+2025-10-28 15:31:25,390 - INFO - API call successful on attempt 1
+2025-10-28 15:31:25,391 - INFO - Market check: CLOSED
+2025-10-28 15:31:55,402 - INFO - Starting data collection...
+2025-10-28 15:32:26,523 - INFO - API call successful on attempt 1
+2025-10-28 15:32:26,525 - INFO - Market check: CLOSED
+2025-10-28 15:33:27,535 - INFO - API call successful on attempt 1
+2025-10-28 15:33:27,537 - INFO - Market check: CLOSED
+2025-10-28 15:34:28,481 - INFO - API call successful on attempt 1
+2025-10-28 15:34:28,483 - INFO - Market check: CLOSED
+2025-10-28 15:35:29,635 - INFO - API call successful on attempt 1
+2025-10-28 15:35:29,636 - INFO - Market check: CLOSED
+2025-10-28 15:36:30,625 - INFO - API call successful on attempt 1
+2025-10-28 15:36:30,626 - INFO - Market check: CLOSED
+2025-10-28 15:37:00,642 - INFO - Generating trading signals...
+2025-10-28 15:37:00,647 - INFO - Starting data collection...
+2025-10-28 15:37:31,590 - INFO - API call successful on attempt 1
+2025-10-28 15:37:31,591 - INFO - Market check: CLOSED
+2025-10-28 15:38:32,618 - INFO - API call successful on attempt 1
+2025-10-28 15:38:32,620 - INFO - Market check: CLOSED
+2025-10-28 15:39:33,578 - INFO - API call successful on attempt 1
+2025-10-28 15:39:33,578 - INFO - Market check: CLOSED
+2025-10-28 15:40:34,560 - INFO - API call successful on attempt 1
+2025-10-28 15:40:34,561 - INFO - Market check: CLOSED
+2025-10-28 15:41:35,519 - INFO - API call successful on attempt 1
+2025-10-28 15:41:35,520 - INFO - Market check: CLOSED
+2025-10-28 15:42:05,528 - INFO - Starting data collection...
+2025-10-28 15:42:36,452 - INFO - API call successful on attempt 1
+2025-10-28 15:42:36,453 - INFO - Market check: CLOSED
+2025-10-28 15:43:37,495 - INFO - API call successful on attempt 1
+2025-10-28 15:43:37,497 - INFO - Market check: CLOSED
+2025-10-30 06:28:47,799 - INFO - Enhanced scheduler started with robust error handling
+2025-10-30 06:29:47,800 - ERROR - API client creation failed: ('Key ID must be given to access Alpaca trade API', ' (env: APCA_API_KEY_ID)')
+2025-10-30 06:29:47,800 - WARNING - Market check failed - assuming closed for safety
+2025-10-30 06:30:47,801 - ERROR - API client creation failed: ('Key ID must be given to access Alpaca trade API', ' (env: APCA_API_KEY_ID)')
+2025-10-30 06:30:47,801 - WARNING - Market check failed - assuming closed for safety
+2025-10-30 06:31:47,802 - ERROR - API client creation failed: ('Key ID must be given to access Alpaca trade API', ' (env: APCA_API_KEY_ID)')
+2025-10-30 06:31:47,802 - WARNING - Market check failed - assuming closed for safety
+2025-10-30 06:32:47,803 - ERROR - API client creation failed: ('Key ID must be given to access Alpaca trade API', ' (env: APCA_API_KEY_ID)')
+2025-10-30 06:32:47,803 - WARNING - Market check failed - assuming closed for safety
+2025-10-30 06:33:47,804 - INFO - Starting data collection...
+2025-10-30 06:33:47,804 - ERROR - API client creation failed: ('Key ID must be given to access Alpaca trade API', ' (env: APCA_API_KEY_ID)')
+2025-10-30 06:33:47,804 - WARNING - Market check failed - assuming closed for safety
+2025-10-30 06:34:48,806 - INFO - Enhanced scheduler started with robust error handling
+2025-10-30 06:35:48,807 - ERROR - API client creation failed: ('Key ID must be given to access Alpaca trade API', ' (env: APCA_API_KEY_ID)')
+2025-10-30 06:35:48,807 - WARNING - Market check failed - assuming closed for safety
+2025-10-30 06:35:51,100 - INFO - Enhanced scheduler started with robust error handling
+2025-10-30 06:36:02,401 - INFO - Scheduler stopped by user
+2025-10-30 06:36:48,808 - ERROR - API client creation failed: ('Key ID must be given to access Alpaca trade API', ' (env: APCA_API_KEY_ID)')
+2025-10-30 06:36:48,808 - WARNING - Market check failed - assuming closed for safety
+2025-10-30 06:37:48,809 - ERROR - API client creation failed: ('Key ID must be given to access Alpaca trade API', ' (env: APCA_API_KEY_ID)')
+2025-10-30 06:37:48,809 - WARNING - Market check failed - assuming closed for safety
+2025-10-30 06:38:48,810 - ERROR - API client creation failed: ('Key ID must be given to access Alpaca trade API', ' (env: APCA_API_KEY_ID)')
+2025-10-30 06:38:48,810 - WARNING - Market check failed - assuming closed for safety
+2025-10-30 06:39:48,810 - INFO - Starting data collection...
+2025-10-30 06:39:48,811 - ERROR - API client creation failed: ('Key ID must be given to access Alpaca trade API', ' (env: APCA_API_KEY_ID)')
+2025-10-30 06:39:48,811 - WARNING - Market check failed - assuming closed for safety
+2025-10-30 06:40:48,812 - ERROR - API client creation failed: ('Key ID must be given to access Alpaca trade API', ' (env: APCA_API_KEY_ID)')
+2025-10-30 06:40:48,812 - WARNING - Market check failed - assuming closed for safety
+2025-10-30 06:41:48,813 - ERROR - API client creation failed: ('Key ID must be given to access Alpaca trade API', ' (env: APCA_API_KEY_ID)')
+2025-10-30 06:41:48,813 - WARNING - Market check failed - assuming closed for safety
+2025-10-30 06:42:48,813 - ERROR - API client creation failed: ('Key ID must be given to access Alpaca trade API', ' (env: APCA_API_KEY_ID)')
+2025-10-30 06:42:48,814 - WARNING - Market check failed - assuming closed for safety
+2025-10-30 06:43:48,814 - ERROR - API client creation failed: ('Key ID must be given to access Alpaca trade API', ' (env: APCA_API_KEY_ID)')
+2025-10-30 06:43:48,814 - WARNING - Market check failed - assuming closed for safety
+2025-10-30 06:44:48,815 - INFO - Generating trading signals...
+2025-10-30 06:44:48,815 - INFO - Starting data collection...
+2025-10-30 06:44:48,815 - ERROR - API client creation failed: ('Key ID must be given to access Alpaca trade API', ' (env: APCA_API_KEY_ID)')
+2025-10-30 06:44:48,816 - WARNING - Market check failed - assuming closed for safety
+2025-10-30 06:45:48,816 - ERROR - API client creation failed: ('Key ID must be given to access Alpaca trade API', ' (env: APCA_API_KEY_ID)')
+2025-10-30 06:45:48,816 - WARNING - Market check failed - assuming closed for safety
+2025-10-30 06:46:48,817 - ERROR - API client creation failed: ('Key ID must be given to access Alpaca trade API', ' (env: APCA_API_KEY_ID)')
+2025-10-30 06:46:48,817 - WARNING - Market check failed - assuming closed for safety

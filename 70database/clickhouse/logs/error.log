@@ -1,0 +1,17 @@
+2025.10.28 19:40:15.146343 [ 6716353 ] {} <Warning> Context: Maximum number of threads is lower than 30000. There could be problems with handling a lot of simultaneous queries.
+2025.10.28 19:40:15.467385 [ 6716353 ] {} <Error> Application: Code: 210. DB::Exception: Listen [::]:8123 failed: Poco::Exception. Code: 1000, e.code() = 48, Net Exception: Address already in use: [::]:8123 (version 25.9.4.58 (official build)). (NETWORK_ERROR), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x00000001118563bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x00000001062f352c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x0000000100eda4d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x0000000100eda0e8
+4. DB::Exception::Exception<String const&, int&, String>(int, FormatStringHelperImpl<std::type_identity<String const&>::type, std::type_identity<int&>::type, std::type_identity<String>::type>, String const&, int&, String&&) @ 0x0000000106653f04
+5. DB::Server::createServer(Poco::Util::AbstractConfiguration&, String const&, char const*, bool, bool, std::vector<DB::ProtocolServerAdapter, std::allocator<DB::ProtocolServerAdapter>>&, std::function<DB::ProtocolServerAdapter (unsigned short)>&&) const @ 0x0000000106730dfc
+6. DB::Server::createServers(Poco::Util::AbstractConfiguration&, std::vector<String, std::allocator<String>> const&, bool, Poco::ThreadPool&, DB::AsynchronousMetrics&, std::vector<DB::ProtocolServerAdapter, std::allocator<DB::ProtocolServerAdapter>>&, bool, DB::ServerType const&) @ 0x000000010674a7e0
+7. DB::Server::main(std::vector<String, std::allocator<String>> const&) @ 0x0000000106740090
+8. Poco::Util::Application::run() @ 0x000000011194e8bc
+9. DB::Server::run() @ 0x0000000106731560
+10. mainEntryClickHouseServer(int, char**) @ 0x000000010672eec8
+11. main @ 0x0000000100ed381c
+12. start @ 0x0000000185e45d54
+ (version 25.9.4.58 (official build))

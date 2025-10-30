@@ -1,0 +1,9 @@
+columns format version: 1
+7 columns:
+`timestamp` DateTime
+`symbol` String
+`signal` String
+`strength` Float64
+`confidence` Float64
+`pricetarget` Float64
+`modelversion` String

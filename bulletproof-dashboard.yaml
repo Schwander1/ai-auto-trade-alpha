@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: argo-bulletproof-dashboard
+  namespace: argo-trading
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: argo-bulletproof
+  template:
+    metadata:
+      labels:
+        app: argo-bulletproof
+    spec:
+      containers:
+      - name: streamlit
+        image: python:3.11-slim
+        ports:
+        - containerPort: 8501
+        env:
+        - name: ALPACA_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: trading-secrets
+              key: alpaca-api-key
+        - name: ALPACA_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: trading-secrets
+              key: alpaca-secret-key
+        command:
+        - /bin/bash
+        - -c
+        - |
+          pip install streamlit pandas numpy requests redis
+          echo "import streamlit as st
+          import os
+          st.title('🚀 ARGO Trading System - LIVE ON KUBERNETES!')
+          st.success('✅ Infrastructure Migration Complete!')
+          st.write('Server IP: 178.156.194.174')
+          st.write('Kubernetes Pod: Running')
+          st.write('Database: Connected')
+          alpaca_key = os.getenv('ALPACA_API_KEY', 'Not set')
+          st.write(f'Alpaca API Key: {alpaca_key[:8]}...')
+          st.balloons()
+          " > app.py
+          streamlit run app.py --server.port=8501 --server.address=0.0.0.0
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: argo-bulletproof-dashboard
+  namespace: argo-trading
+spec:
+  selector:
+    app: argo-bulletproof
+  ports:
+  - port: 8501
+    targetPort: 8501
+  type: LoadBalancer

@@ -1,0 +1,33 @@
+Processing configuration file 'config/clean_alt_ports.xml'.
+Logging information to ./logs/server.log
+Logging errors to ./logs/server.err
+2025.10.29 18:52:01.232765 [ 8179877 ] {} <Information> Application: Starting ClickHouse 25.9.4.58 (revision: 54505, git hash: 08afb4f28eefe01513442c3647a2e00b703d5922, build id: <unknown>), PID 5472
+2025.10.29 18:52:01.233043 [ 8179877 ] {} <Information> Application: starting up
+2025.10.29 18:52:01.233227 [ 8179877 ] {} <Information> Application: OS name: Darwin, version: 25.0.0, architecture: arm64
+2025.10.29 18:52:01.304607 [ 8179877 ] {} <Information> Application: Available RAM: 8.00 GiB; logical cores: 8; used cores: 8.
+2025.10.29 18:52:01.304614 [ 8179877 ] {} <Information> Application: Query Profiler and TraceCollector are disabled because they require PHDR cache to be created (otherwise the function 'dl_iterate_phdr' is not lock free and not async-signal safe).
+2025.10.29 18:52:01.306459 [ 8179877 ] {} <Information> StatusFile: Status file ./data/status already exists - unclean restart. Contents:
+PID: 2497
+Started at: 2025-10-29 18:48:45
+Revision: 54505
+
+2025.10.29 18:52:01.309061 [ 8179877 ] {} <Information> Application: Shutting down storages.
+2025.10.29 18:52:01.310080 [ 8179877 ] {} <Information> Application: Waiting for background threads
+2025.10.29 18:52:01.310230 [ 8179877 ] {} <Information> Application: Background threads finished in 0 ms
+2025.10.29 18:52:01.629738 [ 8179877 ] {} <Error> Application: Code: 76. DB::Exception: Cannot lock file ./data/status. Another server instance in same directory is already running. (CANNOT_OPEN_FILE), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x00000001117c23bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010625f52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x0000000100e464d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x0000000100e460e8
+4. DB::Exception::Exception<String const&>(int, FormatStringHelperImpl<std::type_identity<String const&>::type>, String const&) @ 0x0000000101acc47c
+5. DB::StatusFile::StatusFile(String, std::function<void (DB::WriteBuffer&)>) @ 0x000000010637b258
+6. DB::Server::main(std::vector<String, std::allocator<String>> const&) @ 0x00000001066a36bc
+7. Poco::Util::Application::run() @ 0x00000001118ba8bc
+8. DB::Server::run() @ 0x000000010669d560
+9. mainEntryClickHouseServer(int, char**) @ 0x000000010669aec8
+10. main @ 0x0000000100e3f81c
+11. start @ 0x0000000185e45d54
+ (version 25.9.4.58 (official build))
+2025.10.29 18:52:01.630208 [ 8179877 ] {} <Information> Application: shutting down
+2025.10.29 18:52:01.630410 [ 8179904 ] {} <Information> BaseDaemon: Stop SignalListener thread

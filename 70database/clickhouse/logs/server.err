@@ -1,0 +1,1069 @@
+2025.10.28 19:42:25.335816 [ 6719511 ] {} <Warning> Context: Maximum number of threads is lower than 30000. There could be problems with handling a lot of simultaneous queries.
+2025.10.29 00:35:03.412510 [ 6719659 ] {} <Error> DynamicQueryHandler: Code: 81. DB::Exception: Database argocapital does not exist. (UNKNOWN_DATABASE), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x0000000114d823bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010981f52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x00000001044064d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x00000001044060e8
+4. DB::Exception::Exception<String>(int, FormatStringHelperImpl<std::type_identity<String>::type>, String&&) @ 0x0000000104405d7c
+5. DB::DatabaseCatalog::assertDatabaseExists(String const&) const @ 0x000000010e07fa68
+6. DB::Context::setCurrentDatabaseWithLock(String const&, std::lock_guard<DB::ContextSharedMutex> const&) @ 0x000000010dfe97bc
+7. DB::Context::setCurrentDatabase(String const&) @ 0x000000010dff5228
+8. DB::HTTPHandler::processQuery(DB::HTTPServerRequest&, DB::HTMLForm&, DB::HTTPServerResponse&, DB::HTTPHandler::Output&, std::optional<DB::CurrentThread::QueryScope>&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x00000001113e330c
+9. DB::HTTPHandler::handleRequest(DB::HTTPServerRequest&, DB::HTTPServerResponse&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x00000001113e8f20
+10. DB::HTTPServerConnection::run() @ 0x000000011148e1ec
+11. Poco::Net::TCPServerConnection::start() @ 0x0000000114e51518
+12. Poco::Net::TCPServerDispatcher::run() @ 0x0000000114e51bf8
+13. Poco::PooledThread::run() @ 0x0000000114df1fc8
+14. Poco::ThreadImpl::runnableEntry(void*) @ 0x0000000114def128
+15. _pthread_start @ 0x0000000186204c08
+16. thread_start @ 0x00000001861ffba8
+ (version 25.9.4.58 (official build))
+2025.10.29 00:35:04.525491 [ 6719659 ] {} <Error> DynamicQueryHandler: Code: 81. DB::Exception: Database argocapital does not exist. (UNKNOWN_DATABASE), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x0000000114d823bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010981f52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x00000001044064d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x00000001044060e8
+4. DB::Exception::Exception<String>(int, FormatStringHelperImpl<std::type_identity<String>::type>, String&&) @ 0x0000000104405d7c
+5. DB::DatabaseCatalog::assertDatabaseExists(String const&) const @ 0x000000010e07fa68
+6. DB::Context::setCurrentDatabaseWithLock(String const&, std::lock_guard<DB::ContextSharedMutex> const&) @ 0x000000010dfe97bc
+7. DB::Context::setCurrentDatabase(String const&) @ 0x000000010dff5228
+8. DB::HTTPHandler::processQuery(DB::HTTPServerRequest&, DB::HTMLForm&, DB::HTTPServerResponse&, DB::HTTPHandler::Output&, std::optional<DB::CurrentThread::QueryScope>&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x00000001113e330c
+9. DB::HTTPHandler::handleRequest(DB::HTTPServerRequest&, DB::HTTPServerResponse&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x00000001113e8f20
+10. DB::HTTPServerConnection::run() @ 0x000000011148e1ec
+11. Poco::Net::TCPServerConnection::start() @ 0x0000000114e51518
+12. Poco::Net::TCPServerDispatcher::run() @ 0x0000000114e51bf8
+13. Poco::PooledThread::run() @ 0x0000000114df1fc8
+14. Poco::ThreadImpl::runnableEntry(void*) @ 0x0000000114def128
+15. _pthread_start @ 0x0000000186204c08
+16. thread_start @ 0x00000001861ffba8
+ (version 25.9.4.58 (official build))
+2025.10.29 00:35:06.031013 [ 6719659 ] {} <Error> DynamicQueryHandler: Code: 81. DB::Exception: Database argocapital does not exist. (UNKNOWN_DATABASE), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x0000000114d823bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010981f52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x00000001044064d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x00000001044060e8
+4. DB::Exception::Exception<String>(int, FormatStringHelperImpl<std::type_identity<String>::type>, String&&) @ 0x0000000104405d7c
+5. DB::DatabaseCatalog::assertDatabaseExists(String const&) const @ 0x000000010e07fa68
+6. DB::Context::setCurrentDatabaseWithLock(String const&, std::lock_guard<DB::ContextSharedMutex> const&) @ 0x000000010dfe97bc
+7. DB::Context::setCurrentDatabase(String const&) @ 0x000000010dff5228
+8. DB::HTTPHandler::processQuery(DB::HTTPServerRequest&, DB::HTMLForm&, DB::HTTPServerResponse&, DB::HTTPHandler::Output&, std::optional<DB::CurrentThread::QueryScope>&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x00000001113e330c
+9. DB::HTTPHandler::handleRequest(DB::HTTPServerRequest&, DB::HTTPServerResponse&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x00000001113e8f20
+10. DB::HTTPServerConnection::run() @ 0x000000011148e1ec
+11. Poco::Net::TCPServerConnection::start() @ 0x0000000114e51518
+12. Poco::Net::TCPServerDispatcher::run() @ 0x0000000114e51bf8
+13. Poco::PooledThread::run() @ 0x0000000114df1fc8
+14. Poco::ThreadImpl::runnableEntry(void*) @ 0x0000000114def128
+15. _pthread_start @ 0x0000000186204c08
+16. thread_start @ 0x00000001861ffba8
+ (version 25.9.4.58 (official build))
+2025.10.29 00:35:07.572203 [ 6719659 ] {} <Error> DynamicQueryHandler: Code: 81. DB::Exception: Database argocapital does not exist. (UNKNOWN_DATABASE), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x0000000114d823bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010981f52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x00000001044064d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x00000001044060e8
+4. DB::Exception::Exception<String>(int, FormatStringHelperImpl<std::type_identity<String>::type>, String&&) @ 0x0000000104405d7c
+5. DB::DatabaseCatalog::assertDatabaseExists(String const&) const @ 0x000000010e07fa68
+6. DB::Context::setCurrentDatabaseWithLock(String const&, std::lock_guard<DB::ContextSharedMutex> const&) @ 0x000000010dfe97bc
+7. DB::Context::setCurrentDatabase(String const&) @ 0x000000010dff5228
+8. DB::HTTPHandler::processQuery(DB::HTTPServerRequest&, DB::HTMLForm&, DB::HTTPServerResponse&, DB::HTTPHandler::Output&, std::optional<DB::CurrentThread::QueryScope>&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x00000001113e330c
+9. DB::HTTPHandler::handleRequest(DB::HTTPServerRequest&, DB::HTTPServerResponse&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x00000001113e8f20
+10. DB::HTTPServerConnection::run() @ 0x000000011148e1ec
+11. Poco::Net::TCPServerConnection::start() @ 0x0000000114e51518
+12. Poco::Net::TCPServerDispatcher::run() @ 0x0000000114e51bf8
+13. Poco::PooledThread::run() @ 0x0000000114df1fc8
+14. Poco::ThreadImpl::runnableEntry(void*) @ 0x0000000114def128
+15. _pthread_start @ 0x0000000186204c08
+16. thread_start @ 0x00000001861ffba8
+ (version 25.9.4.58 (official build))
+2025.10.29 00:35:09.469276 [ 6719659 ] {} <Error> DynamicQueryHandler: Code: 81. DB::Exception: Database argocapital does not exist. (UNKNOWN_DATABASE), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x0000000114d823bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010981f52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x00000001044064d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x00000001044060e8
+4. DB::Exception::Exception<String>(int, FormatStringHelperImpl<std::type_identity<String>::type>, String&&) @ 0x0000000104405d7c
+5. DB::DatabaseCatalog::assertDatabaseExists(String const&) const @ 0x000000010e07fa68
+6. DB::Context::setCurrentDatabaseWithLock(String const&, std::lock_guard<DB::ContextSharedMutex> const&) @ 0x000000010dfe97bc
+7. DB::Context::setCurrentDatabase(String const&) @ 0x000000010dff5228
+8. DB::HTTPHandler::processQuery(DB::HTTPServerRequest&, DB::HTMLForm&, DB::HTTPServerResponse&, DB::HTTPHandler::Output&, std::optional<DB::CurrentThread::QueryScope>&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x00000001113e330c
+9. DB::HTTPHandler::handleRequest(DB::HTTPServerRequest&, DB::HTTPServerResponse&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x00000001113e8f20
+10. DB::HTTPServerConnection::run() @ 0x000000011148e1ec
+11. Poco::Net::TCPServerConnection::start() @ 0x0000000114e51518
+12. Poco::Net::TCPServerDispatcher::run() @ 0x0000000114e51bf8
+13. Poco::PooledThread::run() @ 0x0000000114df1fc8
+14. Poco::ThreadImpl::runnableEntry(void*) @ 0x0000000114def128
+15. _pthread_start @ 0x0000000186204c08
+16. thread_start @ 0x00000001861ffba8
+ (version 25.9.4.58 (official build))
+2025.10.29 00:35:10.235324 [ 6719659 ] {} <Error> DynamicQueryHandler: Code: 81. DB::Exception: Database argocapital does not exist. (UNKNOWN_DATABASE), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x0000000114d823bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010981f52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x00000001044064d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x00000001044060e8
+4. DB::Exception::Exception<String>(int, FormatStringHelperImpl<std::type_identity<String>::type>, String&&) @ 0x0000000104405d7c
+5. DB::DatabaseCatalog::assertDatabaseExists(String const&) const @ 0x000000010e07fa68
+6. DB::Context::setCurrentDatabaseWithLock(String const&, std::lock_guard<DB::ContextSharedMutex> const&) @ 0x000000010dfe97bc
+7. DB::Context::setCurrentDatabase(String const&) @ 0x000000010dff5228
+8. DB::HTTPHandler::processQuery(DB::HTTPServerRequest&, DB::HTMLForm&, DB::HTTPServerResponse&, DB::HTTPHandler::Output&, std::optional<DB::CurrentThread::QueryScope>&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x00000001113e330c
+9. DB::HTTPHandler::handleRequest(DB::HTTPServerRequest&, DB::HTTPServerResponse&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x00000001113e8f20
+10. DB::HTTPServerConnection::run() @ 0x000000011148e1ec
+11. Poco::Net::TCPServerConnection::start() @ 0x0000000114e51518
+12. Poco::Net::TCPServerDispatcher::run() @ 0x0000000114e51bf8
+13. Poco::PooledThread::run() @ 0x0000000114df1fc8
+14. Poco::ThreadImpl::runnableEntry(void*) @ 0x0000000114def128
+15. _pthread_start @ 0x0000000186204c08
+16. thread_start @ 0x00000001861ffba8
+ (version 25.9.4.58 (official build))
+2025.10.29 00:35:10.855770 [ 6719659 ] {} <Error> DynamicQueryHandler: Code: 81. DB::Exception: Database argocapital does not exist. (UNKNOWN_DATABASE), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x0000000114d823bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010981f52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x00000001044064d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x00000001044060e8
+4. DB::Exception::Exception<String>(int, FormatStringHelperImpl<std::type_identity<String>::type>, String&&) @ 0x0000000104405d7c
+5. DB::DatabaseCatalog::assertDatabaseExists(String const&) const @ 0x000000010e07fa68
+6. DB::Context::setCurrentDatabaseWithLock(String const&, std::lock_guard<DB::ContextSharedMutex> const&) @ 0x000000010dfe97bc
+7. DB::Context::setCurrentDatabase(String const&) @ 0x000000010dff5228
+8. DB::HTTPHandler::processQuery(DB::HTTPServerRequest&, DB::HTMLForm&, DB::HTTPServerResponse&, DB::HTTPHandler::Output&, std::optional<DB::CurrentThread::QueryScope>&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x00000001113e330c
+9. DB::HTTPHandler::handleRequest(DB::HTTPServerRequest&, DB::HTTPServerResponse&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x00000001113e8f20
+10. DB::HTTPServerConnection::run() @ 0x000000011148e1ec
+11. Poco::Net::TCPServerConnection::start() @ 0x0000000114e51518
+12. Poco::Net::TCPServerDispatcher::run() @ 0x0000000114e51bf8
+13. Poco::PooledThread::run() @ 0x0000000114df1fc8
+14. Poco::ThreadImpl::runnableEntry(void*) @ 0x0000000114def128
+15. _pthread_start @ 0x0000000186204c08
+16. thread_start @ 0x00000001861ffba8
+ (version 25.9.4.58 (official build))
+2025.10.29 00:35:12.236137 [ 6719659 ] {} <Error> DynamicQueryHandler: Code: 81. DB::Exception: Database argocapital does not exist. (UNKNOWN_DATABASE), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x0000000114d823bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010981f52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x00000001044064d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x00000001044060e8
+4. DB::Exception::Exception<String>(int, FormatStringHelperImpl<std::type_identity<String>::type>, String&&) @ 0x0000000104405d7c
+5. DB::DatabaseCatalog::assertDatabaseExists(String const&) const @ 0x000000010e07fa68
+6. DB::Context::setCurrentDatabaseWithLock(String const&, std::lock_guard<DB::ContextSharedMutex> const&) @ 0x000000010dfe97bc
+7. DB::Context::setCurrentDatabase(String const&) @ 0x000000010dff5228
+8. DB::HTTPHandler::processQuery(DB::HTTPServerRequest&, DB::HTMLForm&, DB::HTTPServerResponse&, DB::HTTPHandler::Output&, std::optional<DB::CurrentThread::QueryScope>&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x00000001113e330c
+9. DB::HTTPHandler::handleRequest(DB::HTTPServerRequest&, DB::HTTPServerResponse&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x00000001113e8f20
+10. DB::HTTPServerConnection::run() @ 0x000000011148e1ec
+11. Poco::Net::TCPServerConnection::start() @ 0x0000000114e51518
+12. Poco::Net::TCPServerDispatcher::run() @ 0x0000000114e51bf8
+13. Poco::PooledThread::run() @ 0x0000000114df1fc8
+14. Poco::ThreadImpl::runnableEntry(void*) @ 0x0000000114def128
+15. _pthread_start @ 0x0000000186204c08
+16. thread_start @ 0x00000001861ffba8
+ (version 25.9.4.58 (official build))
+2025.10.29 12:02:29.398068 [ 7286865 ] {} <Warning> Context: Maximum number of threads is lower than 30000. There could be problems with handling a lot of simultaneous queries.
+2025.10.29 12:02:46.014913 [ 7287989 ] {} <Error> Application: Code: 76. DB::Exception: Cannot lock file ./data/status. Another server instance in same directory is already running. (CANNOT_OPEN_FILE), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x0000000110cde3bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010577b52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x00000001003624d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x00000001003620e8
+4. DB::Exception::Exception<String const&>(int, FormatStringHelperImpl<std::type_identity<String const&>::type>, String const&) @ 0x0000000100fe847c
+5. DB::StatusFile::StatusFile(String, std::function<void (DB::WriteBuffer&)>) @ 0x0000000105897258
+6. DB::Server::main(std::vector<String, std::allocator<String>> const&) @ 0x0000000105bbf6bc
+7. Poco::Util::Application::run() @ 0x0000000110dd68bc
+8. DB::Server::run() @ 0x0000000105bb9560
+9. mainEntryClickHouseServer(int, char**) @ 0x0000000105bb6ec8
+10. main @ 0x000000010035b81c
+11. start @ 0x0000000185e45d54
+ (version 25.9.4.58 (official build))
+2025.10.29 12:03:16.419772 [ 7288788 ] {} <Error> Application: Code: 76. DB::Exception: Cannot lock file ./data/status. Another server instance in same directory is already running. (CANNOT_OPEN_FILE), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x0000000114c3a3bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x00000001096d752c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x00000001042be4d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x00000001042be0e8
+4. DB::Exception::Exception<String const&>(int, FormatStringHelperImpl<std::type_identity<String const&>::type>, String const&) @ 0x0000000104f4447c
+5. DB::StatusFile::StatusFile(String, std::function<void (DB::WriteBuffer&)>) @ 0x00000001097f3258
+6. DB::Server::main(std::vector<String, std::allocator<String>> const&) @ 0x0000000109b1b6bc
+7. Poco::Util::Application::run() @ 0x0000000114d328bc
+8. DB::Server::run() @ 0x0000000109b15560
+9. mainEntryClickHouseServer(int, char**) @ 0x0000000109b12ec8
+10. main @ 0x00000001042b781c
+11. start @ 0x0000000185e45d54
+ (version 25.9.4.58 (official build))
+2025.10.29 13:13:04.254079 [ 7286898 ] {316cd869-847e-46d1-a88c-5e1f0932c0d3} <Error> executeQuery: Code: 47. DB::Exception: Unknown expression identifier `action` in scope SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE (action IN ('BUY', 'SELL')) AND (confidence >= 0.75) AND (timestamp > (now() - toIntervalMinute(30))) ORDER BY timestamp DESC, confidence DESC LIMIT 5. (UNKNOWN_IDENTIFIER) (version 25.9.4.58 (official build)) (from 127.0.0.1:60366) (in query:  SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE action IN ('BUY', 'SELL') AND confidence >= 0.75 AND timestamp > now() - INTERVAL 30 MINUTE ORDER BY timestamp DESC, confidence DESC LIMIT 5 FORMAT Native), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x00000001158fe3bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010a39b52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x0000000104f824d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x0000000104f820e8
+4. DB::Exception::Exception<char const*, String&, String, String, String>(int, FormatStringHelperImpl<std::type_identity<char const*>::type, std::type_identity<String&>::type, std::type_identity<String>::type, std::type_identity<String>::type, std::type_identity<String>::type>, char const*&&, String&, String&&, String&&, String&&) @ 0x000000010e6bec4c
+5. DB::QueryAnalyzer::resolveExpressionNode(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool, bool) @ 0x000000010e6a9a5c
+6. DB::QueryAnalyzer::resolveExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool) @ 0x000000010e6a7d6c
+7. DB::QueryAnalyzer::resolveProjectionExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&) @ 0x000000010e6c0174
+8. DB::QueryAnalyzer::resolveQuery(std::shared_ptr<DB::IQueryTreeNode> const&, DB::IdentifierResolveScope&) @ 0x000000010e6a39ac
+9. DB::QueryAnalyzer::resolve(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::IQueryTreeNode> const&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2cb0
+10. DB::QueryAnalysisPass::run(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2320
+11. DB::QueryTreePassManager::run(std::shared_ptr<DB::IQueryTreeNode>) @ 0x000000010e61077c
+12. DB::buildQueryTreeAndRunPasses(std::shared_ptr<DB::IAST> const&, DB::SelectQueryOptions const&, std::shared_ptr<DB::Context const> const&, std::shared_ptr<DB::IStorage> const&) @ 0x000000010ed6f85c
+13. DB::InterpreterSelectQueryAnalyzer::InterpreterSelectQueryAnalyzer(std::shared_ptr<DB::IAST> const&, std::shared_ptr<DB::Context const> const&, DB::SelectQueryOptions const&, std::vector<String, std::allocator<String>> const&) @ 0x000000010ed6e060
+14. std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> std::__function::__policy_invoker<std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>::__call_impl[abi:ne190107]<std::__function::__default_alloc_func<DB::registerInterpreterSelectQueryAnalyzer(DB::InterpreterFactory&)::$_0, std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>>(std::__function::__policy_storage const*, DB::InterpreterFactory::Arguments const&) @ 0x000000010ed712a4
+15. DB::InterpreterFactory::get(std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::Context>, DB::SelectQueryOptions const&) @ 0x000000010ed267ec
+16. DB::executeQueryImpl(char const*, char const*, std::shared_ptr<DB::Context>, DB::QueryFlags, DB::QueryProcessingStage::Enum, std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>&, std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::ImplicitTransactionControlExecutor>) @ 0x000000010f0c0754
+17. DB::executeQuery(std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>, DB::WriteBuffer&, bool, std::shared_ptr<DB::Context>, std::function<void (DB::QueryResultDetails const&)>, DB::QueryFlags, std::optional<DB::FormatSettings> const&, std::function<void (DB::IOutputFormat&, String const&, std::shared_ptr<DB::Context const> const&, std::optional<DB::FormatSettings> const&)>, std::function<void ()>) @ 0x000000010f0c4fa0
+18. DB::HTTPHandler::processQuery(DB::HTTPServerRequest&, DB::HTMLForm&, DB::HTTPServerResponse&, DB::HTTPHandler::Output&, std::optional<DB::CurrentThread::QueryScope>&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f61830
+19. DB::HTTPHandler::handleRequest(DB::HTTPServerRequest&, DB::HTTPServerResponse&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f64f20
+20. DB::HTTPServerConnection::run() @ 0x000000011200a1ec
+21. Poco::Net::TCPServerConnection::start() @ 0x00000001159cd518
+22. Poco::Net::TCPServerDispatcher::run() @ 0x00000001159cdbf8
+23. Poco::PooledThread::run() @ 0x000000011596dfc8
+24. Poco::ThreadImpl::runnableEntry(void*) @ 0x000000011596b128
+25. _pthread_start @ 0x0000000186204c08
+26. thread_start @ 0x00000001861ffba8
+
+2025.10.29 13:13:04.255489 [ 7286898 ] {316cd869-847e-46d1-a88c-5e1f0932c0d3} <Error> DynamicQueryHandler: Code: 47. DB::Exception: Unknown expression identifier `action` in scope SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE (action IN ('BUY', 'SELL')) AND (confidence >= 0.75) AND (timestamp > (now() - toIntervalMinute(30))) ORDER BY timestamp DESC, confidence DESC LIMIT 5. (UNKNOWN_IDENTIFIER), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x00000001158fe3bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010a39b52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x0000000104f824d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x0000000104f820e8
+4. DB::Exception::Exception<char const*, String&, String, String, String>(int, FormatStringHelperImpl<std::type_identity<char const*>::type, std::type_identity<String&>::type, std::type_identity<String>::type, std::type_identity<String>::type, std::type_identity<String>::type>, char const*&&, String&, String&&, String&&, String&&) @ 0x000000010e6bec4c
+5. DB::QueryAnalyzer::resolveExpressionNode(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool, bool) @ 0x000000010e6a9a5c
+6. DB::QueryAnalyzer::resolveExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool) @ 0x000000010e6a7d6c
+7. DB::QueryAnalyzer::resolveProjectionExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&) @ 0x000000010e6c0174
+8. DB::QueryAnalyzer::resolveQuery(std::shared_ptr<DB::IQueryTreeNode> const&, DB::IdentifierResolveScope&) @ 0x000000010e6a39ac
+9. DB::QueryAnalyzer::resolve(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::IQueryTreeNode> const&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2cb0
+10. DB::QueryAnalysisPass::run(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2320
+11. DB::QueryTreePassManager::run(std::shared_ptr<DB::IQueryTreeNode>) @ 0x000000010e61077c
+12. DB::buildQueryTreeAndRunPasses(std::shared_ptr<DB::IAST> const&, DB::SelectQueryOptions const&, std::shared_ptr<DB::Context const> const&, std::shared_ptr<DB::IStorage> const&) @ 0x000000010ed6f85c
+13. DB::InterpreterSelectQueryAnalyzer::InterpreterSelectQueryAnalyzer(std::shared_ptr<DB::IAST> const&, std::shared_ptr<DB::Context const> const&, DB::SelectQueryOptions const&, std::vector<String, std::allocator<String>> const&) @ 0x000000010ed6e060
+14. std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> std::__function::__policy_invoker<std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>::__call_impl[abi:ne190107]<std::__function::__default_alloc_func<DB::registerInterpreterSelectQueryAnalyzer(DB::InterpreterFactory&)::$_0, std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>>(std::__function::__policy_storage const*, DB::InterpreterFactory::Arguments const&) @ 0x000000010ed712a4
+15. DB::InterpreterFactory::get(std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::Context>, DB::SelectQueryOptions const&) @ 0x000000010ed267ec
+16. DB::executeQueryImpl(char const*, char const*, std::shared_ptr<DB::Context>, DB::QueryFlags, DB::QueryProcessingStage::Enum, std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>&, std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::ImplicitTransactionControlExecutor>) @ 0x000000010f0c0754
+17. DB::executeQuery(std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>, DB::WriteBuffer&, bool, std::shared_ptr<DB::Context>, std::function<void (DB::QueryResultDetails const&)>, DB::QueryFlags, std::optional<DB::FormatSettings> const&, std::function<void (DB::IOutputFormat&, String const&, std::shared_ptr<DB::Context const> const&, std::optional<DB::FormatSettings> const&)>, std::function<void ()>) @ 0x000000010f0c4fa0
+18. DB::HTTPHandler::processQuery(DB::HTTPServerRequest&, DB::HTMLForm&, DB::HTTPServerResponse&, DB::HTTPHandler::Output&, std::optional<DB::CurrentThread::QueryScope>&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f61830
+19. DB::HTTPHandler::handleRequest(DB::HTTPServerRequest&, DB::HTTPServerResponse&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f64f20
+20. DB::HTTPServerConnection::run() @ 0x000000011200a1ec
+21. Poco::Net::TCPServerConnection::start() @ 0x00000001159cd518
+22. Poco::Net::TCPServerDispatcher::run() @ 0x00000001159cdbf8
+23. Poco::PooledThread::run() @ 0x000000011596dfc8
+24. Poco::ThreadImpl::runnableEntry(void*) @ 0x000000011596b128
+25. _pthread_start @ 0x0000000186204c08
+26. thread_start @ 0x00000001861ffba8
+ (version 25.9.4.58 (official build))
+2025.10.29 13:13:14.273221 [ 7286898 ] {220f97ab-57a2-405b-b260-590e87f0d806} <Error> executeQuery: Code: 47. DB::Exception: Unknown expression identifier `action` in scope SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE (action IN ('BUY', 'SELL')) AND (confidence >= 0.75) AND (timestamp > (now() - toIntervalMinute(30))) ORDER BY timestamp DESC, confidence DESC LIMIT 5. (UNKNOWN_IDENTIFIER) (version 25.9.4.58 (official build)) (from 127.0.0.1:60366) (in query:  SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE action IN ('BUY', 'SELL') AND confidence >= 0.75 AND timestamp > now() - INTERVAL 30 MINUTE ORDER BY timestamp DESC, confidence DESC LIMIT 5 FORMAT Native), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x00000001158fe3bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010a39b52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x0000000104f824d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x0000000104f820e8
+4. DB::Exception::Exception<char const*, String&, String, String, String>(int, FormatStringHelperImpl<std::type_identity<char const*>::type, std::type_identity<String&>::type, std::type_identity<String>::type, std::type_identity<String>::type, std::type_identity<String>::type>, char const*&&, String&, String&&, String&&, String&&) @ 0x000000010e6bec4c
+5. DB::QueryAnalyzer::resolveExpressionNode(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool, bool) @ 0x000000010e6a9a5c
+6. DB::QueryAnalyzer::resolveExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool) @ 0x000000010e6a7d6c
+7. DB::QueryAnalyzer::resolveProjectionExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&) @ 0x000000010e6c0174
+8. DB::QueryAnalyzer::resolveQuery(std::shared_ptr<DB::IQueryTreeNode> const&, DB::IdentifierResolveScope&) @ 0x000000010e6a39ac
+9. DB::QueryAnalyzer::resolve(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::IQueryTreeNode> const&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2cb0
+10. DB::QueryAnalysisPass::run(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2320
+11. DB::QueryTreePassManager::run(std::shared_ptr<DB::IQueryTreeNode>) @ 0x000000010e61077c
+12. DB::buildQueryTreeAndRunPasses(std::shared_ptr<DB::IAST> const&, DB::SelectQueryOptions const&, std::shared_ptr<DB::Context const> const&, std::shared_ptr<DB::IStorage> const&) @ 0x000000010ed6f85c
+13. DB::InterpreterSelectQueryAnalyzer::InterpreterSelectQueryAnalyzer(std::shared_ptr<DB::IAST> const&, std::shared_ptr<DB::Context const> const&, DB::SelectQueryOptions const&, std::vector<String, std::allocator<String>> const&) @ 0x000000010ed6e060
+14. std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> std::__function::__policy_invoker<std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>::__call_impl[abi:ne190107]<std::__function::__default_alloc_func<DB::registerInterpreterSelectQueryAnalyzer(DB::InterpreterFactory&)::$_0, std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>>(std::__function::__policy_storage const*, DB::InterpreterFactory::Arguments const&) @ 0x000000010ed712a4
+15. DB::InterpreterFactory::get(std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::Context>, DB::SelectQueryOptions const&) @ 0x000000010ed267ec
+16. DB::executeQueryImpl(char const*, char const*, std::shared_ptr<DB::Context>, DB::QueryFlags, DB::QueryProcessingStage::Enum, std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>&, std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::ImplicitTransactionControlExecutor>) @ 0x000000010f0c0754
+17. DB::executeQuery(std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>, DB::WriteBuffer&, bool, std::shared_ptr<DB::Context>, std::function<void (DB::QueryResultDetails const&)>, DB::QueryFlags, std::optional<DB::FormatSettings> const&, std::function<void (DB::IOutputFormat&, String const&, std::shared_ptr<DB::Context const> const&, std::optional<DB::FormatSettings> const&)>, std::function<void ()>) @ 0x000000010f0c4fa0
+18. DB::HTTPHandler::processQuery(DB::HTTPServerRequest&, DB::HTMLForm&, DB::HTTPServerResponse&, DB::HTTPHandler::Output&, std::optional<DB::CurrentThread::QueryScope>&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f61830
+19. DB::HTTPHandler::handleRequest(DB::HTTPServerRequest&, DB::HTTPServerResponse&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f64f20
+20. DB::HTTPServerConnection::run() @ 0x000000011200a1ec
+21. Poco::Net::TCPServerConnection::start() @ 0x00000001159cd518
+22. Poco::Net::TCPServerDispatcher::run() @ 0x00000001159cdbf8
+23. Poco::PooledThread::run() @ 0x000000011596dfc8
+24. Poco::ThreadImpl::runnableEntry(void*) @ 0x000000011596b128
+25. _pthread_start @ 0x0000000186204c08
+26. thread_start @ 0x00000001861ffba8
+
+2025.10.29 13:13:14.273443 [ 7286898 ] {220f97ab-57a2-405b-b260-590e87f0d806} <Error> DynamicQueryHandler: Code: 47. DB::Exception: Unknown expression identifier `action` in scope SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE (action IN ('BUY', 'SELL')) AND (confidence >= 0.75) AND (timestamp > (now() - toIntervalMinute(30))) ORDER BY timestamp DESC, confidence DESC LIMIT 5. (UNKNOWN_IDENTIFIER), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x00000001158fe3bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010a39b52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x0000000104f824d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x0000000104f820e8
+4. DB::Exception::Exception<char const*, String&, String, String, String>(int, FormatStringHelperImpl<std::type_identity<char const*>::type, std::type_identity<String&>::type, std::type_identity<String>::type, std::type_identity<String>::type, std::type_identity<String>::type>, char const*&&, String&, String&&, String&&, String&&) @ 0x000000010e6bec4c
+5. DB::QueryAnalyzer::resolveExpressionNode(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool, bool) @ 0x000000010e6a9a5c
+6. DB::QueryAnalyzer::resolveExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool) @ 0x000000010e6a7d6c
+7. DB::QueryAnalyzer::resolveProjectionExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&) @ 0x000000010e6c0174
+8. DB::QueryAnalyzer::resolveQuery(std::shared_ptr<DB::IQueryTreeNode> const&, DB::IdentifierResolveScope&) @ 0x000000010e6a39ac
+9. DB::QueryAnalyzer::resolve(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::IQueryTreeNode> const&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2cb0
+10. DB::QueryAnalysisPass::run(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2320
+11. DB::QueryTreePassManager::run(std::shared_ptr<DB::IQueryTreeNode>) @ 0x000000010e61077c
+12. DB::buildQueryTreeAndRunPasses(std::shared_ptr<DB::IAST> const&, DB::SelectQueryOptions const&, std::shared_ptr<DB::Context const> const&, std::shared_ptr<DB::IStorage> const&) @ 0x000000010ed6f85c
+13. DB::InterpreterSelectQueryAnalyzer::InterpreterSelectQueryAnalyzer(std::shared_ptr<DB::IAST> const&, std::shared_ptr<DB::Context const> const&, DB::SelectQueryOptions const&, std::vector<String, std::allocator<String>> const&) @ 0x000000010ed6e060
+14. std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> std::__function::__policy_invoker<std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>::__call_impl[abi:ne190107]<std::__function::__default_alloc_func<DB::registerInterpreterSelectQueryAnalyzer(DB::InterpreterFactory&)::$_0, std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>>(std::__function::__policy_storage const*, DB::InterpreterFactory::Arguments const&) @ 0x000000010ed712a4
+15. DB::InterpreterFactory::get(std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::Context>, DB::SelectQueryOptions const&) @ 0x000000010ed267ec
+16. DB::executeQueryImpl(char const*, char const*, std::shared_ptr<DB::Context>, DB::QueryFlags, DB::QueryProcessingStage::Enum, std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>&, std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::ImplicitTransactionControlExecutor>) @ 0x000000010f0c0754
+17. DB::executeQuery(std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>, DB::WriteBuffer&, bool, std::shared_ptr<DB::Context>, std::function<void (DB::QueryResultDetails const&)>, DB::QueryFlags, std::optional<DB::FormatSettings> const&, std::function<void (DB::IOutputFormat&, String const&, std::shared_ptr<DB::Context const> const&, std::optional<DB::FormatSettings> const&)>, std::function<void ()>) @ 0x000000010f0c4fa0
+18. DB::HTTPHandler::processQuery(DB::HTTPServerRequest&, DB::HTMLForm&, DB::HTTPServerResponse&, DB::HTTPHandler::Output&, std::optional<DB::CurrentThread::QueryScope>&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f61830
+19. DB::HTTPHandler::handleRequest(DB::HTTPServerRequest&, DB::HTTPServerResponse&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f64f20
+20. DB::HTTPServerConnection::run() @ 0x000000011200a1ec
+21. Poco::Net::TCPServerConnection::start() @ 0x00000001159cd518
+22. Poco::Net::TCPServerDispatcher::run() @ 0x00000001159cdbf8
+23. Poco::PooledThread::run() @ 0x000000011596dfc8
+24. Poco::ThreadImpl::runnableEntry(void*) @ 0x000000011596b128
+25. _pthread_start @ 0x0000000186204c08
+26. thread_start @ 0x00000001861ffba8
+ (version 25.9.4.58 (official build))
+2025.10.29 13:13:24.283593 [ 7286898 ] {79a47501-9e1b-461a-b452-bae706d08208} <Error> executeQuery: Code: 47. DB::Exception: Unknown expression identifier `action` in scope SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE (action IN ('BUY', 'SELL')) AND (confidence >= 0.75) AND (timestamp > (now() - toIntervalMinute(30))) ORDER BY timestamp DESC, confidence DESC LIMIT 5. (UNKNOWN_IDENTIFIER) (version 25.9.4.58 (official build)) (from 127.0.0.1:60366) (in query:  SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE action IN ('BUY', 'SELL') AND confidence >= 0.75 AND timestamp > now() - INTERVAL 30 MINUTE ORDER BY timestamp DESC, confidence DESC LIMIT 5 FORMAT Native), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x00000001158fe3bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010a39b52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x0000000104f824d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x0000000104f820e8
+4. DB::Exception::Exception<char const*, String&, String, String, String>(int, FormatStringHelperImpl<std::type_identity<char const*>::type, std::type_identity<String&>::type, std::type_identity<String>::type, std::type_identity<String>::type, std::type_identity<String>::type>, char const*&&, String&, String&&, String&&, String&&) @ 0x000000010e6bec4c
+5. DB::QueryAnalyzer::resolveExpressionNode(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool, bool) @ 0x000000010e6a9a5c
+6. DB::QueryAnalyzer::resolveExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool) @ 0x000000010e6a7d6c
+7. DB::QueryAnalyzer::resolveProjectionExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&) @ 0x000000010e6c0174
+8. DB::QueryAnalyzer::resolveQuery(std::shared_ptr<DB::IQueryTreeNode> const&, DB::IdentifierResolveScope&) @ 0x000000010e6a39ac
+9. DB::QueryAnalyzer::resolve(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::IQueryTreeNode> const&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2cb0
+10. DB::QueryAnalysisPass::run(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2320
+11. DB::QueryTreePassManager::run(std::shared_ptr<DB::IQueryTreeNode>) @ 0x000000010e61077c
+12. DB::buildQueryTreeAndRunPasses(std::shared_ptr<DB::IAST> const&, DB::SelectQueryOptions const&, std::shared_ptr<DB::Context const> const&, std::shared_ptr<DB::IStorage> const&) @ 0x000000010ed6f85c
+13. DB::InterpreterSelectQueryAnalyzer::InterpreterSelectQueryAnalyzer(std::shared_ptr<DB::IAST> const&, std::shared_ptr<DB::Context const> const&, DB::SelectQueryOptions const&, std::vector<String, std::allocator<String>> const&) @ 0x000000010ed6e060
+14. std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> std::__function::__policy_invoker<std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>::__call_impl[abi:ne190107]<std::__function::__default_alloc_func<DB::registerInterpreterSelectQueryAnalyzer(DB::InterpreterFactory&)::$_0, std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>>(std::__function::__policy_storage const*, DB::InterpreterFactory::Arguments const&) @ 0x000000010ed712a4
+15. DB::InterpreterFactory::get(std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::Context>, DB::SelectQueryOptions const&) @ 0x000000010ed267ec
+16. DB::executeQueryImpl(char const*, char const*, std::shared_ptr<DB::Context>, DB::QueryFlags, DB::QueryProcessingStage::Enum, std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>&, std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::ImplicitTransactionControlExecutor>) @ 0x000000010f0c0754
+17. DB::executeQuery(std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>, DB::WriteBuffer&, bool, std::shared_ptr<DB::Context>, std::function<void (DB::QueryResultDetails const&)>, DB::QueryFlags, std::optional<DB::FormatSettings> const&, std::function<void (DB::IOutputFormat&, String const&, std::shared_ptr<DB::Context const> const&, std::optional<DB::FormatSettings> const&)>, std::function<void ()>) @ 0x000000010f0c4fa0
+18. DB::HTTPHandler::processQuery(DB::HTTPServerRequest&, DB::HTMLForm&, DB::HTTPServerResponse&, DB::HTTPHandler::Output&, std::optional<DB::CurrentThread::QueryScope>&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f61830
+19. DB::HTTPHandler::handleRequest(DB::HTTPServerRequest&, DB::HTTPServerResponse&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f64f20
+20. DB::HTTPServerConnection::run() @ 0x000000011200a1ec
+21. Poco::Net::TCPServerConnection::start() @ 0x00000001159cd518
+22. Poco::Net::TCPServerDispatcher::run() @ 0x00000001159cdbf8
+23. Poco::PooledThread::run() @ 0x000000011596dfc8
+24. Poco::ThreadImpl::runnableEntry(void*) @ 0x000000011596b128
+25. _pthread_start @ 0x0000000186204c08
+26. thread_start @ 0x00000001861ffba8
+
+2025.10.29 13:13:24.283796 [ 7286898 ] {79a47501-9e1b-461a-b452-bae706d08208} <Error> DynamicQueryHandler: Code: 47. DB::Exception: Unknown expression identifier `action` in scope SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE (action IN ('BUY', 'SELL')) AND (confidence >= 0.75) AND (timestamp > (now() - toIntervalMinute(30))) ORDER BY timestamp DESC, confidence DESC LIMIT 5. (UNKNOWN_IDENTIFIER), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x00000001158fe3bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010a39b52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x0000000104f824d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x0000000104f820e8
+4. DB::Exception::Exception<char const*, String&, String, String, String>(int, FormatStringHelperImpl<std::type_identity<char const*>::type, std::type_identity<String&>::type, std::type_identity<String>::type, std::type_identity<String>::type, std::type_identity<String>::type>, char const*&&, String&, String&&, String&&, String&&) @ 0x000000010e6bec4c
+5. DB::QueryAnalyzer::resolveExpressionNode(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool, bool) @ 0x000000010e6a9a5c
+6. DB::QueryAnalyzer::resolveExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool) @ 0x000000010e6a7d6c
+7. DB::QueryAnalyzer::resolveProjectionExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&) @ 0x000000010e6c0174
+8. DB::QueryAnalyzer::resolveQuery(std::shared_ptr<DB::IQueryTreeNode> const&, DB::IdentifierResolveScope&) @ 0x000000010e6a39ac
+9. DB::QueryAnalyzer::resolve(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::IQueryTreeNode> const&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2cb0
+10. DB::QueryAnalysisPass::run(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2320
+11. DB::QueryTreePassManager::run(std::shared_ptr<DB::IQueryTreeNode>) @ 0x000000010e61077c
+12. DB::buildQueryTreeAndRunPasses(std::shared_ptr<DB::IAST> const&, DB::SelectQueryOptions const&, std::shared_ptr<DB::Context const> const&, std::shared_ptr<DB::IStorage> const&) @ 0x000000010ed6f85c
+13. DB::InterpreterSelectQueryAnalyzer::InterpreterSelectQueryAnalyzer(std::shared_ptr<DB::IAST> const&, std::shared_ptr<DB::Context const> const&, DB::SelectQueryOptions const&, std::vector<String, std::allocator<String>> const&) @ 0x000000010ed6e060
+14. std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> std::__function::__policy_invoker<std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>::__call_impl[abi:ne190107]<std::__function::__default_alloc_func<DB::registerInterpreterSelectQueryAnalyzer(DB::InterpreterFactory&)::$_0, std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>>(std::__function::__policy_storage const*, DB::InterpreterFactory::Arguments const&) @ 0x000000010ed712a4
+15. DB::InterpreterFactory::get(std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::Context>, DB::SelectQueryOptions const&) @ 0x000000010ed267ec
+16. DB::executeQueryImpl(char const*, char const*, std::shared_ptr<DB::Context>, DB::QueryFlags, DB::QueryProcessingStage::Enum, std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>&, std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::ImplicitTransactionControlExecutor>) @ 0x000000010f0c0754
+17. DB::executeQuery(std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>, DB::WriteBuffer&, bool, std::shared_ptr<DB::Context>, std::function<void (DB::QueryResultDetails const&)>, DB::QueryFlags, std::optional<DB::FormatSettings> const&, std::function<void (DB::IOutputFormat&, String const&, std::shared_ptr<DB::Context const> const&, std::optional<DB::FormatSettings> const&)>, std::function<void ()>) @ 0x000000010f0c4fa0
+18. DB::HTTPHandler::processQuery(DB::HTTPServerRequest&, DB::HTMLForm&, DB::HTTPServerResponse&, DB::HTTPHandler::Output&, std::optional<DB::CurrentThread::QueryScope>&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f61830
+19. DB::HTTPHandler::handleRequest(DB::HTTPServerRequest&, DB::HTTPServerResponse&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f64f20
+20. DB::HTTPServerConnection::run() @ 0x000000011200a1ec
+21. Poco::Net::TCPServerConnection::start() @ 0x00000001159cd518
+22. Poco::Net::TCPServerDispatcher::run() @ 0x00000001159cdbf8
+23. Poco::PooledThread::run() @ 0x000000011596dfc8
+24. Poco::ThreadImpl::runnableEntry(void*) @ 0x000000011596b128
+25. _pthread_start @ 0x0000000186204c08
+26. thread_start @ 0x00000001861ffba8
+ (version 25.9.4.58 (official build))
+2025.10.29 13:13:34.474494 [ 7286898 ] {1ad88bfb-e9a8-4c98-a70b-58bfa4e75cda} <Error> executeQuery: Code: 47. DB::Exception: Unknown expression identifier `action` in scope SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE (action IN ('BUY', 'SELL')) AND (confidence >= 0.75) AND (timestamp > (now() - toIntervalMinute(30))) ORDER BY timestamp DESC, confidence DESC LIMIT 5. (UNKNOWN_IDENTIFIER) (version 25.9.4.58 (official build)) (from 127.0.0.1:60366) (in query:  SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE action IN ('BUY', 'SELL') AND confidence >= 0.75 AND timestamp > now() - INTERVAL 30 MINUTE ORDER BY timestamp DESC, confidence DESC LIMIT 5 FORMAT Native), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x00000001158fe3bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010a39b52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x0000000104f824d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x0000000104f820e8
+4. DB::Exception::Exception<char const*, String&, String, String, String>(int, FormatStringHelperImpl<std::type_identity<char const*>::type, std::type_identity<String&>::type, std::type_identity<String>::type, std::type_identity<String>::type, std::type_identity<String>::type>, char const*&&, String&, String&&, String&&, String&&) @ 0x000000010e6bec4c
+5. DB::QueryAnalyzer::resolveExpressionNode(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool, bool) @ 0x000000010e6a9a5c
+6. DB::QueryAnalyzer::resolveExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool) @ 0x000000010e6a7d6c
+7. DB::QueryAnalyzer::resolveProjectionExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&) @ 0x000000010e6c0174
+8. DB::QueryAnalyzer::resolveQuery(std::shared_ptr<DB::IQueryTreeNode> const&, DB::IdentifierResolveScope&) @ 0x000000010e6a39ac
+9. DB::QueryAnalyzer::resolve(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::IQueryTreeNode> const&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2cb0
+10. DB::QueryAnalysisPass::run(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2320
+11. DB::QueryTreePassManager::run(std::shared_ptr<DB::IQueryTreeNode>) @ 0x000000010e61077c
+12. DB::buildQueryTreeAndRunPasses(std::shared_ptr<DB::IAST> const&, DB::SelectQueryOptions const&, std::shared_ptr<DB::Context const> const&, std::shared_ptr<DB::IStorage> const&) @ 0x000000010ed6f85c
+13. DB::InterpreterSelectQueryAnalyzer::InterpreterSelectQueryAnalyzer(std::shared_ptr<DB::IAST> const&, std::shared_ptr<DB::Context const> const&, DB::SelectQueryOptions const&, std::vector<String, std::allocator<String>> const&) @ 0x000000010ed6e060
+14. std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> std::__function::__policy_invoker<std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>::__call_impl[abi:ne190107]<std::__function::__default_alloc_func<DB::registerInterpreterSelectQueryAnalyzer(DB::InterpreterFactory&)::$_0, std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>>(std::__function::__policy_storage const*, DB::InterpreterFactory::Arguments const&) @ 0x000000010ed712a4
+15. DB::InterpreterFactory::get(std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::Context>, DB::SelectQueryOptions const&) @ 0x000000010ed267ec
+16. DB::executeQueryImpl(char const*, char const*, std::shared_ptr<DB::Context>, DB::QueryFlags, DB::QueryProcessingStage::Enum, std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>&, std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::ImplicitTransactionControlExecutor>) @ 0x000000010f0c0754
+17. DB::executeQuery(std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>, DB::WriteBuffer&, bool, std::shared_ptr<DB::Context>, std::function<void (DB::QueryResultDetails const&)>, DB::QueryFlags, std::optional<DB::FormatSettings> const&, std::function<void (DB::IOutputFormat&, String const&, std::shared_ptr<DB::Context const> const&, std::optional<DB::FormatSettings> const&)>, std::function<void ()>) @ 0x000000010f0c4fa0
+18. DB::HTTPHandler::processQuery(DB::HTTPServerRequest&, DB::HTMLForm&, DB::HTTPServerResponse&, DB::HTTPHandler::Output&, std::optional<DB::CurrentThread::QueryScope>&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f61830
+19. DB::HTTPHandler::handleRequest(DB::HTTPServerRequest&, DB::HTTPServerResponse&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f64f20
+20. DB::HTTPServerConnection::run() @ 0x000000011200a1ec
+21. Poco::Net::TCPServerConnection::start() @ 0x00000001159cd518
+22. Poco::Net::TCPServerDispatcher::run() @ 0x00000001159cdbf8
+23. Poco::PooledThread::run() @ 0x000000011596dfc8
+24. Poco::ThreadImpl::runnableEntry(void*) @ 0x000000011596b128
+25. _pthread_start @ 0x0000000186204c08
+26. thread_start @ 0x00000001861ffba8
+
+2025.10.29 13:13:34.496548 [ 7286898 ] {1ad88bfb-e9a8-4c98-a70b-58bfa4e75cda} <Error> DynamicQueryHandler: Code: 47. DB::Exception: Unknown expression identifier `action` in scope SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE (action IN ('BUY', 'SELL')) AND (confidence >= 0.75) AND (timestamp > (now() - toIntervalMinute(30))) ORDER BY timestamp DESC, confidence DESC LIMIT 5. (UNKNOWN_IDENTIFIER), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x00000001158fe3bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010a39b52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x0000000104f824d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x0000000104f820e8
+4. DB::Exception::Exception<char const*, String&, String, String, String>(int, FormatStringHelperImpl<std::type_identity<char const*>::type, std::type_identity<String&>::type, std::type_identity<String>::type, std::type_identity<String>::type, std::type_identity<String>::type>, char const*&&, String&, String&&, String&&, String&&) @ 0x000000010e6bec4c
+5. DB::QueryAnalyzer::resolveExpressionNode(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool, bool) @ 0x000000010e6a9a5c
+6. DB::QueryAnalyzer::resolveExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool) @ 0x000000010e6a7d6c
+7. DB::QueryAnalyzer::resolveProjectionExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&) @ 0x000000010e6c0174
+8. DB::QueryAnalyzer::resolveQuery(std::shared_ptr<DB::IQueryTreeNode> const&, DB::IdentifierResolveScope&) @ 0x000000010e6a39ac
+9. DB::QueryAnalyzer::resolve(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::IQueryTreeNode> const&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2cb0
+10. DB::QueryAnalysisPass::run(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2320
+11. DB::QueryTreePassManager::run(std::shared_ptr<DB::IQueryTreeNode>) @ 0x000000010e61077c
+12. DB::buildQueryTreeAndRunPasses(std::shared_ptr<DB::IAST> const&, DB::SelectQueryOptions const&, std::shared_ptr<DB::Context const> const&, std::shared_ptr<DB::IStorage> const&) @ 0x000000010ed6f85c
+13. DB::InterpreterSelectQueryAnalyzer::InterpreterSelectQueryAnalyzer(std::shared_ptr<DB::IAST> const&, std::shared_ptr<DB::Context const> const&, DB::SelectQueryOptions const&, std::vector<String, std::allocator<String>> const&) @ 0x000000010ed6e060
+14. std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> std::__function::__policy_invoker<std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>::__call_impl[abi:ne190107]<std::__function::__default_alloc_func<DB::registerInterpreterSelectQueryAnalyzer(DB::InterpreterFactory&)::$_0, std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>>(std::__function::__policy_storage const*, DB::InterpreterFactory::Arguments const&) @ 0x000000010ed712a4
+15. DB::InterpreterFactory::get(std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::Context>, DB::SelectQueryOptions const&) @ 0x000000010ed267ec
+16. DB::executeQueryImpl(char const*, char const*, std::shared_ptr<DB::Context>, DB::QueryFlags, DB::QueryProcessingStage::Enum, std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>&, std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::ImplicitTransactionControlExecutor>) @ 0x000000010f0c0754
+17. DB::executeQuery(std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>, DB::WriteBuffer&, bool, std::shared_ptr<DB::Context>, std::function<void (DB::QueryResultDetails const&)>, DB::QueryFlags, std::optional<DB::FormatSettings> const&, std::function<void (DB::IOutputFormat&, String const&, std::shared_ptr<DB::Context const> const&, std::optional<DB::FormatSettings> const&)>, std::function<void ()>) @ 0x000000010f0c4fa0
+18. DB::HTTPHandler::processQuery(DB::HTTPServerRequest&, DB::HTMLForm&, DB::HTTPServerResponse&, DB::HTTPHandler::Output&, std::optional<DB::CurrentThread::QueryScope>&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f61830
+19. DB::HTTPHandler::handleRequest(DB::HTTPServerRequest&, DB::HTTPServerResponse&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f64f20
+20. DB::HTTPServerConnection::run() @ 0x000000011200a1ec
+21. Poco::Net::TCPServerConnection::start() @ 0x00000001159cd518
+22. Poco::Net::TCPServerDispatcher::run() @ 0x00000001159cdbf8
+23. Poco::PooledThread::run() @ 0x000000011596dfc8
+24. Poco::ThreadImpl::runnableEntry(void*) @ 0x000000011596b128
+25. _pthread_start @ 0x0000000186204c08
+26. thread_start @ 0x00000001861ffba8
+ (version 25.9.4.58 (official build))
+2025.10.29 13:13:44.544351 [ 7286898 ] {4cde3933-4dd8-434e-8f54-1f695757660d} <Error> executeQuery: Code: 47. DB::Exception: Unknown expression identifier `action` in scope SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE (action IN ('BUY', 'SELL')) AND (confidence >= 0.75) AND (timestamp > (now() - toIntervalMinute(30))) ORDER BY timestamp DESC, confidence DESC LIMIT 5. (UNKNOWN_IDENTIFIER) (version 25.9.4.58 (official build)) (from 127.0.0.1:60366) (in query:  SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE action IN ('BUY', 'SELL') AND confidence >= 0.75 AND timestamp > now() - INTERVAL 30 MINUTE ORDER BY timestamp DESC, confidence DESC LIMIT 5 FORMAT Native), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x00000001158fe3bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010a39b52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x0000000104f824d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x0000000104f820e8
+4. DB::Exception::Exception<char const*, String&, String, String, String>(int, FormatStringHelperImpl<std::type_identity<char const*>::type, std::type_identity<String&>::type, std::type_identity<String>::type, std::type_identity<String>::type, std::type_identity<String>::type>, char const*&&, String&, String&&, String&&, String&&) @ 0x000000010e6bec4c
+5. DB::QueryAnalyzer::resolveExpressionNode(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool, bool) @ 0x000000010e6a9a5c
+6. DB::QueryAnalyzer::resolveExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool) @ 0x000000010e6a7d6c
+7. DB::QueryAnalyzer::resolveProjectionExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&) @ 0x000000010e6c0174
+8. DB::QueryAnalyzer::resolveQuery(std::shared_ptr<DB::IQueryTreeNode> const&, DB::IdentifierResolveScope&) @ 0x000000010e6a39ac
+9. DB::QueryAnalyzer::resolve(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::IQueryTreeNode> const&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2cb0
+10. DB::QueryAnalysisPass::run(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2320
+11. DB::QueryTreePassManager::run(std::shared_ptr<DB::IQueryTreeNode>) @ 0x000000010e61077c
+12. DB::buildQueryTreeAndRunPasses(std::shared_ptr<DB::IAST> const&, DB::SelectQueryOptions const&, std::shared_ptr<DB::Context const> const&, std::shared_ptr<DB::IStorage> const&) @ 0x000000010ed6f85c
+13. DB::InterpreterSelectQueryAnalyzer::InterpreterSelectQueryAnalyzer(std::shared_ptr<DB::IAST> const&, std::shared_ptr<DB::Context const> const&, DB::SelectQueryOptions const&, std::vector<String, std::allocator<String>> const&) @ 0x000000010ed6e060
+14. std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> std::__function::__policy_invoker<std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>::__call_impl[abi:ne190107]<std::__function::__default_alloc_func<DB::registerInterpreterSelectQueryAnalyzer(DB::InterpreterFactory&)::$_0, std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>>(std::__function::__policy_storage const*, DB::InterpreterFactory::Arguments const&) @ 0x000000010ed712a4
+15. DB::InterpreterFactory::get(std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::Context>, DB::SelectQueryOptions const&) @ 0x000000010ed267ec
+16. DB::executeQueryImpl(char const*, char const*, std::shared_ptr<DB::Context>, DB::QueryFlags, DB::QueryProcessingStage::Enum, std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>&, std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::ImplicitTransactionControlExecutor>) @ 0x000000010f0c0754
+17. DB::executeQuery(std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>, DB::WriteBuffer&, bool, std::shared_ptr<DB::Context>, std::function<void (DB::QueryResultDetails const&)>, DB::QueryFlags, std::optional<DB::FormatSettings> const&, std::function<void (DB::IOutputFormat&, String const&, std::shared_ptr<DB::Context const> const&, std::optional<DB::FormatSettings> const&)>, std::function<void ()>) @ 0x000000010f0c4fa0
+18. DB::HTTPHandler::processQuery(DB::HTTPServerRequest&, DB::HTMLForm&, DB::HTTPServerResponse&, DB::HTTPHandler::Output&, std::optional<DB::CurrentThread::QueryScope>&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f61830
+19. DB::HTTPHandler::handleRequest(DB::HTTPServerRequest&, DB::HTTPServerResponse&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f64f20
+20. DB::HTTPServerConnection::run() @ 0x000000011200a1ec
+21. Poco::Net::TCPServerConnection::start() @ 0x00000001159cd518
+22. Poco::Net::TCPServerDispatcher::run() @ 0x00000001159cdbf8
+23. Poco::PooledThread::run() @ 0x000000011596dfc8
+24. Poco::ThreadImpl::runnableEntry(void*) @ 0x000000011596b128
+25. _pthread_start @ 0x0000000186204c08
+26. thread_start @ 0x00000001861ffba8
+
+2025.10.29 13:13:44.544752 [ 7286898 ] {4cde3933-4dd8-434e-8f54-1f695757660d} <Error> DynamicQueryHandler: Code: 47. DB::Exception: Unknown expression identifier `action` in scope SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE (action IN ('BUY', 'SELL')) AND (confidence >= 0.75) AND (timestamp > (now() - toIntervalMinute(30))) ORDER BY timestamp DESC, confidence DESC LIMIT 5. (UNKNOWN_IDENTIFIER), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x00000001158fe3bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010a39b52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x0000000104f824d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x0000000104f820e8
+4. DB::Exception::Exception<char const*, String&, String, String, String>(int, FormatStringHelperImpl<std::type_identity<char const*>::type, std::type_identity<String&>::type, std::type_identity<String>::type, std::type_identity<String>::type, std::type_identity<String>::type>, char const*&&, String&, String&&, String&&, String&&) @ 0x000000010e6bec4c
+5. DB::QueryAnalyzer::resolveExpressionNode(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool, bool) @ 0x000000010e6a9a5c
+6. DB::QueryAnalyzer::resolveExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool) @ 0x000000010e6a7d6c
+7. DB::QueryAnalyzer::resolveProjectionExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&) @ 0x000000010e6c0174
+8. DB::QueryAnalyzer::resolveQuery(std::shared_ptr<DB::IQueryTreeNode> const&, DB::IdentifierResolveScope&) @ 0x000000010e6a39ac
+9. DB::QueryAnalyzer::resolve(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::IQueryTreeNode> const&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2cb0
+10. DB::QueryAnalysisPass::run(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2320
+11. DB::QueryTreePassManager::run(std::shared_ptr<DB::IQueryTreeNode>) @ 0x000000010e61077c
+12. DB::buildQueryTreeAndRunPasses(std::shared_ptr<DB::IAST> const&, DB::SelectQueryOptions const&, std::shared_ptr<DB::Context const> const&, std::shared_ptr<DB::IStorage> const&) @ 0x000000010ed6f85c
+13. DB::InterpreterSelectQueryAnalyzer::InterpreterSelectQueryAnalyzer(std::shared_ptr<DB::IAST> const&, std::shared_ptr<DB::Context const> const&, DB::SelectQueryOptions const&, std::vector<String, std::allocator<String>> const&) @ 0x000000010ed6e060
+14. std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> std::__function::__policy_invoker<std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>::__call_impl[abi:ne190107]<std::__function::__default_alloc_func<DB::registerInterpreterSelectQueryAnalyzer(DB::InterpreterFactory&)::$_0, std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>>(std::__function::__policy_storage const*, DB::InterpreterFactory::Arguments const&) @ 0x000000010ed712a4
+15. DB::InterpreterFactory::get(std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::Context>, DB::SelectQueryOptions const&) @ 0x000000010ed267ec
+16. DB::executeQueryImpl(char const*, char const*, std::shared_ptr<DB::Context>, DB::QueryFlags, DB::QueryProcessingStage::Enum, std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>&, std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::ImplicitTransactionControlExecutor>) @ 0x000000010f0c0754
+17. DB::executeQuery(std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>, DB::WriteBuffer&, bool, std::shared_ptr<DB::Context>, std::function<void (DB::QueryResultDetails const&)>, DB::QueryFlags, std::optional<DB::FormatSettings> const&, std::function<void (DB::IOutputFormat&, String const&, std::shared_ptr<DB::Context const> const&, std::optional<DB::FormatSettings> const&)>, std::function<void ()>) @ 0x000000010f0c4fa0
+18. DB::HTTPHandler::processQuery(DB::HTTPServerRequest&, DB::HTMLForm&, DB::HTTPServerResponse&, DB::HTTPHandler::Output&, std::optional<DB::CurrentThread::QueryScope>&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f61830
+19. DB::HTTPHandler::handleRequest(DB::HTTPServerRequest&, DB::HTTPServerResponse&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f64f20
+20. DB::HTTPServerConnection::run() @ 0x000000011200a1ec
+21. Poco::Net::TCPServerConnection::start() @ 0x00000001159cd518
+22. Poco::Net::TCPServerDispatcher::run() @ 0x00000001159cdbf8
+23. Poco::PooledThread::run() @ 0x000000011596dfc8
+24. Poco::ThreadImpl::runnableEntry(void*) @ 0x000000011596b128
+25. _pthread_start @ 0x0000000186204c08
+26. thread_start @ 0x00000001861ffba8
+ (version 25.9.4.58 (official build))
+2025.10.29 13:13:54.556023 [ 7286898 ] {a32c025f-97f6-49e5-ad79-858019da3db8} <Error> executeQuery: Code: 47. DB::Exception: Unknown expression identifier `action` in scope SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE (action IN ('BUY', 'SELL')) AND (confidence >= 0.75) AND (timestamp > (now() - toIntervalMinute(30))) ORDER BY timestamp DESC, confidence DESC LIMIT 5. (UNKNOWN_IDENTIFIER) (version 25.9.4.58 (official build)) (from 127.0.0.1:60366) (in query:  SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE action IN ('BUY', 'SELL') AND confidence >= 0.75 AND timestamp > now() - INTERVAL 30 MINUTE ORDER BY timestamp DESC, confidence DESC LIMIT 5 FORMAT Native), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x00000001158fe3bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010a39b52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x0000000104f824d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x0000000104f820e8
+4. DB::Exception::Exception<char const*, String&, String, String, String>(int, FormatStringHelperImpl<std::type_identity<char const*>::type, std::type_identity<String&>::type, std::type_identity<String>::type, std::type_identity<String>::type, std::type_identity<String>::type>, char const*&&, String&, String&&, String&&, String&&) @ 0x000000010e6bec4c
+5. DB::QueryAnalyzer::resolveExpressionNode(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool, bool) @ 0x000000010e6a9a5c
+6. DB::QueryAnalyzer::resolveExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool) @ 0x000000010e6a7d6c
+7. DB::QueryAnalyzer::resolveProjectionExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&) @ 0x000000010e6c0174
+8. DB::QueryAnalyzer::resolveQuery(std::shared_ptr<DB::IQueryTreeNode> const&, DB::IdentifierResolveScope&) @ 0x000000010e6a39ac
+9. DB::QueryAnalyzer::resolve(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::IQueryTreeNode> const&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2cb0
+10. DB::QueryAnalysisPass::run(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2320
+11. DB::QueryTreePassManager::run(std::shared_ptr<DB::IQueryTreeNode>) @ 0x000000010e61077c
+12. DB::buildQueryTreeAndRunPasses(std::shared_ptr<DB::IAST> const&, DB::SelectQueryOptions const&, std::shared_ptr<DB::Context const> const&, std::shared_ptr<DB::IStorage> const&) @ 0x000000010ed6f85c
+13. DB::InterpreterSelectQueryAnalyzer::InterpreterSelectQueryAnalyzer(std::shared_ptr<DB::IAST> const&, std::shared_ptr<DB::Context const> const&, DB::SelectQueryOptions const&, std::vector<String, std::allocator<String>> const&) @ 0x000000010ed6e060
+14. std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> std::__function::__policy_invoker<std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>::__call_impl[abi:ne190107]<std::__function::__default_alloc_func<DB::registerInterpreterSelectQueryAnalyzer(DB::InterpreterFactory&)::$_0, std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>>(std::__function::__policy_storage const*, DB::InterpreterFactory::Arguments const&) @ 0x000000010ed712a4
+15. DB::InterpreterFactory::get(std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::Context>, DB::SelectQueryOptions const&) @ 0x000000010ed267ec
+16. DB::executeQueryImpl(char const*, char const*, std::shared_ptr<DB::Context>, DB::QueryFlags, DB::QueryProcessingStage::Enum, std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>&, std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::ImplicitTransactionControlExecutor>) @ 0x000000010f0c0754
+17. DB::executeQuery(std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>, DB::WriteBuffer&, bool, std::shared_ptr<DB::Context>, std::function<void (DB::QueryResultDetails const&)>, DB::QueryFlags, std::optional<DB::FormatSettings> const&, std::function<void (DB::IOutputFormat&, String const&, std::shared_ptr<DB::Context const> const&, std::optional<DB::FormatSettings> const&)>, std::function<void ()>) @ 0x000000010f0c4fa0
+18. DB::HTTPHandler::processQuery(DB::HTTPServerRequest&, DB::HTMLForm&, DB::HTTPServerResponse&, DB::HTTPHandler::Output&, std::optional<DB::CurrentThread::QueryScope>&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f61830
+19. DB::HTTPHandler::handleRequest(DB::HTTPServerRequest&, DB::HTTPServerResponse&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f64f20
+20. DB::HTTPServerConnection::run() @ 0x000000011200a1ec
+21. Poco::Net::TCPServerConnection::start() @ 0x00000001159cd518
+22. Poco::Net::TCPServerDispatcher::run() @ 0x00000001159cdbf8
+23. Poco::PooledThread::run() @ 0x000000011596dfc8
+24. Poco::ThreadImpl::runnableEntry(void*) @ 0x000000011596b128
+25. _pthread_start @ 0x0000000186204c08
+26. thread_start @ 0x00000001861ffba8
+
+2025.10.29 13:13:54.556325 [ 7286898 ] {a32c025f-97f6-49e5-ad79-858019da3db8} <Error> DynamicQueryHandler: Code: 47. DB::Exception: Unknown expression identifier `action` in scope SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE (action IN ('BUY', 'SELL')) AND (confidence >= 0.75) AND (timestamp > (now() - toIntervalMinute(30))) ORDER BY timestamp DESC, confidence DESC LIMIT 5. (UNKNOWN_IDENTIFIER), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x00000001158fe3bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010a39b52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x0000000104f824d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x0000000104f820e8
+4. DB::Exception::Exception<char const*, String&, String, String, String>(int, FormatStringHelperImpl<std::type_identity<char const*>::type, std::type_identity<String&>::type, std::type_identity<String>::type, std::type_identity<String>::type, std::type_identity<String>::type>, char const*&&, String&, String&&, String&&, String&&) @ 0x000000010e6bec4c
+5. DB::QueryAnalyzer::resolveExpressionNode(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool, bool) @ 0x000000010e6a9a5c
+6. DB::QueryAnalyzer::resolveExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool) @ 0x000000010e6a7d6c
+7. DB::QueryAnalyzer::resolveProjectionExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&) @ 0x000000010e6c0174
+8. DB::QueryAnalyzer::resolveQuery(std::shared_ptr<DB::IQueryTreeNode> const&, DB::IdentifierResolveScope&) @ 0x000000010e6a39ac
+9. DB::QueryAnalyzer::resolve(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::IQueryTreeNode> const&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2cb0
+10. DB::QueryAnalysisPass::run(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2320
+11. DB::QueryTreePassManager::run(std::shared_ptr<DB::IQueryTreeNode>) @ 0x000000010e61077c
+12. DB::buildQueryTreeAndRunPasses(std::shared_ptr<DB::IAST> const&, DB::SelectQueryOptions const&, std::shared_ptr<DB::Context const> const&, std::shared_ptr<DB::IStorage> const&) @ 0x000000010ed6f85c
+13. DB::InterpreterSelectQueryAnalyzer::InterpreterSelectQueryAnalyzer(std::shared_ptr<DB::IAST> const&, std::shared_ptr<DB::Context const> const&, DB::SelectQueryOptions const&, std::vector<String, std::allocator<String>> const&) @ 0x000000010ed6e060
+14. std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> std::__function::__policy_invoker<std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>::__call_impl[abi:ne190107]<std::__function::__default_alloc_func<DB::registerInterpreterSelectQueryAnalyzer(DB::InterpreterFactory&)::$_0, std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>>(std::__function::__policy_storage const*, DB::InterpreterFactory::Arguments const&) @ 0x000000010ed712a4
+15. DB::InterpreterFactory::get(std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::Context>, DB::SelectQueryOptions const&) @ 0x000000010ed267ec
+16. DB::executeQueryImpl(char const*, char const*, std::shared_ptr<DB::Context>, DB::QueryFlags, DB::QueryProcessingStage::Enum, std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>&, std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::ImplicitTransactionControlExecutor>) @ 0x000000010f0c0754
+17. DB::executeQuery(std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>, DB::WriteBuffer&, bool, std::shared_ptr<DB::Context>, std::function<void (DB::QueryResultDetails const&)>, DB::QueryFlags, std::optional<DB::FormatSettings> const&, std::function<void (DB::IOutputFormat&, String const&, std::shared_ptr<DB::Context const> const&, std::optional<DB::FormatSettings> const&)>, std::function<void ()>) @ 0x000000010f0c4fa0
+18. DB::HTTPHandler::processQuery(DB::HTTPServerRequest&, DB::HTMLForm&, DB::HTTPServerResponse&, DB::HTTPHandler::Output&, std::optional<DB::CurrentThread::QueryScope>&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f61830
+19. DB::HTTPHandler::handleRequest(DB::HTTPServerRequest&, DB::HTTPServerResponse&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f64f20
+20. DB::HTTPServerConnection::run() @ 0x000000011200a1ec
+21. Poco::Net::TCPServerConnection::start() @ 0x00000001159cd518
+22. Poco::Net::TCPServerDispatcher::run() @ 0x00000001159cdbf8
+23. Poco::PooledThread::run() @ 0x000000011596dfc8
+24. Poco::ThreadImpl::runnableEntry(void*) @ 0x000000011596b128
+25. _pthread_start @ 0x0000000186204c08
+26. thread_start @ 0x00000001861ffba8
+ (version 25.9.4.58 (official build))
+2025.10.29 13:14:04.562376 [ 7286898 ] {3594c2f9-459a-45a8-bc3d-c6acb2b09aaa} <Error> executeQuery: Code: 47. DB::Exception: Unknown expression identifier `action` in scope SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE (action IN ('BUY', 'SELL')) AND (confidence >= 0.75) AND (timestamp > (now() - toIntervalMinute(30))) ORDER BY timestamp DESC, confidence DESC LIMIT 5. (UNKNOWN_IDENTIFIER) (version 25.9.4.58 (official build)) (from 127.0.0.1:60366) (in query:  SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE action IN ('BUY', 'SELL') AND confidence >= 0.75 AND timestamp > now() - INTERVAL 30 MINUTE ORDER BY timestamp DESC, confidence DESC LIMIT 5 FORMAT Native), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x00000001158fe3bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010a39b52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x0000000104f824d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x0000000104f820e8
+4. DB::Exception::Exception<char const*, String&, String, String, String>(int, FormatStringHelperImpl<std::type_identity<char const*>::type, std::type_identity<String&>::type, std::type_identity<String>::type, std::type_identity<String>::type, std::type_identity<String>::type>, char const*&&, String&, String&&, String&&, String&&) @ 0x000000010e6bec4c
+5. DB::QueryAnalyzer::resolveExpressionNode(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool, bool) @ 0x000000010e6a9a5c
+6. DB::QueryAnalyzer::resolveExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool) @ 0x000000010e6a7d6c
+7. DB::QueryAnalyzer::resolveProjectionExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&) @ 0x000000010e6c0174
+8. DB::QueryAnalyzer::resolveQuery(std::shared_ptr<DB::IQueryTreeNode> const&, DB::IdentifierResolveScope&) @ 0x000000010e6a39ac
+9. DB::QueryAnalyzer::resolve(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::IQueryTreeNode> const&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2cb0
+10. DB::QueryAnalysisPass::run(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2320
+11. DB::QueryTreePassManager::run(std::shared_ptr<DB::IQueryTreeNode>) @ 0x000000010e61077c
+12. DB::buildQueryTreeAndRunPasses(std::shared_ptr<DB::IAST> const&, DB::SelectQueryOptions const&, std::shared_ptr<DB::Context const> const&, std::shared_ptr<DB::IStorage> const&) @ 0x000000010ed6f85c
+13. DB::InterpreterSelectQueryAnalyzer::InterpreterSelectQueryAnalyzer(std::shared_ptr<DB::IAST> const&, std::shared_ptr<DB::Context const> const&, DB::SelectQueryOptions const&, std::vector<String, std::allocator<String>> const&) @ 0x000000010ed6e060
+14. std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> std::__function::__policy_invoker<std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>::__call_impl[abi:ne190107]<std::__function::__default_alloc_func<DB::registerInterpreterSelectQueryAnalyzer(DB::InterpreterFactory&)::$_0, std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>>(std::__function::__policy_storage const*, DB::InterpreterFactory::Arguments const&) @ 0x000000010ed712a4
+15. DB::InterpreterFactory::get(std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::Context>, DB::SelectQueryOptions const&) @ 0x000000010ed267ec
+16. DB::executeQueryImpl(char const*, char const*, std::shared_ptr<DB::Context>, DB::QueryFlags, DB::QueryProcessingStage::Enum, std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>&, std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::ImplicitTransactionControlExecutor>) @ 0x000000010f0c0754
+17. DB::executeQuery(std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>, DB::WriteBuffer&, bool, std::shared_ptr<DB::Context>, std::function<void (DB::QueryResultDetails const&)>, DB::QueryFlags, std::optional<DB::FormatSettings> const&, std::function<void (DB::IOutputFormat&, String const&, std::shared_ptr<DB::Context const> const&, std::optional<DB::FormatSettings> const&)>, std::function<void ()>) @ 0x000000010f0c4fa0
+18. DB::HTTPHandler::processQuery(DB::HTTPServerRequest&, DB::HTMLForm&, DB::HTTPServerResponse&, DB::HTTPHandler::Output&, std::optional<DB::CurrentThread::QueryScope>&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f61830
+19. DB::HTTPHandler::handleRequest(DB::HTTPServerRequest&, DB::HTTPServerResponse&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f64f20
+20. DB::HTTPServerConnection::run() @ 0x000000011200a1ec
+21. Poco::Net::TCPServerConnection::start() @ 0x00000001159cd518
+22. Poco::Net::TCPServerDispatcher::run() @ 0x00000001159cdbf8
+23. Poco::PooledThread::run() @ 0x000000011596dfc8
+24. Poco::ThreadImpl::runnableEntry(void*) @ 0x000000011596b128
+25. _pthread_start @ 0x0000000186204c08
+26. thread_start @ 0x00000001861ffba8
+
+2025.10.29 13:14:04.562584 [ 7286898 ] {3594c2f9-459a-45a8-bc3d-c6acb2b09aaa} <Error> DynamicQueryHandler: Code: 47. DB::Exception: Unknown expression identifier `action` in scope SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE (action IN ('BUY', 'SELL')) AND (confidence >= 0.75) AND (timestamp > (now() - toIntervalMinute(30))) ORDER BY timestamp DESC, confidence DESC LIMIT 5. (UNKNOWN_IDENTIFIER), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x00000001158fe3bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010a39b52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x0000000104f824d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x0000000104f820e8
+4. DB::Exception::Exception<char const*, String&, String, String, String>(int, FormatStringHelperImpl<std::type_identity<char const*>::type, std::type_identity<String&>::type, std::type_identity<String>::type, std::type_identity<String>::type, std::type_identity<String>::type>, char const*&&, String&, String&&, String&&, String&&) @ 0x000000010e6bec4c
+5. DB::QueryAnalyzer::resolveExpressionNode(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool, bool) @ 0x000000010e6a9a5c
+6. DB::QueryAnalyzer::resolveExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool) @ 0x000000010e6a7d6c
+7. DB::QueryAnalyzer::resolveProjectionExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&) @ 0x000000010e6c0174
+8. DB::QueryAnalyzer::resolveQuery(std::shared_ptr<DB::IQueryTreeNode> const&, DB::IdentifierResolveScope&) @ 0x000000010e6a39ac
+9. DB::QueryAnalyzer::resolve(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::IQueryTreeNode> const&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2cb0
+10. DB::QueryAnalysisPass::run(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2320
+11. DB::QueryTreePassManager::run(std::shared_ptr<DB::IQueryTreeNode>) @ 0x000000010e61077c
+12. DB::buildQueryTreeAndRunPasses(std::shared_ptr<DB::IAST> const&, DB::SelectQueryOptions const&, std::shared_ptr<DB::Context const> const&, std::shared_ptr<DB::IStorage> const&) @ 0x000000010ed6f85c
+13. DB::InterpreterSelectQueryAnalyzer::InterpreterSelectQueryAnalyzer(std::shared_ptr<DB::IAST> const&, std::shared_ptr<DB::Context const> const&, DB::SelectQueryOptions const&, std::vector<String, std::allocator<String>> const&) @ 0x000000010ed6e060
+14. std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> std::__function::__policy_invoker<std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>::__call_impl[abi:ne190107]<std::__function::__default_alloc_func<DB::registerInterpreterSelectQueryAnalyzer(DB::InterpreterFactory&)::$_0, std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>>(std::__function::__policy_storage const*, DB::InterpreterFactory::Arguments const&) @ 0x000000010ed712a4
+15. DB::InterpreterFactory::get(std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::Context>, DB::SelectQueryOptions const&) @ 0x000000010ed267ec
+16. DB::executeQueryImpl(char const*, char const*, std::shared_ptr<DB::Context>, DB::QueryFlags, DB::QueryProcessingStage::Enum, std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>&, std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::ImplicitTransactionControlExecutor>) @ 0x000000010f0c0754
+17. DB::executeQuery(std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>, DB::WriteBuffer&, bool, std::shared_ptr<DB::Context>, std::function<void (DB::QueryResultDetails const&)>, DB::QueryFlags, std::optional<DB::FormatSettings> const&, std::function<void (DB::IOutputFormat&, String const&, std::shared_ptr<DB::Context const> const&, std::optional<DB::FormatSettings> const&)>, std::function<void ()>) @ 0x000000010f0c4fa0
+18. DB::HTTPHandler::processQuery(DB::HTTPServerRequest&, DB::HTMLForm&, DB::HTTPServerResponse&, DB::HTTPHandler::Output&, std::optional<DB::CurrentThread::QueryScope>&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f61830
+19. DB::HTTPHandler::handleRequest(DB::HTTPServerRequest&, DB::HTTPServerResponse&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f64f20
+20. DB::HTTPServerConnection::run() @ 0x000000011200a1ec
+21. Poco::Net::TCPServerConnection::start() @ 0x00000001159cd518
+22. Poco::Net::TCPServerDispatcher::run() @ 0x00000001159cdbf8
+23. Poco::PooledThread::run() @ 0x000000011596dfc8
+24. Poco::ThreadImpl::runnableEntry(void*) @ 0x000000011596b128
+25. _pthread_start @ 0x0000000186204c08
+26. thread_start @ 0x00000001861ffba8
+ (version 25.9.4.58 (official build))
+2025.10.29 13:14:14.497071 [ 7286898 ] {0a29ae22-600f-41b1-8e45-7218ea666d3b} <Error> executeQuery: Code: 47. DB::Exception: Unknown expression identifier `action` in scope SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE (action IN ('BUY', 'SELL')) AND (confidence >= 0.75) AND (timestamp > (now() - toIntervalMinute(30))) ORDER BY timestamp DESC, confidence DESC LIMIT 5. (UNKNOWN_IDENTIFIER) (version 25.9.4.58 (official build)) (from 127.0.0.1:60366) (in query:  SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE action IN ('BUY', 'SELL') AND confidence >= 0.75 AND timestamp > now() - INTERVAL 30 MINUTE ORDER BY timestamp DESC, confidence DESC LIMIT 5 FORMAT Native), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x00000001158fe3bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010a39b52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x0000000104f824d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x0000000104f820e8
+4. DB::Exception::Exception<char const*, String&, String, String, String>(int, FormatStringHelperImpl<std::type_identity<char const*>::type, std::type_identity<String&>::type, std::type_identity<String>::type, std::type_identity<String>::type, std::type_identity<String>::type>, char const*&&, String&, String&&, String&&, String&&) @ 0x000000010e6bec4c
+5. DB::QueryAnalyzer::resolveExpressionNode(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool, bool) @ 0x000000010e6a9a5c
+6. DB::QueryAnalyzer::resolveExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool) @ 0x000000010e6a7d6c
+7. DB::QueryAnalyzer::resolveProjectionExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&) @ 0x000000010e6c0174
+8. DB::QueryAnalyzer::resolveQuery(std::shared_ptr<DB::IQueryTreeNode> const&, DB::IdentifierResolveScope&) @ 0x000000010e6a39ac
+9. DB::QueryAnalyzer::resolve(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::IQueryTreeNode> const&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2cb0
+10. DB::QueryAnalysisPass::run(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2320
+11. DB::QueryTreePassManager::run(std::shared_ptr<DB::IQueryTreeNode>) @ 0x000000010e61077c
+12. DB::buildQueryTreeAndRunPasses(std::shared_ptr<DB::IAST> const&, DB::SelectQueryOptions const&, std::shared_ptr<DB::Context const> const&, std::shared_ptr<DB::IStorage> const&) @ 0x000000010ed6f85c
+13. DB::InterpreterSelectQueryAnalyzer::InterpreterSelectQueryAnalyzer(std::shared_ptr<DB::IAST> const&, std::shared_ptr<DB::Context const> const&, DB::SelectQueryOptions const&, std::vector<String, std::allocator<String>> const&) @ 0x000000010ed6e060
+14. std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> std::__function::__policy_invoker<std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>::__call_impl[abi:ne190107]<std::__function::__default_alloc_func<DB::registerInterpreterSelectQueryAnalyzer(DB::InterpreterFactory&)::$_0, std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>>(std::__function::__policy_storage const*, DB::InterpreterFactory::Arguments const&) @ 0x000000010ed712a4
+15. DB::InterpreterFactory::get(std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::Context>, DB::SelectQueryOptions const&) @ 0x000000010ed267ec
+16. DB::executeQueryImpl(char const*, char const*, std::shared_ptr<DB::Context>, DB::QueryFlags, DB::QueryProcessingStage::Enum, std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>&, std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::ImplicitTransactionControlExecutor>) @ 0x000000010f0c0754
+17. DB::executeQuery(std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>, DB::WriteBuffer&, bool, std::shared_ptr<DB::Context>, std::function<void (DB::QueryResultDetails const&)>, DB::QueryFlags, std::optional<DB::FormatSettings> const&, std::function<void (DB::IOutputFormat&, String const&, std::shared_ptr<DB::Context const> const&, std::optional<DB::FormatSettings> const&)>, std::function<void ()>) @ 0x000000010f0c4fa0
+18. DB::HTTPHandler::processQuery(DB::HTTPServerRequest&, DB::HTMLForm&, DB::HTTPServerResponse&, DB::HTTPHandler::Output&, std::optional<DB::CurrentThread::QueryScope>&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f61830
+19. DB::HTTPHandler::handleRequest(DB::HTTPServerRequest&, DB::HTTPServerResponse&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f64f20
+20. DB::HTTPServerConnection::run() @ 0x000000011200a1ec
+21. Poco::Net::TCPServerConnection::start() @ 0x00000001159cd518
+22. Poco::Net::TCPServerDispatcher::run() @ 0x00000001159cdbf8
+23. Poco::PooledThread::run() @ 0x000000011596dfc8
+24. Poco::ThreadImpl::runnableEntry(void*) @ 0x000000011596b128
+25. _pthread_start @ 0x0000000186204c08
+26. thread_start @ 0x00000001861ffba8
+
+2025.10.29 13:14:14.497193 [ 7286898 ] {0a29ae22-600f-41b1-8e45-7218ea666d3b} <Error> DynamicQueryHandler: Code: 47. DB::Exception: Unknown expression identifier `action` in scope SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE (action IN ('BUY', 'SELL')) AND (confidence >= 0.75) AND (timestamp > (now() - toIntervalMinute(30))) ORDER BY timestamp DESC, confidence DESC LIMIT 5. (UNKNOWN_IDENTIFIER), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x00000001158fe3bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010a39b52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x0000000104f824d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x0000000104f820e8
+4. DB::Exception::Exception<char const*, String&, String, String, String>(int, FormatStringHelperImpl<std::type_identity<char const*>::type, std::type_identity<String&>::type, std::type_identity<String>::type, std::type_identity<String>::type, std::type_identity<String>::type>, char const*&&, String&, String&&, String&&, String&&) @ 0x000000010e6bec4c
+5. DB::QueryAnalyzer::resolveExpressionNode(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool, bool) @ 0x000000010e6a9a5c
+6. DB::QueryAnalyzer::resolveExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool) @ 0x000000010e6a7d6c
+7. DB::QueryAnalyzer::resolveProjectionExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&) @ 0x000000010e6c0174
+8. DB::QueryAnalyzer::resolveQuery(std::shared_ptr<DB::IQueryTreeNode> const&, DB::IdentifierResolveScope&) @ 0x000000010e6a39ac
+9. DB::QueryAnalyzer::resolve(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::IQueryTreeNode> const&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2cb0
+10. DB::QueryAnalysisPass::run(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2320
+11. DB::QueryTreePassManager::run(std::shared_ptr<DB::IQueryTreeNode>) @ 0x000000010e61077c
+12. DB::buildQueryTreeAndRunPasses(std::shared_ptr<DB::IAST> const&, DB::SelectQueryOptions const&, std::shared_ptr<DB::Context const> const&, std::shared_ptr<DB::IStorage> const&) @ 0x000000010ed6f85c
+13. DB::InterpreterSelectQueryAnalyzer::InterpreterSelectQueryAnalyzer(std::shared_ptr<DB::IAST> const&, std::shared_ptr<DB::Context const> const&, DB::SelectQueryOptions const&, std::vector<String, std::allocator<String>> const&) @ 0x000000010ed6e060
+14. std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> std::__function::__policy_invoker<std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>::__call_impl[abi:ne190107]<std::__function::__default_alloc_func<DB::registerInterpreterSelectQueryAnalyzer(DB::InterpreterFactory&)::$_0, std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>>(std::__function::__policy_storage const*, DB::InterpreterFactory::Arguments const&) @ 0x000000010ed712a4
+15. DB::InterpreterFactory::get(std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::Context>, DB::SelectQueryOptions const&) @ 0x000000010ed267ec
+16. DB::executeQueryImpl(char const*, char const*, std::shared_ptr<DB::Context>, DB::QueryFlags, DB::QueryProcessingStage::Enum, std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>&, std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::ImplicitTransactionControlExecutor>) @ 0x000000010f0c0754
+17. DB::executeQuery(std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>, DB::WriteBuffer&, bool, std::shared_ptr<DB::Context>, std::function<void (DB::QueryResultDetails const&)>, DB::QueryFlags, std::optional<DB::FormatSettings> const&, std::function<void (DB::IOutputFormat&, String const&, std::shared_ptr<DB::Context const> const&, std::optional<DB::FormatSettings> const&)>, std::function<void ()>) @ 0x000000010f0c4fa0
+18. DB::HTTPHandler::processQuery(DB::HTTPServerRequest&, DB::HTMLForm&, DB::HTTPServerResponse&, DB::HTTPHandler::Output&, std::optional<DB::CurrentThread::QueryScope>&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f61830
+19. DB::HTTPHandler::handleRequest(DB::HTTPServerRequest&, DB::HTTPServerResponse&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f64f20
+20. DB::HTTPServerConnection::run() @ 0x000000011200a1ec
+21. Poco::Net::TCPServerConnection::start() @ 0x00000001159cd518
+22. Poco::Net::TCPServerDispatcher::run() @ 0x00000001159cdbf8
+23. Poco::PooledThread::run() @ 0x000000011596dfc8
+24. Poco::ThreadImpl::runnableEntry(void*) @ 0x000000011596b128
+25. _pthread_start @ 0x0000000186204c08
+26. thread_start @ 0x00000001861ffba8
+ (version 25.9.4.58 (official build))
+2025.10.29 13:14:24.511636 [ 7286898 ] {67618d5b-65fb-4117-8a25-1fac96bc5fb9} <Error> executeQuery: Code: 47. DB::Exception: Unknown expression identifier `action` in scope SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE (action IN ('BUY', 'SELL')) AND (confidence >= 0.75) AND (timestamp > (now() - toIntervalMinute(30))) ORDER BY timestamp DESC, confidence DESC LIMIT 5. (UNKNOWN_IDENTIFIER) (version 25.9.4.58 (official build)) (from 127.0.0.1:60366) (in query:  SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE action IN ('BUY', 'SELL') AND confidence >= 0.75 AND timestamp > now() - INTERVAL 30 MINUTE ORDER BY timestamp DESC, confidence DESC LIMIT 5 FORMAT Native), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x00000001158fe3bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010a39b52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x0000000104f824d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x0000000104f820e8
+4. DB::Exception::Exception<char const*, String&, String, String, String>(int, FormatStringHelperImpl<std::type_identity<char const*>::type, std::type_identity<String&>::type, std::type_identity<String>::type, std::type_identity<String>::type, std::type_identity<String>::type>, char const*&&, String&, String&&, String&&, String&&) @ 0x000000010e6bec4c
+5. DB::QueryAnalyzer::resolveExpressionNode(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool, bool) @ 0x000000010e6a9a5c
+6. DB::QueryAnalyzer::resolveExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool) @ 0x000000010e6a7d6c
+7. DB::QueryAnalyzer::resolveProjectionExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&) @ 0x000000010e6c0174
+8. DB::QueryAnalyzer::resolveQuery(std::shared_ptr<DB::IQueryTreeNode> const&, DB::IdentifierResolveScope&) @ 0x000000010e6a39ac
+9. DB::QueryAnalyzer::resolve(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::IQueryTreeNode> const&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2cb0
+10. DB::QueryAnalysisPass::run(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2320
+11. DB::QueryTreePassManager::run(std::shared_ptr<DB::IQueryTreeNode>) @ 0x000000010e61077c
+12. DB::buildQueryTreeAndRunPasses(std::shared_ptr<DB::IAST> const&, DB::SelectQueryOptions const&, std::shared_ptr<DB::Context const> const&, std::shared_ptr<DB::IStorage> const&) @ 0x000000010ed6f85c
+13. DB::InterpreterSelectQueryAnalyzer::InterpreterSelectQueryAnalyzer(std::shared_ptr<DB::IAST> const&, std::shared_ptr<DB::Context const> const&, DB::SelectQueryOptions const&, std::vector<String, std::allocator<String>> const&) @ 0x000000010ed6e060
+14. std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> std::__function::__policy_invoker<std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>::__call_impl[abi:ne190107]<std::__function::__default_alloc_func<DB::registerInterpreterSelectQueryAnalyzer(DB::InterpreterFactory&)::$_0, std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>>(std::__function::__policy_storage const*, DB::InterpreterFactory::Arguments const&) @ 0x000000010ed712a4
+15. DB::InterpreterFactory::get(std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::Context>, DB::SelectQueryOptions const&) @ 0x000000010ed267ec
+16. DB::executeQueryImpl(char const*, char const*, std::shared_ptr<DB::Context>, DB::QueryFlags, DB::QueryProcessingStage::Enum, std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>&, std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::ImplicitTransactionControlExecutor>) @ 0x000000010f0c0754
+17. DB::executeQuery(std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>, DB::WriteBuffer&, bool, std::shared_ptr<DB::Context>, std::function<void (DB::QueryResultDetails const&)>, DB::QueryFlags, std::optional<DB::FormatSettings> const&, std::function<void (DB::IOutputFormat&, String const&, std::shared_ptr<DB::Context const> const&, std::optional<DB::FormatSettings> const&)>, std::function<void ()>) @ 0x000000010f0c4fa0
+18. DB::HTTPHandler::processQuery(DB::HTTPServerRequest&, DB::HTMLForm&, DB::HTTPServerResponse&, DB::HTTPHandler::Output&, std::optional<DB::CurrentThread::QueryScope>&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f61830
+19. DB::HTTPHandler::handleRequest(DB::HTTPServerRequest&, DB::HTTPServerResponse&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f64f20
+20. DB::HTTPServerConnection::run() @ 0x000000011200a1ec
+21. Poco::Net::TCPServerConnection::start() @ 0x00000001159cd518
+22. Poco::Net::TCPServerDispatcher::run() @ 0x00000001159cdbf8
+23. Poco::PooledThread::run() @ 0x000000011596dfc8
+24. Poco::ThreadImpl::runnableEntry(void*) @ 0x000000011596b128
+25. _pthread_start @ 0x0000000186204c08
+26. thread_start @ 0x00000001861ffba8
+
+2025.10.29 13:14:24.511955 [ 7286898 ] {67618d5b-65fb-4117-8a25-1fac96bc5fb9} <Error> DynamicQueryHandler: Code: 47. DB::Exception: Unknown expression identifier `action` in scope SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE (action IN ('BUY', 'SELL')) AND (confidence >= 0.75) AND (timestamp > (now() - toIntervalMinute(30))) ORDER BY timestamp DESC, confidence DESC LIMIT 5. (UNKNOWN_IDENTIFIER), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x00000001158fe3bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010a39b52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x0000000104f824d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x0000000104f820e8
+4. DB::Exception::Exception<char const*, String&, String, String, String>(int, FormatStringHelperImpl<std::type_identity<char const*>::type, std::type_identity<String&>::type, std::type_identity<String>::type, std::type_identity<String>::type, std::type_identity<String>::type>, char const*&&, String&, String&&, String&&, String&&) @ 0x000000010e6bec4c
+5. DB::QueryAnalyzer::resolveExpressionNode(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool, bool) @ 0x000000010e6a9a5c
+6. DB::QueryAnalyzer::resolveExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool) @ 0x000000010e6a7d6c
+7. DB::QueryAnalyzer::resolveProjectionExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&) @ 0x000000010e6c0174
+8. DB::QueryAnalyzer::resolveQuery(std::shared_ptr<DB::IQueryTreeNode> const&, DB::IdentifierResolveScope&) @ 0x000000010e6a39ac
+9. DB::QueryAnalyzer::resolve(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::IQueryTreeNode> const&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2cb0
+10. DB::QueryAnalysisPass::run(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2320
+11. DB::QueryTreePassManager::run(std::shared_ptr<DB::IQueryTreeNode>) @ 0x000000010e61077c
+12. DB::buildQueryTreeAndRunPasses(std::shared_ptr<DB::IAST> const&, DB::SelectQueryOptions const&, std::shared_ptr<DB::Context const> const&, std::shared_ptr<DB::IStorage> const&) @ 0x000000010ed6f85c
+13. DB::InterpreterSelectQueryAnalyzer::InterpreterSelectQueryAnalyzer(std::shared_ptr<DB::IAST> const&, std::shared_ptr<DB::Context const> const&, DB::SelectQueryOptions const&, std::vector<String, std::allocator<String>> const&) @ 0x000000010ed6e060
+14. std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> std::__function::__policy_invoker<std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>::__call_impl[abi:ne190107]<std::__function::__default_alloc_func<DB::registerInterpreterSelectQueryAnalyzer(DB::InterpreterFactory&)::$_0, std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>>(std::__function::__policy_storage const*, DB::InterpreterFactory::Arguments const&) @ 0x000000010ed712a4
+15. DB::InterpreterFactory::get(std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::Context>, DB::SelectQueryOptions const&) @ 0x000000010ed267ec
+16. DB::executeQueryImpl(char const*, char const*, std::shared_ptr<DB::Context>, DB::QueryFlags, DB::QueryProcessingStage::Enum, std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>&, std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::ImplicitTransactionControlExecutor>) @ 0x000000010f0c0754
+17. DB::executeQuery(std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>, DB::WriteBuffer&, bool, std::shared_ptr<DB::Context>, std::function<void (DB::QueryResultDetails const&)>, DB::QueryFlags, std::optional<DB::FormatSettings> const&, std::function<void (DB::IOutputFormat&, String const&, std::shared_ptr<DB::Context const> const&, std::optional<DB::FormatSettings> const&)>, std::function<void ()>) @ 0x000000010f0c4fa0
+18. DB::HTTPHandler::processQuery(DB::HTTPServerRequest&, DB::HTMLForm&, DB::HTTPServerResponse&, DB::HTTPHandler::Output&, std::optional<DB::CurrentThread::QueryScope>&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f61830
+19. DB::HTTPHandler::handleRequest(DB::HTTPServerRequest&, DB::HTTPServerResponse&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f64f20
+20. DB::HTTPServerConnection::run() @ 0x000000011200a1ec
+21. Poco::Net::TCPServerConnection::start() @ 0x00000001159cd518
+22. Poco::Net::TCPServerDispatcher::run() @ 0x00000001159cdbf8
+23. Poco::PooledThread::run() @ 0x000000011596dfc8
+24. Poco::ThreadImpl::runnableEntry(void*) @ 0x000000011596b128
+25. _pthread_start @ 0x0000000186204c08
+26. thread_start @ 0x00000001861ffba8
+ (version 25.9.4.58 (official build))
+2025.10.29 13:14:34.525095 [ 7286898 ] {e848aa27-086a-4463-a111-2917decd504a} <Error> executeQuery: Code: 47. DB::Exception: Unknown expression identifier `action` in scope SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE (action IN ('BUY', 'SELL')) AND (confidence >= 0.75) AND (timestamp > (now() - toIntervalMinute(30))) ORDER BY timestamp DESC, confidence DESC LIMIT 5. (UNKNOWN_IDENTIFIER) (version 25.9.4.58 (official build)) (from 127.0.0.1:60366) (in query:  SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE action IN ('BUY', 'SELL') AND confidence >= 0.75 AND timestamp > now() - INTERVAL 30 MINUTE ORDER BY timestamp DESC, confidence DESC LIMIT 5 FORMAT Native), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x00000001158fe3bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010a39b52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x0000000104f824d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x0000000104f820e8
+4. DB::Exception::Exception<char const*, String&, String, String, String>(int, FormatStringHelperImpl<std::type_identity<char const*>::type, std::type_identity<String&>::type, std::type_identity<String>::type, std::type_identity<String>::type, std::type_identity<String>::type>, char const*&&, String&, String&&, String&&, String&&) @ 0x000000010e6bec4c
+5. DB::QueryAnalyzer::resolveExpressionNode(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool, bool) @ 0x000000010e6a9a5c
+6. DB::QueryAnalyzer::resolveExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool) @ 0x000000010e6a7d6c
+7. DB::QueryAnalyzer::resolveProjectionExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&) @ 0x000000010e6c0174
+8. DB::QueryAnalyzer::resolveQuery(std::shared_ptr<DB::IQueryTreeNode> const&, DB::IdentifierResolveScope&) @ 0x000000010e6a39ac
+9. DB::QueryAnalyzer::resolve(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::IQueryTreeNode> const&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2cb0
+10. DB::QueryAnalysisPass::run(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2320
+11. DB::QueryTreePassManager::run(std::shared_ptr<DB::IQueryTreeNode>) @ 0x000000010e61077c
+12. DB::buildQueryTreeAndRunPasses(std::shared_ptr<DB::IAST> const&, DB::SelectQueryOptions const&, std::shared_ptr<DB::Context const> const&, std::shared_ptr<DB::IStorage> const&) @ 0x000000010ed6f85c
+13. DB::InterpreterSelectQueryAnalyzer::InterpreterSelectQueryAnalyzer(std::shared_ptr<DB::IAST> const&, std::shared_ptr<DB::Context const> const&, DB::SelectQueryOptions const&, std::vector<String, std::allocator<String>> const&) @ 0x000000010ed6e060
+14. std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> std::__function::__policy_invoker<std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>::__call_impl[abi:ne190107]<std::__function::__default_alloc_func<DB::registerInterpreterSelectQueryAnalyzer(DB::InterpreterFactory&)::$_0, std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>>(std::__function::__policy_storage const*, DB::InterpreterFactory::Arguments const&) @ 0x000000010ed712a4
+15. DB::InterpreterFactory::get(std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::Context>, DB::SelectQueryOptions const&) @ 0x000000010ed267ec
+16. DB::executeQueryImpl(char const*, char const*, std::shared_ptr<DB::Context>, DB::QueryFlags, DB::QueryProcessingStage::Enum, std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>&, std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::ImplicitTransactionControlExecutor>) @ 0x000000010f0c0754
+17. DB::executeQuery(std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>, DB::WriteBuffer&, bool, std::shared_ptr<DB::Context>, std::function<void (DB::QueryResultDetails const&)>, DB::QueryFlags, std::optional<DB::FormatSettings> const&, std::function<void (DB::IOutputFormat&, String const&, std::shared_ptr<DB::Context const> const&, std::optional<DB::FormatSettings> const&)>, std::function<void ()>) @ 0x000000010f0c4fa0
+18. DB::HTTPHandler::processQuery(DB::HTTPServerRequest&, DB::HTMLForm&, DB::HTTPServerResponse&, DB::HTTPHandler::Output&, std::optional<DB::CurrentThread::QueryScope>&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f61830
+19. DB::HTTPHandler::handleRequest(DB::HTTPServerRequest&, DB::HTTPServerResponse&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f64f20
+20. DB::HTTPServerConnection::run() @ 0x000000011200a1ec
+21. Poco::Net::TCPServerConnection::start() @ 0x00000001159cd518
+22. Poco::Net::TCPServerDispatcher::run() @ 0x00000001159cdbf8
+23. Poco::PooledThread::run() @ 0x000000011596dfc8
+24. Poco::ThreadImpl::runnableEntry(void*) @ 0x000000011596b128
+25. _pthread_start @ 0x0000000186204c08
+26. thread_start @ 0x00000001861ffba8
+
+2025.10.29 13:14:34.525287 [ 7286898 ] {e848aa27-086a-4463-a111-2917decd504a} <Error> DynamicQueryHandler: Code: 47. DB::Exception: Unknown expression identifier `action` in scope SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE (action IN ('BUY', 'SELL')) AND (confidence >= 0.75) AND (timestamp > (now() - toIntervalMinute(30))) ORDER BY timestamp DESC, confidence DESC LIMIT 5. (UNKNOWN_IDENTIFIER), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x00000001158fe3bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010a39b52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x0000000104f824d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x0000000104f820e8
+4. DB::Exception::Exception<char const*, String&, String, String, String>(int, FormatStringHelperImpl<std::type_identity<char const*>::type, std::type_identity<String&>::type, std::type_identity<String>::type, std::type_identity<String>::type, std::type_identity<String>::type>, char const*&&, String&, String&&, String&&, String&&) @ 0x000000010e6bec4c
+5. DB::QueryAnalyzer::resolveExpressionNode(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool, bool) @ 0x000000010e6a9a5c
+6. DB::QueryAnalyzer::resolveExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool) @ 0x000000010e6a7d6c
+7. DB::QueryAnalyzer::resolveProjectionExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&) @ 0x000000010e6c0174
+8. DB::QueryAnalyzer::resolveQuery(std::shared_ptr<DB::IQueryTreeNode> const&, DB::IdentifierResolveScope&) @ 0x000000010e6a39ac
+9. DB::QueryAnalyzer::resolve(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::IQueryTreeNode> const&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2cb0
+10. DB::QueryAnalysisPass::run(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2320
+11. DB::QueryTreePassManager::run(std::shared_ptr<DB::IQueryTreeNode>) @ 0x000000010e61077c
+12. DB::buildQueryTreeAndRunPasses(std::shared_ptr<DB::IAST> const&, DB::SelectQueryOptions const&, std::shared_ptr<DB::Context const> const&, std::shared_ptr<DB::IStorage> const&) @ 0x000000010ed6f85c
+13. DB::InterpreterSelectQueryAnalyzer::InterpreterSelectQueryAnalyzer(std::shared_ptr<DB::IAST> const&, std::shared_ptr<DB::Context const> const&, DB::SelectQueryOptions const&, std::vector<String, std::allocator<String>> const&) @ 0x000000010ed6e060
+14. std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> std::__function::__policy_invoker<std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>::__call_impl[abi:ne190107]<std::__function::__default_alloc_func<DB::registerInterpreterSelectQueryAnalyzer(DB::InterpreterFactory&)::$_0, std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>>(std::__function::__policy_storage const*, DB::InterpreterFactory::Arguments const&) @ 0x000000010ed712a4
+15. DB::InterpreterFactory::get(std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::Context>, DB::SelectQueryOptions const&) @ 0x000000010ed267ec
+16. DB::executeQueryImpl(char const*, char const*, std::shared_ptr<DB::Context>, DB::QueryFlags, DB::QueryProcessingStage::Enum, std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>&, std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::ImplicitTransactionControlExecutor>) @ 0x000000010f0c0754
+17. DB::executeQuery(std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>, DB::WriteBuffer&, bool, std::shared_ptr<DB::Context>, std::function<void (DB::QueryResultDetails const&)>, DB::QueryFlags, std::optional<DB::FormatSettings> const&, std::function<void (DB::IOutputFormat&, String const&, std::shared_ptr<DB::Context const> const&, std::optional<DB::FormatSettings> const&)>, std::function<void ()>) @ 0x000000010f0c4fa0
+18. DB::HTTPHandler::processQuery(DB::HTTPServerRequest&, DB::HTMLForm&, DB::HTTPServerResponse&, DB::HTTPHandler::Output&, std::optional<DB::CurrentThread::QueryScope>&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f61830
+19. DB::HTTPHandler::handleRequest(DB::HTTPServerRequest&, DB::HTTPServerResponse&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f64f20
+20. DB::HTTPServerConnection::run() @ 0x000000011200a1ec
+21. Poco::Net::TCPServerConnection::start() @ 0x00000001159cd518
+22. Poco::Net::TCPServerDispatcher::run() @ 0x00000001159cdbf8
+23. Poco::PooledThread::run() @ 0x000000011596dfc8
+24. Poco::ThreadImpl::runnableEntry(void*) @ 0x000000011596b128
+25. _pthread_start @ 0x0000000186204c08
+26. thread_start @ 0x00000001861ffba8
+ (version 25.9.4.58 (official build))
+2025.10.29 13:14:44.542895 [ 7286898 ] {c4f48bf8-230d-4949-ab5e-13b6b8fd3479} <Error> executeQuery: Code: 47. DB::Exception: Unknown expression identifier `action` in scope SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE (action IN ('BUY', 'SELL')) AND (confidence >= 0.75) AND (timestamp > (now() - toIntervalMinute(30))) ORDER BY timestamp DESC, confidence DESC LIMIT 5. (UNKNOWN_IDENTIFIER) (version 25.9.4.58 (official build)) (from 127.0.0.1:60366) (in query:  SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE action IN ('BUY', 'SELL') AND confidence >= 0.75 AND timestamp > now() - INTERVAL 30 MINUTE ORDER BY timestamp DESC, confidence DESC LIMIT 5 FORMAT Native), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x00000001158fe3bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010a39b52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x0000000104f824d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x0000000104f820e8
+4. DB::Exception::Exception<char const*, String&, String, String, String>(int, FormatStringHelperImpl<std::type_identity<char const*>::type, std::type_identity<String&>::type, std::type_identity<String>::type, std::type_identity<String>::type, std::type_identity<String>::type>, char const*&&, String&, String&&, String&&, String&&) @ 0x000000010e6bec4c
+5. DB::QueryAnalyzer::resolveExpressionNode(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool, bool) @ 0x000000010e6a9a5c
+6. DB::QueryAnalyzer::resolveExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool) @ 0x000000010e6a7d6c
+7. DB::QueryAnalyzer::resolveProjectionExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&) @ 0x000000010e6c0174
+8. DB::QueryAnalyzer::resolveQuery(std::shared_ptr<DB::IQueryTreeNode> const&, DB::IdentifierResolveScope&) @ 0x000000010e6a39ac
+9. DB::QueryAnalyzer::resolve(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::IQueryTreeNode> const&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2cb0
+10. DB::QueryAnalysisPass::run(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2320
+11. DB::QueryTreePassManager::run(std::shared_ptr<DB::IQueryTreeNode>) @ 0x000000010e61077c
+12. DB::buildQueryTreeAndRunPasses(std::shared_ptr<DB::IAST> const&, DB::SelectQueryOptions const&, std::shared_ptr<DB::Context const> const&, std::shared_ptr<DB::IStorage> const&) @ 0x000000010ed6f85c
+13. DB::InterpreterSelectQueryAnalyzer::InterpreterSelectQueryAnalyzer(std::shared_ptr<DB::IAST> const&, std::shared_ptr<DB::Context const> const&, DB::SelectQueryOptions const&, std::vector<String, std::allocator<String>> const&) @ 0x000000010ed6e060
+14. std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> std::__function::__policy_invoker<std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>::__call_impl[abi:ne190107]<std::__function::__default_alloc_func<DB::registerInterpreterSelectQueryAnalyzer(DB::InterpreterFactory&)::$_0, std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>>(std::__function::__policy_storage const*, DB::InterpreterFactory::Arguments const&) @ 0x000000010ed712a4
+15. DB::InterpreterFactory::get(std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::Context>, DB::SelectQueryOptions const&) @ 0x000000010ed267ec
+16. DB::executeQueryImpl(char const*, char const*, std::shared_ptr<DB::Context>, DB::QueryFlags, DB::QueryProcessingStage::Enum, std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>&, std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::ImplicitTransactionControlExecutor>) @ 0x000000010f0c0754
+17. DB::executeQuery(std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>, DB::WriteBuffer&, bool, std::shared_ptr<DB::Context>, std::function<void (DB::QueryResultDetails const&)>, DB::QueryFlags, std::optional<DB::FormatSettings> const&, std::function<void (DB::IOutputFormat&, String const&, std::shared_ptr<DB::Context const> const&, std::optional<DB::FormatSettings> const&)>, std::function<void ()>) @ 0x000000010f0c4fa0
+18. DB::HTTPHandler::processQuery(DB::HTTPServerRequest&, DB::HTMLForm&, DB::HTTPServerResponse&, DB::HTTPHandler::Output&, std::optional<DB::CurrentThread::QueryScope>&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f61830
+19. DB::HTTPHandler::handleRequest(DB::HTTPServerRequest&, DB::HTTPServerResponse&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f64f20
+20. DB::HTTPServerConnection::run() @ 0x000000011200a1ec
+21. Poco::Net::TCPServerConnection::start() @ 0x00000001159cd518
+22. Poco::Net::TCPServerDispatcher::run() @ 0x00000001159cdbf8
+23. Poco::PooledThread::run() @ 0x000000011596dfc8
+24. Poco::ThreadImpl::runnableEntry(void*) @ 0x000000011596b128
+25. _pthread_start @ 0x0000000186204c08
+26. thread_start @ 0x00000001861ffba8
+
+2025.10.29 13:14:44.543443 [ 7286898 ] {c4f48bf8-230d-4949-ab5e-13b6b8fd3479} <Error> DynamicQueryHandler: Code: 47. DB::Exception: Unknown expression identifier `action` in scope SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE (action IN ('BUY', 'SELL')) AND (confidence >= 0.75) AND (timestamp > (now() - toIntervalMinute(30))) ORDER BY timestamp DESC, confidence DESC LIMIT 5. (UNKNOWN_IDENTIFIER), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x00000001158fe3bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010a39b52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x0000000104f824d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x0000000104f820e8
+4. DB::Exception::Exception<char const*, String&, String, String, String>(int, FormatStringHelperImpl<std::type_identity<char const*>::type, std::type_identity<String&>::type, std::type_identity<String>::type, std::type_identity<String>::type, std::type_identity<String>::type>, char const*&&, String&, String&&, String&&, String&&) @ 0x000000010e6bec4c
+5. DB::QueryAnalyzer::resolveExpressionNode(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool, bool) @ 0x000000010e6a9a5c
+6. DB::QueryAnalyzer::resolveExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool) @ 0x000000010e6a7d6c
+7. DB::QueryAnalyzer::resolveProjectionExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&) @ 0x000000010e6c0174
+8. DB::QueryAnalyzer::resolveQuery(std::shared_ptr<DB::IQueryTreeNode> const&, DB::IdentifierResolveScope&) @ 0x000000010e6a39ac
+9. DB::QueryAnalyzer::resolve(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::IQueryTreeNode> const&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2cb0
+10. DB::QueryAnalysisPass::run(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2320
+11. DB::QueryTreePassManager::run(std::shared_ptr<DB::IQueryTreeNode>) @ 0x000000010e61077c
+12. DB::buildQueryTreeAndRunPasses(std::shared_ptr<DB::IAST> const&, DB::SelectQueryOptions const&, std::shared_ptr<DB::Context const> const&, std::shared_ptr<DB::IStorage> const&) @ 0x000000010ed6f85c
+13. DB::InterpreterSelectQueryAnalyzer::InterpreterSelectQueryAnalyzer(std::shared_ptr<DB::IAST> const&, std::shared_ptr<DB::Context const> const&, DB::SelectQueryOptions const&, std::vector<String, std::allocator<String>> const&) @ 0x000000010ed6e060
+14. std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> std::__function::__policy_invoker<std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>::__call_impl[abi:ne190107]<std::__function::__default_alloc_func<DB::registerInterpreterSelectQueryAnalyzer(DB::InterpreterFactory&)::$_0, std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>>(std::__function::__policy_storage const*, DB::InterpreterFactory::Arguments const&) @ 0x000000010ed712a4
+15. DB::InterpreterFactory::get(std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::Context>, DB::SelectQueryOptions const&) @ 0x000000010ed267ec
+16. DB::executeQueryImpl(char const*, char const*, std::shared_ptr<DB::Context>, DB::QueryFlags, DB::QueryProcessingStage::Enum, std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>&, std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::ImplicitTransactionControlExecutor>) @ 0x000000010f0c0754
+17. DB::executeQuery(std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>, DB::WriteBuffer&, bool, std::shared_ptr<DB::Context>, std::function<void (DB::QueryResultDetails const&)>, DB::QueryFlags, std::optional<DB::FormatSettings> const&, std::function<void (DB::IOutputFormat&, String const&, std::shared_ptr<DB::Context const> const&, std::optional<DB::FormatSettings> const&)>, std::function<void ()>) @ 0x000000010f0c4fa0
+18. DB::HTTPHandler::processQuery(DB::HTTPServerRequest&, DB::HTMLForm&, DB::HTTPServerResponse&, DB::HTTPHandler::Output&, std::optional<DB::CurrentThread::QueryScope>&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f61830
+19. DB::HTTPHandler::handleRequest(DB::HTTPServerRequest&, DB::HTTPServerResponse&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f64f20
+20. DB::HTTPServerConnection::run() @ 0x000000011200a1ec
+21. Poco::Net::TCPServerConnection::start() @ 0x00000001159cd518
+22. Poco::Net::TCPServerDispatcher::run() @ 0x00000001159cdbf8
+23. Poco::PooledThread::run() @ 0x000000011596dfc8
+24. Poco::ThreadImpl::runnableEntry(void*) @ 0x000000011596b128
+25. _pthread_start @ 0x0000000186204c08
+26. thread_start @ 0x00000001861ffba8
+ (version 25.9.4.58 (official build))
+2025.10.29 13:14:54.553964 [ 7286898 ] {3907fdd3-f858-4f0c-9871-a719463f54ff} <Error> executeQuery: Code: 47. DB::Exception: Unknown expression identifier `action` in scope SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE (action IN ('BUY', 'SELL')) AND (confidence >= 0.75) AND (timestamp > (now() - toIntervalMinute(30))) ORDER BY timestamp DESC, confidence DESC LIMIT 5. (UNKNOWN_IDENTIFIER) (version 25.9.4.58 (official build)) (from 127.0.0.1:60366) (in query:  SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE action IN ('BUY', 'SELL') AND confidence >= 0.75 AND timestamp > now() - INTERVAL 30 MINUTE ORDER BY timestamp DESC, confidence DESC LIMIT 5 FORMAT Native), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x00000001158fe3bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010a39b52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x0000000104f824d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x0000000104f820e8
+4. DB::Exception::Exception<char const*, String&, String, String, String>(int, FormatStringHelperImpl<std::type_identity<char const*>::type, std::type_identity<String&>::type, std::type_identity<String>::type, std::type_identity<String>::type, std::type_identity<String>::type>, char const*&&, String&, String&&, String&&, String&&) @ 0x000000010e6bec4c
+5. DB::QueryAnalyzer::resolveExpressionNode(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool, bool) @ 0x000000010e6a9a5c
+6. DB::QueryAnalyzer::resolveExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool) @ 0x000000010e6a7d6c
+7. DB::QueryAnalyzer::resolveProjectionExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&) @ 0x000000010e6c0174
+8. DB::QueryAnalyzer::resolveQuery(std::shared_ptr<DB::IQueryTreeNode> const&, DB::IdentifierResolveScope&) @ 0x000000010e6a39ac
+9. DB::QueryAnalyzer::resolve(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::IQueryTreeNode> const&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2cb0
+10. DB::QueryAnalysisPass::run(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2320
+11. DB::QueryTreePassManager::run(std::shared_ptr<DB::IQueryTreeNode>) @ 0x000000010e61077c
+12. DB::buildQueryTreeAndRunPasses(std::shared_ptr<DB::IAST> const&, DB::SelectQueryOptions const&, std::shared_ptr<DB::Context const> const&, std::shared_ptr<DB::IStorage> const&) @ 0x000000010ed6f85c
+13. DB::InterpreterSelectQueryAnalyzer::InterpreterSelectQueryAnalyzer(std::shared_ptr<DB::IAST> const&, std::shared_ptr<DB::Context const> const&, DB::SelectQueryOptions const&, std::vector<String, std::allocator<String>> const&) @ 0x000000010ed6e060
+14. std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> std::__function::__policy_invoker<std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>::__call_impl[abi:ne190107]<std::__function::__default_alloc_func<DB::registerInterpreterSelectQueryAnalyzer(DB::InterpreterFactory&)::$_0, std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>>(std::__function::__policy_storage const*, DB::InterpreterFactory::Arguments const&) @ 0x000000010ed712a4
+15. DB::InterpreterFactory::get(std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::Context>, DB::SelectQueryOptions const&) @ 0x000000010ed267ec
+16. DB::executeQueryImpl(char const*, char const*, std::shared_ptr<DB::Context>, DB::QueryFlags, DB::QueryProcessingStage::Enum, std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>&, std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::ImplicitTransactionControlExecutor>) @ 0x000000010f0c0754
+17. DB::executeQuery(std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>, DB::WriteBuffer&, bool, std::shared_ptr<DB::Context>, std::function<void (DB::QueryResultDetails const&)>, DB::QueryFlags, std::optional<DB::FormatSettings> const&, std::function<void (DB::IOutputFormat&, String const&, std::shared_ptr<DB::Context const> const&, std::optional<DB::FormatSettings> const&)>, std::function<void ()>) @ 0x000000010f0c4fa0
+18. DB::HTTPHandler::processQuery(DB::HTTPServerRequest&, DB::HTMLForm&, DB::HTTPServerResponse&, DB::HTTPHandler::Output&, std::optional<DB::CurrentThread::QueryScope>&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f61830
+19. DB::HTTPHandler::handleRequest(DB::HTTPServerRequest&, DB::HTTPServerResponse&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f64f20
+20. DB::HTTPServerConnection::run() @ 0x000000011200a1ec
+21. Poco::Net::TCPServerConnection::start() @ 0x00000001159cd518
+22. Poco::Net::TCPServerDispatcher::run() @ 0x00000001159cdbf8
+23. Poco::PooledThread::run() @ 0x000000011596dfc8
+24. Poco::ThreadImpl::runnableEntry(void*) @ 0x000000011596b128
+25. _pthread_start @ 0x0000000186204c08
+26. thread_start @ 0x00000001861ffba8
+
+2025.10.29 13:14:54.554271 [ 7286898 ] {3907fdd3-f858-4f0c-9871-a719463f54ff} <Error> DynamicQueryHandler: Code: 47. DB::Exception: Unknown expression identifier `action` in scope SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE (action IN ('BUY', 'SELL')) AND (confidence >= 0.75) AND (timestamp > (now() - toIntervalMinute(30))) ORDER BY timestamp DESC, confidence DESC LIMIT 5. (UNKNOWN_IDENTIFIER), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x00000001158fe3bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010a39b52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x0000000104f824d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x0000000104f820e8
+4. DB::Exception::Exception<char const*, String&, String, String, String>(int, FormatStringHelperImpl<std::type_identity<char const*>::type, std::type_identity<String&>::type, std::type_identity<String>::type, std::type_identity<String>::type, std::type_identity<String>::type>, char const*&&, String&, String&&, String&&, String&&) @ 0x000000010e6bec4c
+5. DB::QueryAnalyzer::resolveExpressionNode(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool, bool) @ 0x000000010e6a9a5c
+6. DB::QueryAnalyzer::resolveExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool) @ 0x000000010e6a7d6c
+7. DB::QueryAnalyzer::resolveProjectionExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&) @ 0x000000010e6c0174
+8. DB::QueryAnalyzer::resolveQuery(std::shared_ptr<DB::IQueryTreeNode> const&, DB::IdentifierResolveScope&) @ 0x000000010e6a39ac
+9. DB::QueryAnalyzer::resolve(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::IQueryTreeNode> const&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2cb0
+10. DB::QueryAnalysisPass::run(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2320
+11. DB::QueryTreePassManager::run(std::shared_ptr<DB::IQueryTreeNode>) @ 0x000000010e61077c
+12. DB::buildQueryTreeAndRunPasses(std::shared_ptr<DB::IAST> const&, DB::SelectQueryOptions const&, std::shared_ptr<DB::Context const> const&, std::shared_ptr<DB::IStorage> const&) @ 0x000000010ed6f85c
+13. DB::InterpreterSelectQueryAnalyzer::InterpreterSelectQueryAnalyzer(std::shared_ptr<DB::IAST> const&, std::shared_ptr<DB::Context const> const&, DB::SelectQueryOptions const&, std::vector<String, std::allocator<String>> const&) @ 0x000000010ed6e060
+14. std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> std::__function::__policy_invoker<std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>::__call_impl[abi:ne190107]<std::__function::__default_alloc_func<DB::registerInterpreterSelectQueryAnalyzer(DB::InterpreterFactory&)::$_0, std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>>(std::__function::__policy_storage const*, DB::InterpreterFactory::Arguments const&) @ 0x000000010ed712a4
+15. DB::InterpreterFactory::get(std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::Context>, DB::SelectQueryOptions const&) @ 0x000000010ed267ec
+16. DB::executeQueryImpl(char const*, char const*, std::shared_ptr<DB::Context>, DB::QueryFlags, DB::QueryProcessingStage::Enum, std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>&, std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::ImplicitTransactionControlExecutor>) @ 0x000000010f0c0754
+17. DB::executeQuery(std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>, DB::WriteBuffer&, bool, std::shared_ptr<DB::Context>, std::function<void (DB::QueryResultDetails const&)>, DB::QueryFlags, std::optional<DB::FormatSettings> const&, std::function<void (DB::IOutputFormat&, String const&, std::shared_ptr<DB::Context const> const&, std::optional<DB::FormatSettings> const&)>, std::function<void ()>) @ 0x000000010f0c4fa0
+18. DB::HTTPHandler::processQuery(DB::HTTPServerRequest&, DB::HTMLForm&, DB::HTTPServerResponse&, DB::HTTPHandler::Output&, std::optional<DB::CurrentThread::QueryScope>&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f61830
+19. DB::HTTPHandler::handleRequest(DB::HTTPServerRequest&, DB::HTTPServerResponse&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f64f20
+20. DB::HTTPServerConnection::run() @ 0x000000011200a1ec
+21. Poco::Net::TCPServerConnection::start() @ 0x00000001159cd518
+22. Poco::Net::TCPServerDispatcher::run() @ 0x00000001159cdbf8
+23. Poco::PooledThread::run() @ 0x000000011596dfc8
+24. Poco::ThreadImpl::runnableEntry(void*) @ 0x000000011596b128
+25. _pthread_start @ 0x0000000186204c08
+26. thread_start @ 0x00000001861ffba8
+ (version 25.9.4.58 (official build))
+2025.10.29 13:15:04.571764 [ 7286898 ] {542e76bc-3ef7-4de3-9aee-90b489833d67} <Error> executeQuery: Code: 47. DB::Exception: Unknown expression identifier `action` in scope SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE (action IN ('BUY', 'SELL')) AND (confidence >= 0.75) AND (timestamp > (now() - toIntervalMinute(30))) ORDER BY timestamp DESC, confidence DESC LIMIT 5. (UNKNOWN_IDENTIFIER) (version 25.9.4.58 (official build)) (from 127.0.0.1:60366) (in query:  SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE action IN ('BUY', 'SELL') AND confidence >= 0.75 AND timestamp > now() - INTERVAL 30 MINUTE ORDER BY timestamp DESC, confidence DESC LIMIT 5 FORMAT Native), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x00000001158fe3bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010a39b52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x0000000104f824d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x0000000104f820e8
+4. DB::Exception::Exception<char const*, String&, String, String, String>(int, FormatStringHelperImpl<std::type_identity<char const*>::type, std::type_identity<String&>::type, std::type_identity<String>::type, std::type_identity<String>::type, std::type_identity<String>::type>, char const*&&, String&, String&&, String&&, String&&) @ 0x000000010e6bec4c
+5. DB::QueryAnalyzer::resolveExpressionNode(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool, bool) @ 0x000000010e6a9a5c
+6. DB::QueryAnalyzer::resolveExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool) @ 0x000000010e6a7d6c
+7. DB::QueryAnalyzer::resolveProjectionExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&) @ 0x000000010e6c0174
+8. DB::QueryAnalyzer::resolveQuery(std::shared_ptr<DB::IQueryTreeNode> const&, DB::IdentifierResolveScope&) @ 0x000000010e6a39ac
+9. DB::QueryAnalyzer::resolve(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::IQueryTreeNode> const&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2cb0
+10. DB::QueryAnalysisPass::run(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2320
+11. DB::QueryTreePassManager::run(std::shared_ptr<DB::IQueryTreeNode>) @ 0x000000010e61077c
+12. DB::buildQueryTreeAndRunPasses(std::shared_ptr<DB::IAST> const&, DB::SelectQueryOptions const&, std::shared_ptr<DB::Context const> const&, std::shared_ptr<DB::IStorage> const&) @ 0x000000010ed6f85c
+13. DB::InterpreterSelectQueryAnalyzer::InterpreterSelectQueryAnalyzer(std::shared_ptr<DB::IAST> const&, std::shared_ptr<DB::Context const> const&, DB::SelectQueryOptions const&, std::vector<String, std::allocator<String>> const&) @ 0x000000010ed6e060
+14. std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> std::__function::__policy_invoker<std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>::__call_impl[abi:ne190107]<std::__function::__default_alloc_func<DB::registerInterpreterSelectQueryAnalyzer(DB::InterpreterFactory&)::$_0, std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>>(std::__function::__policy_storage const*, DB::InterpreterFactory::Arguments const&) @ 0x000000010ed712a4
+15. DB::InterpreterFactory::get(std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::Context>, DB::SelectQueryOptions const&) @ 0x000000010ed267ec
+16. DB::executeQueryImpl(char const*, char const*, std::shared_ptr<DB::Context>, DB::QueryFlags, DB::QueryProcessingStage::Enum, std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>&, std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::ImplicitTransactionControlExecutor>) @ 0x000000010f0c0754
+17. DB::executeQuery(std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>, DB::WriteBuffer&, bool, std::shared_ptr<DB::Context>, std::function<void (DB::QueryResultDetails const&)>, DB::QueryFlags, std::optional<DB::FormatSettings> const&, std::function<void (DB::IOutputFormat&, String const&, std::shared_ptr<DB::Context const> const&, std::optional<DB::FormatSettings> const&)>, std::function<void ()>) @ 0x000000010f0c4fa0
+18. DB::HTTPHandler::processQuery(DB::HTTPServerRequest&, DB::HTMLForm&, DB::HTTPServerResponse&, DB::HTTPHandler::Output&, std::optional<DB::CurrentThread::QueryScope>&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f61830
+19. DB::HTTPHandler::handleRequest(DB::HTTPServerRequest&, DB::HTTPServerResponse&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f64f20
+20. DB::HTTPServerConnection::run() @ 0x000000011200a1ec
+21. Poco::Net::TCPServerConnection::start() @ 0x00000001159cd518
+22. Poco::Net::TCPServerDispatcher::run() @ 0x00000001159cdbf8
+23. Poco::PooledThread::run() @ 0x000000011596dfc8
+24. Poco::ThreadImpl::runnableEntry(void*) @ 0x000000011596b128
+25. _pthread_start @ 0x0000000186204c08
+26. thread_start @ 0x00000001861ffba8
+
+2025.10.29 13:15:04.572077 [ 7286898 ] {542e76bc-3ef7-4de3-9aee-90b489833d67} <Error> DynamicQueryHandler: Code: 47. DB::Exception: Unknown expression identifier `action` in scope SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE (action IN ('BUY', 'SELL')) AND (confidence >= 0.75) AND (timestamp > (now() - toIntervalMinute(30))) ORDER BY timestamp DESC, confidence DESC LIMIT 5. (UNKNOWN_IDENTIFIER), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x00000001158fe3bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010a39b52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x0000000104f824d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x0000000104f820e8
+4. DB::Exception::Exception<char const*, String&, String, String, String>(int, FormatStringHelperImpl<std::type_identity<char const*>::type, std::type_identity<String&>::type, std::type_identity<String>::type, std::type_identity<String>::type, std::type_identity<String>::type>, char const*&&, String&, String&&, String&&, String&&) @ 0x000000010e6bec4c
+5. DB::QueryAnalyzer::resolveExpressionNode(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool, bool) @ 0x000000010e6a9a5c
+6. DB::QueryAnalyzer::resolveExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool) @ 0x000000010e6a7d6c
+7. DB::QueryAnalyzer::resolveProjectionExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&) @ 0x000000010e6c0174
+8. DB::QueryAnalyzer::resolveQuery(std::shared_ptr<DB::IQueryTreeNode> const&, DB::IdentifierResolveScope&) @ 0x000000010e6a39ac
+9. DB::QueryAnalyzer::resolve(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::IQueryTreeNode> const&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2cb0
+10. DB::QueryAnalysisPass::run(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2320
+11. DB::QueryTreePassManager::run(std::shared_ptr<DB::IQueryTreeNode>) @ 0x000000010e61077c
+12. DB::buildQueryTreeAndRunPasses(std::shared_ptr<DB::IAST> const&, DB::SelectQueryOptions const&, std::shared_ptr<DB::Context const> const&, std::shared_ptr<DB::IStorage> const&) @ 0x000000010ed6f85c
+13. DB::InterpreterSelectQueryAnalyzer::InterpreterSelectQueryAnalyzer(std::shared_ptr<DB::IAST> const&, std::shared_ptr<DB::Context const> const&, DB::SelectQueryOptions const&, std::vector<String, std::allocator<String>> const&) @ 0x000000010ed6e060
+14. std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> std::__function::__policy_invoker<std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>::__call_impl[abi:ne190107]<std::__function::__default_alloc_func<DB::registerInterpreterSelectQueryAnalyzer(DB::InterpreterFactory&)::$_0, std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>>(std::__function::__policy_storage const*, DB::InterpreterFactory::Arguments const&) @ 0x000000010ed712a4
+15. DB::InterpreterFactory::get(std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::Context>, DB::SelectQueryOptions const&) @ 0x000000010ed267ec
+16. DB::executeQueryImpl(char const*, char const*, std::shared_ptr<DB::Context>, DB::QueryFlags, DB::QueryProcessingStage::Enum, std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>&, std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::ImplicitTransactionControlExecutor>) @ 0x000000010f0c0754
+17. DB::executeQuery(std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>, DB::WriteBuffer&, bool, std::shared_ptr<DB::Context>, std::function<void (DB::QueryResultDetails const&)>, DB::QueryFlags, std::optional<DB::FormatSettings> const&, std::function<void (DB::IOutputFormat&, String const&, std::shared_ptr<DB::Context const> const&, std::optional<DB::FormatSettings> const&)>, std::function<void ()>) @ 0x000000010f0c4fa0
+18. DB::HTTPHandler::processQuery(DB::HTTPServerRequest&, DB::HTMLForm&, DB::HTTPServerResponse&, DB::HTTPHandler::Output&, std::optional<DB::CurrentThread::QueryScope>&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f61830
+19. DB::HTTPHandler::handleRequest(DB::HTTPServerRequest&, DB::HTTPServerResponse&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f64f20
+20. DB::HTTPServerConnection::run() @ 0x000000011200a1ec
+21. Poco::Net::TCPServerConnection::start() @ 0x00000001159cd518
+22. Poco::Net::TCPServerDispatcher::run() @ 0x00000001159cdbf8
+23. Poco::PooledThread::run() @ 0x000000011596dfc8
+24. Poco::ThreadImpl::runnableEntry(void*) @ 0x000000011596b128
+25. _pthread_start @ 0x0000000186204c08
+26. thread_start @ 0x00000001861ffba8
+ (version 25.9.4.58 (official build))
+2025.10.29 13:15:14.594936 [ 7286898 ] {a50bd73a-355d-41b5-95cb-5d79e102dd62} <Error> executeQuery: Code: 47. DB::Exception: Unknown expression identifier `action` in scope SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE (action IN ('BUY', 'SELL')) AND (confidence >= 0.75) AND (timestamp > (now() - toIntervalMinute(30))) ORDER BY timestamp DESC, confidence DESC LIMIT 5. (UNKNOWN_IDENTIFIER) (version 25.9.4.58 (official build)) (from 127.0.0.1:60366) (in query:  SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE action IN ('BUY', 'SELL') AND confidence >= 0.75 AND timestamp > now() - INTERVAL 30 MINUTE ORDER BY timestamp DESC, confidence DESC LIMIT 5 FORMAT Native), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x00000001158fe3bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010a39b52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x0000000104f824d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x0000000104f820e8
+4. DB::Exception::Exception<char const*, String&, String, String, String>(int, FormatStringHelperImpl<std::type_identity<char const*>::type, std::type_identity<String&>::type, std::type_identity<String>::type, std::type_identity<String>::type, std::type_identity<String>::type>, char const*&&, String&, String&&, String&&, String&&) @ 0x000000010e6bec4c
+5. DB::QueryAnalyzer::resolveExpressionNode(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool, bool) @ 0x000000010e6a9a5c
+6. DB::QueryAnalyzer::resolveExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool) @ 0x000000010e6a7d6c
+7. DB::QueryAnalyzer::resolveProjectionExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&) @ 0x000000010e6c0174
+8. DB::QueryAnalyzer::resolveQuery(std::shared_ptr<DB::IQueryTreeNode> const&, DB::IdentifierResolveScope&) @ 0x000000010e6a39ac
+9. DB::QueryAnalyzer::resolve(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::IQueryTreeNode> const&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2cb0
+10. DB::QueryAnalysisPass::run(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2320
+11. DB::QueryTreePassManager::run(std::shared_ptr<DB::IQueryTreeNode>) @ 0x000000010e61077c
+12. DB::buildQueryTreeAndRunPasses(std::shared_ptr<DB::IAST> const&, DB::SelectQueryOptions const&, std::shared_ptr<DB::Context const> const&, std::shared_ptr<DB::IStorage> const&) @ 0x000000010ed6f85c
+13. DB::InterpreterSelectQueryAnalyzer::InterpreterSelectQueryAnalyzer(std::shared_ptr<DB::IAST> const&, std::shared_ptr<DB::Context const> const&, DB::SelectQueryOptions const&, std::vector<String, std::allocator<String>> const&) @ 0x000000010ed6e060
+14. std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> std::__function::__policy_invoker<std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>::__call_impl[abi:ne190107]<std::__function::__default_alloc_func<DB::registerInterpreterSelectQueryAnalyzer(DB::InterpreterFactory&)::$_0, std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>>(std::__function::__policy_storage const*, DB::InterpreterFactory::Arguments const&) @ 0x000000010ed712a4
+15. DB::InterpreterFactory::get(std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::Context>, DB::SelectQueryOptions const&) @ 0x000000010ed267ec
+16. DB::executeQueryImpl(char const*, char const*, std::shared_ptr<DB::Context>, DB::QueryFlags, DB::QueryProcessingStage::Enum, std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>&, std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::ImplicitTransactionControlExecutor>) @ 0x000000010f0c0754
+17. DB::executeQuery(std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>, DB::WriteBuffer&, bool, std::shared_ptr<DB::Context>, std::function<void (DB::QueryResultDetails const&)>, DB::QueryFlags, std::optional<DB::FormatSettings> const&, std::function<void (DB::IOutputFormat&, String const&, std::shared_ptr<DB::Context const> const&, std::optional<DB::FormatSettings> const&)>, std::function<void ()>) @ 0x000000010f0c4fa0
+18. DB::HTTPHandler::processQuery(DB::HTTPServerRequest&, DB::HTMLForm&, DB::HTTPServerResponse&, DB::HTTPHandler::Output&, std::optional<DB::CurrentThread::QueryScope>&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f61830
+19. DB::HTTPHandler::handleRequest(DB::HTTPServerRequest&, DB::HTTPServerResponse&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f64f20
+20. DB::HTTPServerConnection::run() @ 0x000000011200a1ec
+21. Poco::Net::TCPServerConnection::start() @ 0x00000001159cd518
+22. Poco::Net::TCPServerDispatcher::run() @ 0x00000001159cdbf8
+23. Poco::PooledThread::run() @ 0x000000011596dfc8
+24. Poco::ThreadImpl::runnableEntry(void*) @ 0x000000011596b128
+25. _pthread_start @ 0x0000000186204c08
+26. thread_start @ 0x00000001861ffba8
+
+2025.10.29 13:15:14.595596 [ 7286898 ] {a50bd73a-355d-41b5-95cb-5d79e102dd62} <Error> DynamicQueryHandler: Code: 47. DB::Exception: Unknown expression identifier `action` in scope SELECT timestamp, symbol, action, confidence FROM tradingsignals WHERE (action IN ('BUY', 'SELL')) AND (confidence >= 0.75) AND (timestamp > (now() - toIntervalMinute(30))) ORDER BY timestamp DESC, confidence DESC LIMIT 5. (UNKNOWN_IDENTIFIER), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x00000001158fe3bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010a39b52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x0000000104f824d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x0000000104f820e8
+4. DB::Exception::Exception<char const*, String&, String, String, String>(int, FormatStringHelperImpl<std::type_identity<char const*>::type, std::type_identity<String&>::type, std::type_identity<String>::type, std::type_identity<String>::type, std::type_identity<String>::type>, char const*&&, String&, String&&, String&&, String&&) @ 0x000000010e6bec4c
+5. DB::QueryAnalyzer::resolveExpressionNode(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool, bool) @ 0x000000010e6a9a5c
+6. DB::QueryAnalyzer::resolveExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&, bool, bool) @ 0x000000010e6a7d6c
+7. DB::QueryAnalyzer::resolveProjectionExpressionNodeList(std::shared_ptr<DB::IQueryTreeNode>&, DB::IdentifierResolveScope&) @ 0x000000010e6c0174
+8. DB::QueryAnalyzer::resolveQuery(std::shared_ptr<DB::IQueryTreeNode> const&, DB::IdentifierResolveScope&) @ 0x000000010e6a39ac
+9. DB::QueryAnalyzer::resolve(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::IQueryTreeNode> const&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2cb0
+10. DB::QueryAnalysisPass::run(std::shared_ptr<DB::IQueryTreeNode>&, std::shared_ptr<DB::Context const>) @ 0x000000010e6a2320
+11. DB::QueryTreePassManager::run(std::shared_ptr<DB::IQueryTreeNode>) @ 0x000000010e61077c
+12. DB::buildQueryTreeAndRunPasses(std::shared_ptr<DB::IAST> const&, DB::SelectQueryOptions const&, std::shared_ptr<DB::Context const> const&, std::shared_ptr<DB::IStorage> const&) @ 0x000000010ed6f85c
+13. DB::InterpreterSelectQueryAnalyzer::InterpreterSelectQueryAnalyzer(std::shared_ptr<DB::IAST> const&, std::shared_ptr<DB::Context const> const&, DB::SelectQueryOptions const&, std::vector<String, std::allocator<String>> const&) @ 0x000000010ed6e060
+14. std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> std::__function::__policy_invoker<std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>::__call_impl[abi:ne190107]<std::__function::__default_alloc_func<DB::registerInterpreterSelectQueryAnalyzer(DB::InterpreterFactory&)::$_0, std::unique_ptr<DB::IInterpreter, std::default_delete<DB::IInterpreter>> (DB::InterpreterFactory::Arguments const&)>>(std::__function::__policy_storage const*, DB::InterpreterFactory::Arguments const&) @ 0x000000010ed712a4
+15. DB::InterpreterFactory::get(std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::Context>, DB::SelectQueryOptions const&) @ 0x000000010ed267ec
+16. DB::executeQueryImpl(char const*, char const*, std::shared_ptr<DB::Context>, DB::QueryFlags, DB::QueryProcessingStage::Enum, std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>&, std::shared_ptr<DB::IAST>&, std::shared_ptr<DB::ImplicitTransactionControlExecutor>) @ 0x000000010f0c0754
+17. DB::executeQuery(std::unique_ptr<DB::ReadBuffer, std::default_delete<DB::ReadBuffer>>, DB::WriteBuffer&, bool, std::shared_ptr<DB::Context>, std::function<void (DB::QueryResultDetails const&)>, DB::QueryFlags, std::optional<DB::FormatSettings> const&, std::function<void (DB::IOutputFormat&, String const&, std::shared_ptr<DB::Context const> const&, std::optional<DB::FormatSettings> const&)>, std::function<void ()>) @ 0x000000010f0c4fa0
+18. DB::HTTPHandler::processQuery(DB::HTTPServerRequest&, DB::HTMLForm&, DB::HTTPServerResponse&, DB::HTTPHandler::Output&, std::optional<DB::CurrentThread::QueryScope>&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f61830
+19. DB::HTTPHandler::handleRequest(DB::HTTPServerRequest&, DB::HTTPServerResponse&, StrongTypedef<unsigned long, ProfileEvents::EventTag> const&) @ 0x0000000111f64f20
+20. DB::HTTPServerConnection::run() @ 0x000000011200a1ec
+21. Poco::Net::TCPServerConnection::start() @ 0x00000001159cd518
+22. Poco::Net::TCPServerDispatcher::run() @ 0x00000001159cdbf8
+23. Poco::PooledThread::run() @ 0x000000011596dfc8
+24. Poco::ThreadImpl::runnableEntry(void*) @ 0x000000011596b128
+25. _pthread_start @ 0x0000000186204c08
+26. thread_start @ 0x00000001861ffba8
+ (version 25.9.4.58 (official build))
+2025.10.29 13:43:15.126415 [ 7286865 ] {} <Warning> Application: Closed all listening sockets. Waiting for 2 outstanding connections.
+2025.10.29 13:43:20.175727 [ 7286865 ] {} <Warning> Application: Closed connections. But 1 remain. Tip: To increase wait time add to config: <shutdown_wait_unfinished>60</shutdown_wait_unfinished>
+2025.10.29 13:43:20.178541 [ 7286865 ] {} <Warning> Application: Will shutdown forcefully.
+2025.10.29 13:52:59.870011 [ 7882915 ] {} <Warning> Context: Maximum number of threads is lower than 30000. There could be problems with handling a lot of simultaneous queries.
+2025.10.29 14:02:16.899603 [ 7893103 ] {} <Warning> Context: Maximum number of threads is lower than 30000. There could be problems with handling a lot of simultaneous queries.
+2025.10.29 17:42:11.899006 [ 8148860 ] {} <Warning> Context: Maximum number of threads is lower than 30000. There could be problems with handling a lot of simultaneous queries.
+2025.10.29 18:48:45.273403 [ 8170804 ] {} <Warning> Context: Maximum number of threads is lower than 30000. There could be problems with handling a lot of simultaneous queries.
+2025.10.29 18:50:01.460290 [ 8174615 ] {} <Error> Application: Code: 76. DB::Exception: Cannot lock file ./data/status. Another server instance in same directory is already running. (CANNOT_OPEN_FILE), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x0000000114ef23bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010998f52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x00000001045764d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x00000001045760e8
+4. DB::Exception::Exception<String const&>(int, FormatStringHelperImpl<std::type_identity<String const&>::type>, String const&) @ 0x00000001051fc47c
+5. DB::StatusFile::StatusFile(String, std::function<void (DB::WriteBuffer&)>) @ 0x0000000109aab258
+6. DB::Server::main(std::vector<String, std::allocator<String>> const&) @ 0x0000000109dd36bc
+7. Poco::Util::Application::run() @ 0x0000000114fea8bc
+8. DB::Server::run() @ 0x0000000109dcd560
+9. mainEntryClickHouseServer(int, char**) @ 0x0000000109dcaec8
+10. main @ 0x000000010456f81c
+11. start @ 0x0000000185e45d54
+ (version 25.9.4.58 (official build))
+2025.10.29 18:52:01.629738 [ 8179877 ] {} <Error> Application: Code: 76. DB::Exception: Cannot lock file ./data/status. Another server instance in same directory is already running. (CANNOT_OPEN_FILE), Stack trace (when copying this message, always include the lines below):
+
+0. Poco::Exception::Exception(String const&, int) @ 0x00000001117c23bc
+1. DB::Exception::Exception(DB::Exception::MessageMasked&&, int, bool) @ 0x000000010625f52c
+2. DB::Exception::Exception(String&&, int, String, bool) @ 0x0000000100e464d8
+3. DB::Exception::Exception(PreformattedMessage&&, int) @ 0x0000000100e460e8
+4. DB::Exception::Exception<String const&>(int, FormatStringHelperImpl<std::type_identity<String const&>::type>, String const&) @ 0x0000000101acc47c
+5. DB::StatusFile::StatusFile(String, std::function<void (DB::WriteBuffer&)>) @ 0x000000010637b258
+6. DB::Server::main(std::vector<String, std::allocator<String>> const&) @ 0x00000001066a36bc
+7. Poco::Util::Application::run() @ 0x00000001118ba8bc
+8. DB::Server::run() @ 0x000000010669d560
+9. mainEntryClickHouseServer(int, char**) @ 0x000000010669aec8
+10. main @ 0x0000000100e3f81c
+11. start @ 0x0000000185e45d54
+ (version 25.9.4.58 (official build))
