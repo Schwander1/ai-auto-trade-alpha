@@ -13,3 +13,4 @@ argon2-cffi
 prometheus_client
 redis
 httpx
+email-validator
