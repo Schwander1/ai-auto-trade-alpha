@@ -3,7 +3,7 @@ import redis
 import time
 from typing import Optional
 from backend.core.config import settings
-from backend.core.metrics import record_rate_limit_check
+# Metrics recording handled by metrics middleware
 
 # Initialize Redis client for rate limiting
 try:
@@ -69,7 +69,7 @@ def check_rate_limit(
         current_count = results[1]
         
         allowed = current_count < max_requests
-        record_rate_limit_check(client_id, allowed)
+        # Metrics recording handled by metrics middleware
         return allowed
     
     except Exception as e:
