@@ -1,2 +1,15 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+sqlalchemy
+psycopg2-binary
+pydantic
+pydantic-settings
+python-multipart
+stripe
+python-jose[cryptography]
+passlib[bcrypt]
+argon2-cffi
 prometheus_client
 redis
+httpx
