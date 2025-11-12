@@ -1,3 +1,19 @@
+// Mock stripe.ts before importing stripe-helpers
+jest.mock('@/lib/stripe', () => ({
+  TIER_PRICING: {
+    STARTER: { name: 'Starter', price: 49 },
+    PROFESSIONAL: { name: 'Professional', price: 99 },
+    INSTITUTIONAL: { name: 'Institutional', price: 249 },
+  },
+  STRIPE_PRICE_IDS: {
+    STARTER: 'price_starter',
+    PROFESSIONAL: 'price_pro',
+    INSTITUTIONAL: 'price_elite',
+  },
+  stripe: {},
+  getStripe: jest.fn(),
+}))
+
 import {
   isSubscriptionActive,
   isOnTrial,
@@ -221,15 +237,13 @@ describe('Stripe Helpers', () => {
 
   describe('getTierDisplayName', () => {
     it('returns display name for known tier', () => {
-      // This depends on TIER_PRICING from stripe.ts
-      // Mock the import or test with actual values
-      try {
-        const name = getTierDisplayName('STARTER')
-        expect(typeof name).toBe('string')
-      } catch (e) {
-        // If TIER_PRICING is not available, test still passes
-        expect(true).toBe(true)
-      }
+      const name = getTierDisplayName('STARTER')
+      expect(name).toBe('Starter')
+    })
+
+    it('returns display name for PROFESSIONAL tier', () => {
+      const name = getTierDisplayName('PROFESSIONAL')
+      expect(name).toBe('Professional')
     })
 
     it('returns tier as-is for unknown tier', () => {
@@ -239,14 +253,14 @@ describe('Stripe Helpers', () => {
   })
 
   describe('getTierPrice', () => {
-    it('returns price for known tier', () => {
-      try {
-        const price = getTierPrice('STARTER')
-        expect(typeof price).toBe('number')
-      } catch (e) {
-        // If TIER_PRICING is not available, test still passes
-        expect(true).toBe(true)
-      }
+    it('returns price for STARTER tier', () => {
+      const price = getTierPrice('STARTER')
+      expect(price).toBe(49)
+    })
+
+    it('returns price for PROFESSIONAL tier', () => {
+      const price = getTierPrice('PROFESSIONAL')
+      expect(price).toBe(99)
     })
 
     it('returns 0 for unknown tier', () => {
