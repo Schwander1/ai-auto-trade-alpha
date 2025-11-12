@@ -11,6 +11,8 @@ from backend.core.config import settings
 from backend.core.database import get_db, engine, Base
 from backend.models.user import User, UserTier
 from backend.models.signal import Signal
+from backend.models.notification import Notification
+from backend.models.backtest import Backtest
 from backend.auth.security import verify_password, get_password_hash, create_access_token, verify_token
 
 # Initialize Stripe
@@ -349,6 +351,11 @@ except:
 
 # Zapier webhooks
 
-# Admin endpoints
-from backend.api import admin
-app.include_router(admin.router, prefix='/api/admin', tags=['admin'])
+# Include all API routers
+from backend.api import auth, users, subscriptions, signals as signals_api, notifications, admin
+app.include_router(auth.router)
+app.include_router(users.router)
+app.include_router(subscriptions.router)
+app.include_router(signals_api.router)
+app.include_router(notifications.router)
+app.include_router(admin.router)

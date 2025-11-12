@@ -7,6 +7,12 @@ class Settings(BaseSettings):
     STRIPE_SECRET_KEY: str
     STRIPE_PUBLISHABLE_KEY: str
     STRIPE_WEBHOOK_SECRET: str = "whsec_WILL_GET_LATER"
+    STRIPE_ACCOUNT_ID: Optional[str] = None
+    
+    # Stripe Price IDs
+    STRIPE_STARTER_PRICE_ID: str = ""  # Founder tier
+    STRIPE_PRO_PRICE_ID: str = ""  # Professional tier
+    STRIPE_ELITE_PRICE_ID: str = ""  # Institutional tier
     
     # Database
     DATABASE_URL: str
@@ -30,11 +36,15 @@ class Settings(BaseSettings):
     DOMAIN: str
     FRONTEND_URL: str
     
+    # Argo API
+    ARGO_API_URL: str = "http://178.156.194.174:8000"
+    
     # Optional
     SENDGRID_API_KEY: Optional[str] = None
     
     class Config:
         env_file = ".env"
         case_sensitive = True
+        extra = "allow"  # Allow extra fields from .env
 
 settings = Settings()

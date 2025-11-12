@@ -20,6 +20,14 @@ active_trades = Gauge('argo_active_trades', 'Number of active trades')
 app = FastAPI(title="Argo Trading API", version="6.0", description="95%+ Win Rate Trading Signals")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
+# Include new API routers
+from argo.api import signals, backtest, performance, symbols, health
+app.include_router(signals.router)
+app.include_router(backtest.router)
+app.include_router(performance.router)
+app.include_router(symbols.router)
+app.include_router(health.router)
+
 # Price database (simulated real-time prices)
 LIVE_PRICES = {
     "AAPL": 175.50, "NVDA": 495.10, "TSLA": 242.30, "MSFT": 378.20, "GOOGL": 142.80, "META": 485.00, "AMZN": 178.90,
