@@ -108,3 +108,4 @@ The `.cursorrules` file enables Cursor to:
 ## 📄 License
 
 Private & Confidential
+test

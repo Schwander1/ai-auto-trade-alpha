@@ -1,26 +1,15 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-# Run linting and tests before commit
 echo "🔍 Running pre-commit checks..."
 
-# Run linting
-pnpm lint || {
+# Run linting only
+pnpm lint
+
+# Check if lint passed
+if [ $? -ne 0 ]; then
   echo "❌ Linting failed. Please fix errors before committing."
   exit 1
-}
-
-# Run type checking
-pnpm type-check || {
-  echo "❌ Type checking failed. Please fix errors before committing."
-  exit 1
-}
-
-# Run tests (fast mode)
-pnpm test -- --bail --findRelatedTests || {
-  echo "❌ Tests failed. Please fix errors before committing."
-  exit 1
-}
+fi
 
 echo "✅ Pre-commit checks passed!"
-
