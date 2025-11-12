@@ -20,7 +20,7 @@ from backend.models.user import User
 from backend.core.rate_limit import check_rate_limit, get_rate_limit_status
 from backend.api.auth import get_current_user
 
-router = APIRouter(prefix="/api/users", tags=["users"])
+router = APIRouter(prefix="/api/v1/users", tags=["users"])
 
 # Rate limiting
 RATE_LIMIT_WINDOW = 60

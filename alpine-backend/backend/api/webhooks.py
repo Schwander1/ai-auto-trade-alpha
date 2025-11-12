@@ -12,7 +12,7 @@ from backend.core.config import settings
 from backend.models.user import User, UserTier
 from backend.core.security_logging import log_security_event, SecurityEvent
 
-router = APIRouter(prefix="/api/webhooks", tags=["webhooks"])
+router = APIRouter(prefix="/api/v1/webhooks", tags=["webhooks"])
 logger = logging.getLogger(__name__)
 
 # Initialize Stripe

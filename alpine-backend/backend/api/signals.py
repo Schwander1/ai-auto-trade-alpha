@@ -29,7 +29,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/signals", tags=["signals"])
+router = APIRouter(prefix="/api/v1/signals", tags=["signals"])
 
 # Rate limiting
 RATE_LIMIT_WINDOW = 60

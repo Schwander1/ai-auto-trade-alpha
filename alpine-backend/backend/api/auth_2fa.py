@@ -17,7 +17,7 @@ from backend.auth.security import create_access_token
 from backend.auth.totp import TOTPManager
 import json
 
-router = APIRouter(prefix="/api/auth", tags=["auth"])
+router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 
 
 class Verify2FALoginRequest(BaseModel):

@@ -1,6 +1,7 @@
 """Argo Trading API v6.0 - Production"""
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from prometheus_client import Counter, Gauge, generate_latest, CONTENT_TYPE_LATEST
 from fastapi.responses import Response
 from datetime import datetime
@@ -8,6 +9,8 @@ import logging
 import hashlib
 import json
 import random
+
+from argo.core.request_tracking import RequestTrackingMiddleware
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -17,7 +20,14 @@ win_rate_gauge = Gauge('argo_win_rate', 'Current win rate')
 api_latency = Gauge('argo_api_latency_ms', 'API latency in milliseconds')
 active_trades = Gauge('argo_active_trades', 'Number of active trades')
 
-app = FastAPI(title="Argo Trading API", version="6.0", description="95%+ Win Rate Trading Signals")
+app = FastAPI(
+    title="Argo Trading API",
+    version="6.0",
+    description="95%+ Win Rate Trading Signals",
+    docs_url="/api/v1/docs",
+    redoc_url="/api/v1/redoc",
+    openapi_url="/api/v1/openapi.json"
+)
 
 # CORS configuration - whitelist only trusted origins
 ALLOWED_ORIGINS = [
@@ -28,13 +38,16 @@ ALLOWED_ORIGINS = [
     "https://91.98.153.49:3000",  # HTTPS variant
 ]
 
+# Add middleware (order matters - first added is last executed)
+app.add_middleware(RequestTrackingMiddleware)  # Request ID tracking
+app.add_middleware(GZipMiddleware, minimum_size=1000)  # Compression
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization", "X-Requested-With", "X-API-Key"],
-    expose_headers=["X-Request-ID", "X-RateLimit-Remaining"],
+    allow_headers=["Content-Type", "Authorization", "X-Requested-With", "X-API-Key", "X-Request-ID"],
+    expose_headers=["X-Request-ID", "X-RateLimit-Remaining", "X-RateLimit-Limit", "X-RateLimit-Reset"],
     max_age=3600,
 )
 

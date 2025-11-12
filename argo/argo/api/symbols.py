@@ -84,22 +84,7 @@ PRICE_DATA = {
 }
 
 
-def check_rate_limit(client_id: str = "default") -> bool:
-    """Check rate limit"""
-    now = time.time()
-    if client_id not in rate_limit_store:
-        rate_limit_store[client_id] = []
-    
-    rate_limit_store[client_id] = [
-        req_time for req_time in rate_limit_store[client_id]
-        if now - req_time < RATE_LIMIT_WINDOW
-    ]
-    
-    if len(rate_limit_store[client_id]) >= RATE_LIMIT_MAX:
-        return False
-    
-    rate_limit_store[client_id].append(now)
-    return True
+# Rate limiting now handled by argo.core.rate_limit module
 
 
 @router.get("", response_model=List[SymbolInfo])
@@ -134,7 +119,7 @@ async def get_available_symbols(
     """
     # Rate limiting
     client_id = authorization or "anonymous"
-    if not check_rate_limit(client_id):
+    if not check_rate_limit(client_id, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
     
     # Filter symbols
@@ -188,7 +173,7 @@ async def get_symbol_data(
     """
     # Rate limiting
     client_id = authorization or "anonymous"
-    if not check_rate_limit(client_id):
+    if not check_rate_limit(client_id, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
     
     # Check if symbol exists
@@ -251,7 +236,7 @@ async def get_symbol_history(
     """
     # Rate limiting
     client_id = authorization or "anonymous"
-    if not check_rate_limit(client_id):
+    if not check_rate_limit(client_id, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
     
     # Check if symbol exists

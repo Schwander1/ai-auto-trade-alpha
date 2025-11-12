@@ -24,7 +24,7 @@ from backend.models.user import User, UserTier
 from backend.auth.security import verify_password, get_password_hash, create_access_token, verify_token
 from fastapi import Request
 
-router = APIRouter(prefix="/api/auth", tags=["auth"])
+router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
 

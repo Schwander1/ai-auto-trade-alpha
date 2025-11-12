@@ -60,22 +60,7 @@ class BacktestMetrics(BaseModel):
 BACKTESTS_DB = {}
 
 
-def check_rate_limit(client_id: str = "default") -> bool:
-    """Check rate limit"""
-    now = time.time()
-    if client_id not in rate_limit_store:
-        rate_limit_store[client_id] = []
-    
-    rate_limit_store[client_id] = [
-        req_time for req_time in rate_limit_store[client_id]
-        if now - req_time < RATE_LIMIT_WINDOW
-    ]
-    
-    if len(rate_limit_store[client_id]) >= RATE_LIMIT_MAX:
-        return False
-    
-    rate_limit_store[client_id].append(now)
-    return True
+# Rate limiting now handled by argo.core.rate_limit module
 
 
 @router.post("", response_model=BacktestResult, status_code=201)
@@ -121,7 +106,7 @@ async def create_backtest(
     """
     # Rate limiting
     client_id = authorization or "anonymous"
-    if not check_rate_limit(client_id):
+    if not check_rate_limit(client_id, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
     
     # Validate dates
@@ -185,7 +170,7 @@ async def get_backtest_result(
     """
     # Rate limiting
     client_id = authorization or "anonymous"
-    if not check_rate_limit(client_id):
+    if not check_rate_limit(client_id, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
     
     # Find backtest
@@ -231,7 +216,7 @@ async def get_backtest_metrics(
     """
     # Rate limiting
     client_id = authorization or "anonymous"
-    if not check_rate_limit(client_id):
+    if not check_rate_limit(client_id, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
     
     # Find backtest

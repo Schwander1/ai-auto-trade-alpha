@@ -25,7 +25,7 @@ from backend.api.auth import get_current_user
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/subscriptions", tags=["subscriptions"])
+router = APIRouter(prefix="/api/v1/subscriptions", tags=["subscriptions"])
 
 # Initialize Stripe
 stripe.api_key = settings.STRIPE_SECRET_KEY

@@ -16,10 +16,10 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/signals", tags=["signals"])
+router = APIRouter(prefix="/api/v1/signals", tags=["signals"])
 
-# Rate limiting storage (in production, use Redis)
-rate_limit_store = {}
+# Use Redis-based rate limiting from core
+from argo.core.rate_limit import check_rate_limit, add_rate_limit_headers, get_rate_limit_status
 RATE_LIMIT_WINDOW = 60  # 1 minute
 RATE_LIMIT_MAX = 100
 
@@ -111,25 +111,7 @@ def verify_hmac(authorization: Optional[str] = Header(None)) -> bool:
         return False
 
 
-def check_rate_limit(client_id: str = "default") -> bool:
-    """Check rate limit (100 req/min)"""
-    now = time.time()
-    if client_id not in rate_limit_store:
-        rate_limit_store[client_id] = []
-    
-    # Remove old requests outside window
-    rate_limit_store[client_id] = [
-        req_time for req_time in rate_limit_store[client_id]
-        if now - req_time < RATE_LIMIT_WINDOW
-    ]
-    
-    # Check limit
-    if len(rate_limit_store[client_id]) >= RATE_LIMIT_MAX:
-        return False
-    
-    # Add current request
-    rate_limit_store[client_id].append(now)
-    return True
+# Rate limiting now handled by argo.core.rate_limit module
 
 
 @router.get("", response_model=PaginatedResponse)
@@ -179,7 +161,7 @@ async def get_all_signals(
     """
     # Rate limiting
     client_id = request.client.host if request.client else "anonymous"
-    if not check_rate_limit(client_id):
+    if not check_rate_limit(client_id, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW):
         raise HTTPException(
             status_code=429,
             detail=f"Rate limit exceeded. Maximum {RATE_LIMIT_MAX} requests per minute."
@@ -269,7 +251,7 @@ async def get_signal_by_id(
     """
     # Rate limiting
     client_id = request.client.host if request.client else "anonymous"
-    if not check_rate_limit(client_id):
+    if not check_rate_limit(client_id, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
     
     # Input sanitization - validate signal_id format
@@ -328,7 +310,7 @@ async def get_latest_signals(
     """
     # Rate limiting
     client_id = request.client.host if request.client else "anonymous"
-    if not check_rate_limit(client_id):
+    if not check_rate_limit(client_id, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
     
     # Get latest signals
@@ -384,7 +366,7 @@ async def get_signal_stats(
     """
     # Rate limiting
     client_id = request.client.host if request.client else "anonymous"
-    if not check_rate_limit(client_id):
+    if not check_rate_limit(client_id, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
     
     # Calculate stats

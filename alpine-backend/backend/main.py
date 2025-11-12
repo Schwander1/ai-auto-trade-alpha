@@ -16,6 +16,8 @@ from backend.core.metrics import get_metrics
 from backend.core.security_headers import SecurityHeadersMiddleware
 from backend.core.csrf import CSRFProtectionMiddleware
 from backend.core.request_tracking import RequestTrackingMiddleware
+from backend.core.request_logging import RequestLoggingMiddleware
+from backend.core.metrics_middleware import MetricsMiddleware
 from backend.models.user import User, UserTier
 from backend.models.signal import Signal
 from backend.models.notification import Notification
@@ -39,13 +41,18 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="Alpine Analytics API",
     version="1.0.0",
-    description="AI Trading Signal Platform"
+    description="AI Trading Signal Platform",
+    docs_url="/api/v1/docs",
+    redoc_url="/api/v1/redoc",
+    openapi_url="/api/v1/openapi.json"
 )
 
-# Add security middleware (order matters - first added is last executed)
+# Add middleware (order matters - first added is last executed)
 app.add_middleware(SecurityHeadersMiddleware)  # Add security headers
 app.add_middleware(CSRFProtectionMiddleware)  # CSRF protection
 app.add_middleware(RequestTrackingMiddleware)  # Request ID tracking
+app.add_middleware(RequestLoggingMiddleware)  # Request/response logging with PII redaction
+app.add_middleware(MetricsMiddleware)  # Prometheus metrics
 app.add_middleware(GZipMiddleware, minimum_size=1000)  # Compression
 
 # CORS middleware - Production-ready configuration

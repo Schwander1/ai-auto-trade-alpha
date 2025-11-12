@@ -13,7 +13,7 @@ from backend.api.auth import get_current_user
 from backend.api.admin import require_admin
 from backend.models.user import User
 
-router = APIRouter(prefix="/api/security", tags=["security"])
+router = APIRouter(prefix="/api/v1/security", tags=["security"])
 
 
 class SecurityMetrics(BaseModel):

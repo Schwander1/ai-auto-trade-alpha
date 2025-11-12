@@ -22,7 +22,7 @@ from backend.core.security_logging import log_security_event, SecurityEvent
 from backend.models.user import User, UserTier
 from backend.api.auth import get_current_user
 
-router = APIRouter(prefix="/api/admin", tags=["admin"])
+router = APIRouter(prefix="/api/v1/admin", tags=["admin"])
 
 # Rate limiting
 RATE_LIMIT_WINDOW = 60

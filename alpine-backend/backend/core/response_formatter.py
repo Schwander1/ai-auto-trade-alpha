@@ -6,6 +6,24 @@ from backend.core.request_tracking import get_request_id
 from fastapi import Request
 
 
+def add_cache_headers(response: Response, max_age: int = 0, public: bool = False):
+    """
+    Add cache control headers to response
+    
+    Args:
+        response: FastAPI response object
+        max_age: Maximum age in seconds (0 = no cache)
+        public: Whether response can be cached by public caches
+    """
+    if max_age > 0:
+        cache_control = f"{'public' if public else 'private'}, max-age={max_age}"
+    else:
+        cache_control = "no-cache, no-store, must-revalidate"
+    
+    response.headers["Cache-Control"] = cache_control
+    return response
+
+
 def format_error_response(
     status_code: int,
     message: str,

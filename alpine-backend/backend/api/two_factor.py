@@ -16,7 +16,7 @@ from backend.models.user import User
 from backend.api.auth import get_current_user
 from backend.auth.totp import TOTPManager
 
-router = APIRouter(prefix="/api/2fa", tags=["2fa"])
+router = APIRouter(prefix="/api/v1/2fa", tags=["2fa"])
 
 
 class Enable2FARequest(BaseModel):

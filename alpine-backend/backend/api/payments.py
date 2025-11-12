@@ -4,7 +4,7 @@ from pydantic import BaseModel
 import stripe
 from backend.core.config import settings
 
-router = APIRouter(prefix="/api/payments", tags=["payments"])
+router = APIRouter(prefix="/api/v1/payments", tags=["payments"])
 
 # Use test key for now (replace with real key in production)
 stripe.api_key = getattr(settings, 'STRIPE_SECRET_KEY', 'sk_test_placeholder')
