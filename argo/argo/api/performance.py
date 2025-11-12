@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from pydantic import BaseModel, Field
 import time
 
-router = APIRouter(prefix="/api/performance", tags=["performance"])
+router = APIRouter(prefix="/api/v1/performance", tags=["performance"])
 
 # Rate limiting
 rate_limit_store = {}

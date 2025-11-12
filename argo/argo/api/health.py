@@ -14,7 +14,7 @@ try:
 except ImportError:
     psutil = None
 
-router = APIRouter(prefix="/api/health", tags=["health"])
+router = APIRouter(prefix="/api/v1/health", tags=["health"])
 
 # Track startup time for uptime calculation
 STARTUP_TIME = datetime.utcnow()
