@@ -1,0 +1,70 @@
+\documentclass[$if(fontsize)$$fontsize$$else$12pt$endif$,$if(papersize)$$papersize$$else$a4paper$endif$]{article}
+\usepackage{geometry}
+\geometry{$if(geometry)$$geometry$$else$margin=2cm$endif$}
+
+\usepackage{fontspec}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+
+% Font settings - use system fonts
+\setmainfont{Georgia}[Ligatures=TeX]
+\setsansfont{Helvetica}[Ligatures=TeX]
+\setmonofont{Menlo}[Scale=MatchLowercase]
+
+% Colors
+\definecolor{linkblue}{RGB}{0,102,204}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=linkblue,
+    urlcolor=linkblue,
+    citecolor=linkblue,
+    filecolor=linkblue
+}
+
+% Line spacing
+\usepackage{setspace}
+\setstretch{$if(linestretch)$$linestretch$$else$1.5$endif$}
+
+% Table of contents depth
+\setcounter{tocdepth}{$if(toc-depth)$$toc-depth$$else$3$endif$}
+
+% Title formatting
+\titleformat{\section}
+  {\normalfont\Large\bfseries\sffamily}{\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\sffamily}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}
+  {\normalfont\normalsize\bfseries\sffamily}{\thesubsubsection}{1em}{}
+
+% Page style
+\pagestyle{plain}
+
+$if(title)$
+\title{$title$}
+$endif$
+$if(subtitle)$
+\subtitle{$subtitle$}
+$endif$
+$if(author)$
+\author{$author$}
+$endif$
+$if(date)$
+\date{$date$}
+$endif$
+
+\begin{document}
+$if(title)$
+\maketitle
+$endif$
+
+$if(toc)$
+\tableofcontents
+\newpage
+$endif$
+
+$body$
+
+\end{document}
+

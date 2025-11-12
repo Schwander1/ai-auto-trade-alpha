@@ -7,6 +7,171 @@
 - packages/alpine-frontend/ - Web UI (Next.js) on 91.98.153.49:3000
 - packages/shared/ - Shared utilities (TypeScript + Python)
 
+## AI Code Review Standards (CRITICAL)
+
+You are an expert senior software engineer conducting comprehensive code reviews. Analyze all code against professional enterprise-grade standards and enforce the following requirements:
+
+### Code Quality Standards
+
+#### Architecture & Design
+
+- **SOLID Principles**: Enforce Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation, Dependency Inversion
+- **Design Patterns**: Apply appropriate patterns (Factory, Strategy, Observer, Repository, etc.) where beneficial
+- **Separation of Concerns**: Maintain clear boundaries between layers (presentation, business logic, data access)
+- **Coupling & Cohesion**: Ensure low coupling between modules and high cohesion within modules
+- **Scalability**: Design for horizontal scaling, stateless services, and efficient resource usage
+- **Maintainability**: Code should be easy to understand, modify, and extend by other developers
+
+#### Code Structure
+
+- **Naming**: Use meaningful, descriptive names for variables, functions, classes, and modules
+  - Functions: `verb_noun` (e.g., `calculate_total`, `fetch_user_data`)
+  - Classes: `Noun` or `NounVerb` (e.g., `UserService`, `PaymentProcessor`)
+  - Variables: `descriptive_name` (e.g., `user_count`, `is_authenticated`)
+  - Constants: `UPPER_SNAKE_CASE` (e.g., `MAX_RETRY_ATTEMPTS`, `API_TIMEOUT_SECONDS`)
+
+- **Function Size**: Keep functions small and focused (ideally under 20-30 lines, maximum 50)
+- **Parameters**: Limit function parameters (maximum 3-4; use objects/dictionaries for more)
+- **Nesting**: Avoid deep nesting (maximum 3-4 levels; extract functions to reduce depth)
+- **DRY Principle**: Eliminate code duplication; extract common logic into reusable functions
+- **Dead Code**: Remove unused imports, commented-out code, and unreachable code paths
+
+#### Error Handling
+
+- **Comprehensive Coverage**: Implement try-catch blocks for all operations that can fail
+- **Specific Exceptions**: Use specific exception types, not generic `Exception` or `Error`
+  - Python: `ValueError`, `TypeError`, `KeyError`, `FileNotFoundError`, custom exceptions
+  - TypeScript: `Error`, `TypeError`, `RangeError`, custom error classes
+- **Error Messages**: Provide meaningful, actionable error messages with context
+- **Logging**: Log errors appropriately with context (user ID, request ID, stack trace)
+- **Never Fail Silently**: Always handle errors explicitly; log or propagate appropriately
+- **Input Validation**: Validate all inputs at system boundaries (API endpoints, function parameters)
+
+#### Security
+
+- **Input Sanitization**: Sanitize and validate all user inputs (SQL injection, XSS prevention)
+- **SQL Injection**: Use parameterized queries, ORM methods, never string concatenation
+- **XSS Prevention**: Escape output, use Content Security Policy, sanitize HTML
+- **CSRF Protection**: Implement CSRF tokens for state-changing operations
+- **Credentials**: Never hardcode credentials, API keys, or sensitive data
+- **Environment Variables**: Use environment variables for all configuration and secrets
+- **Authentication**: Implement proper authentication (JWT, OAuth, session-based)
+- **Authorization**: Enforce authorization checks (role-based, permission-based)
+- **Least Privilege**: Follow principle of least privilege for all operations
+- **Encryption**: Encrypt sensitive data at rest and in transit (TLS/SSL, database encryption)
+- **Secrets Management**: Use secure secret management (AWS Secrets Manager, HashiCorp Vault, etc.)
+
+#### Performance
+
+- **Database Queries**: Optimize queries, avoid N+1 problems, use eager loading where appropriate
+- **Caching**: Implement appropriate caching strategies (Redis, in-memory, CDN)
+- **Async Operations**: Use async/await for I/O operations (database, API calls, file operations)
+- **Loop Optimization**: Avoid unnecessary computations in loops; move invariants outside
+- **Complexity**: Consider time and space complexity; optimize O(n²) or worse algorithms
+- **Profiling**: Profile performance-critical sections; identify and fix bottlenecks
+- **Connection Pooling**: Use connection pooling for database and HTTP connections
+- **Lazy Loading**: Implement lazy loading for large datasets and resources
+
+#### Testing
+
+- **Unit Tests**: Write unit tests for all business logic (aim for 80%+ coverage, 95%+ for critical paths)
+- **Integration Tests**: Include integration tests for critical paths (API endpoints, database operations)
+- **Edge Cases**: Add tests for edge cases, boundary conditions, and error scenarios
+- **Test Isolation**: Ensure tests are isolated, repeatable, and don't depend on external state
+- **Test Names**: Use descriptive test names that explain the scenario: `test_should_return_error_when_user_not_found`
+- **Test Data**: Use factories, fixtures, or mocks for test data; avoid hardcoded values
+- **E2E Tests**: Include end-to-end tests for critical user flows
+
+#### Documentation
+
+- **Comments**: Add clear comments explaining WHY, not WHAT (code should be self-documenting)
+- **API Documentation**: Document all public APIs with proper docstrings/JSDoc
+  - Python: Google-style or NumPy-style docstrings
+  - TypeScript: JSDoc with @param, @returns, @throws
+- **Examples**: Include usage examples for complex functions and classes
+- **README**: Maintain up-to-date README with setup instructions, architecture overview, deployment guide
+- **Assumptions**: Document assumptions, limitations, and known issues
+- **Algorithms**: Add inline comments for complex algorithms explaining the approach
+
+#### Code Style & Formatting
+
+- **Style Guides**: Follow language-specific style guides
+  - Python: PEP 8 (use Black formatter, 88-100 char line length)
+  - TypeScript/JavaScript: Airbnb Style Guide (use ESLint + Prettier, 100-120 char line length)
+- **Indentation**: Use consistent indentation (4 spaces for Python, 2 spaces for TypeScript)
+- **Naming Conventions**: Maintain consistent naming (camelCase for JS/TS, snake_case for Python)
+- **Line Length**: Keep line length reasonable (80-120 characters depending on language)
+- **Linters**: Use linters and formatters (ESLint, Prettier, Black, Ruff, mypy)
+- **Type Hints**: Use type hints/annotations for all function parameters and return values
+
+#### Version Control
+
+- **Commit Messages**: Write clear, descriptive commit messages following Conventional Commits
+  - Format: `type(scope): description`
+  - Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
+- **Atomic Commits**: Keep commits atomic and focused (one logical change per commit)
+- **Issue References**: Reference issue/ticket numbers in commits: `fix(auth): resolve login issue (#123)`
+- **Sensitive Data**: Never commit credentials, API keys, passwords, or personal information
+- **Large Files**: Avoid committing large binaries; use Git LFS or external storage
+
+#### Dependencies
+
+- **Updates**: Keep dependencies up to date; regularly audit for security vulnerabilities
+- **Security Audits**: Run security audits (npm audit, pip-audit, safety)
+- **Minimal Dependencies**: Avoid unnecessary dependencies; prefer standard library when possible
+- **Version Pinning**: Pin versions for reproducibility (package-lock.json, requirements.txt)
+- **License Compliance**: Ensure all dependencies have compatible licenses
+
+## Code Review Process
+
+When reviewing existing code or new changes:
+
+1. **Identify Violations**: Scan for violations of the above standards
+2. **Explain the Issue**: Clearly explain why the issue matters and its impact
+3. **Provide Solutions**: Offer specific refactored code that fixes the problem
+4. **Prioritize Issues**: Categorize as Critical, High, Medium, or Low priority
+5. **Suggest Improvements**: Propose enhancements beyond just fixing violations
+
+### Priority Levels
+
+- **Critical**: Security vulnerabilities, data loss risks, production-breaking bugs, missing error handling
+- **High**: Performance issues, maintainability problems, missing tests for critical paths, architectural concerns
+- **Medium**: Code quality improvements, test coverage gaps, documentation gaps, style inconsistencies
+- **Low**: Minor style issues, optional optimizations, nice-to-have improvements
+
+## Review Output Format
+
+For each file reviewed, provide:
+
+### Summary
+Overall code quality assessment with a score (1-10) and key strengths/weaknesses.
+
+### Critical Issues
+Must-fix problems that pose security risks, could cause data loss, or will break in production.
+- Issue description
+- Impact analysis
+- Refactored code with explanation
+
+### High Priority
+Important improvements affecting performance, maintainability, or reliability.
+- Issue description
+- Impact analysis
+- Refactored code with explanation
+
+### Medium Priority
+Code quality enhancements that improve readability, testability, or documentation.
+- Issue description
+- Suggested improvement
+- Example refactored code
+
+### Low Priority
+Minor style improvements and optional optimizations.
+- Issue description
+- Suggested change
+
+### Refactored Code
+Complete corrected versions of problematic sections with detailed explanations of changes.
+
 ## AI Optimization Rules (CRITICAL)
 
 ### 1. Performance Optimization
@@ -149,3 +314,123 @@ When analyzing code, automatically:
 - Production servers remain untouched until explicit deploy
 - All deployments must pass health checks
 - Rollback capability must be <30 seconds
+
+## Workspace Organization & Cleanup Rules (CRITICAL)
+
+### Automatic Workspace Maintenance
+
+You are responsible for maintaining a clean, organized workspace. Automatically:
+
+1. **Scan for Unnecessary Files**: Identify and remove:
+   - Duplicate files (same content, different names/locations)
+   - Temporary files (*.tmp, *.log, *.swp, *.bak, *.old, *~)
+   - OS-specific files (.DS_Store, Thumbs.db, .idea/, .vscode/ except configs)
+   - Build artifacts that should be in .gitignore
+   - Empty directories
+   - Unused test files or fixtures
+   - Old backup files
+
+2. **Detect Duplicates**: Use content hashing to identify true duplicates (not just same name)
+
+3. **Organize File Structure**: Enforce this structure:
+   ```
+   argo-alpine-workspace/
+   ├── packages/
+   │   ├── argo-trading/          # Trading engine
+   │   ├── alpine-backend/        # User/subscription API
+   │   ├── alpine-frontend/       # Web UI
+   │   └── shared/                # Shared utilities
+   ├── docs/                      # All documentation
+   │   ├── InvestorDocs/          # Investor documentation
+   │   ├── TechnicalDocs/         # Technical documentation
+   │   └── SystemDocs/            # System documentation
+   ├── scripts/                   # Utility scripts
+   ├── infrastructure/            # Infrastructure configs
+   │   └── monitoring/            # Prometheus, Grafana
+   ├── tests/                     # Integration/E2E tests
+   ├── pdfs/                      # Generated PDFs
+   ├── .github/                   # GitHub workflows
+   ├── .husky/                    # Git hooks
+   └── [root config files]        # package.json, turbo.json, etc.
+   ```
+
+4. **File Naming Conventions**:
+   - Scripts: `kebab-case.sh` or `kebab-case.py`
+   - Documentation: `UPPERCASE_WITH_UNDERSCORES.md` or versioned `v1.0_01_*.md`
+   - Config files: `.filename` or `filename.config.ext`
+   - Test files: `*.test.ts`, `*.spec.ts`, `test_*.py`
+
+5. **Enforce Organization**:
+   - Move misplaced files to correct locations
+   - Consolidate duplicate functionality
+   - Remove orphaned files (no references in codebase)
+   - Keep root directory clean (only essential configs)
+
+6. **Before Adding New Files**:
+   - Check if similar functionality exists
+   - Place in correct directory per structure above
+   - Follow naming conventions
+   - Update relevant documentation
+
+7. **Cleanup Triggers**:
+   - Before major commits
+   - When user requests cleanup
+   - When detecting workspace bloat (>100 files in root)
+   - Weekly automated scan (suggest to user)
+
+### Cleanup Process
+
+When performing cleanup:
+
+1. **Analysis Phase**:
+   - Scan entire workspace
+   - Identify duplicates (content-based)
+   - List unnecessary files
+   - Map current structure vs. ideal structure
+
+2. **User Approval** (for destructive operations):
+   - Show list of files to be removed
+   - Explain why each file is unnecessary
+   - Get confirmation before deletion
+
+3. **Execution Phase**:
+   - Remove approved unnecessary files
+   - Move files to correct locations
+   - Update import paths if needed
+   - Update documentation references
+
+4. **Verification Phase**:
+   - Verify no broken imports
+   - Confirm structure matches standards
+   - Update .gitignore if needed
+   - Document changes made
+
+### Files to Always Remove
+
+- `*.pyc`, `__pycache__/`, `*.pyo`
+- `node_modules/` (keep package.json, remove actual modules)
+- `.next/`, `dist/`, `build/` (build artifacts)
+- `*.log`, `*.tmp`, `*.swp`, `*.bak`
+- `.DS_Store`, `Thumbs.db`
+- Duplicate documentation files
+- Old migration files (keep only latest)
+- Unused test fixtures
+
+### Files to Always Keep
+
+- All source code files
+- Configuration files (.env.example, not .env)
+- Documentation in docs/
+- Scripts in scripts/
+- Test files in proper test directories
+- Git-related files (.gitignore, .gitattributes)
+- CI/CD configs (.github/, etc.)
+
+### Organization Enforcement
+
+When new files are created or modified:
+- Automatically suggest correct location if misplaced
+- Warn about duplicate functionality
+- Enforce naming conventions
+- Update documentation if structure changes
+- Maintain clean separation of concerns
