@@ -69,15 +69,12 @@ describe('API Client', () => {
           json: async () => [],
         })
 
-      jest.useFakeTimers()
       const promise = fetchLatestSignals()
       
-      await act(async () => {
-        jest.advanceTimersByTime(2000)
-      })
+      // Wait for retry
+      await new Promise(resolve => setTimeout(resolve, 1500))
 
       await expect(promise).resolves.toEqual([])
-      jest.useRealTimers()
     })
 
     it('does not retry on 4xx errors', async () => {
@@ -182,8 +179,3 @@ describe('API Client', () => {
   })
 })
 
-// Helper for fake timers
-const act = async (callback: () => void) => {
-  callback()
-  await new Promise(resolve => setTimeout(resolve, 0))
-}
