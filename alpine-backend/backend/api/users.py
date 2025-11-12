@@ -11,8 +11,10 @@ from datetime import datetime
 import time
 
 from backend.core.database import get_db
+from backend.core.cache import cache_response
 from backend.models.user import User
-from backend.api.auth import get_current_user, check_rate_limit
+from backend.core.rate_limit import check_rate_limit
+from backend.api.auth import get_current_user
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 
@@ -45,6 +47,7 @@ class DeleteAccountRequest(BaseModel):
 
 
 @router.get("/profile", response_model=UserProfileResponse)
+@cache_response(ttl=300)  # Cache user profile for 5 minutes
 async def get_profile(
     current_user: User = Depends(get_current_user),
     authorization: Optional[str] = Header(None)

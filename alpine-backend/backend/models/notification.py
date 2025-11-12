@@ -1,5 +1,5 @@
 """Notification database model"""
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, Index
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from backend.core.database import Base
@@ -8,6 +8,11 @@ from backend.core.database import Base
 class Notification(Base):
     """User notification model"""
     __tablename__ = "notifications"
+    
+    __table_args__ = (
+        # Composite index for common query pattern: unread notifications by user and date
+        Index('idx_notif_user_read_created', 'user_id', 'is_read', 'created_at'),
+    )
     
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)

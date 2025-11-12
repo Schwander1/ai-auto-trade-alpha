@@ -18,8 +18,10 @@ import io
 
 from backend.core.database import get_db
 from backend.core.config import settings
+from backend.core.cache import cache_response
 from backend.models.user import User, UserTier
-from backend.api.auth import get_current_user, check_rate_limit
+from backend.core.rate_limit import check_rate_limit
+from backend.api.auth import get_current_user
 
 router = APIRouter(prefix="/api/signals", tags=["signals"])
 
@@ -114,6 +116,7 @@ async def fetch_signals_from_argo(limit: int = 10, premium_only: bool = False) -
 
 
 @router.get("/subscribed", response_model=PaginatedSignalsResponse)
+@cache_response(ttl=60)  # Cache for 1 minute (signals update frequently)
 async def get_subscribed_signals(
     limit: int = Query(10, ge=1, le=100, description="Number of signals to return"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),

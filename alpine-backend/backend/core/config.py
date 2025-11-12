@@ -39,8 +39,15 @@ class Settings(BaseSettings):
     # Argo API
     ARGO_API_URL: str = "http://178.156.194.174:8000"
     
+    # Redis
+    REDIS_HOST: str = "localhost"
+    REDIS_PORT: int = 6379
+    REDIS_PASSWORD: Optional[str] = None
+    REDIS_DB: int = 0
+    
     # Optional
     SENDGRID_API_KEY: Optional[str] = None
+    DEBUG: bool = False
     
     class Config:
         env_file = ".env"

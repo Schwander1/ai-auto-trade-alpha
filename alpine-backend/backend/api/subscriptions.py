@@ -14,7 +14,8 @@ import stripe
 from backend.core.database import get_db
 from backend.core.config import settings
 from backend.models.user import User, UserTier
-from backend.api.auth import get_current_user, check_rate_limit
+from backend.core.rate_limit import check_rate_limit
+from backend.api.auth import get_current_user
 
 router = APIRouter(prefix="/api/subscriptions", tags=["subscriptions"])
 

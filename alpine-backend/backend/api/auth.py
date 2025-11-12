@@ -14,6 +14,9 @@ import redis
 
 from backend.core.database import get_db
 from backend.core.config import settings
+from backend.core.rate_limit import check_rate_limit
+from backend.core.cache import cache_response
+from backend.core.token_blacklist import is_token_blacklisted, blacklist_token
 from backend.models.user import User, UserTier
 from backend.auth.security import verify_password, get_password_hash, create_access_token, verify_token
 
@@ -21,13 +24,8 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
 
-# Rate limiting (in production, use Redis)
-rate_limit_store = {}
-RATE_LIMIT_WINDOW = 60
-RATE_LIMIT_MAX = 100
-
-# Token blacklist (in production, use Redis)
-token_blacklist = set()
+# Rate limiting and token blacklist now handled by backend.core modules
+# Imported above: check_rate_limit, is_token_blacklisted, blacklist_token
 
 
 class SignupRequest(BaseModel):
@@ -57,22 +55,7 @@ class UserResponse(BaseModel):
     updated_at: Optional[str] = None
 
 
-def check_rate_limit(client_id: str = "default") -> bool:
-    """Check rate limit (100 req/min per user)"""
-    now = time.time()
-    if client_id not in rate_limit_store:
-        rate_limit_store[client_id] = []
-    
-    rate_limit_store[client_id] = [
-        req_time for req_time in rate_limit_store[client_id]
-        if now - req_time < RATE_LIMIT_WINDOW
-    ]
-    
-    if len(rate_limit_store[client_id]) >= RATE_LIMIT_MAX:
-        return False
-    
-    rate_limit_store[client_id].append(now)
-    return True
+# Rate limiting is now handled by backend.core.rate_limit module
 
 
 async def get_current_user(
@@ -80,8 +63,8 @@ async def get_current_user(
     db: Session = Depends(get_db)
 ) -> User:
     """Get current authenticated user"""
-    # Check if token is blacklisted
-    if token in token_blacklist:
+    # Check if token is blacklisted (using Redis)
+    if is_token_blacklisted(token):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token has been revoked",
@@ -294,13 +277,14 @@ async def logout(
     # Extract token from authorization header
     if authorization and authorization.startswith("Bearer "):
         token = authorization.split(" ")[1]
-        # Add to blacklist (in production, use Redis with TTL)
-        token_blacklist.add(token)
+        # Add to blacklist (using Redis)
+        blacklist_token(token, ttl=settings.JWT_EXPIRATION_HOURS * 3600)
     
     return {"message": "Successfully logged out"}
 
 
 @router.get("/me", response_model=UserResponse)
+@cache_response(ttl=300)  # Cache user info for 5 minutes
 async def get_current_user_info(
     current_user: User = Depends(get_current_user)
 ):

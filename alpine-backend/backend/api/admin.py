@@ -6,14 +6,17 @@ Protected endpoints - admin only
 
 from fastapi import APIRouter, HTTPException, Depends, Query, Header
 from sqlalchemy.orm import Session
+from sqlalchemy import func, Integer
 from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime, timedelta
 import time
 
 from backend.core.database import get_db
+from backend.core.rate_limit import check_rate_limit
+from backend.core.cache import cache_response
 from backend.models.user import User, UserTier
-from backend.api.auth import get_current_user, check_rate_limit
+from backend.api.auth import get_current_user
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
@@ -91,6 +94,7 @@ class RevenueResponse(BaseModel):
 
 
 @router.get("/analytics", response_model=AnalyticsResponse)
+@cache_response(ttl=300)  # Cache for 5 minutes
 async def get_analytics(
     current_user: User = Depends(require_admin),
     authorization: Optional[str] = Header(None)
@@ -131,25 +135,41 @@ async def get_analytics(
     if not check_rate_limit(client_id):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
     
-    # Get analytics from database (mock data for now)
+    # Get analytics from database - OPTIMIZED: Single query with aggregation (N+1 fix)
     from backend.core.database import get_db
     db = next(get_db())
-    total_users = db.query(User).count()
-    active_users = db.query(User).filter(User.is_active == True).count()
     
+    # Single query to get all user statistics
     today = datetime.utcnow().date()
     week_ago = today - timedelta(days=7)
     month_ago = today - timedelta(days=30)
+    today_start = datetime.combine(today, datetime.min.time())
+    week_start = datetime.combine(week_ago, datetime.min.time())
+    month_start = datetime.combine(month_ago, datetime.min.time())
     
-    new_users_today = db.query(User).filter(User.created_at >= datetime.combine(today, datetime.min.time())).count()
-    new_users_this_week = db.query(User).filter(User.created_at >= datetime.combine(week_ago, datetime.min.time())).count()
-    new_users_this_month = db.query(User).filter(User.created_at >= datetime.combine(month_ago, datetime.min.time())).count()
+    # Aggregate all statistics in one query
+    stats = db.query(
+        func.count(User.id).label('total_users'),
+        func.sum(func.cast(User.is_active, Integer)).label('active_users'),
+        func.sum(func.cast(User.created_at >= today_start, Integer)).label('new_today'),
+        func.sum(func.cast(User.created_at >= week_start, Integer)).label('new_week'),
+        func.sum(func.cast(User.created_at >= month_start, Integer)).label('new_month'),
+        func.sum(func.cast(User.tier == UserTier.STARTER, Integer)).label('starter_count'),
+        func.sum(func.cast(User.tier == UserTier.PRO, Integer)).label('pro_count'),
+        func.sum(func.cast(User.tier == UserTier.ELITE, Integer)).label('elite_count')
+    ).first()
+    
+    total_users = stats.total_users or 0
+    active_users = stats.active_users or 0
+    new_users_today = stats.new_today or 0
+    new_users_this_week = stats.new_week or 0
+    new_users_this_month = stats.new_month or 0
     
     # Users by tier
     users_by_tier = {
-        "starter": db.query(User).filter(User.tier == UserTier.STARTER).count(),
-        "pro": db.query(User).filter(User.tier == UserTier.PRO).count(),
-        "elite": db.query(User).filter(User.tier == UserTier.ELITE).count()
+        "starter": stats.starter_count or 0,
+        "pro": stats.pro_count or 0,
+        "elite": stats.elite_count or 0
     }
     
     return AnalyticsResponse(
@@ -257,6 +277,7 @@ async def get_users(
 
 
 @router.get("/revenue", response_model=RevenueResponse)
+@cache_response(ttl=300)  # Cache for 5 minutes
 async def get_revenue(
     current_user: User = Depends(require_admin),
     authorization: Optional[str] = Header(None)
@@ -294,21 +315,35 @@ async def get_revenue(
     if not check_rate_limit(client_id):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
     
-    # Get revenue from database (mock data for now)
+    # OPTIMIZED: Single query for revenue statistics (N+1 fix)
     from backend.core.database import get_db
+    from backend.core.config import settings
     db = next(get_db())
     
-    # Count active subscriptions
-    active_subscriptions = db.query(User).filter(
-        User.is_active == True,
-        User.stripe_subscription_id.isnot(None)
-    ).count()
+    # Single aggregated query for all revenue statistics
+    revenue_stats = db.query(
+        func.sum(func.cast(
+            (User.is_active == True) & (User.stripe_subscription_id.isnot(None)),
+            Integer
+        )).label('active_subscriptions'),
+        func.sum(func.cast(
+            (User.tier == UserTier.STARTER) & (User.is_active == True),
+            Integer
+        )).label('starter_count'),
+        func.sum(func.cast(
+            (User.tier == UserTier.PRO) & (User.is_active == True),
+            Integer
+        )).label('pro_count'),
+        func.sum(func.cast(
+            (User.tier == UserTier.ELITE) & (User.is_active == True),
+            Integer
+        )).label('elite_count')
+    ).first()
     
-    # Calculate revenue by tier (mock calculation)
-    from backend.core.config import settings
-    starter_count = db.query(User).filter(User.tier == UserTier.STARTER, User.is_active == True).count()
-    pro_count = db.query(User).filter(User.tier == UserTier.PRO, User.is_active == True).count()
-    elite_count = db.query(User).filter(User.tier == UserTier.ELITE, User.is_active == True).count()
+    active_subscriptions = revenue_stats.active_subscriptions or 0
+    starter_count = revenue_stats.starter_count or 0
+    pro_count = revenue_stats.pro_count or 0
+    elite_count = revenue_stats.elite_count or 0
     
     revenue_by_tier = {
         "starter": starter_count * settings.TIER_STARTER_PRICE,

@@ -1,14 +1,18 @@
 """Main FastAPI application"""
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from typing import List
 import stripe
+import logging
 from pydantic import BaseModel
 
 from backend.core.config import settings
 from backend.core.database import get_db, engine, Base
+from backend.core.metrics import get_metrics
 from backend.models.user import User, UserTier
 from backend.models.signal import Signal
 from backend.models.notification import Notification
@@ -21,6 +25,13 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 # Create database tables
 Base.metadata.create_all(bind=engine)
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 # FastAPI app
 app = FastAPI(
     title="Alpine Analytics API",
@@ -28,13 +39,26 @@ app = FastAPI(
     description="AI Trading Signal Platform"
 )
 
-# CORS middleware
+# Add GZip compression middleware
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+# CORS middleware - Production-ready configuration
+from backend.core.config import settings
+
+ALLOWED_ORIGINS = [
+    settings.FRONTEND_URL,
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://91.98.153.49:3000",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Update for production
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
+    expose_headers=["X-Total-Count", "X-Page-Count", "X-RateLimit-Remaining"],
 )
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
@@ -76,13 +100,63 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
 # ===== HEALTH CHECK =====
 
 @app.get("/health")
-async def health_check():
-    return {
+async def health_check(db: Session = Depends(get_db)):
+    """Comprehensive health check with database and Redis connectivity"""
+    from sqlalchemy import text
+    from backend.core.cache import redis_client
+    
+    health_status = {
         "status": "healthy",
         "service": "Alpine Analytics API",
         "version": "1.0.0",
-        "domain": settings.DOMAIN
+        "domain": settings.DOMAIN,
+        "checks": {}
     }
+    
+    # Check database
+    try:
+        db.execute(text("SELECT 1"))
+        health_status["checks"]["database"] = "healthy"
+    except Exception as e:
+        health_status["checks"]["database"] = f"unhealthy: {str(e)}"
+        health_status["status"] = "degraded"
+    
+    # Check Redis
+    try:
+        if redis_client:
+            redis_client.ping()
+            health_status["checks"]["redis"] = "healthy"
+        else:
+            health_status["checks"]["redis"] = "not_configured"
+    except Exception as e:
+        health_status["checks"]["redis"] = f"unhealthy: {str(e)}"
+        health_status["status"] = "degraded"
+    
+    return health_status
+
+
+@app.get("/metrics")
+async def metrics():
+    """Prometheus metrics endpoint"""
+    return get_metrics()
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Global exception handler with structured error responses"""
+    logger.error(f"Unhandled exception: {exc}", exc_info=True, extra={
+        "path": request.url.path,
+        "method": request.method,
+    })
+    
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": "Internal server error",
+            "message": str(exc) if settings.DEBUG else "An error occurred",
+            "path": request.url.path
+        }
+    )
 
 # ===== AUTHENTICATION ENDPOINTS =====
 
