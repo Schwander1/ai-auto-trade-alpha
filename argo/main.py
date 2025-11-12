@@ -18,7 +18,25 @@ api_latency = Gauge('argo_api_latency_ms', 'API latency in milliseconds')
 active_trades = Gauge('argo_active_trades', 'Number of active trades')
 
 app = FastAPI(title="Argo Trading API", version="6.0", description="95%+ Win Rate Trading Signals")
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+
+# CORS configuration - whitelist only trusted origins
+ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://91.98.153.49:3000",
+    "http://91.98.153.49:8001",  # Alpine backend
+    "https://91.98.153.49:3000",  # HTTPS variant
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "X-Requested-With", "X-API-Key"],
+    expose_headers=["X-Request-ID", "X-RateLimit-Remaining"],
+    max_age=3600,
+)
 
 # Include new API routers
 from argo.api import signals, backtest, performance, symbols, health

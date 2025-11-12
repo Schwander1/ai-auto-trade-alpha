@@ -3,14 +3,18 @@ Signals API endpoints for Argo Trading Engine
 GET all, GET by ID, GET latest, GET stats
 """
 
-from fastapi import APIRouter, HTTPException, Query, Depends, Header
+from fastapi import APIRouter, HTTPException, Query, Depends, Header, Request, Response
 from typing import Optional, List
 from datetime import datetime, timedelta
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 import hashlib
 import json
 import hmac
 import time
+import re
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/signals", tags=["signals"])
 
@@ -20,7 +24,11 @@ RATE_LIMIT_WINDOW = 60  # 1 minute
 RATE_LIMIT_MAX = 100
 
 # HMAC authentication for Argo
-ARGO_API_SECRET = "argo_secret_key_change_in_production"  # Should be in env
+import os
+ARGO_API_SECRET = os.getenv("ARGO_API_SECRET", "argo_secret_key_change_in_production")
+if ARGO_API_SECRET == "argo_secret_key_change_in_production":
+    import warnings
+    warnings.warn("ARGO_API_SECRET is using default value. Set ARGO_API_SECRET environment variable in production!")
 
 
 class SignalResponse(BaseModel):
@@ -126,6 +134,8 @@ def check_rate_limit(client_id: str = "default") -> bool:
 
 @router.get("", response_model=PaginatedResponse)
 async def get_all_signals(
+    request: Request,
+    response: Response,
     limit: int = Query(10, ge=1, le=100, description="Number of signals to return"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
     premium_only: bool = Query(False, description="Filter premium signals only"),
@@ -168,12 +178,31 @@ async def get_all_signals(
     ```
     """
     # Rate limiting
-    client_id = authorization or "anonymous"
+    client_id = request.client.host if request.client else "anonymous"
     if not check_rate_limit(client_id):
         raise HTTPException(
             status_code=429,
             detail=f"Rate limit exceeded. Maximum {RATE_LIMIT_MAX} requests per minute."
         )
+    
+    # Input sanitization
+    try:
+        if symbol:
+            # Sanitize symbol (uppercase, alphanumeric and hyphens only)
+            symbol = symbol.upper().strip()
+            if not re.match(r'^[A-Z0-9_-]+$', symbol) or len(symbol) > 20:
+                raise HTTPException(status_code=400, detail="Invalid symbol format")
+        
+        if action:
+            # Sanitize action (BUY or SELL only)
+            action = action.upper().strip()
+            if action not in ["BUY", "SELL"]:
+                raise HTTPException(status_code=400, detail="Invalid action. Must be BUY or SELL")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Input sanitization error: {e}")
+        raise HTTPException(status_code=400, detail="Invalid input parameters")
     
     # Filter signals
     filtered = SIGNALS_DB.copy()
@@ -182,14 +211,19 @@ async def get_all_signals(
         filtered = [s for s in filtered if s.get("confidence", 0) >= 95]
     
     if symbol:
-        filtered = [s for s in filtered if s.get("symbol") == symbol.upper()]
+        filtered = [s for s in filtered if s.get("symbol") == symbol]
     
     if action:
-        filtered = [s for s in filtered if s.get("action") == action.upper()]
+        filtered = [s for s in filtered if s.get("action") == action]
     
     # Paginate
     total = len(filtered)
     paginated = filtered[offset:offset + limit]
+    
+    # Add rate limit headers
+    remaining = max(0, RATE_LIMIT_MAX - len(rate_limit_store.get(client_id, [])))
+    response.headers["X-RateLimit-Remaining"] = str(remaining)
+    response.headers["X-RateLimit-Limit"] = str(RATE_LIMIT_MAX)
     
     return PaginatedResponse(
         items=[SignalResponse(**s) for s in paginated],
@@ -202,6 +236,8 @@ async def get_all_signals(
 
 @router.get("/{signal_id}", response_model=SignalResponse)
 async def get_signal_by_id(
+    request: Request,
+    response: Response,
     signal_id: str,
     authorization: Optional[str] = Header(None)
 ):
@@ -232,9 +268,17 @@ async def get_signal_by_id(
     ```
     """
     # Rate limiting
-    client_id = authorization or "anonymous"
+    client_id = request.client.host if request.client else "anonymous"
     if not check_rate_limit(client_id):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
+    
+    # Input sanitization - validate signal_id format
+    if not signal_id or len(signal_id) > 100:
+        raise HTTPException(status_code=400, detail="Invalid signal ID format")
+    
+    # Sanitize signal_id (alphanumeric, hyphens, underscores only)
+    if not re.match(r'^[A-Za-z0-9_-]+$', signal_id):
+        raise HTTPException(status_code=400, detail="Invalid signal ID format")
     
     # Find signal
     signal = next((s for s in SIGNALS_DB if s.get("id") == signal_id), None)
@@ -242,11 +286,18 @@ async def get_signal_by_id(
     if not signal:
         raise HTTPException(status_code=404, detail=f"Signal {signal_id} not found")
     
+    # Add rate limit headers
+    remaining = max(0, RATE_LIMIT_MAX - len(rate_limit_store.get(client_id, [])))
+    response.headers["X-RateLimit-Remaining"] = str(remaining)
+    response.headers["X-RateLimit-Limit"] = str(RATE_LIMIT_MAX)
+    
     return SignalResponse(**signal)
 
 
 @router.get("/latest", response_model=List[SignalResponse])
 async def get_latest_signals(
+    request: Request,
+    response: Response,
     limit: int = Query(10, ge=1, le=100, description="Number of latest signals"),
     premium_only: bool = Query(False, description="Filter premium signals only"),
     authorization: Optional[str] = Header(None)
@@ -276,7 +327,7 @@ async def get_latest_signals(
     ```
     """
     # Rate limiting
-    client_id = authorization or "anonymous"
+    client_id = request.client.host if request.client else "anonymous"
     if not check_rate_limit(client_id):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
     
@@ -292,11 +343,18 @@ async def get_latest_signals(
     # Limit
     limited = filtered[:limit]
     
+    # Add rate limit headers
+    remaining = max(0, RATE_LIMIT_MAX - len(rate_limit_store.get(client_id, [])))
+    response.headers["X-RateLimit-Remaining"] = str(remaining)
+    response.headers["X-RateLimit-Limit"] = str(RATE_LIMIT_MAX)
+    
     return [SignalResponse(**s) for s in limited]
 
 
 @router.get("/stats", response_model=SignalStatsResponse)
 async def get_signal_stats(
+    request: Request,
+    response: Response,
     authorization: Optional[str] = Header(None)
 ):
     """
@@ -325,7 +383,7 @@ async def get_signal_stats(
     ```
     """
     # Rate limiting
-    client_id = authorization or "anonymous"
+    client_id = request.client.host if request.client else "anonymous"
     if not check_rate_limit(client_id):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
     
@@ -339,6 +397,11 @@ async def get_signal_stats(
     # Calculate win rate (mock data)
     win_rate = 96.3 if total > 0 else 0.0
     avg_confidence = sum(s.get("confidence", 0) for s in SIGNALS_DB) / total if total > 0 else 0.0
+    
+    # Add rate limit headers
+    remaining = max(0, RATE_LIMIT_MAX - len(rate_limit_store.get(client_id, [])))
+    response.headers["X-RateLimit-Remaining"] = str(remaining)
+    response.headers["X-RateLimit-Limit"] = str(RATE_LIMIT_MAX)
     
     return SignalStatsResponse(
         total_signals=total,

@@ -28,6 +28,12 @@ class User(Base):
     is_active = Column(Boolean, default=True, index=True)
     is_verified = Column(Boolean, default=False)
     
+    # 2FA fields
+    totp_secret = Column(String, nullable=True)  # TOTP secret (encrypted in production)
+    totp_enabled = Column(Boolean, default=False)  # Whether 2FA is enabled
+    backup_codes = Column(String, nullable=True)  # JSON array of hashed backup codes
+    last_totp_used = Column(DateTime(timezone=True), nullable=True)  # Prevent replay attacks
+    
     stripe_customer_id = Column(String, unique=True, index=True)
     stripe_subscription_id = Column(String, index=True)
     

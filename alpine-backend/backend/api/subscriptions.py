@@ -3,19 +3,27 @@ Subscription management API endpoints for Alpine Backend
 GET plan, POST upgrade, GET invoices
 """
 
-from fastapi import APIRouter, HTTPException, Depends, status, Query, Header
+from fastapi import APIRouter, HTTPException, Depends, status, Query, Header, Request, Response
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from typing import Optional, List
 from datetime import datetime
 import time
 import stripe
+import hmac
+import hashlib
+import logging
 
 from backend.core.database import get_db
 from backend.core.config import settings
+from backend.core.input_sanitizer import sanitize_tier
+from backend.core.response_formatter import add_rate_limit_headers
+from backend.core.security_logging import log_security_event, SecurityEvent
 from backend.models.user import User, UserTier
-from backend.core.rate_limit import check_rate_limit
+from backend.core.rate_limit import check_rate_limit, get_rate_limit_status
 from backend.api.auth import get_current_user
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/subscriptions", tags=["subscriptions"])
 
@@ -41,6 +49,11 @@ class SubscriptionPlanResponse(BaseModel):
 class UpgradeRequest(BaseModel):
     """Upgrade subscription request"""
     tier: str = Field(..., description="Target tier: starter, pro, elite")
+    
+    @validator('tier')
+    def validate_tier(cls, v):
+        """Validate and sanitize tier"""
+        return sanitize_tier(v)
 
 
 class InvoiceResponse(BaseModel):
@@ -81,6 +94,8 @@ TIER_PRICES = {
 
 @router.get("/plan", response_model=SubscriptionPlanResponse)
 async def get_subscription_plan(
+    request: Request,
+    response: Response,
     current_user: User = Depends(get_current_user),
     authorization: Optional[str] = Header(None)
 ):
@@ -115,6 +130,14 @@ async def get_subscription_plan(
     if not check_rate_limit(client_id):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
     
+    # Add rate limit headers
+    rate_limit_status = get_rate_limit_status(client_id)
+    add_rate_limit_headers(
+        response,
+        remaining=rate_limit_status["remaining"],
+        reset_at=int(time.time()) + rate_limit_status["reset_in"]
+    )
+    
     # Get Stripe subscription if exists
     stripe_subscription = None
     current_period_end = None
@@ -142,6 +165,8 @@ async def get_subscription_plan(
 @router.post("/upgrade", response_model=dict)
 async def upgrade_subscription(
     upgrade_data: UpgradeRequest,
+    request: Request,
+    response: Response,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
     authorization: Optional[str] = Header(None)
@@ -173,13 +198,15 @@ async def upgrade_subscription(
     if not check_rate_limit(client_id):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
     
-    # Validate tier
-    valid_tiers = ["starter", "pro", "elite"]
-    if upgrade_data.tier not in valid_tiers:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid tier. Must be one of: {', '.join(valid_tiers)}"
-        )
+    # Add rate limit headers
+    rate_limit_status = get_rate_limit_status(client_id)
+    add_rate_limit_headers(
+        response,
+        remaining=rate_limit_status["remaining"],
+        reset_at=int(time.time()) + rate_limit_status["reset_in"]
+    )
+    
+    # Tier is already validated by Pydantic validator
     
     # Check if already at or above requested tier
     tier_order = {"starter": 1, "pro": 2, "elite": 3}
@@ -220,20 +247,32 @@ async def upgrade_subscription(
             }
         )
         
+        # Log subscription upgrade attempt
+        log_security_event(
+            SecurityEvent.ADMIN_ACTION,
+            user_id=current_user.id,
+            email=current_user.email,
+            details={"action": "subscription_upgrade_initiated", "tier": upgrade_data.tier},
+            request=request
+        )
+        
         return {
             "message": "Subscription upgrade initiated",
             "tier": upgrade_data.tier,
             "checkout_url": checkout_session.url
         }
     except stripe.error.StripeError as e:
+        logger.error(f"Stripe error during subscription upgrade: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Stripe error: {str(e)}"
+            detail="Payment processing error. Please try again later."
         )
 
 
 @router.get("/invoices", response_model=PaginatedInvoicesResponse)
 async def get_invoices(
+    request: Request,
+    response: Response,
     limit: int = Query(10, ge=1, le=100, description="Number of invoices to return"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
     current_user: User = Depends(get_current_user),
@@ -275,6 +314,14 @@ async def get_invoices(
     if not check_rate_limit(client_id):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
     
+    # Add rate limit headers
+    rate_limit_status = get_rate_limit_status(client_id)
+    add_rate_limit_headers(
+        response,
+        remaining=rate_limit_status["remaining"],
+        reset_at=int(time.time()) + rate_limit_status["reset_in"]
+    )
+    
     # Get invoices from Stripe
     if not current_user.stripe_customer_id:
         return PaginatedInvoicesResponse(
@@ -313,8 +360,9 @@ async def get_invoices(
             has_more=invoices.has_more
         )
     except stripe.error.StripeError as e:
+        logger.error(f"Stripe error fetching invoices: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Stripe error: {str(e)}"
+            detail="Failed to fetch invoices. Please try again later."
         )
 

@@ -13,6 +13,9 @@ from pydantic import BaseModel
 from backend.core.config import settings
 from backend.core.database import get_db, engine, Base
 from backend.core.metrics import get_metrics
+from backend.core.security_headers import SecurityHeadersMiddleware
+from backend.core.csrf import CSRFProtectionMiddleware
+from backend.core.request_tracking import RequestTrackingMiddleware
 from backend.models.user import User, UserTier
 from backend.models.signal import Signal
 from backend.models.notification import Notification
@@ -39,26 +42,35 @@ app = FastAPI(
     description="AI Trading Signal Platform"
 )
 
-# Add GZip compression middleware
-app.add_middleware(GZipMiddleware, minimum_size=1000)
+# Add security middleware (order matters - first added is last executed)
+app.add_middleware(SecurityHeadersMiddleware)  # Add security headers
+app.add_middleware(CSRFProtectionMiddleware)  # CSRF protection
+app.add_middleware(RequestTrackingMiddleware)  # Request ID tracking
+app.add_middleware(GZipMiddleware, minimum_size=1000)  # Compression
 
 # CORS middleware - Production-ready configuration
 from backend.core.config import settings
 
+# CORS configuration - whitelist only trusted origins
 ALLOWED_ORIGINS = [
     settings.FRONTEND_URL,
     "http://localhost:3000",
     "http://localhost:3001",
     "http://91.98.153.49:3000",
+    "https://91.98.153.49:3000",  # HTTPS variant
 ]
+
+# Remove any wildcard or unsafe origins
+ALLOWED_ORIGINS = [origin for origin in ALLOWED_ORIGINS if origin and origin != "*"]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
-    expose_headers=["X-Total-Count", "X-Page-Count", "X-RateLimit-Remaining"],
+    allow_headers=["Content-Type", "Authorization", "X-Requested-With", "X-CSRF-Token", "X-Request-ID"],
+    expose_headers=["X-Total-Count", "X-Page-Count", "X-RateLimit-Remaining", "X-Request-ID"],
+    max_age=3600,  # Cache preflight requests for 1 hour
 )
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
@@ -144,17 +156,26 @@ async def metrics():
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     """Global exception handler with structured error responses"""
+    from backend.core.request_tracking import get_request_id
+    
+    request_id = get_request_id(request)
+    
     logger.error(f"Unhandled exception: {exc}", exc_info=True, extra={
         "path": request.url.path,
         "method": request.method,
+        "request_id": request_id,
     })
+    
+    # Don't expose internal error details in production
+    error_message = str(exc) if settings.DEBUG else "An error occurred"
     
     return JSONResponse(
         status_code=500,
         content={
             "error": "Internal server error",
-            "message": str(exc) if settings.DEBUG else "An error occurred",
-            "path": request.url.path
+            "message": error_message,
+            "path": request.url.path,
+            "request_id": request_id
         }
     )
 
@@ -426,10 +447,14 @@ except:
 # Zapier webhooks
 
 # Include all API routers
-from backend.api import auth, users, subscriptions, signals as signals_api, notifications, admin
+from backend.api import auth, auth_2fa, users, subscriptions, signals as signals_api, notifications, admin, webhooks, two_factor, security_dashboard
 app.include_router(auth.router)
+app.include_router(auth_2fa.router)
 app.include_router(users.router)
 app.include_router(subscriptions.router)
 app.include_router(signals_api.router)
 app.include_router(notifications.router)
 app.include_router(admin.router)
+app.include_router(webhooks.router)
+app.include_router(two_factor.router)
+app.include_router(security_dashboard.router)

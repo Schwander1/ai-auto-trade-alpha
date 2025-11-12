@@ -3,17 +3,21 @@ User management API endpoints for Alpine Backend
 GET profile, PUT profile, DELETE account
 """
 
-from fastapi import APIRouter, HTTPException, Depends, status, Header
+from fastapi import APIRouter, HTTPException, Depends, status, Header, Request, Response
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, validator
 from typing import Optional
 from datetime import datetime
 import time
+import re
 
 from backend.core.database import get_db
 from backend.core.cache import cache_response
+from backend.core.input_sanitizer import sanitize_string, sanitize_email
+from backend.core.response_formatter import format_error_response, add_rate_limit_headers
+from backend.core.security_logging import log_security_event, SecurityEvent
 from backend.models.user import User
-from backend.core.rate_limit import check_rate_limit
+from backend.core.rate_limit import check_rate_limit, get_rate_limit_status
 from backend.api.auth import get_current_user
 
 router = APIRouter(prefix="/api/users", tags=["users"])
@@ -39,6 +43,22 @@ class UpdateProfileRequest(BaseModel):
     """Update profile request"""
     full_name: Optional[str] = Field(None, min_length=1, max_length=100)
     email: Optional[EmailStr] = None
+    
+    @validator('full_name')
+    def validate_full_name(cls, v):
+        """Validate and sanitize full name"""
+        if v is not None:
+            v = sanitize_string(v, max_length=100)
+            if len(v) < 1:
+                raise ValueError("Full name cannot be empty")
+        return v
+    
+    @validator('email')
+    def validate_email(cls, v):
+        """Validate and sanitize email"""
+        if v is not None:
+            v = sanitize_email(v)
+        return v
 
 
 class DeleteAccountRequest(BaseModel):
@@ -49,6 +69,8 @@ class DeleteAccountRequest(BaseModel):
 @router.get("/profile", response_model=UserProfileResponse)
 @cache_response(ttl=300)  # Cache user profile for 5 minutes
 async def get_profile(
+    request: Request,
+    response: Response,
     current_user: User = Depends(get_current_user),
     authorization: Optional[str] = Header(None)
 ):
@@ -80,6 +102,14 @@ async def get_profile(
     if not check_rate_limit(client_id):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
     
+    # Add rate limit headers
+    rate_limit_status = get_rate_limit_status(client_id)
+    add_rate_limit_headers(
+        response,
+        remaining=rate_limit_status["remaining"],
+        reset_at=int(time.time()) + rate_limit_status["reset_in"]
+    )
+    
     return UserProfileResponse(
         id=current_user.id,
         email=current_user.email,
@@ -95,6 +125,8 @@ async def get_profile(
 @router.put("/profile", response_model=UserProfileResponse)
 async def update_profile(
     profile_data: UpdateProfileRequest,
+    request: Request,
+    response: Response,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
     authorization: Optional[str] = Header(None)
@@ -132,22 +164,51 @@ async def update_profile(
     if not check_rate_limit(client_id):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
     
+    # Add rate limit headers
+    rate_limit_status = get_rate_limit_status(client_id)
+    add_rate_limit_headers(
+        response,
+        remaining=rate_limit_status["remaining"],
+        reset_at=int(time.time()) + rate_limit_status["reset_in"]
+    )
+    
     # Update fields
     updated = False
     
     if profile_data.full_name is not None:
-        current_user.full_name = profile_data.full_name
+        # Sanitize full name
+        sanitized_name = sanitize_string(profile_data.full_name, max_length=100)
+        current_user.full_name = sanitized_name
         updated = True
     
     if profile_data.email is not None and profile_data.email != current_user.email:
+        # Sanitize email
+        try:
+            sanitized_email = sanitize_email(profile_data.email)
+        except ValueError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e)
+            )
+        
         # Check if email is already taken
-        existing_user = db.query(User).filter(User.email == profile_data.email).first()
+        existing_user = db.query(User).filter(User.email == sanitized_email).first()
         if existing_user:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Email already registered"
             )
-        current_user.email = profile_data.email
+        
+        # Log email change
+        log_security_event(
+            SecurityEvent.ADMIN_ACTION,
+            user_id=current_user.id,
+            email=current_user.email,
+            details={"action": "email_change", "old_email": current_user.email, "new_email": sanitized_email},
+            request=request
+        )
+        
+        current_user.email = sanitized_email
         current_user.is_verified = False  # Require re-verification
         updated = True
     
@@ -171,6 +232,8 @@ async def update_profile(
 @router.delete("/account", status_code=200)
 async def delete_account(
     delete_data: DeleteAccountRequest,
+    request: Request,
+    response: Response,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
     authorization: Optional[str] = Header(None)
@@ -200,13 +263,37 @@ async def delete_account(
     if not check_rate_limit(client_id):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
     
+    # Add rate limit headers
+    rate_limit_status = get_rate_limit_status(client_id)
+    add_rate_limit_headers(
+        response,
+        remaining=rate_limit_status["remaining"],
+        reset_at=int(time.time()) + rate_limit_status["reset_in"]
+    )
+    
     # Verify password
     from backend.auth.security import verify_password
     if not verify_password(delete_data.password, current_user.hashed_password):
+        log_security_event(
+            SecurityEvent.FAILED_LOGIN,
+            user_id=current_user.id,
+            email=current_user.email,
+            details={"reason": "incorrect_password_for_account_deletion"},
+            request=request
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect password"
         )
+    
+    # Log account deletion
+    log_security_event(
+        SecurityEvent.ACCOUNT_DELETED,
+        user_id=current_user.id,
+        email=current_user.email,
+        details={"action": "account_deletion"},
+        request=request
+    )
     
     # Delete user (soft delete by setting is_active=False)
     current_user.is_active = False

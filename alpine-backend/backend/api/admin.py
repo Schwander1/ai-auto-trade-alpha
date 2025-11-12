@@ -4,17 +4,21 @@ GET analytics, GET users, GET revenue
 Protected endpoints - admin only
 """
 
-from fastapi import APIRouter, HTTPException, Depends, Query, Header
+from fastapi import APIRouter, HTTPException, Depends, Query, Header, Request, Response
 from sqlalchemy.orm import Session
 from sqlalchemy import func, Integer
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from typing import Optional, List
 from datetime import datetime, timedelta
 import time
+import re
 
 from backend.core.database import get_db
-from backend.core.rate_limit import check_rate_limit
+from backend.core.rate_limit import check_rate_limit, get_rate_limit_status
 from backend.core.cache import cache_response
+from backend.core.input_sanitizer import sanitize_tier
+from backend.core.response_formatter import add_rate_limit_headers
+from backend.core.security_logging import log_security_event, SecurityEvent
 from backend.models.user import User, UserTier
 from backend.api.auth import get_current_user
 
@@ -96,6 +100,8 @@ class RevenueResponse(BaseModel):
 @router.get("/analytics", response_model=AnalyticsResponse)
 @cache_response(ttl=300)  # Cache for 5 minutes
 async def get_analytics(
+    request: Request,
+    response: Response,
     current_user: User = Depends(require_admin),
     authorization: Optional[str] = Header(None)
 ):
@@ -134,6 +140,23 @@ async def get_analytics(
     client_id = current_user.email
     if not check_rate_limit(client_id):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
+    
+    # Add rate limit headers
+    rate_limit_status = get_rate_limit_status(client_id)
+    add_rate_limit_headers(
+        response,
+        remaining=rate_limit_status["remaining"],
+        reset_at=int(time.time()) + rate_limit_status["reset_in"]
+    )
+    
+    # Log admin access
+    log_security_event(
+        SecurityEvent.ADMIN_ACTION,
+        user_id=current_user.id,
+        email=current_user.email,
+        details={"action": "view_analytics"},
+        request=request
+    )
     
     # Get analytics from database - OPTIMIZED: Single query with aggregation (N+1 fix)
     from backend.core.database import get_db
@@ -190,6 +213,8 @@ async def get_analytics(
 
 @router.get("/users", response_model=PaginatedUsersResponse)
 async def get_users(
+    request: Request,
+    response: Response,
     limit: int = Query(20, ge=1, le=100, description="Number of users to return"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
     tier: Optional[str] = Query(None, description="Filter by tier"),
@@ -233,18 +258,36 @@ async def get_users(
     if not check_rate_limit(client_id):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
     
+    # Add rate limit headers
+    rate_limit_status = get_rate_limit_status(client_id)
+    add_rate_limit_headers(
+        response,
+        remaining=rate_limit_status["remaining"],
+        reset_at=int(time.time()) + rate_limit_status["reset_in"]
+    )
+    
+    # Log admin access
+    log_security_event(
+        SecurityEvent.ADMIN_ACTION,
+        user_id=current_user.id,
+        email=current_user.email,
+        details={"action": "view_users", "filters": {"tier": tier, "is_active": is_active}},
+        request=request
+    )
+    
     # Get users from database
     from backend.core.database import get_db
     db = next(get_db())
     query = db.query(User)
     
-    # Apply filters
+    # Apply filters with input sanitization
     if tier:
         try:
-            tier_enum = UserTier(tier)
+            sanitized_tier = sanitize_tier(tier)
+            tier_enum = UserTier(sanitized_tier)
             query = query.filter(User.tier == tier_enum)
-        except ValueError:
-            raise HTTPException(status_code=400, detail=f"Invalid tier: {tier}")
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
     
     if is_active is not None:
         query = query.filter(User.is_active == is_active)
@@ -279,6 +322,8 @@ async def get_users(
 @router.get("/revenue", response_model=RevenueResponse)
 @cache_response(ttl=300)  # Cache for 5 minutes
 async def get_revenue(
+    request: Request,
+    response: Response,
     current_user: User = Depends(require_admin),
     authorization: Optional[str] = Header(None)
 ):
@@ -314,6 +359,23 @@ async def get_revenue(
     client_id = current_user.email
     if not check_rate_limit(client_id):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
+    
+    # Add rate limit headers
+    rate_limit_status = get_rate_limit_status(client_id)
+    add_rate_limit_headers(
+        response,
+        remaining=rate_limit_status["remaining"],
+        reset_at=int(time.time()) + rate_limit_status["reset_in"]
+    )
+    
+    # Log admin access
+    log_security_event(
+        SecurityEvent.ADMIN_ACTION,
+        user_id=current_user.id,
+        email=current_user.email,
+        details={"action": "view_revenue"},
+        request=request
+    )
     
     # OPTIMIZED: Single query for revenue statistics (N+1 fix)
     from backend.core.database import get_db

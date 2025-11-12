@@ -3,12 +3,13 @@ Signals API endpoints for Alpine Backend
 GET subscribed signals, GET history, GET export
 """
 
-from fastapi import APIRouter, HTTPException, Depends, Query, Header, Response
+from fastapi import APIRouter, HTTPException, Depends, Query, Header, Response, Request
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from typing import Optional, List
 from datetime import datetime, timedelta
 import time
+import re
 try:
     import httpx
 except ImportError:
@@ -19,9 +20,14 @@ import io
 from backend.core.database import get_db
 from backend.core.config import settings
 from backend.core.cache import cache_response
+from backend.core.input_sanitizer import sanitize_symbol, sanitize_action
+from backend.core.response_formatter import add_rate_limit_headers
 from backend.models.user import User, UserTier
-from backend.core.rate_limit import check_rate_limit
+from backend.core.rate_limit import check_rate_limit, get_rate_limit_status
 from backend.api.auth import get_current_user
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/signals", tags=["signals"])
 
@@ -118,6 +124,8 @@ async def fetch_signals_from_argo(limit: int = 10, premium_only: bool = False) -
 @router.get("/subscribed", response_model=PaginatedSignalsResponse)
 @cache_response(ttl=60)  # Cache for 1 minute (signals update frequently)
 async def get_subscribed_signals(
+    request: Request,
+    response: Response,
     limit: int = Query(10, ge=1, le=100, description="Number of signals to return"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
     premium_only: bool = Query(False, description="Filter premium signals only"),
@@ -161,13 +169,30 @@ async def get_subscribed_signals(
     if not check_rate_limit(client_id):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
     
+    # Add rate limit headers
+    rate_limit_status = get_rate_limit_status(client_id)
+    add_rate_limit_headers(
+        response,
+        remaining=rate_limit_status["remaining"],
+        reset_at=int(time.time()) + rate_limit_status["reset_in"]
+    )
+    
     # Check tier limits
     tier_limit = get_tier_signal_limit(current_user.tier)
     if limit > tier_limit:
         limit = tier_limit
     
     # Fetch signals from Argo
-    signals = await fetch_signals_from_argo(limit=limit + offset, premium_only=premium_only)
+    try:
+        signals = await fetch_signals_from_argo(limit=limit + offset, premium_only=premium_only)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching signals from Argo: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail="Failed to fetch signals. Please try again later."
+        )
     
     # Apply pagination
     total = len(signals)
@@ -185,6 +210,8 @@ async def get_subscribed_signals(
 
 @router.get("/history", response_model=List[SignalHistoryResponse])
 async def get_signal_history(
+    request: Request,
+    response: Response,
     limit: int = Query(50, ge=1, le=500, description="Number of historical signals"),
     days: int = Query(30, ge=1, le=365, description="Number of days to look back"),
     current_user: User = Depends(get_current_user),
@@ -221,6 +248,14 @@ async def get_signal_history(
     if not check_rate_limit(client_id):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
     
+    # Add rate limit headers
+    rate_limit_status = get_rate_limit_status(client_id)
+    add_rate_limit_headers(
+        response,
+        remaining=rate_limit_status["remaining"],
+        reset_at=int(time.time()) + rate_limit_status["reset_in"]
+    )
+    
     # Mock history data (in production, fetch from database)
     history = []
     start_date = datetime.utcnow() - timedelta(days=days)
@@ -244,6 +279,8 @@ async def get_signal_history(
 
 @router.get("/export")
 async def export_signals(
+    request: Request,
+    response: Response,
     format: str = Query("csv", description="Export format: csv, json"),
     days: int = Query(30, ge=1, le=365, description="Number of days to export"),
     current_user: User = Depends(get_current_user),
@@ -264,12 +301,28 @@ async def export_signals(
     if not check_rate_limit(client_id):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
     
-    # Validate format
+    # Add rate limit headers
+    rate_limit_status = get_rate_limit_status(client_id)
+    add_rate_limit_headers(
+        response,
+        remaining=rate_limit_status["remaining"],
+        reset_at=int(time.time()) + rate_limit_status["reset_in"]
+    )
+    
+    # Validate and sanitize format
+    format = format.lower().strip()
     if format not in ["csv", "json"]:
         raise HTTPException(status_code=400, detail="Invalid format. Must be 'csv' or 'json'")
     
     # Fetch signals
-    signals = await fetch_signals_from_argo(limit=1000, premium_only=False)
+    try:
+        signals = await fetch_signals_from_argo(limit=1000, premium_only=False)
+    except Exception as e:
+        logger.error(f"Error fetching signals for export: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail="Failed to fetch signals for export. Please try again later."
+        )
     
     if format == "csv":
         # Generate CSV
@@ -286,16 +339,31 @@ async def export_signals(
                 "timestamp": signal.get("timestamp", "")
             })
         
-        return Response(
+        csv_response = Response(
             content=output.getvalue(),
             media_type="text/csv",
             headers={"Content-Disposition": f"attachment; filename=signals_{datetime.utcnow().strftime('%Y%m%d')}.csv"}
         )
+        # Add rate limit headers
+        add_rate_limit_headers(
+            csv_response,
+            remaining=rate_limit_status["remaining"],
+            reset_at=int(time.time()) + rate_limit_status["reset_in"]
+        )
+        return csv_response
     else:
         # Return JSON
-        return Response(
-            content=str(signals),
+        import json as json_lib
+        json_response = Response(
+            content=json_lib.dumps(signals, indent=2, default=str),
             media_type="application/json",
             headers={"Content-Disposition": f"attachment; filename=signals_{datetime.utcnow().strftime('%Y%m%d')}.json"}
         )
+        # Add rate limit headers
+        add_rate_limit_headers(
+            json_response,
+            remaining=rate_limit_status["remaining"],
+            reset_at=int(time.time()) + rate_limit_status["reset_in"]
+        )
+        return json_response
 

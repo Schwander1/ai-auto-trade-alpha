@@ -3,16 +3,19 @@ Notifications API endpoints for Alpine Backend
 GET unread, POST read, DELETE
 """
 
-from fastapi import APIRouter, HTTPException, Depends, Query, Header
+from fastapi import APIRouter, HTTPException, Depends, Query, Header, Request, Response
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from typing import Optional, List
 from datetime import datetime
 import time
+import re
 
 from backend.core.database import get_db
+from backend.core.input_sanitizer import sanitize_string
+from backend.core.response_formatter import add_rate_limit_headers
 from backend.models.user import User
-from backend.core.rate_limit import check_rate_limit
+from backend.core.rate_limit import check_rate_limit, get_rate_limit_status
 from backend.api.auth import get_current_user
 
 router = APIRouter(prefix="/api/notifications", tags=["notifications"])
@@ -50,6 +53,24 @@ class PaginatedNotificationsResponse(BaseModel):
 class MarkReadRequest(BaseModel):
     """Mark notification as read request"""
     notification_ids: List[str] = Field(..., description="List of notification IDs to mark as read")
+    
+    @validator('notification_ids')
+    def validate_notification_ids(cls, v):
+        """Validate notification IDs"""
+        if not v or len(v) == 0:
+            raise ValueError("At least one notification ID is required")
+        if len(v) > 100:
+            raise ValueError("Maximum 100 notification IDs allowed")
+        # Sanitize each ID
+        sanitized = []
+        for nid in v:
+            if not isinstance(nid, str) or len(nid) > 100:
+                raise ValueError("Invalid notification ID format")
+            # Only allow alphanumeric, hyphens, underscores
+            if not re.match(r'^[A-Za-z0-9_-]+$', nid):
+                raise ValueError("Invalid notification ID format")
+            sanitized.append(nid)
+        return sanitized
 
 
 def get_user_notifications(user_id: int) -> List[dict]:
@@ -61,6 +82,8 @@ def get_user_notifications(user_id: int) -> List[dict]:
 
 @router.get("/unread", response_model=PaginatedNotificationsResponse)
 async def get_unread_notifications(
+    request: Request,
+    response: Response,
     limit: int = Query(20, ge=1, le=100, description="Number of notifications to return"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
     current_user: User = Depends(get_current_user),
@@ -103,6 +126,14 @@ async def get_unread_notifications(
     if not check_rate_limit(client_id):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
     
+    # Add rate limit headers
+    rate_limit_status = get_rate_limit_status(client_id)
+    add_rate_limit_headers(
+        response,
+        remaining=rate_limit_status["remaining"],
+        reset_at=int(time.time()) + rate_limit_status["reset_in"]
+    )
+    
     # Get user notifications
     all_notifications = get_user_notifications(current_user.id)
     unread_notifications = [n for n in all_notifications if not n.get("is_read", False)]
@@ -127,6 +158,8 @@ async def get_unread_notifications(
 @router.post("/read", status_code=200)
 async def mark_notifications_read(
     read_data: MarkReadRequest,
+    request: Request,
+    response: Response,
     current_user: User = Depends(get_current_user),
     authorization: Optional[str] = Header(None)
 ):
@@ -156,6 +189,14 @@ async def mark_notifications_read(
     if not check_rate_limit(client_id):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
     
+    # Add rate limit headers
+    rate_limit_status = get_rate_limit_status(client_id)
+    add_rate_limit_headers(
+        response,
+        remaining=rate_limit_status["remaining"],
+        reset_at=int(time.time()) + rate_limit_status["reset_in"]
+    )
+    
     # Get user notifications
     notifications = get_user_notifications(current_user.id)
     
@@ -178,6 +219,8 @@ async def mark_notifications_read(
 
 @router.delete("/{notification_id}", status_code=200)
 async def delete_notification(
+    request: Request,
+    response: Response,
     notification_id: str,
     current_user: User = Depends(get_current_user),
     authorization: Optional[str] = Header(None)
@@ -202,6 +245,22 @@ async def delete_notification(
     client_id = current_user.email
     if not check_rate_limit(client_id):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
+    
+    # Add rate limit headers
+    rate_limit_status = get_rate_limit_status(client_id)
+    add_rate_limit_headers(
+        response,
+        remaining=rate_limit_status["remaining"],
+        reset_at=int(time.time()) + rate_limit_status["reset_in"]
+    )
+    
+    # Input sanitization - validate notification_id format
+    if not notification_id or len(notification_id) > 100:
+        raise HTTPException(status_code=400, detail="Invalid notification ID format")
+    
+    # Sanitize notification_id (alphanumeric, hyphens, underscores only)
+    if not re.match(r'^[A-Za-z0-9_-]+$', notification_id):
+        raise HTTPException(status_code=400, detail="Invalid notification ID format")
     
     # Get user notifications
     notifications = get_user_notifications(current_user.id)

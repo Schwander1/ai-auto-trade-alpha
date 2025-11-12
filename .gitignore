@@ -94,6 +94,14 @@ grafana_data/
 *.cert
 secrets/
 
+# API Keys and Config Files
+**/config.json
+argo/config.json
+**/*config*.json
+!package.json
+!tsconfig.json
+!jsconfig.json
+
 # Local development
 .local/
 .cache/

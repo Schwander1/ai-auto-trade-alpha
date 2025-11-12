@@ -17,8 +17,12 @@ from backend.core.config import settings
 from backend.core.rate_limit import check_rate_limit
 from backend.core.cache import cache_response
 from backend.core.token_blacklist import is_token_blacklisted, blacklist_token
+from backend.core.account_lockout import is_account_locked, record_failed_login, clear_failed_attempts
+from backend.core.security_logging import log_successful_login, log_failed_login, SecurityEvent
+from backend.auth.password_validator import PasswordValidator
 from backend.models.user import User, UserTier
 from backend.auth.security import verify_password, get_password_hash, create_access_token, verify_token
+from fastapi import Request
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -31,8 +35,16 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
 class SignupRequest(BaseModel):
     """Signup request model"""
     email: EmailStr
-    password: str = Field(..., min_length=8, description="Password must be at least 8 characters")
+    password: str = Field(..., min_length=12, description="Password must be at least 12 characters with uppercase, lowercase, numbers, and special characters")
     full_name: str = Field(..., min_length=1, max_length=100)
+    
+    @validator('password')
+    def validate_password(cls, v):
+        """Validate password strength"""
+        is_valid, errors = PasswordValidator.validate_password(v)
+        if not is_valid:
+            raise ValueError("; ".join(errors))
+        return v
 
 
 class LoginResponse(BaseModel):
@@ -41,6 +53,7 @@ class LoginResponse(BaseModel):
     token_type: str = "bearer"
     expires_in: int
     user: dict
+    requires_2fa: bool = False  # Indicates if 2FA verification is required
 
 
 class UserResponse(BaseModel):
@@ -98,6 +111,7 @@ async def get_current_user(
 @router.post("/signup", response_model=LoginResponse, status_code=201)
 async def signup(
     user_data: SignupRequest,
+    request: Request,
     db: Session = Depends(get_db),
     authorization: Optional[str] = Header(None)
 ):
@@ -131,11 +145,19 @@ async def signup(
     ```
     """
     # Rate limiting
-    client_id = authorization or "anonymous"
+    client_id = authorization or request.client.host if request.client else "anonymous"
     if not check_rate_limit(client_id):
         raise HTTPException(
             status_code=429,
             detail=f"Rate limit exceeded. Maximum {RATE_LIMIT_MAX} requests per minute."
+        )
+    
+    # Validate password strength
+    is_valid, errors = PasswordValidator.validate_password(user_data.password)
+    if not is_valid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="; ".join(errors)
         )
     
     # Check if user already exists
@@ -180,6 +202,7 @@ async def signup(
 @router.post("/login", response_model=LoginResponse)
 async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
+    request: Request,
     db: Session = Depends(get_db),
     authorization: Optional[str] = Header(None)
 ):
@@ -209,17 +232,33 @@ async def login(
     ```
     """
     # Rate limiting
-    client_id = form_data.username or "anonymous"
+    client_id = form_data.username or request.client.host if request.client else "anonymous"
     if not check_rate_limit(client_id):
         raise HTTPException(
             status_code=429,
             detail="Rate limit exceeded. Too many login attempts."
         )
     
+    # Check if account is locked
+    if is_account_locked(form_data.username):
+        from backend.core.account_lockout import get_lockout_remaining
+        remaining = get_lockout_remaining(form_data.username)
+        raise HTTPException(
+            status_code=status.HTTP_423_LOCKED,
+            detail=f"Account locked due to too many failed login attempts. Try again in {remaining // 60} minutes."
+        )
+    
     # Find user
     user = db.query(User).filter(User.email == form_data.username).first()
     
-    if not user or not verify_password(form_data.password, user.hashed_password):
+    # Verify password (always check to prevent user enumeration)
+    password_valid = False
+    if user:
+        password_valid = verify_password(form_data.password, user.hashed_password)
+    
+    if not user or not password_valid:
+        # Record failed login attempt
+        record_failed_login(form_data.username, request.client.host if request.client else None, request)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
@@ -231,6 +270,28 @@ async def login(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User account is inactive"
         )
+    
+    # Clear failed attempts on successful login
+    clear_failed_attempts(user.email)
+    
+    # Check if 2FA is enabled
+    if user.totp_enabled:
+        # Return partial login response indicating 2FA required
+        return LoginResponse(
+            access_token="",  # No token until 2FA verified
+            token_type="bearer",
+            expires_in=0,
+            user={
+                "id": user.id,
+                "email": user.email,
+                "full_name": user.full_name,
+                "tier": user.tier.value
+            },
+            requires_2fa=True  # Indicate 2FA is required
+        )
+    
+    # Log successful login
+    log_successful_login(user.id, user.email, request.client.host if request.client else None, request)
     
     # Create access token
     access_token = create_access_token(data={"sub": user.email})
