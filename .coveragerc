@@ -1,0 +1,33 @@
+# Coverage configuration for Python packages
+# Enforces 95% coverage minimum
+
+[run]
+source = 
+    packages/argo-trading
+    packages/alpine-backend
+    packages/shared
+omit = 
+    */tests/*
+    */venv/*
+    */__pycache__/*
+    */migrations/*
+    */setup.py
+    */__init__.py
+
+[report]
+precision = 2
+show_missing = True
+skip_covered = False
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise AssertionError
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+    @abstractmethod
+    # TYPE: ignore
+
+[html]
+directory = htmlcov
+

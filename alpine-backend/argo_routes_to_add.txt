@@ -1,0 +1,150 @@
+        )
+        
+        return {"sessionId": session.id, "url": session.url}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Payment error: {str(e)}")
+
+@app.post("/api/payments/webhook")
+async def stripe_webhook(request: dict, db: Session = Depends(get_db)):
+    """Handle Stripe webhooks"""
+    # This would normally verify the webhook signature
+    # For now, simplified version
+    
+    event_type = request.get('type')
+    
+    if event_type == 'checkout.session.completed':
+        session = request.get('data', {}).get('object', {})
+        user_id = session.get('metadata', {}).get('user_id')
+        tier = session.get('metadata', {}).get('tier')
+        
+        if user_id and tier:
+            user = db.query(User).filter(User.id == user_id).first()
+            if user:
+                user.tier = UserTier(tier.lower())
+                user.stripe_subscription_id = session.get('subscription')
+                db.commit()
+    
+    return {"status": "success"}
+
+# ===== SIGNAL ENDPOINTS =====
+
+@app.get("/api/signals/live")
+async def get_live_signals(
+    limit: int = 10,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get live trading signals based on user tier"""
+    
+    # Confidence thresholds by tier
+    thresholds = {
+        UserTier.STARTER: 0.75,  # 75%+ confidence
+        UserTier.PRO: 0.85,      # 85%+ confidence
+        UserTier.ELITE: 0.95     # 95%+ confidence
+    }
+    
+    min_confidence = thresholds.get(current_user.tier, 0.75)
+    
+    signals = db.query(Signal).filter(
+        Signal.is_active == True,
+        Signal.confidence >= min_confidence
+    ).order_by(Signal.created_at.desc()).limit(limit).all()
+    
+    return {
+        "signals": [
+            {
+                "id": s.id,
+                "symbol": s.symbol,
+                "action": s.action,
+                "price": s.price,
+                "confidence": s.confidence,
+                "target_price": s.target_price,
+                "stop_loss": s.stop_loss,
+                "rationale": s.rationale,
+                "created_at": str(s.created_at)
+            }
+            for s in signals
+        ],
+        "user_tier": current_user.tier.value,
+        "min_confidence": min_confidence,
+        "count": len(signals)
+    }
+
+@app.post("/api/signals/test")
+async def create_test_signal(db: Session = Depends(get_db)):
+    """Create a test signal for development"""
+    import random
+    import hashlib
+    from datetime import datetime
+    
+    symbols = ['AAPL', 'TSLA', 'NVDA', 'MSFT', 'GOOGL']
+    actions = ['BUY', 'SELL']
+    
+    symbol = random.choice(symbols)
+    action = random.choice(actions)
+    price = round(random.uniform(100, 500), 2)
+    confidence = round(random.uniform(0.75, 0.99), 2)
+    
+    hash_data = f"{symbol}{datetime.utcnow().isoformat()}{confidence}"
+    verification_hash = hashlib.sha256(hash_data.encode()).hexdigest()[:16]
+    
+    signal = Signal(
+        symbol=symbol,
+        action=action,
+        price=price,
+        confidence=confidence,
+        target_price=price * 1.05 if action == 'BUY' else price * 0.95,
+        stop_loss=price * 0.98 if action == 'BUY' else price * 1.02,
+        rationale=f"Test signal for {symbol}",
+        verification_hash=verification_hash,
+        is_active=True
+    )
+    
+    db.add(signal)
+    db.commit()
+    db.refresh(signal)
+    
+    return {
+        "message": "Test signal created",
+        "signal": {
+            "symbol": signal.symbol,
+            "action": signal.action,
+            "confidence": signal.confidence
+        }
+    }
+
+# ===== ADMIN ENDPOINTS =====
+
+@app.get("/api/admin/stats")
+async def get_stats(db: Session = Depends(get_db)):
+    """Get platform statistics"""
+    total_users = db.query(User).count()
+    total_signals = db.query(Signal).count()
+    active_signals = db.query(Signal).filter(Signal.is_active == True).count()
+    
+    return {
+        "total_users": total_users,
+        "total_signals": total_signals,
+        "active_signals": active_signals,
+        "platform": "Alpine Analytics"
+    }
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+# Payment routes
+try:
+    from backend.api.payments import router as payment_router
+    app.include_router(payment_router)
+except:
+    pass
+
+# Zapier webhooks
+
+# Zapier webhooks
+
+# Admin endpoints
+from backend.api import admin
+app.include_router(admin.router, prefix='/api/admin', tags=['admin'])

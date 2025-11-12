@@ -1,0 +1,164 @@
+version: '3.9'
+
+services:
+  backend-1:
+    build: ./backend
+    container_name: alpine-backend-1
+    ports:
+      - "127.0.0.1:8001:8000"
+    environment:
+      - ARGO_API_URL=http://178.156.194.174:8000
+      - ENVIRONMENT=production
+      - INSTANCE=1
+    restart: unless-stopped
+    networks:
+      - alpine-network
+
+  backend-2:
+    build: ./backend
+    container_name: alpine-backend-2
+    ports:
+      - "127.0.0.1:8002:8000"
+    environment:
+      - ARGO_API_URL=http://178.156.194.174:8000
+      - ENVIRONMENT=production
+      - INSTANCE=2
+    restart: unless-stopped
+    networks:
+      - alpine-network
+
+  backend-3:
+    build: ./backend
+    container_name: alpine-backend-3
+    ports:
+      - "127.0.0.1:8003:8000"
+    environment:
+      - ARGO_API_URL=http://178.156.194.174:8000
+      - ENVIRONMENT=production
+      - INSTANCE=3
+    restart: unless-stopped
+    networks:
+      - alpine-network
+
+  frontend-1:
+    build: ./frontend
+    container_name: alpine-frontend-1
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://91.98.153.49/api
+    restart: unless-stopped
+    networks:
+      - alpine-network
+
+  frontend-2:
+    build: ./frontend
+    container_name: alpine-frontend-2
+    ports:
+      - "127.0.0.1:3002:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://91.98.153.49/api
+    restart: unless-stopped
+    networks:
+      - alpine-network
+
+  postgres:
+    image: postgres:15
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_USER=alpine_user
+      - POSTGRES_PASSWORD=AlpineSecure2025!
+      - POSTGRES_DB=alpine_prod
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - alpine-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+    command: redis-server --requirepass AlpineRedis2025! --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - alpine-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=30d'
+    restart: unless-stopped
+    networks:
+      - alpine-network
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=AlpineGrafana2025!
+      - GF_SERVER_ROOT_URL=http://91.98.153.49/grafana
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - alpine-network
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    ports:
+      - "9100:9100"
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+    restart: unless-stopped
+    networks:
+      - alpine-network
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    ports:
+      - "9187:9187"
+    environment:
+      DATA_SOURCE_NAME: "postgresql://alpine_user:AlpineSecure2025!@postgres:5432/alpine_prod?sslmode=disable"
+    restart: unless-stopped
+    networks:
+      - alpine-network
+
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    ports:
+      - "9121:9121"
+    environment:
+      - REDIS_ADDR=redis://redis:6379
+      - REDIS_PASSWORD=AlpineRedis2025!
+    restart: unless-stopped
+    networks:
+      - alpine-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  alpine-network:
+    driver: bridge

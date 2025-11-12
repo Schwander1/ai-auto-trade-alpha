@@ -1,0 +1,62 @@
+# Git-cliff configuration for automated changelog generation
+# Generates CHANGELOG.md from conventional commits
+
+[changelog]
+# Changelog file path
+file = "CHANGELOG.md"
+# Changelog header
+header = """
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+"""
+# Changelog footer
+footer = """
+---
+**Full Changelog**: https://github.com/your-org/argo-alpine-monorepo/compare/{{ previous_tag }}...{{ current_tag }}
+"""
+# Changelog body template
+body = """
+{% if version %}\
+    ## [{{ version }}] - {{ timestamp | date(format="%Y-%m-%d") }}
+{% else %}\
+    ## [Unreleased]
+{% endif %}\
+{% for group, commits in commits | group_by(attribute="group") %}
+    ### {{ group | upper_first }}
+    {% for commit in commits %}
+    - {% if commit.breaking %}[**breaking**] {% endif %}{{ commit.message | upper_first }}\
+    {%- if commit.scope %} ({{ commit.scope }}){% endif %}
+    {% endfor %}
+{% endfor %}
+"""
+
+[git]
+# Conventional commit types
+conventional_commits = true
+# Filter commits by type
+commit_parsers = [
+    { message = "^feat", group = "Features" },
+    { message = "^fix", group = "Bug Fixes" },
+    { message = "^docs", group = "Documentation" },
+    { message = "^perf", group = "Performance" },
+    { message = "^refactor", group = "Refactoring" },
+    { message = "^test", group = "Testing" },
+    { message = "^chore", group = "Chores" },
+    { message = "^ci", group = "CI/CD" },
+    { message = "^build", group = "Build" },
+    { message = "^style", group = "Style" },
+    { message = "^revert", group = "Reverts" },
+]
+# Filter out merge commits
+filter_commits = true
+# Tag pattern
+tag_pattern = "v[0-9]*"
+# Skip tags matching pattern
+skip_tags = "v0.1.0-beta.1"
+
+[output]
+# Output format
+format = "markdown"
+

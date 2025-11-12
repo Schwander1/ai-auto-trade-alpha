@@ -1,0 +1,88 @@
+# Prometheus configuration for monitoring Argo and Alpine services
+# Collects metrics from all services for observability
+
+global:
+  scrape_interval: 15s  # Scrape targets every 15 seconds
+  evaluation_interval: 15s  # Evaluate rules every 15 seconds
+  external_labels:
+    cluster: 'argo-alpine-production'
+    environment: 'production'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - 'localhost:9093'
+
+# Load rules once and periodically evaluate them
+rule_files:
+  - 'alerts.yml'
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+
+  # Argo Trading Engine
+  - job_name: 'argo'
+    static_configs:
+      - targets: ['178.156.194.174:8000']
+        labels:
+          service: 'argo-trading'
+          environment: 'production'
+    metrics_path: '/metrics'
+    scrape_interval: 10s  # More frequent for trading signals
+
+  # Alpine Backend API
+  - job_name: 'alpine-backend'
+    static_configs:
+      - targets: ['91.98.153.49:8001']
+        labels:
+          service: 'alpine-backend'
+          environment: 'production'
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  # Alpine Frontend (if metrics endpoint exists)
+  - job_name: 'alpine-frontend'
+    static_configs:
+      - targets: ['91.98.153.49:3000']
+        labels:
+          service: 'alpine-frontend'
+          environment: 'production'
+    metrics_path: '/api/metrics'
+    scrape_interval: 30s
+
+  # PostgreSQL exporter (if available)
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['localhost:9187']
+        labels:
+          service: 'postgres'
+          environment: 'production'
+    scrape_interval: 30s
+
+  # Redis exporter (if available)
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['localhost:9121']
+        labels:
+          service: 'redis'
+          environment: 'production'
+    scrape_interval: 30s
+
+  # Node exporter (system metrics)
+  - job_name: 'node'
+    static_configs:
+      - targets: 
+          - '178.156.194.174:9100'  # Argo server
+          - '91.98.153.49:9100'      # Alpine server
+        labels:
+          environment: 'production'
+    scrape_interval: 30s
+

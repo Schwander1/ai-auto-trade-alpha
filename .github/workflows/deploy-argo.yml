@@ -1,0 +1,53 @@
+name: Deploy Argo
+
+# Deploy Argo trading engine to production (178.156.194.174)
+# Runs on push to main or manual trigger
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/argo-trading/**'
+      - '.github/workflows/deploy-argo.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    environment: production-argo
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.ARGO_SSH_PRIVATE_KEY }}
+      
+      - name: Add server to known hosts
+        run: |
+          ssh-keyscan -H 178.156.194.174 >> ~/.ssh/known_hosts
+      
+      - name: Deploy Argo
+        run: |
+          chmod +x scripts/deploy-argo.sh
+          ./scripts/deploy-argo.sh
+      
+      - name: Health Check
+        run: |
+          sleep 10
+          curl -f http://178.156.194.174:8000/health || exit 1
+          echo "✅ Argo health check passed"
+      
+      - name: Verify Endpoint
+        run: |
+          RESPONSE=$(curl -s http://178.156.194.174:8000/api/signals/latest?limit=1)
+          if echo "$RESPONSE" | jq -e 'type == "array"' > /dev/null; then
+            echo "✅ /api/signals/latest returns array"
+          else
+            echo "❌ /api/signals/latest does not return array"
+            exit 1
+          fi
+

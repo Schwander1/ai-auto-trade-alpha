@@ -1,0 +1,140 @@
+// Prisma schema for Alpine Analytics
+// PostgreSQL database schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model for authentication and subscription management
+model User {
+  id                String    @id @default(uuid())
+  email             String    @unique
+  passwordHash      String    @map("password_hash")
+  tier              UserTier  @default(STARTER)
+  subscriptionStart DateTime? @map("subscription_start")
+  subscriptionEnd   DateTime? @map("subscription_end")
+  stripeCustomerId String?   @unique @map("stripe_customer_id")
+  stripeSubscriptionId String? @unique @map("stripe_subscription_id")
+  stripePriceId     String?  @map("stripe_price_id")
+  subscriptionStatus String? @map("subscription_status")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  
+  // Relations
+  sessions          Session[]
+  accounts          Account[]
+  
+  @@map("users")
+}
+
+// NextAuth Account model (for OAuth providers)
+model Account {
+  id                String  @id @default(uuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+// NextAuth Session model
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("sessions")
+}
+
+// NextAuth VerificationToken model
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+  
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// Signal model - mirrors Argo's structure for caching
+
+model Signal {
+  id              String         @id
+  symbol          String
+  action          SignalAction
+  entryPrice      Decimal        @map("entry_price") @db.Decimal(10, 2)
+  stopLoss        Decimal?       @map("stop_loss") @db.Decimal(10, 2)
+  takeProfit      Decimal?       @map("take_profit") @db.Decimal(10, 2)
+  confidence      Decimal        @db.Decimal(5, 2)
+  timestamp       DateTime
+  hash            String         @unique
+  regime          MarketRegime?
+  regimeStrength  Int?           @map("regime_strength")
+  status          SignalStatus   @default(pending)
+  outcome         SignalOutcome?
+  exitPrice       Decimal?       @map("exit_price") @db.Decimal(10, 2)
+  pnlPct          Decimal?       @map("pnl_pct") @db.Decimal(5, 2)
+  exitTimestamp   DateTime?      @map("exit_timestamp")
+  
+  @@index([timestamp])
+  @@index([symbol])
+  @@index([confidence])
+  @@index([status])
+  @@map("signals")
+}
+
+// Enums
+enum UserTier {
+  STARTER
+  PROFESSIONAL
+  INSTITUTIONAL
+}
+
+enum SignalAction {
+  BUY
+  SELL
+}
+
+enum SignalType {
+  PREMIUM
+  STANDARD
+}
+
+enum SignalStatus {
+  pending
+  active
+  closed
+  expired
+}
+
+enum SignalOutcome {
+  win
+  loss
+  expired
+}
+
+enum MarketRegime {
+  Bull
+  Bear
+  Chop
+  Crisis
+}
+

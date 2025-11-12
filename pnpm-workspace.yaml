@@ -1,0 +1,16 @@
+# PNPM Workspace Configuration
+# Defines packages in the monorepo for dependency management
+
+packages:
+  # Trading engine (Python/FastAPI)
+  - 'packages/argo-trading'
+  
+  # Backend API (Python/FastAPI)
+  - 'packages/alpine-backend'
+  
+  # Frontend dashboard (Next.js)
+  - 'packages/alpine-frontend'
+  
+  # Shared utilities (TypeScript + Python)
+  - 'packages/shared'
+

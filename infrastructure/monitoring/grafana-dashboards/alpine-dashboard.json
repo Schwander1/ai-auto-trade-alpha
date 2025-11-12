@@ -1,0 +1,85 @@
+{
+  "dashboard": {
+    "title": "Alpine Services",
+    "tags": ["alpine", "backend", "frontend"],
+    "timezone": "browser",
+    "schemaVersion": 27,
+    "version": 1,
+    "refresh": "15s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Backend Request Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{job=\"alpine-backend\"}[5m])",
+            "legendFormat": "{{method}} {{status}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Backend Response Time",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=\"alpine-backend\"}[5m]))",
+            "legendFormat": "95th percentile"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Frontend Page Views",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(page_views_total{job=\"alpine-frontend\"}[5m])",
+            "legendFormat": "Page views"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+      },
+      {
+        "id": 4,
+        "title": "Database Connections",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "pg_stat_database_numbackends{job=\"postgres\"}",
+            "legendFormat": "Connections"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+      },
+      {
+        "id": 5,
+        "title": "Backend Uptime",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "up{job=\"alpine-backend\"}",
+            "legendFormat": "Backend"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 16}
+      },
+      {
+        "id": 6,
+        "title": "Frontend Uptime",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "up{job=\"alpine-frontend\"}",
+            "legendFormat": "Frontend"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 16}
+      }
+    ]
+  }
+}
+

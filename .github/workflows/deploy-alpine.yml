@@ -1,0 +1,65 @@
+name: Deploy Alpine
+
+# Deploy Alpine backend and frontend to production (91.98.153.49)
+# Zero-downtime blue/green deployment
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/alpine-backend/**'
+      - 'packages/alpine-frontend/**'
+      - '.github/workflows/deploy-alpine.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    environment: production-alpine
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.ALPINE_SSH_PRIVATE_KEY }}
+      
+      - name: Add server to known hosts
+        run: |
+          ssh-keyscan -H 91.98.153.49 >> ~/.ssh/known_hosts
+      
+      - name: Deploy Alpine
+        run: |
+          chmod +x scripts/deploy-alpine.sh
+          ./scripts/deploy-alpine.sh
+      
+      - name: Health Check Backend
+        run: |
+          sleep 15
+          for i in {1..10}; do
+            if curl -f http://91.98.153.49:8001/health; then
+              echo "✅ Backend health check passed"
+              exit 0
+            fi
+            echo "Waiting for backend... ($i/10)"
+            sleep 3
+          done
+          echo "❌ Backend health check failed"
+          exit 1
+      
+      - name: Health Check Frontend
+        run: |
+          for i in {1..10}; do
+            if curl -f http://91.98.153.49:3000; then
+              echo "✅ Frontend health check passed"
+              exit 0
+            fi
+            echo "Waiting for frontend... ($i/10)"
+            sleep 3
+          done
+          echo "❌ Frontend health check failed"
+          exit 1
+

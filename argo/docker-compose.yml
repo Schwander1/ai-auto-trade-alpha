@@ -1,0 +1,66 @@
+services:
+  argo-api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - ENVIRONMENT=${ENVIRONMENT}
+      - LOG_LEVEL=${LOG_LEVEL}
+    restart: unless-stopped
+    networks:
+      - argo-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+    command: redis-server --requirepass ArgoSecure2025!
+    restart: unless-stopped
+    networks:
+      - argo-network
+
+networks:
+  argo-network:
+    driver: bridge
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: argo-prometheus
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+    
+  grafana:
+    image: grafana/grafana:latest
+    container_name: argo-grafana
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=argo2025
+      - GF_USERS_ALLOW_SIGN_UP=false
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+      
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: argo-node-exporter
+    ports:
+      - "9100:9100"
+    restart: unless-stopped
+
+volumes:
+  prometheus-data:
+  grafana-data:

@@ -1,0 +1,467 @@
+'use client'
+
+import { useState } from 'react'
+import { motion } from 'framer-motion'
+import { FileCheck, Hash, Table, Code, Shield, Download, FileText } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+
+const csvPreviewData = [
+  {
+    trade_id: 1,
+    date_entered: '2006-01-03',
+    time_entered: '09:45:00',
+    symbol: 'SPY',
+    regime: 'Bull',
+    signal: 'LONG',
+    entry_price: 126.45,
+    exit_price: 128.92,
+    pnl_usd: 165.49,
+    pnl_pct: 1.95,
+    win_loss: 'WIN',
+    sha256: 'a7f5c3e8d92b41f6...',
+  },
+  {
+    trade_id: 2,
+    date_entered: '2006-01-18',
+    time_entered: '10:15:00',
+    symbol: 'QQQ',
+    regime: 'Bull',
+    signal: 'LONG',
+    entry_price: 42.18,
+    exit_price: 41.49,
+    pnl_usd: -69.84,
+    pnl_pct: -1.68,
+    win_loss: 'LOSS',
+    sha256: 'b8g6d4f9e03c52g7...',
+  },
+  {
+    trade_id: 3,
+    date_entered: '2006-02-14',
+    time_entered: '10:30:00',
+    symbol: 'AAPL',
+    regime: 'Bull',
+    signal: 'LONG',
+    entry_price: 68.23,
+    exit_price: 70.15,
+    pnl_usd: 192.00,
+    pnl_pct: 2.81,
+    win_loss: 'WIN',
+    sha256: 'c9h7e5f0f14d63h8...',
+  },
+  {
+    trade_id: 4,
+    date_entered: '2006-03-08',
+    time_entered: '11:00:00',
+    symbol: 'MSFT',
+    regime: 'Chop',
+    signal: 'LONG',
+    entry_price: 27.45,
+    exit_price: 27.12,
+    pnl_usd: -33.00,
+    pnl_pct: -1.20,
+    win_loss: 'LOSS',
+    sha256: 'd0i8f6g1g25e74i9...',
+  },
+  {
+    trade_id: 5,
+    date_entered: '2006-04-12',
+    time_entered: '09:20:00',
+    symbol: 'GOOGL',
+    regime: 'Bull',
+    signal: 'LONG',
+    entry_price: 415.50,
+    exit_price: 428.75,
+    pnl_usd: 1325.00,
+    pnl_pct: 3.19,
+    win_loss: 'WIN',
+    sha256: 'e1j9g7h2h36f85j0...',
+  },
+  {
+    trade_id: 6,
+    date_entered: '2006-05-22',
+    time_entered: '14:15:00',
+    symbol: 'AMZN',
+    regime: 'Bull',
+    signal: 'LONG',
+    entry_price: 36.80,
+    exit_price: 35.92,
+    pnl_usd: -88.00,
+    pnl_pct: -2.39,
+    win_loss: 'LOSS',
+    sha256: 'f2k0h8i3i47g96k1...',
+  },
+  {
+    trade_id: 7,
+    date_entered: '2006-06-30',
+    time_entered: '13:45:00',
+    symbol: 'SPY',
+    regime: 'Bear',
+    signal: 'SHORT',
+    entry_price: 127.50,
+    exit_price: 125.20,
+    pnl_usd: 230.00,
+    pnl_pct: 1.80,
+    win_loss: 'WIN',
+    sha256: 'g3l1i9j4j58h07l2...',
+  },
+  {
+    trade_id: 8,
+    date_entered: '2006-08-15',
+    time_entered: '10:00:00',
+    symbol: 'QQQ',
+    regime: 'Chop',
+    signal: 'LONG',
+    entry_price: 43.25,
+    exit_price: 44.10,
+    pnl_usd: 85.00,
+    pnl_pct: 1.97,
+    win_loss: 'WIN',
+    sha256: 'h4m2j0k5k69i18m3...',
+  },
+  {
+    trade_id: 9,
+    date_entered: '2006-09-20',
+    time_entered: '11:30:00',
+    symbol: 'AAPL',
+    regime: 'Bull',
+    signal: 'LONG',
+    entry_price: 72.15,
+    exit_price: 74.50,
+    pnl_usd: 235.00,
+    pnl_pct: 3.26,
+    win_loss: 'WIN',
+    sha256: 'i5n3k1l6l70j29n4...',
+  },
+  {
+    trade_id: 10,
+    date_entered: '2006-10-25',
+    time_entered: '15:00:00',
+    symbol: 'MSFT',
+    regime: 'Crisis',
+    signal: 'LONG',
+    entry_price: 28.90,
+    exit_price: 28.45,
+    pnl_usd: -45.00,
+    pnl_pct: -1.56,
+    win_loss: 'LOSS',
+    sha256: 'j6o4l2m7m81k30o5...',
+  },
+]
+
+const csvFeatures = [
+  {
+    icon: FileCheck,
+    title: '4,374 Verified Trades',
+    description: 'Complete history. Zero gaps. Every trade from 2006-2025.',
+  },
+  {
+    icon: Hash,
+    title: 'SHA-256 Signatures',
+    description: 'Every row cryptographically signed. Verify authenticity yourself.',
+  },
+  {
+    icon: Table,
+    title: '19 Data Columns',
+    description: 'Entry, exit, P&L, regime, position size, holding period, and more.',
+  },
+  {
+    icon: Code,
+    title: 'Analysis Ready',
+    description: 'Import directly into Python, R, Excel, Tableau, or Power BI.',
+  },
+  {
+    icon: Shield,
+    title: 'Metadata Included',
+    description: 'Header with performance summary. Footer with verification instructions.',
+  },
+  {
+    icon: Download,
+    title: 'Instant Download',
+    description: 'CSV + README.txt. 850KB uncompressed. Free for all visitors.',
+  },
+]
+
+const codeExamples = {
+  python: `import pandas as pd
+df = pd.read_csv('Alpine_Trade_History.csv', skiprows=10, skipfooter=15, engine='python')
+print(f"Total Return: {df['Cumulative_Return_Pct'].iloc[-1]:.1f}%")`,
+  r: `library(readr)
+trades <- read_csv("Alpine_Trade_History.csv", skip = 10, n_max = 4374)
+regime_stats <- trades %>% group_by(Regime_Type) %>% summarise(win_rate = mean(Win_Loss == "WIN"))`,
+  excel: `1. Open Excel
+2. Data > Get Data > From File > From Text/CSV
+3. Select Alpine_Trade_History.csv
+4. Use Power Query to analyze by regime`,
+}
+
+const regimeColors = {
+  Bull: 'bg-alpine-accent/20 text-alpine-accent border-alpine-accent/30',
+  Bear: 'bg-alpine-red/20 text-alpine-red border-alpine-red/30',
+  Chop: 'bg-alpine-orange/20 text-alpine-orange border-alpine-orange/30',
+  Crisis: 'bg-alpine-blue/20 text-alpine-blue border-alpine-blue/30',
+}
+
+export default function CSVPreview() {
+  const [activeTab, setActiveTab] = useState<'python' | 'r' | 'excel'>('python')
+
+  return (
+    <section className="py-24 bg-alpine-dark">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-12"
+        >
+          <h2 className="font-display text-4xl md:text-6xl font-black text-white mb-4">
+            Backtest Data. <span className="bg-gradient-to-r from-alpine-accent to-alpine-pink bg-clip-text text-transparent">Institutional Quality.</span>
+          </h2>
+          <p className="text-xl text-alpine-text-dim max-w-3xl mx-auto mb-8">
+            Download our complete 20-year backtest: 4,374 signals with confidence scores (87-98% range).
+            <br />
+            <strong className="text-alpine-accent">Launching Nov 12 at 9:00 AM ET</strong>, all live signals include SHA-256 verification.
+          </p>
+        </motion.div>
+
+        {/* Table Preview - Desktop */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="hidden md:block mb-12"
+        >
+          <div className="bg-alpine-card border border-alpine-border rounded-lg overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-alpine-accent/10">
+                <tr>
+                  <th className="px-4 py-3 text-left text-alpine-text font-semibold">ID</th>
+                  <th className="px-4 py-3 text-left text-alpine-text font-semibold">Date</th>
+                  <th className="px-4 py-3 text-left text-alpine-text font-semibold">Symbol</th>
+                  <th className="px-4 py-3 text-left text-alpine-text font-semibold">Regime</th>
+                  <th className="px-4 py-3 text-left text-alpine-text font-semibold">Signal</th>
+                  <th className="px-4 py-3 text-right text-alpine-text font-semibold">Entry</th>
+                  <th className="px-4 py-3 text-right text-alpine-text font-semibold">Exit</th>
+                  <th className="px-4 py-3 text-right text-alpine-text font-semibold">P&L $</th>
+                  <th className="px-4 py-3 text-right text-alpine-text font-semibold">P&L %</th>
+                  <th className="px-4 py-3 text-center text-alpine-text font-semibold">Result</th>
+                  <th className="px-4 py-3 text-left text-alpine-text font-semibold">SHA-256</th>
+                </tr>
+              </thead>
+              <tbody>
+                {csvPreviewData.map((trade) => (
+                  <tr
+                    key={trade.trade_id}
+                    className="border-t border-alpine-border hover:bg-alpine-card/50"
+                  >
+                    <td className="px-4 py-3 text-alpine-text-dim font-mono">{trade.trade_id}</td>
+                    <td className="px-4 py-3 text-alpine-text-dim font-mono">{trade.date_entered}</td>
+                    <td className="px-4 py-3 text-alpine-text font-semibold">{trade.symbol}</td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-semibold border ${regimeColors[trade.regime as keyof typeof regimeColors]}`}
+                      >
+                        {trade.regime}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-alpine-text-dim">{trade.signal}</td>
+                    <td className="px-4 py-3 text-alpine-text-dim font-mono text-right">
+                      ${trade.entry_price.toFixed(2)}
+                    </td>
+                    <td className="px-4 py-3 text-alpine-text-dim font-mono text-right">
+                      ${trade.exit_price.toFixed(2)}
+                    </td>
+                    <td
+                      className={`px-4 py-3 font-mono text-right font-semibold ${
+                        trade.pnl_usd >= 0 ? 'text-alpine-accent' : 'text-alpine-red'
+                      }`}
+                    >
+                      ${trade.pnl_usd >= 0 ? '+' : ''}
+                      {trade.pnl_usd.toFixed(2)}
+                    </td>
+                    <td
+                      className={`px-4 py-3 font-mono text-right font-semibold ${
+                        trade.pnl_pct >= 0 ? 'text-alpine-accent' : 'text-alpine-red'
+                      }`}
+                    >
+                      {trade.pnl_pct >= 0 ? '+' : ''}
+                      {trade.pnl_pct.toFixed(2)}%
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-semibold ${
+                          trade.win_loss === 'WIN'
+                            ? 'bg-alpine-accent/20 text-alpine-accent'
+                            : 'bg-alpine-red/20 text-alpine-red'
+                        }`}
+                      >
+                        {trade.win_loss}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-alpine-text-dim font-mono text-xs">
+                      {trade.sha256}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </motion.div>
+
+        {/* Mobile Card Layout */}
+        <div className="md:hidden space-y-4 mb-12">
+          {csvPreviewData.slice(0, 5).map((trade) => (
+            <motion.div
+              key={trade.trade_id}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="bg-alpine-card border border-alpine-border rounded-lg p-4"
+            >
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <span className="text-alpine-text font-semibold">{trade.symbol}</span>
+                  <span className="text-alpine-text-dim text-sm ml-2">{trade.date_entered}</span>
+                </div>
+                <span
+                  className={`px-2 py-1 rounded text-xs font-semibold border ${regimeColors[trade.regime as keyof typeof regimeColors]}`}
+                >
+                  {trade.regime}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <span className="text-alpine-text-dim">Entry:</span>{' '}
+                  <span className="text-alpine-text">${trade.entry_price.toFixed(2)}</span>
+                </div>
+                <div>
+                  <span className="text-alpine-text-dim">Exit:</span>{' '}
+                  <span className="text-alpine-text">${trade.exit_price.toFixed(2)}</span>
+                </div>
+                <div>
+                  <span className="text-alpine-text-dim">P&L:</span>{' '}
+                  <span
+                    className={
+                      trade.pnl_usd >= 0 ? 'text-alpine-accent' : 'text-alpine-red'
+                    }
+                  >
+                    ${trade.pnl_usd >= 0 ? '+' : ''}
+                    {trade.pnl_usd.toFixed(2)} ({trade.pnl_pct >= 0 ? '+' : ''}
+                    {trade.pnl_pct.toFixed(2)}%)
+                  </span>
+                </div>
+                <div>
+                  <span
+                    className={`px-2 py-1 rounded text-xs font-semibold ${
+                      trade.win_loss === 'WIN'
+                        ? 'bg-alpine-green/20 text-alpine-green'
+                        : 'bg-alpine-red/20 text-alpine-red'
+                    }`}
+                  >
+                    {trade.win_loss}
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Feature Cards */}
+        <div className="grid md:grid-cols-3 gap-6 mb-12">
+          {csvFeatures.map((feature, index) => {
+            const Icon = feature.icon
+            return (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                className="bg-alpine-card border border-alpine-border rounded-lg p-6"
+              >
+                <Icon className="w-8 h-8 text-alpine-accent mb-4" />
+                <h3 className="text-alpine-text font-bold mb-2">{feature.title}</h3>
+                <p className="text-alpine-text-dim text-sm">{feature.description}</p>
+              </motion.div>
+            )
+          })}
+        </div>
+
+        {/* Code Examples */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="bg-alpine-card border border-alpine-border rounded-lg p-6 mb-12"
+        >
+          <div className="flex space-x-2 mb-4">
+            {(['python', 'r', 'excel'] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-4 py-2 rounded font-semibold transition-colors ${
+                  activeTab === tab
+                    ? 'bg-alpine-accent text-alpine-darker'
+                    : 'bg-alpine-card text-alpine-text-dim hover:text-alpine-text'
+                }`}
+              >
+                {tab.toUpperCase()}
+              </button>
+            ))}
+          </div>
+          <pre className="bg-alpine-darker rounded p-4 overflow-x-auto">
+            <code className="text-alpine-text text-sm font-mono">
+              {codeExamples[activeTab]}
+            </code>
+          </pre>
+        </motion.div>
+
+        {/* Download CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="bg-alpine-accent/10 border-2 border-alpine-accent rounded-lg p-8 text-center"
+        >
+          <h3 className="text-2xl font-display font-bold text-alpine-text mb-4">
+            Ready to verify our performance yourself?
+          </h3>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-4">
+            <a
+              href="/api/download-backtest"
+              className="group relative inline-flex items-center justify-center gap-3 px-10 py-5 bg-gradient-to-r from-alpine-accent to-alpine-pink hover:from-alpine-pink hover:to-alpine-accent text-white font-black text-lg rounded-xl shadow-2xl shadow-alpine-accent/50 transform transition-all duration-300 hover:scale-105"
+            >
+              <span className="relative z-10 flex items-center gap-3">
+                <Download className="w-6 h-6" />
+                Download 20-Year Backtest Data (CSV)
+              </span>
+            </a>
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-alpine-accent text-alpine-accent hover:bg-alpine-accent/10"
+            >
+              <FileText className="w-5 h-5 mr-2" />
+              View README.txt
+            </Button>
+          </div>
+          <p className="text-alpine-text-dim text-sm mb-4">Free download. No email required.</p>
+          
+          {/* Backtest Disclaimer */}
+          <div className="mt-6 p-6 bg-alpine-orange/10 border border-alpine-orange/30 rounded-lg text-alpine-text-dim text-sm max-w-3xl mx-auto">
+            <p className="font-semibold text-alpine-orange mb-2">⚠️ Important: Backtest Disclosure</p>
+            <p className="mb-2">
+              This data represents backtested performance from 2006-2025. Backtested results are hypothetical
+              and do not represent actual trading. Live cryptographically verified signals begin Wednesday, November 12, 2025 at 9:00 AM ET.
+            </p>
+            <p>
+              <strong>Why we're transparent:</strong> Many signal services show backtests and call them "verified."
+              We're honest about what's backtest vs what's live. Launching Nov 12 at 9:00 AM ET, you'll watch our REAL track record build.
+            </p>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+

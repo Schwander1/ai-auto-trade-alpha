@@ -1,0 +1,151 @@
+# Argo → Alpine Intelligent Monorepo
+# AI-Powered Development Environment with Continuous Optimization
+
+## Project Structure
+- packages/argo-trading/ - Trading engine (Python/FastAPI) on 178.156.194.174:8000
+- packages/alpine-backend/ - User/subscription API (Python/FastAPI) on 91.98.153.49:8001
+- packages/alpine-frontend/ - Web UI (Next.js) on 91.98.153.49:3000
+- packages/shared/ - Shared utilities (TypeScript + Python)
+
+## AI Optimization Rules (CRITICAL)
+
+### 1. Performance Optimization
+- ALWAYS analyze code for performance bottlenecks before suggesting changes
+- Flag O(n²) or worse algorithms and suggest O(n log n) or better alternatives
+- Identify N+1 query problems in database access patterns
+- Suggest caching opportunities (Redis, in-memory, CDN)
+- Recommend lazy loading for large datasets
+- Optimize bundle sizes (code splitting, tree shaking)
+- Suggest database query optimization (indexes, query plans)
+
+### 2. Code Quality Standards
+- Enforce 95%+ test coverage for all new code
+- Require type safety (TypeScript strict mode, Python type hints)
+- Flag code duplication and suggest DRY refactoring
+- Identify unused imports, variables, and dead code
+- Suggest better error handling patterns
+- Recommend proper logging (structured, contextual)
+
+### 3. Security Best Practices
+- Scan for SQL injection vulnerabilities
+- Check for XSS vulnerabilities in frontend code
+- Verify authentication/authorization patterns
+- Flag hardcoded secrets or credentials
+- Suggest input validation and sanitization
+- Recommend rate limiting for APIs
+- Check for CORS misconfigurations
+
+### 4. Automatic Refactoring Suggestions
+- Identify long functions (>50 lines) and suggest extraction
+- Flag complex conditionals and suggest simplification
+- Recommend design pattern improvements
+- Suggest better naming conventions
+- Identify magic numbers and suggest constants
+- Flag code smells (God objects, feature envy, etc.)
+
+### 5. Test Coverage Requirements
+- Every new function MUST have unit tests
+- Integration tests for API endpoints
+- E2E tests for critical user flows
+- Suggest edge cases and boundary conditions
+- Recommend test data factories
+- Flag untested error paths
+
+### 6. Documentation Standards
+- Auto-generate docstrings for public APIs
+- Suggest JSDoc/TSDoc comments for complex logic
+- Recommend README updates for new features
+- Flag undocumented breaking changes
+- Suggest inline comments for non-obvious code
+
+### 7. Database Optimization
+- Analyze query performance automatically
+- Suggest missing indexes
+- Flag inefficient joins
+- Recommend connection pooling
+- Suggest query result caching
+- Identify slow queries (>100ms)
+
+### 8. Caching Opportunities
+- API response caching (Redis, Memcached)
+- Database query result caching
+- Frontend asset caching (CDN)
+- Computed value memoization
+- Session caching strategies
+
+## Quick Start Commands
+When user says "start services", "start dev", or "start all":
+
+1. Start Docker databases first:
+   docker-compose -f packages/alpine-backend/docker-compose.local.yml up -d
+
+2. Open 3 labeled split terminals and run:
+
+Terminal 1 - "🚀 Argo (8000)":
+cd packages/argo-trading && source venv/bin/activate && uvicorn main:app --reload --host 0.0.0.0 --port 8000
+
+Terminal 2 - "🔧 Backend (9001)":
+cd packages/alpine-backend && source venv/bin/activate && uvicorn backend.main:app --reload --host 0.0.0.0 --port 9001
+
+Terminal 3 - "🌐 Frontend (3001)":
+cd packages/alpine-frontend && pnpm dev
+
+## Service Information
+- Argo Health: http://localhost:8000/health
+- Backend Health: http://localhost:9001/health
+- Frontend UI: http://localhost:3001
+- Argo Signals: http://localhost:8000/api/signals/latest
+- Argo Metrics: http://localhost:8000/metrics
+
+## Common Development Tasks
+- "test health" - curl all health endpoints
+- "show signals" - get latest trading signals from Argo
+- "restart backend" - kill and restart backend only
+- "deploy argo" - push changes to 178.156.194.174
+- "deploy alpine" - push changes to 91.98.153.49
+- "optimize" - run code analysis and generate optimization report
+
+## Terminal Management
+Always use clear terminal labels with emojis:
+- 🚀 for Argo (Trading)
+- 🔧 for Backend (API)
+- 🌐 for Frontend (UI)
+- 🧪 for Testing
+- 📊 for Monitoring
+
+## Code Review Checklist (Auto-apply)
+Before suggesting code, verify:
+- [ ] Performance optimized (no bottlenecks)
+- [ ] Security reviewed (no vulnerabilities)
+- [ ] Tests included (95%+ coverage)
+- [ ] Documentation updated
+- [ ] Type safety enforced
+- [ ] Error handling comprehensive
+- [ ] Logging appropriate
+- [ ] Caching considered
+- [ ] Database queries optimized
+
+## Continuous Improvement Triggers
+When analyzing code, automatically:
+1. Compare performance metrics with previous versions
+2. Suggest algorithm improvements
+3. Identify refactoring opportunities
+4. Recommend dependency updates
+5. Flag deprecated APIs
+6. Suggest architectural improvements
+7. Recommend monitoring additions
+
+## Production Deployment
+- Zero-downtime deployments required
+- Health checks before traffic switch
+- Automatic rollback on failure
+- Blue/green deployment for Alpine
+- Canary releases for Argo
+
+## Important Notes
+- Frontend runs on 3001 (3000 taken by Grafana)
+- PostgreSQL on 5433 (5432 taken by old Argo)
+- All services use local .env files
+- Production servers remain untouched until explicit deploy
+- All deployments must pass health checks
+- Rollback capability must be <30 seconds

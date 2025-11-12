@@ -1,0 +1,574 @@
+MISSION: Deliver trading signals with <500ms latency, <2s page load, 99.9% uptime
+CRITICAL: Revenue-critical frontend. User experience = revenue.
+============================================================================
+PROJECT CONTEXT
+Alpine Analytics is the subscriber-facing dashboard for Argo Capital's trading signals. Users pay $50-$200/month for real-time signals with SHA-256 verification. Every millisecond of latency costs revenue. Every bug costs customers.
+
+Target: $2-3B acquisition exit
+Tech Stack: NextJS 14+ (App Router), TypeScript, Tailwind CSS, React
+Backend: FastAPI (connects to Argo via bridge)
+Performance: <500ms API, <2s page load, 99.9% uptime
+
+CRITICAL NON-NEGOTIABLES
+Performance Requirements
+Initial page load: <2 seconds (First Contentful Paint)
+
+API response: <500ms (P95)
+
+WebSocket latency: <100ms (signal → browser)
+
+Core Web Vitals: LCP <2.5s, FID <100ms, CLS <0.1
+
+Mobile performance: 90+ Lighthouse score
+
+User Experience Requirements
+Mobile-first responsive design
+
+WCAG 2.1 AA accessibility
+
+Offline graceful degradation
+
+Real-time updates (no page refresh)
+
+Error states with clear messaging
+
+Code Quality Requirements
+80%+ test coverage (Jest, React Testing Library)
+
+Zero TypeScript errors (strict mode)
+
+Zero ESLint errors
+
+No any types (use proper typing)
+
+All components documented
+
+TYPESCRIPT/JAVASCRIPT CODE STYLE
+Naming Conventions
+typescript
+// Files: kebab-case.tsx
+signal-card.tsx
+dashboard-layout.tsx
+use-websocket.ts
+
+// Components: PascalCase
+export default function SignalCard() {}
+export function DashboardLayout() {}
+
+// Functions: camelCase
+function calculateConfidence() {}
+const fetchSignalData = async () => {}
+
+// Variables: camelCase
+const signalList = []
+const isLoading = false
+
+// Constants: UPPERCASE_SNAKE_CASE
+const API_ENDPOINT = 'https://api.alpineanalytics.com'
+const MAX_RETRY_ATTEMPTS = 3
+
+// Types/Interfaces: PascalCase
+interface SignalData {}
+type UserRole = 'free' | 'pro' | 'premium'
+
+// Boolean variables: is/has/should prefix
+const isAuthenticated = true
+const hasSubscription = false
+const shouldShowModal = true
+Component Structure
+typescript
+// signal-card.tsx
+'use client' // Only if client component needed
+
+import { useState, useEffect } from 'react'
+import { Signal } from '@/types/signal'
+import { verifySignalHash } from '@/lib/crypto'
+
+interface SignalCardProps {
+  signal: Signal
+  onVerify?: (hash: string) => void
+  className?: string
+}
+
+/**
+ * SignalCard displays a trading signal with real-time updates and verification.
+ * 
+ * @param signal - Signal data from Argo backend
+ * @param onVerify - Optional callback when user verifies signal hash
+ * @param className - Additional Tailwind classes
+ * 
+ * @example
+ * <SignalCard 
+ *   signal={signalData} 
+ *   onVerify={handleVerify}
+ *   className="mb-4"
+ * />
+ */
+export default function SignalCard({ 
+  signal, 
+  onVerify,
+  className = ''
+}: SignalCardProps) {
+  // 1. STATE DECLARATIONS
+  const [isVerified, setIsVerified] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  
+  // 2. EFFECTS
+  useEffect(() => {
+    // Auto-verify on mount
+    verifySignal()
+  }, [signal.id])
+  
+  // 3. EVENT HANDLERS
+  const handleVerifyClick = async () => {
+    setIsLoading(true)
+    try {
+      const result = await verifySignalHash(signal.hash, signal)
+      setIsVerified(result)
+      onVerify?.(signal.hash)
+    } catch (error) {
+      console.error('Verification failed:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+  
+  // 4. HELPER FUNCTIONS
+  const formatConfidence = (value: number): string => {
+    return `${value.toFixed(1)}%`
+  }
+  
+  // 5. EARLY RETURNS (if needed)
+  if (!signal) return null
+  
+  // 6. RENDER
+  return (
+    <div className={`rounded-lg border bg-white p-4 shadow-sm ${className}`}>
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-gray-900">
+          {signal.symbol}
+        </h3>
+        <span className={`px-2 py-1 text-sm font-medium ${
+          signal.type === 'BUY' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+        }`}>
+          {signal.type}
+        </span>
+      </div>
+      
+      <div className="mt-2 space-y-1">
+        <p className="text-sm text-gray-600">
+          Entry: ${signal.entry_price.toFixed(2)}
+        </p>
+        <p className="text-sm text-gray-600">
+          Confidence: {formatConfidence(signal.confidence)}
+        </p>
+      </div>
+      
+      {isVerified && (
+        <div className="mt-3 flex items-center text-sm text-green-600">
+          <svg className="mr-1 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+          </svg>
+          Verified
+        </div>
+      )}
+      
+      <button
+        onClick={handleVerifyClick}
+        disabled={isLoading}
+        className="mt-4 w-full rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+      >
+        {isLoading ? 'Verifying...' : 'Verify Signal'}
+      </button>
+    </div>
+  )
+}
+TypeScript Type Safety
+typescript
+// NEVER use 'any'
+// BAD ❌
+const data: any = await fetchData()
+
+// GOOD ✅
+const data: SignalResponse = await fetchData()
+
+// Define types for all API responses
+interface SignalResponse {
+  id: string
+  symbol: string
+  type: 'BUY' | 'SELL' | 'NEUTRAL'
+  entry_price: number
+  stop_loss: number | null
+  take_profit: number | null
+  confidence: number
+  reasoning: string
+  timestamp: string
+  hash: string
+}
+
+// Use union types for specific values
+type SubscriptionTier = 'free' | 'pro' | 'premium'
+type SignalStatus = 'pending' | 'active' | 'closed'
+
+// Use utility types
+type PartialSignal = Partial<SignalResponse>
+type SignalKeys = keyof SignalResponse
+type ReadonlySignal = Readonly<SignalResponse>
+Server Components (Default) vs Client Components
+typescript
+// SERVER COMPONENT (default) - No 'use client'
+// Use for: Static content, data fetching, SEO-critical pages
+// app/dashboard/page.tsx
+import { getSignals } from '@/lib/api'
+
+export default async function DashboardPage() {
+  const signals = await getSignals() // Fetch on server
+  
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      <SignalList signals={signals} />
+    </div>
+  )
+}
+
+// CLIENT COMPONENT - Add 'use client'
+// Use for: Interactivity, state, effects, browser APIs
+// components/signal-list.tsx
+'use client'
+
+import { useState } from 'react'
+
+export default function SignalList({ signals }) {
+  const [filter, setFilter] = useState('all')
+  // Client-side filtering, interactions
+  return <div>...</div>
+}
+CODE ORGANIZATION
+File Structure
+text
+alpine-frontend/
+├── app/                      # NextJS 14 App Router
+│   ├── (auth)/              # Auth group (shared layout)
+│   │   ├── login/
+│   │   └── signup/
+│   ├── dashboard/           # Main dashboard
+│   │   ├── page.tsx
+│   │   └── layout.tsx
+│   ├── signals/             # Signal pages
+│   │   ├── [id]/           # Dynamic route
+│   │   └── page.tsx
+│   ├── profile/
+│   ├── billing/
+│   ├── layout.tsx           # Root layout
+│   ├── page.tsx             # Home page
+│   └── error.tsx            # Error boundary
+├── components/              # React components
+│   ├── ui/                 # Reusable UI (buttons, cards, inputs)
+│   │   ├── button.tsx
+│   │   ├── card.tsx
+│   │   └── input.tsx
+│   └── features/           # Feature-specific components
+│       ├── signal-card.tsx
+│       ├── dashboard-header.tsx
+│       └── websocket-indicator.tsx
+├── hooks/                  # Custom React hooks
+│   ├── use-websocket.ts
+│   ├── use-auth.ts
+│   └── use-signals.ts
+├── lib/                    # Utilities, helpers
+│   ├── api.ts             # API client
+│   ├── crypto.ts          # SHA-256 verification
+│   ├── utils.ts           # Helper functions
+│   └── constants.ts       # Constants
+├── types/                  # TypeScript types
+│   ├── signal.ts
+│   ├── user.ts
+│   └── api.ts
+├── styles/                 # Global styles
+│   └── globals.css
+├── public/                 # Static assets
+│   ├── images/
+│   └── data/
+├── .cursorrules           # This file
+├── .cursorignore
+├── tsconfig.json
+├── next.config.js
+└── tailwind.config.ts
+PERFORMANCE OPTIMIZATION
+Image Optimization
+typescript
+import Image from 'next/image'
+
+// ALWAYS use Next.js Image component
+// BAD ❌
+<img src="/logo.png" alt="Logo" />
+
+// GOOD ✅
+<Image
+  src="/logo.png"
+  alt="Alpine Analytics Logo"
+  width={200}
+  height={50}
+  priority // For above-the-fold images
+/>
+Code Splitting & Lazy Loading
+typescript
+import dynamic from 'next/dynamic'
+
+// Lazy load non-critical components
+const HeavyChart = dynamic(() => import('@/components/heavy-chart'), {
+  loading: () => <div>Loading chart...</div>,
+  ssr: false // Disable server-side rendering if needed
+})
+API Data Fetching
+typescript
+// Use React Server Components for initial data
+// app/dashboard/page.tsx
+export default async function DashboardPage() {
+  const signals = await fetch('https://api.alpine.com/signals', {
+    next: { revalidate: 60 } // Revalidate every 60 seconds
+  }).then(res => res.json())
+  
+  return <SignalList signals={signals} />
+}
+
+// Use client-side fetching for real-time updates
+// hooks/use-signals.ts
+'use client'
+
+export function useSignals() {
+  const [signals, setSignals] = useState<Signal[]>([])
+  
+  useEffect(() => {
+    const ws = new WebSocket('wss://api.alpine.com/ws')
+    ws.onmessage = (event) => {
+      const newSignal = JSON.parse(event.data)
+      setSignals(prev => [newSignal, ...prev])
+    }
+    return () => ws.close()
+  }, [])
+  
+  return signals
+}
+TAILWIND CSS BEST PRACTICES
+Responsive Design (Mobile-First)
+typescript
+<div className="
+  p-4           // Base (mobile): 16px padding
+  sm:p-6        // Small (640px+): 24px padding
+  md:p-8        // Medium (768px+): 32px padding
+  lg:p-12       // Large (1024px+): 48px padding
+">
+  Content
+</div>
+Reusable Component Variants
+typescript
+// Use cn() helper for conditional classes
+import { cn } from '@/lib/utils'
+
+interface ButtonProps {
+  variant?: 'primary' | 'secondary' | 'danger'
+  size?: 'sm' | 'md' | 'lg'
+  className?: string
+  children: React.ReactNode
+}
+
+export function Button({ 
+  variant = 'primary', 
+  size = 'md',
+  className,
+  children 
+}: ButtonProps) {
+  return (
+    <button className={cn(
+      // Base styles
+      'rounded-md font-medium transition-colors',
+      // Variant styles
+      {
+        'bg-blue-600 text-white hover:bg-blue-700': variant === 'primary',
+        'bg-gray-200 text-gray-900 hover:bg-gray-300': variant === 'secondary',
+        'bg-red-600 text-white hover:bg-red-700': variant === 'danger',
+      },
+      // Size styles
+      {
+        'px-3 py-1.5 text-sm': size === 'sm',
+        'px-4 py-2 text-base': size === 'md',
+        'px-6 py-3 text-lg': size === 'lg',
+      },
+      // Additional classes
+      className
+    )}>
+      {children}
+    </button>
+  )
+}
+ERROR HANDLING & LOADING STATES
+Error Boundaries
+typescript
+// app/error.tsx
+'use client'
+
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string }
+  reset: () => void
+}) {
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center">
+      <h2 className="text-2xl font-bold">Something went wrong!</h2>
+      <button
+        onClick={reset}
+        className="mt-4 rounded-md bg-blue-600 px-4 py-2 text-white"
+      >
+        Try again
+      </button>
+    </div>
+  )
+}
+Loading States
+typescript
+// app/dashboard/loading.tsx
+export default function Loading() {
+  return (
+    <div className="animate-pulse space-y-4">
+      <div className="h-12 rounded bg-gray-200" />
+      <div className="h-64 rounded bg-gray-200" />
+    </div>
+  )
+}
+TESTING REQUIREMENTS
+Component Tests (Jest + React Testing Library)
+typescript
+// __tests__/signal-card.test.tsx
+import { render, screen, fireEvent } from '@testing-library/react'
+import SignalCard from '@/components/signal-card'
+
+describe('SignalCard', () => {
+  const mockSignal = {
+    id: '123',
+    symbol: 'AAPL',
+    type: 'BUY',
+    entry_price: 150.25,
+    confidence: 95.3,
+    hash: 'abc123...'
+  }
+  
+  it('renders signal data correctly', () => {
+    render(<SignalCard signal={mockSignal} />)
+    
+    expect(screen.getByText('AAPL')).toBeInTheDocument()
+    expect(screen.getByText('BUY')).toBeInTheDocument()
+    expect(screen.getByText(/\$150\.25/)).toBeInTheDocument()
+  })
+  
+  it('calls onVerify when verify button clicked', async () => {
+    const onVerify = jest.fn()
+    render(<SignalCard signal={mockSignal} onVerify={onVerify} />)
+    
+    fireEvent.click(screen.getByText('Verify Signal'))
+    
+    expect(onVerify).toHaveBeenCalledWith(mockSignal.hash)
+  })
+})
+ACCESSIBILITY (WCAG 2.1 AA)
+typescript
+// ALWAYS include proper ARIA labels and semantic HTML
+
+// BAD ❌
+<div onClick={handleClick}>Click me</div>
+
+// GOOD ✅
+<button
+  onClick={handleClick}
+  aria-label="Verify trading signal"
+  className="..."
+>
+  Verify Signal
+</button>
+
+// Use semantic HTML
+<nav aria-label="Main navigation">
+  <ul>
+    <li><a href="/dashboard">Dashboard</a></li>
+  </ul>
+</nav>
+
+// Proper form labels
+<label htmlFor="email" className="block text-sm font-medium">
+  Email
+</label>
+<input
+  id="email"
+  type="email"
+  aria-required="true"
+  aria-describedby="email-help"
+/>
+<p id="email-help" className="text-sm text-gray-600">
+  We'll never share your email
+</p>
+GIT COMMIT STANDARDS
+Same as Argo:
+
+text
+feat: add real-time signal WebSocket updates
+fix: correct confidence score rounding in signal card
+refactor: extract signal verification logic to hook
+test: add integration tests for dashboard page
+docs: update component usage examples
+perf: optimize dashboard rendering with React.memo
+CURSOR AI BEHAVIOR
+When Generating Code
+✅ Use Server Components by default
+
+✅ Add 'use client' only when needed (state, effects, browser APIs)
+
+✅ Always include TypeScript types (no any)
+
+✅ Use Tailwind for styling (no custom CSS unless necessary)
+
+✅ Include JSDoc comments for all exported components
+
+✅ Add proper ARIA labels for accessibility
+
+✅ Optimize images with next/image
+
+✅ Handle loading and error states
+
+When Refactoring
+✅ Extract repeated logic into custom hooks
+
+✅ Create reusable UI components
+
+✅ Optimize performance (memo, lazy loading)
+
+✅ Improve type safety
+
+✅ Add missing tests
+
+REVENUE-CRITICAL CHECKLIST
+Before deploying:
+
+ Lighthouse score >90 (mobile)
+
+ <2s page load (tested on 3G)
+
+ All TypeScript errors resolved
+
+ 80%+ test coverage
+
+ Accessibility audit passed
+
+ Error boundaries implemented
+
+ Loading states for all async operations
+
+ Mobile responsive (tested on actual devices)
+
+ WebSocket reconnection working
+
+ SHA-256 verification functional
+
+This frontend directly impacts revenue. Every bug costs customers. Every millisecond matters.

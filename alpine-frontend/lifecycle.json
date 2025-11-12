@@ -1,0 +1,14 @@
+{
+  "Rules": [
+    {
+      "Id": "MoveToGlacier",
+      "Status": "Enabled",
+      "Transitions": [
+        {
+          "Days": 30,
+          "StorageClass": "GLACIER"
+        }
+      ]
+    }
+  ]
+}

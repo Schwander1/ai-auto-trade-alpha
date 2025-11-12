@@ -1,0 +1,97 @@
+{
+  "id": null,
+  "uid": "argo-live-perf",
+  "title": "Argo Live Performance Dashboard",
+  "tags": ["argo", "live", "trading"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "10s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Win Rate (Live)",
+      "type": "stat",
+      "gridPos": {"h": 8, "w": 6, "x": 0, "y": 0},
+      "targets": [{
+        "expr": "argo_win_rate",
+        "refId": "A"
+      }],
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "steps": [
+              {"value": 0, "color": "red"},
+              {"value": 90, "color": "orange"},
+              {"value": 95, "color": "green"}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Total Signals",
+      "type": "stat",
+      "gridPos": {"h": 8, "w": 6, "x": 6, "y": 0},
+      "targets": [{
+        "expr": "argo_total_signals_total",
+        "refId": "A"
+      }]
+    },
+    {
+      "id": 3,
+      "title": "Sharpe Ratio",
+      "type": "gauge",
+      "gridPos": {"h": 8, "w": 6, "x": 12, "y": 0},
+      "targets": [{
+        "expr": "argo_sharpe_ratio",
+        "refId": "A"
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 4
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Max Drawdown",
+      "type": "gauge",
+      "gridPos": {"h": 8, "w": 6, "x": 18, "y": 0},
+      "targets": [{
+        "expr": "argo_max_drawdown",
+        "refId": "A"
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": -20,
+          "max": 0
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "Win Rate Trend (6h)",
+      "type": "timeseries",
+      "gridPos": {"h": 10, "w": 24, "x": 0, "y": 8},
+      "targets": [{
+        "expr": "argo_win_rate",
+        "legendFormat": "Win Rate",
+        "refId": "A"
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+version: '3.9'
+
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://91.98.153.49:8001
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - alpine-network
+
+  backend:
+    build: ./backend
+    ports:
+      - "8001:8000"
+    environment:
+      - ARGO_API_URL=http://178.156.194.174:8000
+      - ENVIRONMENT=production
+    restart: unless-stopped
+    networks:
+      - alpine-network
+
+  postgres:
+    image: postgres:15
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_USER=alpine_user
+      - POSTGRES_PASSWORD=AlpineSecure2025!
+      - POSTGRES_DB=alpine_prod
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - alpine-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+    command: redis-server --requirepass AlpineRedis2025!
+    restart: unless-stopped
+    networks:
+      - alpine-network
+
+volumes:
+  postgres_data:
+
+networks:
+  alpine-network:
+    driver: bridge

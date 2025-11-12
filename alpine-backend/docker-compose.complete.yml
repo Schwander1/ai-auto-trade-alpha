@@ -1,0 +1,187 @@
+version: '3.9'
+
+services:
+  # === APPLICATION SERVICES ===
+  
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - backend
+      - frontend
+    restart: unless-stopped
+    networks:
+      - alpine-network
+
+  backend:
+    build: ./backend
+    environment:
+      - ARGO_API_URL=http://178.156.194.174:8000
+      - ENVIRONMENT=production
+      - SENTRY_DSN=${SENTRY_DSN}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - MAIL_FROM=signals@alpine-analytics.com
+      - MAIL_SERVER=smtp.gmail.com
+    restart: unless-stopped
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    networks:
+      - alpine-network
+
+  frontend:
+    build: ./frontend
+    environment:
+      - NEXT_PUBLIC_API_URL=/api
+    restart: unless-stopped
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    networks:
+      - alpine-network
+
+  # === DATA SERVICES ===
+  
+  postgres:
+    image: postgres:15
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_USER=alpine_user
+      - POSTGRES_PASSWORD=AlpineSecure2025!
+      - POSTGRES_DB=alpine_prod
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - alpine-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+    command: redis-server --requirepass AlpineRedis2025! --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - alpine-network
+
+  # === MONITORING SERVICES ===
+  
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=30d'
+    restart: unless-stopped
+    networks:
+      - alpine-network
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=AlpineGrafana2025!
+      - GF_SERVER_ROOT_URL=http://91.98.153.49:3001
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - alpine-network
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./monitoring/alertmanager:/etc/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+    restart: unless-stopped
+    networks:
+      - alpine-network
+
+  # === EXPORTERS ===
+  
+  node-exporter:
+    image: prom/node-exporter:latest
+    ports:
+      - "9100:9100"
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+    restart: unless-stopped
+    networks:
+      - alpine-network
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    ports:
+      - "9187:9187"
+    environment:
+      DATA_SOURCE_NAME: "postgresql://alpine_user:AlpineSecure2025!@postgres:5432/alpine_prod?sslmode=disable"
+    restart: unless-stopped
+    networks:
+      - alpine-network
+
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    ports:
+      - "9121:9121"
+    environment:
+      - REDIS_ADDR=redis://redis:6379
+      - REDIS_PASSWORD=AlpineRedis2025!
+    restart: unless-stopped
+    networks:
+      - alpine-network
+
+
+  # === ARGO METRICS EXPORTER ===
+  
+  argo-exporter:
+    build: ./monitoring/argo-exporter
+    container_name: alpine-production-argo-exporter-1
+    ports:
+      - "9200:9200"
+    environment:
+      - ARGO_API_URL=http://178.156.194.174:8000
+      - SCRAPE_INTERVAL=30
+    restart: unless-stopped
+    networks:
+      - alpine-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  alpine-network:
+    driver: bridge

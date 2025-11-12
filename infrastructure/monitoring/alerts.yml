@@ -1,0 +1,145 @@
+# Prometheus alerting rules
+# Defines conditions that trigger alerts
+
+groups:
+  - name: argo_alerts
+    interval: 30s
+    rules:
+      # Argo service down
+      - alert: ArgoServiceDown
+        expr: up{job="argo"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: argo
+        annotations:
+          summary: "Argo trading engine is down"
+          description: "Argo service at {{ $labels.instance }} has been down for more than 1 minute."
+
+      # Argo high error rate
+      - alert: ArgoHighErrorRate
+        expr: rate(http_requests_total{job="argo",status=~"5.."}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: argo
+        annotations:
+          summary: "Argo has high error rate"
+          description: "Argo error rate is {{ $value }} errors/second (threshold: 0.1)"
+
+      # Argo slow response time
+      - alert: ArgoSlowResponse
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="argo"}[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: argo
+        annotations:
+          summary: "Argo has slow response times"
+          description: "95th percentile response time is {{ $value }}s (threshold: 1s)"
+
+  - name: alpine_alerts
+    interval: 30s
+    rules:
+      # Alpine Backend down
+      - alert: AlpineBackendDown
+        expr: up{job="alpine-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: alpine-backend
+        annotations:
+          summary: "Alpine Backend is down"
+          description: "Alpine Backend at {{ $labels.instance }} has been down for more than 1 minute."
+
+      # Alpine Backend high error rate
+      - alert: AlpineBackendHighErrorRate
+        expr: rate(http_requests_total{job="alpine-backend",status=~"5.."}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          service: alpine-backend
+        annotations:
+          summary: "Alpine Backend has high error rate"
+          description: "Alpine Backend error rate is {{ $value }} errors/second (threshold: 0.05)"
+
+      # Alpine Frontend down
+      - alert: AlpineFrontendDown
+        expr: up{job="alpine-frontend"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: alpine-frontend
+        annotations:
+          summary: "Alpine Frontend is down"
+          description: "Alpine Frontend at {{ $labels.instance }} has been down for more than 2 minutes."
+
+  - name: system_alerts
+    interval: 30s
+    rules:
+      # High CPU usage
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is {{ $value }}% (threshold: 80%)"
+
+      # High memory usage
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is {{ $value }}% (threshold: 85%)"
+
+      # Disk space low
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 15
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low disk space on {{ $labels.instance }}"
+          description: "Disk space is {{ $value }}% available (threshold: 15%)"
+
+  - name: database_alerts
+    interval: 30s
+    rules:
+      # PostgreSQL down
+      - alert: PostgreSQLDown
+        expr: up{job="postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: postgres
+        annotations:
+          summary: "PostgreSQL is down"
+          description: "PostgreSQL at {{ $labels.instance }} has been down for more than 1 minute."
+
+      # PostgreSQL high connections
+      - alert: PostgreSQLHighConnections
+        expr: pg_stat_database_numbackends{job="postgres"} > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: postgres
+        annotations:
+          summary: "PostgreSQL has high connection count"
+          description: "PostgreSQL has {{ $value }} active connections (threshold: 80)"
+
+      # Redis down
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: redis
+        annotations:
+          summary: "Redis is down"
+          description: "Redis at {{ $labels.instance }} has been down for more than 1 minute."
+
