@@ -6,8 +6,8 @@ from functools import wraps
 from typing import Optional, Callable, Any
 from backend.core.config import settings
 from backend.core.metrics import (
-    record_cache_hit, record_cache_miss, record_cache_operation,
-    update_redis_status
+    record_cache_hit,
+    record_cache_miss,
 )
 
 # Initialize Redis client
@@ -24,11 +24,9 @@ try:
     )
     # Test connection
     redis_client.ping()
-    update_redis_status(True)
 except Exception as e:
     print(f"Warning: Redis connection failed: {e}. Caching disabled.")
     redis_client = None
-    update_redis_status(False)
 
 
 def cache_key(*args, **kwargs) -> str:
@@ -59,15 +57,12 @@ def cache_response(ttl: int = 300, prefix: str = "cache"):
             try:
                 cached = redis_client.get(key)
                 if cached:
-                    record_cache_hit(key)
-                    record_cache_operation('get', True)
+                    record_cache_hit('response')
                     return json.loads(cached)
                 else:
-                    record_cache_miss(key)
-                    record_cache_operation('get', True)
+                    record_cache_miss('response')
             except Exception as e:
                 print(f"Cache read error: {e}")
-                record_cache_operation('get', False)
             
             # Execute function
             result = await func(*args, **kwargs)
@@ -75,10 +70,8 @@ def cache_response(ttl: int = 300, prefix: str = "cache"):
             # Store in cache
             try:
                 redis_client.setex(key, ttl, json.dumps(result, default=str))
-                record_cache_operation('set', True)
             except Exception as e:
                 print(f"Cache write error: {e}")
-                record_cache_operation('set', False)
             
             return result
         
