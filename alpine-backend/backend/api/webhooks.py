@@ -1,5 +1,5 @@
 """Stripe webhook handler with signature verification"""
-from fastapi import APIRouter, Request, HTTPException, status, Header
+from fastapi import APIRouter, Request, HTTPException, Depends, status, Header
 from sqlalchemy.orm import Session
 import stripe
 import hmac
