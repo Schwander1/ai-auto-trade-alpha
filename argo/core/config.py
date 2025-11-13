@@ -91,6 +91,7 @@ class Settings(BaseSettings):
         case_sensitive = True
         # Allow properties to be accessed
         arbitrary_types_allowed = True
+        extra = "allow"  # Allow extra fields from .env
 
 
 settings = Settings()

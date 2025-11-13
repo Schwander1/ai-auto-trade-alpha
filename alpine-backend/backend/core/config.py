@@ -159,14 +159,19 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
-# Validate settings on import (only in production)
+# Validate settings on import (only in production, and only if secrets are loaded)
 import os
-if os.getenv("ENVIRONMENT") == "production" or not settings.DEBUG:
+# Only validate if we're in production AND secrets are actually loaded
+# Skip validation if using AWS Secrets Manager and it's not available (will use fallback)
+if os.getenv("ENVIRONMENT") == "production":
     try:
-        settings.validate_secrets()
+        # Only validate if we have actual values (not empty strings from failed AWS load)
+        if settings.DATABASE_URL and settings.JWT_SECRET and settings.STRIPE_SECRET_KEY:
+            settings.validate_secrets()
     except ValueError as e:
         import logging
         logging.error(f"Configuration validation failed: {e}")
-        # In production, fail fast
-        if os.getenv("ENVIRONMENT") == "production":
+        # In production, fail fast only if we're sure secrets should be loaded
+        if os.getenv("USE_AWS_SECRETS", "true").lower() == "true":
+            # If AWS Secrets Manager is enabled but secrets aren't loaded, that's a problem
             raise

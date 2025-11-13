@@ -19,7 +19,11 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/signals", tags=["signals"])
 
 # Use Redis-based rate limiting from core
-from argo.core.rate_limit import check_rate_limit, add_rate_limit_headers, get_rate_limit_status
+try:
+    from argo.core.rate_limit import check_rate_limit, add_rate_limit_headers, get_rate_limit_status
+except ImportError:
+    # Fallback if running from argo directory
+    from core.rate_limit import check_rate_limit, add_rate_limit_headers, get_rate_limit_status
 RATE_LIMIT_WINDOW = 60  # 1 minute
 RATE_LIMIT_MAX = 100
 

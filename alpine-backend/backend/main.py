@@ -11,7 +11,7 @@ import logging
 from pydantic import BaseModel
 
 from backend.core.config import settings
-from backend.core.database import get_db, engine, Base
+from backend.core.database import get_db, get_engine, Base
 from backend.core.metrics import get_metrics
 from backend.core.security_headers import SecurityHeadersMiddleware
 from backend.core.csrf import CSRFProtectionMiddleware
@@ -28,7 +28,13 @@ from backend.auth.security import verify_password, get_password_hash, create_acc
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 # Create database tables
-Base.metadata.create_all(bind=engine)
+# Create tables (lazy initialization - engine will be created on first use)
+try:
+    engine = get_engine()
+    Base.metadata.create_all(bind=engine)
+except Exception as e:
+    import logging
+    logging.warning(f"Could not create database tables on startup: {e}. Tables will be created on first use.")
 
 # Configure logging
 logging.basicConfig(

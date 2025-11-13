@@ -5,7 +5,12 @@ from typing import Optional
 from functools import wraps
 from fastapi import HTTPException, Request, Response
 import logging
-from argo.core.config import settings
+
+# Import settings with fallback for import path
+try:
+    from argo.core.config import settings
+except ImportError:
+    from core.config import settings
 
 logger = logging.getLogger(__name__)
 

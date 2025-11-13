@@ -10,7 +10,11 @@ import hashlib
 import json
 import random
 
-from argo.core.request_tracking import RequestTrackingMiddleware
+try:
+    from argo.core.request_tracking import RequestTrackingMiddleware
+except ImportError:
+    # Fallback if running from argo directory
+    from core.request_tracking import RequestTrackingMiddleware
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
