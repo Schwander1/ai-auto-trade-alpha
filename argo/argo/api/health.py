@@ -107,12 +107,28 @@ async def get_health_status():
             "disk_percent": 0.0
         }
     
+    # Check secrets manager access
+    secrets_status = "healthy"
+    try:
+        from core.config import settings
+        # Try to access a secret to verify AWS Secrets Manager is working
+        if hasattr(settings, 'secrets') and settings.secrets:
+            test_secret = settings.ARGO_API_SECRET
+            if not test_secret or test_secret == "argo_secret_key_change_in_production":
+                secrets_status = "degraded"  # Using default/fallback
+        else:
+            secrets_status = "degraded"  # Using environment variables
+    except Exception as e:
+        secrets_status = "unhealthy"
+    
     # Determine overall status
     status = "healthy"
     if system_info["cpu_percent"] > 90 or system_info["memory_percent"] > 90:
         status = "degraded"
     if system_info["disk_percent"] > 95:
         status = "unhealthy"
+    if secrets_status == "unhealthy":
+        status = "degraded"
     
     return HealthStatus(
         status=status,
@@ -123,7 +139,8 @@ async def get_health_status():
         services={
             "api": "healthy",
             "database": "healthy",
-            "redis": "healthy"
+            "redis": "healthy",
+            "secrets": secrets_status
         },
         system=system_info
     )

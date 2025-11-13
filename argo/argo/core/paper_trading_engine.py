@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 """Alpine Analytics Paper Trading Engine"""
-import json, logging
+import json
+import os
+import sys
+import logging
 from datetime import datetime
+from pathlib import Path
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("AlpinePaperTrading")
@@ -15,18 +19,63 @@ except:
     ALPACA_AVAILABLE = False
     logger.warning("Alpaca SDK not available - using simulation mode")
 
+# Add shared package to path
+shared_path = Path(__file__).parent.parent.parent.parent.parent / "packages" / "shared"
+if shared_path.exists():
+    sys.path.insert(0, str(shared_path))
+
+try:
+    from utils.secrets_manager import get_secret
+    SECRETS_MANAGER_AVAILABLE = True
+except ImportError:
+    SECRETS_MANAGER_AVAILABLE = False
+
 class PaperTradingEngine:
-    def __init__(self, config_path='/root/argo-production/config.json'):
-        with open(config_path) as f:
-            config = json.load(f)
-        self.config = config.get('trading', {})
+    def __init__(self, config_path=None):
+        # Try to get Alpaca credentials from AWS Secrets Manager first
+        alpaca_api_key = None
+        alpaca_secret_key = None
+        alpaca_paper = True
         
-        if ALPACA_AVAILABLE and config.get('alpaca', {}).get('enabled', True):
+        if SECRETS_MANAGER_AVAILABLE:
+            try:
+                service = "argo"
+                alpaca_api_key = get_secret("alpaca-api-key", service=service)
+                alpaca_secret_key = get_secret("alpaca-secret-key", service=service)
+                paper_mode = get_secret("alpaca-paper", service=service, default="true")
+                alpaca_paper = paper_mode.lower() == "true" if paper_mode else True
+            except Exception as e:
+                logger.warning(f"Failed to get Alpaca credentials from AWS Secrets Manager: {e}")
+        
+        # Fallback to config.json if AWS Secrets Manager doesn't have the keys
+        if not alpaca_api_key or not alpaca_secret_key:
+            if config_path is None:
+                config_path = os.getenv('ARGO_CONFIG_PATH', '/root/argo-production/config.json')
+            
+            if os.path.exists(config_path):
+                try:
+                    with open(config_path) as f:
+                        config = json.load(f)
+                    alpaca_config = config.get('alpaca', {})
+                    alpaca_api_key = alpaca_api_key or alpaca_config.get('api_key') or os.getenv('ALPACA_API_KEY')
+                    alpaca_secret_key = alpaca_secret_key or alpaca_config.get('secret_key') or os.getenv('ALPACA_SECRET_KEY')
+                    alpaca_paper = alpaca_config.get('paper', True) if alpaca_config else True
+                    self.config = config.get('trading', {})
+                except Exception as e:
+                    logger.warning(f"Failed to load config.json: {e}")
+                    self.config = {}
+            else:
+                # Try environment variables as last resort
+                alpaca_api_key = alpaca_api_key or os.getenv('ALPACA_API_KEY')
+                alpaca_secret_key = alpaca_secret_key or os.getenv('ALPACA_SECRET_KEY')
+                self.config = {}
+        
+        if ALPACA_AVAILABLE and alpaca_api_key and alpaca_secret_key:
             try:
                 self.alpaca = TradingClient(
-                    config['alpaca']['api_key'],
-                    config['alpaca']['secret_key'],
-                    paper=config['alpaca'].get('paper', True)
+                    alpaca_api_key,
+                    alpaca_secret_key,
+                    paper=alpaca_paper
                 )
                 account = self.alpaca.get_account()
                 logger.info(f"✅ Alpaca connected | Portfolio: ${float(account.portfolio_value):,.2f}")

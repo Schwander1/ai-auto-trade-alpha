@@ -1,15 +1,44 @@
 import os
+import sys
 import requests
+from pathlib import Path
 from anthropic import Anthropic
+
+# Add shared package to path
+shared_path = Path(__file__).parent.parent.parent.parent.parent / "packages" / "shared"
+if shared_path.exists():
+    sys.path.insert(0, str(shared_path))
+
+try:
+    from utils.secrets_manager import get_secret
+    SECRETS_MANAGER_AVAILABLE = True
+except ImportError:
+    SECRETS_MANAGER_AVAILABLE = False
 
 class PremiumAPIs:
     """Integration with all premium data sources"""
     
     def __init__(self):
-        self.alpha_vantage_key = os.getenv('ALPHA_VANTAGE_API_KEY')
-        self.anthropic_key = os.getenv('ANTHROPIC_API_KEY')
-        self.perplexity_key = os.getenv('PERPLEXITY_API_KEY')
-        self.xai_key = os.getenv('XAI_API_KEY')
+        # Try AWS Secrets Manager first, fallback to environment variables
+        service = "argo"
+        
+        if SECRETS_MANAGER_AVAILABLE:
+            try:
+                self.alpha_vantage_key = get_secret("alpha-vantage-api-key", service=service) or os.getenv('ALPHA_VANTAGE_API_KEY')
+                self.anthropic_key = get_secret("anthropic-api-key", service=service) or os.getenv('ANTHROPIC_API_KEY')
+                self.perplexity_key = get_secret("perplexity-api-key", service=service) or os.getenv('PERPLEXITY_API_KEY')
+                self.xai_key = get_secret("xai-api-key", service=service) or os.getenv('XAI_API_KEY')
+            except Exception:
+                # Fallback to environment variables
+                self.alpha_vantage_key = os.getenv('ALPHA_VANTAGE_API_KEY')
+                self.anthropic_key = os.getenv('ANTHROPIC_API_KEY')
+                self.perplexity_key = os.getenv('PERPLEXITY_API_KEY')
+                self.xai_key = os.getenv('XAI_API_KEY')
+        else:
+            self.alpha_vantage_key = os.getenv('ALPHA_VANTAGE_API_KEY')
+            self.anthropic_key = os.getenv('ANTHROPIC_API_KEY')
+            self.perplexity_key = os.getenv('PERPLEXITY_API_KEY')
+            self.xai_key = os.getenv('XAI_API_KEY')
         
     def get_fundamental_data(self, symbol):
         """Alpha Vantage - Company fundamentals"""

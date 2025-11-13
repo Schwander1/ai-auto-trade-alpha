@@ -151,6 +151,27 @@ async def health_check(db: Session = Depends(get_db)):
         health_status["checks"]["redis"] = f"unhealthy: {str(e)}"
         health_status["status"] = "degraded"
     
+    # Check secrets manager access
+    try:
+        import sys
+        from pathlib import Path
+        shared_path = Path(__file__).parent.parent.parent.parent.parent / "packages" / "shared"
+        if shared_path.exists():
+            sys.path.insert(0, str(shared_path))
+            from utils.secrets_manager import get_secrets_manager
+            secrets_manager = get_secrets_manager()
+            # Try to access a secret to verify AWS Secrets Manager is working
+            test_secret = secrets_manager.get_secret("jwt-secret", service="alpine-backend", required=False)
+            if test_secret:
+                health_status["checks"]["secrets"] = "healthy"
+            else:
+                health_status["checks"]["secrets"] = "degraded (using fallback)"
+        else:
+            health_status["checks"]["secrets"] = "not_configured"
+    except Exception as e:
+        health_status["checks"]["secrets"] = f"degraded: {str(e)}"
+        # Don't mark overall status as degraded for secrets fallback
+    
     return health_status
 
 

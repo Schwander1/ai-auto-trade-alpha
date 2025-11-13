@@ -4,22 +4,62 @@ Every signal → Notion Pro (instant) + Tradervue Gold (instant) + Power BI (str
 """
 import requests
 import os
+import sys
 from datetime import datetime
+from pathlib import Path
+
+# Add shared package to path
+shared_path = Path(__file__).parent.parent.parent.parent.parent / "packages" / "shared"
+if shared_path.exists():
+    sys.path.insert(0, str(shared_path))
+
+try:
+    from utils.secrets_manager import get_secret
+    SECRETS_MANAGER_AVAILABLE = True
+except ImportError:
+    SECRETS_MANAGER_AVAILABLE = False
 
 class LiveTracker:
     def __init__(self):
-        # Notion Pro
-        self.notion_key = os.getenv('NOTION_API_KEY', '')
-        self.notion_trades = os.getenv('NOTION_TRADES_DB', '')
+        service = "argo"
+        
+        # Notion Pro - Try AWS Secrets Manager first, fallback to env
+        if SECRETS_MANAGER_AVAILABLE:
+            try:
+                self.notion_key = get_secret("notion-api-key", service=service) or os.getenv('NOTION_API_KEY', '')
+                self.notion_trades = get_secret("notion-trades-db", service=service) or os.getenv('NOTION_TRADES_DB', '')
+            except Exception:
+                self.notion_key = os.getenv('NOTION_API_KEY', '')
+                self.notion_trades = os.getenv('NOTION_TRADES_DB', '')
+        else:
+            self.notion_key = os.getenv('NOTION_API_KEY', '')
+            self.notion_trades = os.getenv('NOTION_TRADES_DB', '')
+        
         self.notion_enabled = bool(self.notion_key and self.notion_trades)
         
-        # Tradervue Gold
-        self.tradervue_user = os.getenv('TRADERVUE_USERNAME', '')
-        self.tradervue_token = os.getenv('TRADERVUE_API_TOKEN', '')
+        # Tradervue Gold - Try AWS Secrets Manager first, fallback to env
+        if SECRETS_MANAGER_AVAILABLE:
+            try:
+                self.tradervue_user = get_secret("tradervue-username", service=service) or os.getenv('TRADERVUE_USERNAME', '')
+                self.tradervue_token = get_secret("tradervue-api-token", service=service) or os.getenv('TRADERVUE_API_TOKEN', '')
+            except Exception:
+                self.tradervue_user = os.getenv('TRADERVUE_USERNAME', '')
+                self.tradervue_token = os.getenv('TRADERVUE_API_TOKEN', '')
+        else:
+            self.tradervue_user = os.getenv('TRADERVUE_USERNAME', '')
+            self.tradervue_token = os.getenv('TRADERVUE_API_TOKEN', '')
+        
         self.tradervue_enabled = bool(self.tradervue_user)
         
-        # Power BI
-        self.powerbi_url = os.getenv('POWERBI_STREAM_URL', '')
+        # Power BI - Try AWS Secrets Manager first, fallback to env
+        if SECRETS_MANAGER_AVAILABLE:
+            try:
+                self.powerbi_url = get_secret("powerbi-stream-url", service=service) or os.getenv('POWERBI_STREAM_URL', '')
+            except Exception:
+                self.powerbi_url = os.getenv('POWERBI_STREAM_URL', '')
+        else:
+            self.powerbi_url = os.getenv('POWERBI_STREAM_URL', '')
+        
         self.powerbi_enabled = bool(self.powerbi_url)
         
         print(f"✅ Tracking: Notion {'✅' if self.notion_enabled else '❌'} | Tradervue {'✅' if self.tradervue_enabled else '❌'} | Power BI {'✅' if self.powerbi_enabled else '❌'}")
