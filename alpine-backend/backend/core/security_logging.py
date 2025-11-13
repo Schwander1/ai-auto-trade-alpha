@@ -10,11 +10,12 @@ import traceback
 security_logger = logging.getLogger("security")
 security_logger.setLevel(logging.INFO)
 
+# Ensure logs directory exists
+import os
+os.makedirs("logs", exist_ok=True)
+
 # Create file handler for security logs
-    # Ensure logs directory exists
-    import os
-    os.makedirs("logs", exist_ok=True)
-    handler = logging.FileHandler("logs/security.log")
+handler = logging.FileHandler("logs/security.log")
 handler.setLevel(logging.INFO)
 
 # Create formatter
