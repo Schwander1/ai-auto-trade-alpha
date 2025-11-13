@@ -5,7 +5,7 @@ GET unread, POST read, DELETE
 
 from fastapi import APIRouter, HTTPException, Depends, Query, Header, Request, Response
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List
 from datetime import datetime
 import time
@@ -54,7 +54,8 @@ class MarkReadRequest(BaseModel):
     """Mark notification as read request"""
     notification_ids: List[str] = Field(..., description="List of notification IDs to mark as read")
     
-    @validator('notification_ids')
+    @field_validator('notification_ids')
+    @classmethod
     def validate_notification_ids(cls, v):
         """Validate notification IDs"""
         if not v or len(v) == 0:

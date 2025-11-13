@@ -5,7 +5,7 @@ GET plan, POST upgrade, GET invoices
 
 from fastapi import APIRouter, HTTPException, Depends, status, Query, Header, Request, Response
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List
 from datetime import datetime
 import time
@@ -50,7 +50,8 @@ class UpgradeRequest(BaseModel):
     """Upgrade subscription request"""
     tier: str = Field(..., description="Target tier: starter, pro, elite")
     
-    @validator('tier')
+    @field_validator('tier')
+    @classmethod
     def validate_tier(cls, v):
         """Validate and sanitize tier"""
         return sanitize_tier(v)

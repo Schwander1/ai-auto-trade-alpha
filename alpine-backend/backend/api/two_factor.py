@@ -1,7 +1,7 @@
 """2FA (TOTP) API endpoints"""
 from fastapi import APIRouter, HTTPException, Depends, status, Header, Request, Response
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional
 import json
 import re
@@ -23,7 +23,8 @@ class Enable2FARequest(BaseModel):
     """Request to enable 2FA"""
     token: str = Field(..., description="TOTP token to verify setup", min_length=6, max_length=6)
     
-    @validator('token')
+    @field_validator('token')
+    @classmethod
     def validate_token(cls, v):
         """Validate TOTP token format"""
         if not re.match(r'^\d{6}$', v):
@@ -35,7 +36,8 @@ class Verify2FARequest(BaseModel):
     """Request to verify 2FA token"""
     token: str = Field(..., description="TOTP token or backup code", min_length=6, max_length=12)
     
-    @validator('token')
+    @field_validator('token')
+    @classmethod
     def validate_token(cls, v):
         """Validate token format (6-digit TOTP or 8-12 char backup code)"""
         if not re.match(r'^[\dA-Za-z]{6,12}$', v):

@@ -1,7 +1,7 @@
 """2FA verification endpoint for login"""
 from fastapi import APIRouter, HTTPException, Depends, status, Header, Request, Response
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional
 import re
 import time
@@ -25,12 +25,14 @@ class Verify2FALoginRequest(BaseModel):
     email: str = Field(..., description="User email")
     token: str = Field(..., description="TOTP token or backup code", min_length=6, max_length=12)
     
-    @validator('email')
+    @field_validator('email')
+    @classmethod
     def validate_email(cls, v):
         """Validate and sanitize email"""
         return sanitize_email(v)
     
-    @validator('token')
+    @field_validator('token')
+    @classmethod
     def validate_token(cls, v):
         """Validate token format"""
         if not re.match(r'^[\dA-Za-z]{6,12}$', v):

@@ -5,7 +5,7 @@ GET profile, PUT profile, DELETE account
 
 from fastapi import APIRouter, HTTPException, Depends, status, Header, Request, Response
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, EmailStr, Field, validator
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional
 from datetime import datetime
 import time
@@ -44,7 +44,8 @@ class UpdateProfileRequest(BaseModel):
     full_name: Optional[str] = Field(None, min_length=1, max_length=100)
     email: Optional[EmailStr] = None
     
-    @validator('full_name')
+    @field_validator('full_name')
+    @classmethod
     def validate_full_name(cls, v):
         """Validate and sanitize full name"""
         if v is not None:
@@ -53,7 +54,8 @@ class UpdateProfileRequest(BaseModel):
                 raise ValueError("Full name cannot be empty")
         return v
     
-    @validator('email')
+    @field_validator('email')
+    @classmethod
     def validate_email(cls, v):
         """Validate and sanitize email"""
         if v is not None:

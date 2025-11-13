@@ -6,7 +6,7 @@ POST signup, POST login, POST logout, GET me
 from fastapi import APIRouter, HTTPException, Depends, status, Header
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional
 from datetime import datetime, timedelta
 import time
@@ -38,7 +38,8 @@ class SignupRequest(BaseModel):
     password: str = Field(..., min_length=12, description="Password must be at least 12 characters with uppercase, lowercase, numbers, and special characters")
     full_name: str = Field(..., min_length=1, max_length=100)
     
-    @validator('password')
+    @field_validator('password')
+    @classmethod
     def validate_password(cls, v):
         """Validate password strength"""
         is_valid, errors = PasswordValidator.validate_password(v)
