@@ -6,9 +6,16 @@ import sys
 from pathlib import Path
 
 # Add shared package to path
-shared_path = Path(__file__).parent.parent.parent.parent.parent / "packages" / "shared"
-if shared_path.exists():
-    sys.path.insert(0, str(shared_path))
+# Try multiple possible paths
+possible_paths = [
+    Path(__file__).parent.parent.parent.parent.parent / "packages" / "shared",  # From workspace root
+    Path(__file__).parent.parent.parent.parent / "packages" / "shared",  # Alternative path
+    Path(__file__).parent.parent.parent / "packages" / "shared",  # Another alternative
+]
+for shared_path in possible_paths:
+    if shared_path.exists():
+        sys.path.insert(0, str(shared_path.resolve()))
+        break
 
 try:
     from utils.secrets_manager import get_secrets_manager
