@@ -11,7 +11,10 @@ security_logger = logging.getLogger("security")
 security_logger.setLevel(logging.INFO)
 
 # Create file handler for security logs
-handler = logging.FileHandler("logs/security.log")
+    # Ensure logs directory exists
+    import os
+    os.makedirs("logs", exist_ok=True)
+    handler = logging.FileHandler("logs/security.log")
 handler.setLevel(logging.INFO)
 
 # Create formatter
