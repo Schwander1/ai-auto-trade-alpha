@@ -1,103 +1,75 @@
 #!/bin/bash
+# Emergency Rollback Script
+
 set -e
 
-# Instant rollback script (<30 seconds)
-# Rolls back to previous working version
+PROJECT="${1:-}"
+VERSION="${2:-}"
 
-echo "🔄 Rolling back to previous version..."
-echo "======================================"
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
 
-# Check which service to rollback
-SERVICE=${1:-"all"}
+print_error() {
+    echo -e "${RED}❌ $1${NC}"
+}
 
-if [ "$SERVICE" = "argo" ] || [ "$SERVICE" = "all" ]; then
-  echo ""
-  echo "🔄 Rolling back Argo..."
-  
-  ARGO_SERVER="178.156.194.174"
-  ARGO_USER="root"
-  ARGO_PATH="/root/argo-production"
-  BACKUP_PATH="/root/argo-production-backup"
-  
-  ssh ${ARGO_USER}@${ARGO_SERVER} "
-    if [ -d ${BACKUP_PATH} ]; then
-      echo 'Stopping current service...'
-      pkill -f 'uvicorn main:app' || true
-      sleep 2
-      
-      echo 'Restoring backup...'
-      rm -rf ${ARGO_PATH}
-      mv ${BACKUP_PATH} ${ARGO_PATH}
-      
-      echo 'Starting previous version...'
-      cd ${ARGO_PATH}
-      source venv/bin/activate
-      nohup uvicorn main:app --host 0.0.0.0 --port 8000 > /tmp/argo.log 2>&1 &
-      sleep 5
-      
-      echo '✅ Argo rolled back'
-    else
-      echo '❌ No backup found for Argo'
-    fi
-  "
-fi
+print_success() {
+    echo -e "${GREEN}✅ $1${NC}"
+}
 
-if [ "$SERVICE" = "alpine" ] || [ "$SERVICE" = "all" ]; then
-  echo ""
-  echo "🔄 Rolling back Alpine..."
-  
-  ALPINE_SERVER="91.98.153.49"
-  ALPINE_USER="root"
-  
-  # Determine current and previous colors
-  CURRENT_COLOR=$(ssh ${ALPINE_USER}@${ALPINE_SERVER} "
-    if docker ps | grep -q '8001:8000'; then
-      echo 'blue'
-    elif docker ps | grep -q '8002:8000'; then
-      echo 'green'
-    else
-      echo 'unknown'
-    fi
-  " 2>/dev/null || echo "unknown")
-  
-  if [ "$CURRENT_COLOR" = "blue" ]; then
-    PREVIOUS_COLOR="green"
-    PREVIOUS_PORT="8002"
-  elif [ "$CURRENT_COLOR" = "green" ]; then
-    PREVIOUS_COLOR="blue"
-    PREVIOUS_PORT="8001"
-  else
-    echo "⚠️  Could not determine current deployment"
-    exit 1
-  fi
-  
-  echo "Current: $CURRENT_COLOR, Rolling back to: $PREVIOUS_COLOR"
-  
-  ssh ${ALPINE_USER}@${ALPINE_SERVER} "
-    # Switch nginx to previous color
-    if [ -f /etc/nginx/sites-enabled/alpine ]; then
-      if [ '$PREVIOUS_COLOR' = 'green' ]; then
-        sed -i 's/8001/8002/g' /etc/nginx/sites-enabled/alpine
-        sed -i 's/3000/3002/g' /etc/nginx/sites-enabled/alpine
-      else
-        sed -i 's/8002/8001/g' /etc/nginx/sites-enabled/alpine
-        sed -i 's/3002/3000/g' /etc/nginx/sites-enabled/alpine
-      fi
-      nginx -t && systemctl reload nginx
-      echo '✅ Traffic switched to $PREVIOUS_COLOR'
+print_warning() {
+    echo -e "${YELLOW}⚠️  $1${NC}"
+}
+
+main() {
+    if [ -z "$PROJECT" ] || [ -z "$VERSION" ]; then
+        echo "Usage: $0 [argo|alpine] [VERSION]"
+        echo ""
+        echo "Example: $0 argo v1.2.3"
+        echo "Example: $0 alpine v2.1.2"
+        exit 1
     fi
     
-    # Stop current deployment
-    if [ '$CURRENT_COLOR' = 'blue' ]; then
-      cd /root/alpine-production-blue && docker compose down
-    else
-      cd /root/alpine-production-green && docker compose down
+    echo "🔄 EMERGENCY ROLLBACK"
+    echo "===================="
+    echo "Project: $PROJECT"
+    echo "Version: $VERSION"
+    echo ""
+    
+    print_warning "This will rollback to version $VERSION"
+    echo "Are you sure? (type 'yes' to confirm)"
+    read -p "> " CONFIRM
+    
+    if [ "$CONFIRM" != "yes" ]; then
+        print_error "Rollback cancelled"
+        exit 1
     fi
     
-    echo '✅ Alpine rolled back to $PREVIOUS_COLOR'
-  "
-fi
+    # Checkout version
+    if git checkout "$VERSION" 2>/dev/null; then
+        print_success "Checked out version $VERSION"
+        
+        if [ "$PROJECT" = "argo" ]; then
+            cd argo || exit 1
+        elif [ "$PROJECT" = "alpine" ]; then
+            cd alpine-backend || exit 1
+        fi
+        
+        if command -v vercel &> /dev/null; then
+            print_info "Deploying rollback..."
+            vercel deploy --prod
+        else
+            print_warning "Vercel CLI not available"
+        fi
+        
+        cd ..
+    else
+        print_error "Version $VERSION not found"
+        exit 1
+    fi
+}
 
-echo ""
-echo "🎉 Rollback complete!"
-
+main "$@"

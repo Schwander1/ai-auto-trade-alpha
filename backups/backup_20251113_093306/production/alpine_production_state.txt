@@ -1,0 +1,33 @@
+=== ALPINE PRODUCTION SERVER ===
+
+Docker Services:
+CONTAINER ID   IMAGE                              COMMAND                  CREATED        STATUS                  PORTS                                         NAMES
+76aa5c9b0fac   alpine-production-green-backend    "uvicorn backend.mai…"   12 hours ago   Up 12 hours             0.0.0.0:8002->8000/tcp, [::]:8002->8000/tcp   alpine-production-green-backend-1
+f1e3e0ee6a22   redis:7-alpine                     "docker-entrypoint.s…"   16 hours ago   Up 16 hours             0.0.0.0:6381->6379/tcp, [::]:6381->6379/tcp   alpine-production-green-redis-1
+c5071b77f244   postgres:15                        "docker-entrypoint.s…"   16 hours ago   Up 16 hours             0.0.0.0:5434->5432/tcp, [::]:5434->5432/tcp   alpine-production-green-postgres-1
+becc5dc29922   alpine-production-green-frontend   "docker-entrypoint.s…"   16 hours ago   Up 16 hours             0.0.0.0:3002->3000/tcp, [::]:3002->3000/tcp   alpine-production-green-frontend-1
+1007a1a39296   alpine-production-backend          "uvicorn backend.mai…"   18 hours ago   Up 8 minutes            0.0.0.0:8001->8000/tcp, [::]:8001->8000/tcp   alpine-production-backend-1
+a5d91ceb1842   postgres:15                        "docker-entrypoint.s…"   18 hours ago   Up 18 hours (healthy)   0.0.0.0:5433->5432/tcp, [::]:5433->5432/tcp   alpine-production-postgres-1
+704384b24ce0   redis:7-alpine                     "docker-entrypoint.s…"   18 hours ago   Up 18 hours (healthy)   0.0.0.0:6380->6379/tcp, [::]:6380->6379/tcp   alpine-production-redis-1
+
+File Structure:
+total 96
+drwxr-xr-x.  9  501 games 4096 Nov 12 20:08 .
+dr-xr-x---.  9 root root  4096 Nov 12 20:08 ..
+-rw-r--r--.  1  501 games 1960 Nov  9 19:17 argo_integration_clean.py
+-rw-r--r--.  1  501 games 4507 Nov  9 19:16 argo_routes_to_add.txt
+drwxr-xr-x. 14  501 games 4096 Nov 12 22:00 backend
+-rw-r--r--.  1  501 games 1971 Nov  9 19:20 complete_argo_integration.py
+-rw-r--r--.  1  501 games 1067 Nov  9 22:10 docker-compose.blue.yml
+-rw-r--r--.  1  501 games 4206 Nov  9 22:53 docker-compose.complete.yml
+-rw-r--r--.  1  501 games 1067 Nov  9 22:10 docker-compose.green.yml
+-rw-r--r--.  1  501 games  485 Nov 12 15:59 docker-compose.local.yml
+-rw-r--r--.  1  501 games 3768 Nov  9 03:12 docker-compose.production.yml
+-rw-r--r--.  1  501 games 1223 Nov 12 21:54 docker-compose.yml
+drwxr-xr-x.  2  501 games 4096 Nov  9 04:00 docs
+-rw-r--r--.  1  501 games 1054 Nov 12 20:07 .env
+-rw-r--r--.  1 root root   609 Nov 12 20:07 .env.backup.20251112_200712
+-rw-r--r--.  1  501 games  481 Nov 12 16:04 .env.local
+drwxr-xr-x.  4  501 games 4096 Nov  9 02:45 frontend
+drwxr-xr-x.  6  501 games 4096 Nov  9 22:49 monitoring
+drwxr-xr-x.  3  501 games 4096 Nov  9 03:04 nginx

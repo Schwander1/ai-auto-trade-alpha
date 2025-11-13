@@ -17,7 +17,7 @@ class SonarDataSource:
         self.api_key = api_key
         self.base_url = "https://api.perplexity.ai/chat/completions"
         
-    def fetch_ai_analysis(self, symbol):
+    async def fetch_analysis(self, symbol):
         """Get AI-powered analysis for a symbol"""
         try:
             prompt = f"""Analyze {symbol} for trading:

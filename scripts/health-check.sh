@@ -1,65 +1,85 @@
 #!/bin/bash
+# Health Check Script for Production/Staging Environments
 
-# Health check script for all services
-# Verifies all production services are running and healthy
+set -e
 
-echo "🏥 Health Check - All Services"
-echo "=============================="
-echo ""
+PROJECT="${1:-}"
+ENVIRONMENT="${2:-production}"
 
-EXIT_CODE=0
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
 
-# Check Argo
-echo "🔍 Checking Argo (178.156.194.174:8000)..."
-if curl -f -s --max-time 5 http://178.156.194.174:8000/health > /dev/null; then
-  HEALTH=$(curl -s --max-time 5 http://178.156.194.174:8000/health)
-  STATUS=$(echo $HEALTH | python3 -c "import sys, json; d=json.load(sys.stdin); print(d.get('status', 'unknown'))" 2>/dev/null || echo "unknown")
-  echo "   ✅ Status: $STATUS"
-  
-  # Check /api/signals/latest
-  SIGNALS=$(curl -s --max-time 5 "http://178.156.194.174:8000/api/signals/latest?limit=1")
-  if echo "$SIGNALS" | python3 -c "import sys, json; d=json.load(sys.stdin); exit(0 if isinstance(d, list) else 1)" 2>/dev/null; then
-    echo "   ✅ /api/signals/latest: Returns array"
-  else
-    echo "   ⚠️  /api/signals/latest: May not return array"
-    EXIT_CODE=1
-  fi
-else
-  echo "   ❌ Not responding"
-  EXIT_CODE=1
-fi
+print_success() {
+    echo -e "${GREEN}✅ $1${NC}"
+}
 
-echo ""
+print_error() {
+    echo -e "${RED}❌ $1${NC}"
+}
 
-# Check Alpine Backend
-echo "🔍 Checking Alpine Backend (91.98.153.49:8001)..."
-if curl -f -s --max-time 5 http://91.98.153.49:8001/health > /dev/null; then
-  HEALTH=$(curl -s --max-time 5 http://91.98.153.49:8001/health)
-  STATUS=$(echo $HEALTH | python3 -c "import sys, json; d=json.load(sys.stdin); print(d.get('status', 'unknown'))" 2>/dev/null || echo "unknown")
-  echo "   ✅ Status: $STATUS"
-else
-  echo "   ❌ Not responding"
-  EXIT_CODE=1
-fi
+print_info() {
+    echo -e "${BLUE}ℹ️  $1${NC}"
+}
 
-echo ""
+check_health() {
+    local url=$1
+    local project_name=$2
+    
+    echo ""
+    echo "Checking: $project_name"
+    echo "URL: $url/api/health"
+    
+    if response=$(curl -sf -w "\n%{http_code}" "$url/api/health" 2>/dev/null); then
+        http_code=$(echo "$response" | tail -n1)
+        body=$(echo "$response" | sed '$d')
+        
+        if [ "$http_code" = "200" ]; then
+            print_success "Health check passed (HTTP $http_code)"
+            echo "Response: $body" | head -5
+            return 0
+        else
+            print_error "Health check failed (HTTP $http_code)"
+            return 1
+        fi
+    else
+        print_error "Health check failed (connection error)"
+        return 1
+    fi
+}
 
-# Check Alpine Frontend
-echo "🔍 Checking Alpine Frontend (91.98.153.49:3000)..."
-if curl -f -s --max-time 5 http://91.98.153.49:3000 > /dev/null; then
-  echo "   ✅ Responding"
-else
-  echo "   ❌ Not responding"
-  EXIT_CODE=1
-fi
+main() {
+    if [ -z "$PROJECT" ]; then
+        echo "Usage: $0 [argo|alpine] [production|staging]"
+        exit 1
+    fi
+    
+    echo "🏥 HEALTH CHECK"
+    echo "=============="
+    echo "Project: $PROJECT"
+    echo "Environment: $ENVIRONMENT"
+    
+    if [ "$PROJECT" = "argo" ]; then
+        if [ "$ENVIRONMENT" = "production" ]; then
+            URL="https://argo-capital-production.vercel.app"
+        else
+            URL="https://staging-argo.vercel.app"
+        fi
+        check_health "$URL" "Argo Capital"
+    elif [ "$PROJECT" = "alpine" ]; then
+        if [ "$ENVIRONMENT" = "production" ]; then
+            URL="https://alpineanalytics.ai"
+        else
+            URL="https://staging-alpine.vercel.app"
+        fi
+        check_health "$URL" "Alpine Analytics"
+    else
+        print_error "Unknown project: $PROJECT"
+        exit 1
+    fi
+}
 
-echo ""
-
-if [ $EXIT_CODE -eq 0 ]; then
-  echo "✅ All services healthy!"
-else
-  echo "❌ Some services are unhealthy"
-fi
-
-exit $EXIT_CODE
-
+main "$@"

@@ -481,12 +481,13 @@ except:
 # Zapier webhooks
 
 # Include all API routers
-from backend.api import auth, auth_2fa, users, subscriptions, signals as signals_api, notifications, admin, webhooks, two_factor, security_dashboard
+from backend.api import auth, auth_2fa, users, subscriptions, signals as signals_api, notifications, admin, webhooks, two_factor, security_dashboard, argo_sync
 app.include_router(auth.router)
 app.include_router(auth_2fa.router)
 app.include_router(users.router)
 app.include_router(subscriptions.router)
 app.include_router(signals_api.router)
+app.include_router(argo_sync.router)  # Argo signal sync endpoint (maintains entity separation)
 app.include_router(notifications.router)
 app.include_router(admin.router)
 app.include_router(webhooks.router)

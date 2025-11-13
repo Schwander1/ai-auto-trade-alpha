@@ -49,6 +49,28 @@ export function useWebSocket({
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data)
+          const clientReceiveTime = performance.now()
+          
+          // Calculate delivery latency if server_timestamp is available
+          if (data.server_timestamp) {
+            const serverTime = data.server_timestamp * 1000 // Convert to milliseconds
+            const latencyMs = clientReceiveTime - (performance.timeOrigin + serverTime - Date.now())
+            
+            // Log warning if latency exceeds patent requirement (<500ms)
+            if (latencyMs > 500) {
+              console.warn(
+                `⚠️ Signal delivery latency ${latencyMs.toFixed(2)}ms exceeds patent requirement (<500ms)`,
+                data
+              )
+            }
+            
+            // Store latency in signal data
+            data.delivery_latency_ms = Math.round(latencyMs)
+            
+            // Mark performance for monitoring
+            performance.mark(`signal-delivery-${data.id || 'unknown'}`)
+          }
+          
           setLastMessage(data)
           onMessage?.(data)
         } catch (err) {

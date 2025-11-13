@@ -1,0 +1,11 @@
+=== FULL SYSTEM BACKUP MANIFEST ===
+
+Backup Date: Thu Nov 13 09:33:56 CST 2025
+Backup Directory: backups/backup_20251113_093342
+
+=== FILES INCLUDED ===
+
+  - MANIFEST.txt (4.0K)
+
+=== TOTAL SIZE ===
+  4.0K

@@ -19,9 +19,29 @@ def get_engine():
                 "or environment variables."
             )
         
+        # Fix Docker hostname for production (postgres -> localhost:5433)
+        db_url = settings.DATABASE_URL
+        from urllib.parse import urlparse, urlunparse
+        
+        parsed = urlparse(db_url)
+        if parsed.hostname == 'postgres':
+            # Replace Docker hostname with localhost and use port 5433
+            new_netloc = f"{parsed.username}:{parsed.password}@localhost:5433"
+            db_url = urlunparse((
+                parsed.scheme,
+                new_netloc,
+                parsed.path,
+                parsed.params,
+                parsed.query,
+                parsed.fragment
+            ))
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.info(f"Fixed DATABASE_URL: Docker hostname 'postgres' -> 'localhost:5433'")
+        
         # Optimized connection pooling
         _engine = create_engine(
-            settings.DATABASE_URL,
+            db_url,
             pool_size=20,              # Increased pool size for better concurrency
             max_overflow=10,           # Allow overflow connections under load
             pool_pre_ping=True,        # Verify connections before use (handles stale connections)

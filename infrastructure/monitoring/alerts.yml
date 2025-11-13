@@ -143,3 +143,50 @@ groups:
           summary: "Redis is down"
           description: "Redis at {{ $labels.instance }} has been down for more than 1 minute."
 
+  - name: compliance_alerts
+    interval: 30s
+    rules:
+      # Signal Delivery Latency Alert (Patent Requirement: <500ms)
+      - alert: SignalDeliveryLatencyHigh
+        expr: histogram_quantile(0.95, rate(signal_delivery_latency_seconds_bucket[5m])) * 1000 > 500
+        for: 5m
+        labels:
+          severity: critical
+          component: compliance
+        annotations:
+          summary: "Signal delivery latency exceeds patent requirement"
+          description: "P95 signal delivery latency is {{ $value }}ms (requirement: <500ms). This violates patent claim for real-time delivery."
+
+      # Integrity Verification Failure Alert
+      - alert: IntegrityVerificationFailure
+        expr: increase(integrity_failed_verifications_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+          component: security
+        annotations:
+          summary: "Signal integrity verification failed"
+          description: "{{ $value }} signal(s) failed integrity verification. This indicates potential tampering or data corruption."
+
+      # Backup Overdue Alert
+      - alert: BackupOverdue
+        expr: (time() - last_backup_timestamp) > 86400
+        for: 1h
+        labels:
+          severity: warning
+          component: compliance
+        annotations:
+          summary: "Backup is overdue"
+          description: "Last backup was {{ $value }} seconds ago (>24 hours). Daily backups are required for compliance."
+
+      # Signal Modification Attempt Alert
+      - alert: SignalModificationAttempt
+        expr: increase(audit_log_entries_total{action=~"UPDATE_ATTEMPT|DELETE_ATTEMPT"}[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+          component: security
+        annotations:
+          summary: "Signal modification attempt detected"
+          description: "{{ $value }} modification attempt(s) detected. All attempts are blocked and logged in audit trail."
+

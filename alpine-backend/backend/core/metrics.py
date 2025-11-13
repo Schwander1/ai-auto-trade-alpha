@@ -46,6 +46,54 @@ rate_limit_exceeded_total = Counter(
     ['endpoint', 'client_id']
 )
 
+# Signal latency metrics (PATENT CLAIM: <500ms delivery)
+signal_generation_latency = Histogram(
+    'signal_generation_latency_seconds',
+    'Time to generate signal (patent claim: real-time generation)',
+    buckets=[0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0]
+)
+
+signal_delivery_latency = Histogram(
+    'signal_delivery_latency_seconds',
+    'End-to-end signal delivery time (patent claim: <500ms)',
+    buckets=[0.01, 0.05, 0.1, 0.2, 0.5, 1.0, 2.0]
+)
+
+signal_verification_duration = Histogram(
+    'signal_verification_duration_seconds',
+    'SHA-256 verification time (patent claim: cryptographic verification)',
+    buckets=[0.0001, 0.0005, 0.001, 0.005, 0.01]
+)
+
+# Latency percentile warnings
+latency_p95_warning = Gauge(
+    'signal_delivery_latency_p95_ms',
+    'P95 signal delivery latency in milliseconds (alert if >500ms)'
+)
+
+latency_p99_warning = Gauge(
+    'signal_delivery_latency_p99_ms',
+    'P99 signal delivery latency in milliseconds (alert if >500ms)'
+)
+
+# Backup metrics
+backup_duration_seconds = Histogram(
+    'backup_duration_seconds',
+    'Time to create backup',
+    buckets=[1.0, 5.0, 10.0, 30.0, 60.0, 300.0]
+)
+
+last_backup_timestamp = Gauge(
+    'last_backup_timestamp',
+    'Unix timestamp of last successful backup'
+)
+
+# Integrity verification metrics
+integrity_failed_verifications_total = Counter(
+    'integrity_failed_verifications_total',
+    'Total failed integrity verifications (should be 0)'
+)
+
 
 def get_metrics() -> Response:
     """Get Prometheus metrics"""

@@ -22,7 +22,7 @@ class XAIGrokDataSource:
         if not self.enabled:
             logger.warning("⚠️  xAI Grok API key not configured - using fallback sentiment")
     
-    def fetch_sentiment(self, symbol):
+    async def fetch_sentiment(self, symbol):
         """Get AI-powered sentiment analysis"""
         if not self.enabled:
             # Fallback: Return neutral sentiment

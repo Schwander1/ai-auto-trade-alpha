@@ -1,0 +1,60 @@
+=== LOCAL DEV SERVICES ===
+
+Argo:
+{
+    "status": "healthy",
+    "version": "6.0",
+    "timestamp": "2025-11-13T15:32:51.917306",
+    "uptime": "100%",
+    "ai_enabled": true,
+    "performance_tracking": true,
+    "strategies_loaded": 4,
+    "data_sources": 6
+}
+
+Alpine Backend:
+{
+    "status": "degraded",
+    "service": "Alpine Analytics API",
+    "version": "1.0.0",
+    "domain": "localhost",
+    "checks": {
+        "database": "unhealthy: (psycopg2.OperationalError) connection to server at \"localhost\" (::1), port 5433 failed: Connection refused\n\tIs the server running on that host and accepting TCP/IP connections?\nconnection to server at \"localhost\" (127.0.0.1), port 5433 failed: Connection refused\n\tIs the server running on that host and accepting TCP/IP connections?\n\n(Background on this error at: https://sqlalche.me/e/20/e3q8)",
+        "redis": "not_configured",
+        "secrets": "not_configured"
+    }
+}
+
+=== PRODUCTION SERVICES ===
+
+Argo Production:
+{
+    "status": "healthy",
+    "version": "6.0",
+    "timestamp": "2025-11-13T15:32:52.270718",
+    "uptime": "100%",
+    "ai_enabled": true,
+    "performance_tracking": true,
+    "strategies_loaded": 4,
+    "data_sources": 6
+}
+
+Alpine Backend Production:
+{
+    "status": "healthy",
+    "service": "Alpine Analytics API",
+    "version": "1.0.0",
+    "domain": "91.98.153.49",
+    "checks": {
+        "database": "healthy",
+        "redis": "not_configured"
+    }
+}
+
+=== PROCESS STATUS ===
+dylanneuenschwander 82152  54.6  0.3 435285232  27152   ??  SN    9:19AM   5:53.93 /opt/homebrew/Cellar/python@3.12/3.12.12/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python /Users/dylanneuenschwander/argo-alpine-workspace/argo/venv/bin/uvicorn main:app --reload --host 0.0.0.0 --port 8000
+dylanneuenschwander 82789   0.0  0.1 435352720   8912   ??  SN    9:22AM   0:00.41 /opt/homebrew/Cellar/python@3.12/3.12.12/Frameworks/Python.framework/Versions/3.12/Resources/Python.app/Contents/MacOS/Python /Users/dylanneuenschwander/argo-alpine-workspace/alpine-backend/venv/bin/uvicorn backend.main:app --reload --host 0.0.0.0 --port 9001
+dylanneuenschwander 76075   0.0  0.2 1890413920  13136   ??  S     8:02AM   0:00.71 /Applications/Cursor.app/Contents/Frameworks/Cursor Helper (Plugin).app/Contents/MacOS/Cursor Helper (Plugin) /Applications/Cursor.app/Contents/Resources/app/extensions/markdown-language-features/dist/serverWorkerMain --node-ipc --clientProcessId=69522
+dylanneuenschwander 73685   0.0  0.1 1890414032  11888   ??  S     7:52AM   0:00.68 /Applications/Cursor.app/Contents/Frameworks/Cursor Helper (Plugin).app/Contents/MacOS/Cursor Helper (Plugin) /Applications/Cursor.app/Contents/Resources/app/extensions/json-language-features/server/dist/node/jsonServerMain --node-ipc --clientProcessId=69522
+dylanneuenschwander  2035   0.0  0.1 1890472576  10560   ??  S    11:19AM   1:20.16 /Applications/Notion.app/Contents/Frameworks/Notion Helper.app/Contents/MacOS/Notion Helper --type=utility --utility-sub-type=node.mojom.NodeService --lang=en-US --service-sandbox-type=none --user-data-dir=/Users/dylanneuenschwander/Library/Application Support/Notion --shared-files --field-trial-handle=1718379636,r,17101123064495621437,8921829583592169455,262144 --enable-features=DocumentPolicyIncludeJSCallStacksInCrashReports,MacLoopbackAudioForScreenShare,PdfUseShowSaveFilePicker,ScreenCaptureKitPickerScreen,ScreenCaptureKitStreamPickerSonoma --disable-features=MacWebContentsOcclusion,ScreenAIOCREnabled,SpareRendererForSitePerProcess,TimeoutHangingVideoCaptureStarts --variations-seed-version
+root               811   0.0  0.0 436573056   1760   ??  Ss   11:18AM   0:00.37 /Library/PrivilegedHelperTools/com.docker.vmnetd

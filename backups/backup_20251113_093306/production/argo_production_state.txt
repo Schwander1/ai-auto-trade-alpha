@@ -1,0 +1,38 @@
+=== ARGO PRODUCTION SERVER ===
+
+Service Status:
+root     2813564  0.4  0.1 168096 58464 ?        Sl   10:29   0:00 /root/argo-production/venv/bin/python3 /root/argo-production/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
+
+Recent Logs:
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     10.42.0.107:58496 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39480 - "GET /health HTTP/1.1" 200 OK
+INFO:     76.16.41.27:50965 - "GET /health HTTP/1.1" 200 OK
+INFO:     76.16.41.27:50969 - "GET /health HTTP/1.1" 200 OK
+INFO:     10.42.0.107:43136 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     76.16.41.27:50979 - "GET /health HTTP/1.1" 200 OK
+INFO:     10.42.0.107:37220 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     10.42.0.107:56470 - "GET /metrics HTTP/1.1" 200 OK
+
+File Structure:
+total 148
+drwxr-xr-x 14  501 staff  4096 Nov 13 10:29 .
+drwx------ 37 root root  12288 Nov 13 10:27 ..
+drwxr-xr-x  2  501 staff  4096 Nov 11 23:12 {
+drwxr-xr-x 22  501 staff  4096 Nov 13 09:26 argo
+-rw-r--r--  1  501 staff  1043 Nov 11 23:34 config.json
+-rw-r--r--  1  501 staff   921 Nov 12 17:45 config.json.example
+drwxr-xr-x  3  501 staff  4096 Nov 13 10:06 core
+drwxr-xr-x  5 root root   4096 Nov 11 23:40 data
+-rwxr-xr-x  1  501 staff  1688 Nov  9 13:06 deploy_all.sh
+-rw-r--r--  1  501 staff  1575 Nov 11 23:15 docker-compose.yml
+-rw-r--r--  1  501 staff   370 Nov  9 12:38 Dockerfile
+drwxr-xr-x  3  501 staff  4096 Nov 12 17:25 docs
+-rw-r--r--  1  501 staff   185 Nov 12 11:09 .env
+-rw-r--r--  1  501 staff   185 Nov 12 10:59 .env.local
+drwxr-xr-x  8 root root   4096 Nov  9 10:55 .git
+drwxr-xr-x  4  501 staff  4096 Nov 12 17:25 logs
+-rw-r--r--  1  501 staff 14387 Nov 13 10:22 main.py
+-rw-r--r--  1  501 staff 10175 Nov 11 22:04 main.py.backup2
+-rw-r--r--  1  501 staff 10175 Nov 11 22:48 main.py.backup_20251111_224833

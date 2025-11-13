@@ -1,0 +1,20 @@
+85d9d3d docs: add comprehensive backup documentation
+90cd653 docs: add comprehensive deployment status report
+48fe194 fix: improve shared package path resolution for alpine backend
+7bead0e fix: resolve import errors and database initialization issues
+4d3cde9 fix(secrets): fix remaining typescript linting errors
+d6f75cf fix: use del instead of pop for MutableHeaders in security_headers
+53ce626 fix: add missing Depends import in webhooks.py
+bce6dc7 fix: update all @validator decorators to Pydantic v2 field_validator
+017a6f3 fix: correct indentation for logs directory creation
+4c8c8aa fix: create logs directory if it doesn't exist in security_logging
+68ac186 fix: remove non-existent record_cache_operation and update_redis_status imports
+d917ddd fix: remove non-existent record_rate_limit_check import
+8ebc95a fix: correct parameter order in login function to fix syntax error
+e11e990 fix: update remaining Argo API routers to use /api/v1/ prefix
+3be46f1 feat: complete API enhancements implementation
+22de281 test: comprehensive test suite implementation
+b64d256 feat(security): comprehensive endpoint audit and security enhancements
+fe09310 chore: workspace cleanup and organization with automated enforcement
+67e6764 docs: complete documentation system with versioning, formatting, and PDF generation
+bfc5e31 fix: add email-validator to requirements

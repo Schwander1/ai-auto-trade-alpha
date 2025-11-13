@@ -1,0 +1,8 @@
+CONTAINER ID   IMAGE                              COMMAND                  CREATED        STATUS                  PORTS                                         NAMES
+76aa5c9b0fac   alpine-production-green-backend    "uvicorn backend.mai…"   12 hours ago   Up 12 hours             0.0.0.0:8002->8000/tcp, [::]:8002->8000/tcp   alpine-production-green-backend-1
+f1e3e0ee6a22   redis:7-alpine                     "docker-entrypoint.s…"   16 hours ago   Up 16 hours             0.0.0.0:6381->6379/tcp, [::]:6381->6379/tcp   alpine-production-green-redis-1
+c5071b77f244   postgres:15                        "docker-entrypoint.s…"   16 hours ago   Up 16 hours             0.0.0.0:5434->5432/tcp, [::]:5434->5432/tcp   alpine-production-green-postgres-1
+becc5dc29922   alpine-production-green-frontend   "docker-entrypoint.s…"   16 hours ago   Up 16 hours             0.0.0.0:3002->3000/tcp, [::]:3002->3000/tcp   alpine-production-green-frontend-1
+1007a1a39296   alpine-production-backend          "uvicorn backend.mai…"   18 hours ago   Up 10 minutes           0.0.0.0:8001->8000/tcp, [::]:8001->8000/tcp   alpine-production-backend-1
+a5d91ceb1842   postgres:15                        "docker-entrypoint.s…"   18 hours ago   Up 18 hours (healthy)   0.0.0.0:5433->5432/tcp, [::]:5433->5432/tcp   alpine-production-postgres-1
+704384b24ce0   redis:7-alpine                     "docker-entrypoint.s…"   18 hours ago   Up 18 hours (healthy)   0.0.0.0:6380->6379/tcp, [::]:6380->6379/tcp   alpine-production-redis-1

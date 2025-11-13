@@ -68,6 +68,7 @@ class Settings(BaseSettings):
     REDIS_PASSWORD: Optional[str] = None
     REDIS_DB: int = 0
     SENDGRID_API_KEY: Optional[str] = None
+    ARGO_API_KEY: str = ""  # API key for Argo to authenticate with Alpine
     
     def __init__(self, **kwargs):
         # Check if AWS Secrets Manager should be used
@@ -134,6 +135,8 @@ class Settings(BaseSettings):
             kwargs["REDIS_DB"] = int(get_secret_value("redis-db", "0"))
         if "SENDGRID_API_KEY" not in kwargs:
             kwargs["SENDGRID_API_KEY"] = get_secret_value("sendgrid-api-key", "") or None
+        if "ARGO_API_KEY" not in kwargs:
+            kwargs["ARGO_API_KEY"] = get_secret_value("argo-api-key", "")
         
         super().__init__(**kwargs)
     

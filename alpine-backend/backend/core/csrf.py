@@ -35,6 +35,10 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
                 )
             return response
         
+        # Skip CSRF for Argo sync endpoint (API-to-API, uses API key auth instead)
+        if request.url.path.startswith("/api/v1/argo/sync"):
+            return await call_next(request)
+        
         # For state-changing methods, verify CSRF token
         csrf_token_header = request.headers.get(self.CSRF_TOKEN_HEADER)
         csrf_token_cookie = request.cookies.get(self.CSRF_COOKIE_NAME)

@@ -1,0 +1,470 @@
+{
+  "dashboard": {
+    "title": "Alpine Analytics - Compliance & Security Dashboard",
+    "tags": ["compliance", "security", "audit", "integrity"],
+    "timezone": "browser",
+    "schemaVersion": 27,
+    "version": 1,
+    "refresh": "10s",
+    "description": "Comprehensive compliance, security, and auditability monitoring for Alpine Analytics trading signals",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Signal Delivery Latency (P95)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(signal_delivery_latency_seconds_bucket[5m])) * 1000",
+            "legendFormat": "P95 (ms)",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(signal_delivery_latency_seconds_bucket[5m])) * 1000",
+            "legendFormat": "P99 (ms)",
+            "refId": "B"
+          },
+          {
+            "expr": "500",
+            "legendFormat": "Patent Requirement (<500ms)",
+            "refId": "C"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "yaxes": [
+          {"format": "ms", "label": "Latency (ms)"},
+          {"format": "short"}
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [500], "type": "gt"},
+              "operator": {"type": "and"},
+              "query": {"params": ["A", "5m", "now"]},
+              "reducer": {"params": [], "type": "last"},
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "for": "5m",
+          "frequency": "10s",
+          "handler": 1,
+          "name": "Signal Delivery Latency > 500ms",
+          "noDataState": "no_data",
+          "notifications": []
+        }
+      },
+      {
+        "id": 2,
+        "title": "Signal Generation Latency",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(signal_generation_latency_seconds_bucket[5m])) * 1000",
+            "legendFormat": "P50 (ms)",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(signal_generation_latency_seconds_bucket[5m])) * 1000",
+            "legendFormat": "P95 (ms)",
+            "refId": "B"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(signal_generation_latency_seconds_bucket[5m])) * 1000",
+            "legendFormat": "P99 (ms)",
+            "refId": "C"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "yaxes": [
+          {"format": "ms", "label": "Latency (ms)"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Hash Verification Duration",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(signal_verification_duration_seconds_bucket[5m])) * 1000",
+            "legendFormat": "P95 (ms)",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(signal_verification_duration_seconds_bucket[5m])) * 1000",
+            "legendFormat": "P99 (ms)",
+            "refId": "B"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "yaxes": [
+          {"format": "ms", "label": "Duration (ms)"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Failed Integrity Verifications",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "integrity_failed_verifications_total",
+            "legendFormat": "Failed Verifications",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 8},
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "textMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 1, "color": "red"}
+              ]
+            }
+          }
+        },
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [0], "type": "gt"},
+              "operator": {"type": "and"},
+              "query": {"params": ["A", "5m", "now"]},
+              "reducer": {"params": [], "type": "last"},
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "for": "1m",
+          "frequency": "10s",
+          "handler": 1,
+          "name": "Integrity Verification Failure",
+          "noDataState": "no_data",
+          "notifications": []
+        }
+      },
+      {
+        "id": 5,
+        "title": "Last Backup Timestamp",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "last_backup_timestamp",
+            "legendFormat": "Last Backup",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 8},
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "textMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "text"}
+              ]
+            },
+            "unit": "s"
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "Backup Duration",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(backup_duration_seconds_bucket[5m]))",
+            "legendFormat": "P95 (seconds)",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+        "yaxes": [
+          {"format": "s", "label": "Duration (seconds)"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Audit Log Entries (Last 24h)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "increase(audit_log_entries_total[24h])",
+            "legendFormat": "Total Entries",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+        "yaxes": [
+          {"format": "short", "label": "Count"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Signal Modification Attempts",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "increase(audit_log_entries_total{action=\"UPDATE_ATTEMPT\"}[1h])",
+            "legendFormat": "UPDATE Attempts",
+            "refId": "A"
+          },
+          {
+            "expr": "increase(audit_log_entries_total{action=\"DELETE_ATTEMPT\"}[1h])",
+            "legendFormat": "DELETE Attempts",
+            "refId": "B"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 12, "x": 0, "y": 24},
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "textMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 1, "color": "red"}
+              ]
+            }
+          }
+        },
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [0], "type": "gt"},
+              "operator": {"type": "and"},
+              "query": {"params": ["A", "5m", "now"]},
+              "reducer": {"params": [], "type": "last"},
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "for": "1m",
+          "frequency": "10s",
+          "handler": 1,
+          "name": "Signal Modification Attempt Detected",
+          "noDataState": "no_data",
+          "notifications": []
+        }
+      },
+      {
+        "id": 9,
+        "title": "Latency Percentiles (Real-time)",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "signal_delivery_latency_p95_ms",
+            "legendFormat": "P95 (ms)",
+            "refId": "A"
+          },
+          {
+            "expr": "signal_delivery_latency_p99_ms",
+            "legendFormat": "P99 (ms)",
+            "refId": "B"
+          },
+          {
+            "expr": "500",
+            "legendFormat": "Requirement (<500ms)",
+            "refId": "C"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24},
+        "yaxes": [
+          {"format": "ms", "label": "Latency (ms)"},
+          {"format": "short"}
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Integrity Check Status",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "up{job=\"integrity-monitor\"}",
+            "legendFormat": "Monitor Status",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 32},
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "textMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 1, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 11,
+        "title": "Backup Status",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "time() - last_backup_timestamp",
+            "legendFormat": "Hours Since Last Backup",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 32},
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "textMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "h",
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 24, "color": "yellow"},
+                {"value": 25, "color": "red"}
+              ]
+            }
+          }
+        },
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [86400], "type": "gt"},
+              "operator": {"type": "and"},
+              "query": {"params": ["A", "5m", "now"]},
+              "reducer": {"params": [], "type": "last"},
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "for": "1h",
+          "frequency": "10s",
+          "handler": 1,
+          "name": "Backup Overdue (>25 hours)",
+          "noDataState": "no_data",
+          "notifications": []
+        }
+      },
+      {
+        "id": 12,
+        "title": "Compliance Status Overview",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "signal_delivery_latency_p95_ms < 500",
+            "format": "table",
+            "instant": true,
+            "legendFormat": "Latency < 500ms",
+            "refId": "A"
+          },
+          {
+            "expr": "integrity_failed_verifications_total == 0",
+            "format": "table",
+            "instant": true,
+            "legendFormat": "No Integrity Failures",
+            "refId": "B"
+          },
+          {
+            "expr": "time() - last_backup_timestamp < 86400",
+            "format": "table",
+            "instant": true,
+            "legendFormat": "Backup < 24h",
+            "refId": "C"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 32},
+        "options": {
+          "showHeader": true,
+          "sortBy": []
+        }
+      }
+    ],
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "timepicker": {
+      "refresh_intervals": ["10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"]
+    },
+    "templating": {
+      "list": []
+    },
+    "annotations": {
+      "list": []
+    },
+    "links": []
+  }
+}
+

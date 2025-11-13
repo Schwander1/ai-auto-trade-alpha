@@ -1,0 +1,46 @@
+=== DEPLOYMENT STATE ===
+
+Local Dev:
+{
+    "status": "healthy",
+    "version": "6.0",
+    "timestamp": "2025-11-13T15:34:24.144375",
+    "uptime": "100%",
+    "ai_enabled": true,
+    "performance_tracking": true,
+    "strategies_loaded": 4,
+    "data_sources": 6
+}
+{
+    "status": "degraded",
+    "service": "Alpine Analytics API",
+    "version": "1.0.0",
+    "domain": "localhost",
+    "checks": {
+        "database": "unhealthy: (psycopg2.OperationalError) connection to server at \"localhost\" (::1), port 5433 failed: Connection refused\n\tIs the server running on that host and accepting TCP/IP connections?\nconnection to server at \"localhost\" (127.0.0.1), port 5433 failed: Connection refused\n\tIs the server running on that host and accepting TCP/IP connections?\n\n(Background on this error at: https://sqlalche.me/e/20/e3q8)",
+        "redis": "not_configured",
+        "secrets": "not_configured"
+    }
+}
+
+Production:
+{
+    "status": "healthy",
+    "version": "6.0",
+    "timestamp": "2025-11-13T15:34:24.427410",
+    "uptime": "100%",
+    "ai_enabled": true,
+    "performance_tracking": true,
+    "strategies_loaded": 4,
+    "data_sources": 6
+}
+{
+    "status": "healthy",
+    "service": "Alpine Analytics API",
+    "version": "1.0.0",
+    "domain": "91.98.153.49",
+    "checks": {
+        "database": "healthy",
+        "redis": "not_configured"
+    }
+}

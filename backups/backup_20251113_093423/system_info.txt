@@ -1,0 +1,6 @@
+=== SYSTEM INFO ===
+Date: Thu Nov 13 09:34:26 CST 2025
+OS: Darwin Dylans-MacBook-Pro.local 25.1.0 Darwin Kernel Version 25.1.0: Mon Oct 20 19:32:47 PDT 2025; root:xnu-12377.41.6~2/RELEASE_ARM64_T8103 arm64
+Python 3.14.0
+v20.11.0
+git version 2.51.1

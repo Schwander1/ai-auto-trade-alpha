@@ -1,0 +1,16 @@
+=== SYSTEM INFORMATION ===
+
+Date: Thu Nov 13 09:33:35 CST 2025
+Hostname: Dylans-MacBook-Pro.local
+User: dylanneuenschwander
+OS: Darwin Dylans-MacBook-Pro.local 25.1.0 Darwin Kernel Version 25.1.0: Mon Oct 20 19:32:47 PDT 2025; root:xnu-12377.41.6~2/RELEASE_ARM64_T8103 arm64
+
+=== SOFTWARE VERSIONS ===
+Python 3.14.0
+v20.11.0
+git version 2.51.1
+aws-cli/1.42.61 Python/3.11.14 Darwin/25.1.0 botocore/1.40.61
+
+=== DISK SPACE ===
+Filesystem      Size    Used   Avail Capacity iused ifree %iused  Mounted on
+/dev/disk3s5   228Gi   178Gi    24Gi    89%    1.5M  247M    1%   /System/Volumes/Data

@@ -1,0 +1,2 @@
+origin	https://github.com/Schwander1/argo-alpine-monorepo.git (fetch)
+origin	https://github.com/Schwander1/argo-alpine-monorepo.git (push)

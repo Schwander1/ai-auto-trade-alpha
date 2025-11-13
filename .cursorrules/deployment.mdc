@@ -1,0 +1,64 @@
+# Deployment Rules for Argo-Alpine Monorepo
+
+## Project Structure
+
+- `argo/` → Argo Capital (Alpaca Markets Integration)
+- `alpine-backend/` → Alpine Analytics Backend
+- `alpine-frontend/` → Alpine Analytics Frontend
+- `packages/` → Shared code (affects all projects)
+
+## Deployment Safety Gates (MANDATORY)
+
+All 10 gates MUST pass before production deployment:
+
+1. ✅ Identify Changes - Detect which project(s) modified
+2. ✅ Verify Scope - Ensure single project or coupled projects
+3. ✅ Run Tests - `pnpm --filter=[project] test` must pass
+4. ✅ Run Linting - `pnpm --filter=[project] lint` must pass
+5. ✅ Build Locally - `pnpm --filter=[project] build` must succeed
+6. ✅ Verify Staging - Confirm staging deployment is healthy
+7. ✅ Validate Environment - Run `scripts/check-env.sh [project]`
+8. ✅ Code Quality - NO console.log, debugger, TODO, FIXME in diffs
+9. ✅ Pre-Deployment Health - Verify production systems healthy
+10. ✅ Explicit Confirmation - Require exact phrase: "deploy fully to production"
+
+## Project Isolation Rules
+
+- NEVER mix `argo/` and `alpine-*/` changes in single commit
+- `alpine-backend/` and `alpine-frontend/` deploy together as "alpine-analytics"
+- Changes to `packages/` require testing ALL projects
+
+## Environment Variables
+
+### Argo Capital (`argo/.env.production`)
+- ALPACA_API_KEY
+- STRIPE_SECRET_KEY
+- DATABASE_URL
+- REDIS_URL
+
+### Alpine Analytics (`alpine-backend/.env.production`, `alpine-frontend/.env.production`)
+- ANALYTICS_API_KEY
+- RESEND_API_KEY
+- DATABASE_URL
+- REDIS_URL
+
+## Deployment Commands
+
+- `./scripts/deploy.sh` - Full automated deployment (auto-detects project)
+- `./scripts/check-env.sh [argo|alpine]` - Validate environment variables
+- `./scripts/health-check.sh [argo|alpine] [production|staging]` - Health check
+- `./scripts/rollback.sh [argo|alpine] [VERSION]` - Emergency rollback
+
+## When User Says "deploy fully to production"
+
+Execute complete 10-step workflow automatically:
+1. Auto-detect project from git changes
+2. Validate changes (lint, test, build)
+3. Verify environment setup
+4. Scan code quality
+5. Validate staging
+6. Check production environment
+7. Require exact confirmation
+8. Execute deployment
+9. Post-deployment health checks
+10. Completion notification

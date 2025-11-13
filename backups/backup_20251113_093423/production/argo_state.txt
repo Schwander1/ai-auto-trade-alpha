@@ -1,0 +1,11 @@
+root     2813564  0.3  0.1 168096 58592 ?        Sl   10:29   0:00 /root/argo-production/venv/bin/python3 /root/argo-production/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
+INFO:     76.16.41.27:51071 - "GET /health HTTP/1.1" 200 OK
+INFO:     10.42.0.107:39338 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     10.42.0.107:37552 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     10.42.0.107:45638 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     76.16.41.27:51123 - "GET /health HTTP/1.1" 200 OK
+INFO:     10.42.0.107:54984 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     10.42.0.107:41286 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     10.42.0.107:59240 - "GET /metrics HTTP/1.1" 200 OK
+INFO:     76.16.41.27:51172 - "GET /health HTTP/1.1" 200 OK
+INFO:     10.42.0.107:54946 - "GET /metrics HTTP/1.1" 200 OK

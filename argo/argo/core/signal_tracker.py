@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
 """Alpine Analytics - Enterprise Signal Tracker v4.1"""
-import json, hashlib, sqlite3, logging, threading
+import json, hashlib, sqlite3, logging, threading, time
 from datetime import datetime
 from pathlib import Path
 
-BASE_DIR = Path("/root/argo-production")
+# Use relative path that works in both dev and production
+import os
+if os.path.exists("/root/argo-production"):
+    BASE_DIR = Path("/root/argo-production")
+else:
+    # Development/local path
+    BASE_DIR = Path(__file__).parent.parent.parent.parent
 DB_FILE = BASE_DIR / "data" / "signals.db"
 SIGNALS_LOG = BASE_DIR / "logs" / "signals.log"
 
@@ -76,13 +82,34 @@ class SignalTracker:
         return hashlib.sha256(json.dumps(hashable, sort_keys=True).encode()).hexdigest()
     
     def log_signal(self, signal):
+        """
+        Log signal with latency tracking and server timestamp
+        
+        PATENT CLAIM: Real-time delivery tracking (<500ms)
+        """
+        start_time = time.time()
+        
         with self._lock:
             if 'signal_id' not in signal:
                 signal['signal_id'] = self._generate_signal_id()
             if 'timestamp' not in signal:
                 signal['timestamp'] = datetime.utcnow().isoformat()
             
+            # Add server timestamp for latency calculation
+            signal['server_timestamp'] = start_time
+            
             signal['sha256'] = self._calculate_sha256(signal)
+            
+            # Calculate generation latency
+            generation_latency_ms = int((time.time() - start_time) * 1000)
+            signal['generation_latency_ms'] = generation_latency_ms
+            
+            # Record Prometheus metric if available
+            try:
+                from argo.core.metrics import signal_generation_latency
+                signal_generation_latency.observe(time.time() - start_time)
+            except (ImportError, AttributeError):
+                pass  # Metrics not available
             
             conn = sqlite3.connect(str(self.db_file))
             cursor = conn.cursor()
@@ -108,6 +135,15 @@ class SignalTracker:
             
             with self.signals_log.open('a') as f:
                 f.write(json.dumps(signal, sort_keys=True) + '\n')
+            
+            # Sync to Alpine Backend PostgreSQL
+            try:
+                from argo.core.alpine_sync import get_alpine_sync
+                alpine_sync = get_alpine_sync()
+                if alpine_sync.enabled:
+                    alpine_sync.sync_signal(signal)
+            except Exception as e:
+                logger.debug(f"Alpine sync error (non-critical): {e}")
             
             return signal['signal_id']
     

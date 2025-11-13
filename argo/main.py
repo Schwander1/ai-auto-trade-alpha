@@ -9,6 +9,8 @@ import logging
 import hashlib
 import json
 import random
+import asyncio
+from contextlib import asynccontextmanager
 
 try:
     from argo.core.request_tracking import RequestTrackingMiddleware
@@ -18,6 +20,41 @@ except ImportError:
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Background signal generation service
+_signal_service = None
+_background_task = None
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Startup and shutdown events"""
+    global _signal_service, _background_task
+    
+    # Startup: Start background signal generation
+    try:
+        from argo.core.signal_generation_service import get_signal_service
+        _signal_service = get_signal_service()
+        
+        # Start background task (generates signals every 5 seconds)
+        _background_task = asyncio.create_task(
+            _signal_service.start_background_generation(interval_seconds=5)
+        )
+        logger.info("🚀 Background signal generation started (every 5 seconds)")
+    except Exception as e:
+        logger.error(f"❌ Failed to start signal generation service: {e}")
+    
+    yield
+    
+    # Shutdown: Stop background task
+    if _signal_service:
+        _signal_service.stop()
+    if _background_task:
+        _background_task.cancel()
+        try:
+            await _background_task
+        except asyncio.CancelledError:
+            pass
+    logger.info("🛑 Background signal generation stopped")
 
 signals_generated = Counter('argo_signals_total', 'Total signals generated')
 win_rate_gauge = Gauge('argo_win_rate', 'Current win rate')
@@ -30,7 +67,8 @@ app = FastAPI(
     description="95%+ Win Rate Trading Signals",
     docs_url="/api/v1/docs",
     redoc_url="/api/v1/redoc",
-    openapi_url="/api/v1/openapi.json"
+    openapi_url="/api/v1/openapi.json",
+    lifespan=lifespan
 )
 
 # CORS configuration - whitelist only trusted origins
@@ -252,20 +290,83 @@ async def get_signals():
 
 @app.get("/api/signals/latest")
 async def get_latest_signals(limit: int = 10, premium_only: bool = False):
-    """Get latest trading signals - returns array directly for frontend compatibility"""
-    all_signals = (await get_signals())["signals"]
+    """Get latest trading signals from database - returns array directly for frontend compatibility"""
+    try:
+        # Try to get signals from database (SignalTracker)
+        from argo.core.signal_tracker import SignalTracker
+        tracker = SignalTracker()
+        
+        # Query database for latest signals
+        import sqlite3
+        from pathlib import Path
+        import os
+        
+        if os.path.exists("/root/argo-production"):
+            db_path = Path("/root/argo-production") / "data" / "signals.db"
+        else:
+            db_path = Path(__file__).parent.parent / "data" / "signals.db"
+        
+        if db_path.exists():
+            conn = sqlite3.connect(str(db_path))
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            
+            query = "SELECT * FROM signals ORDER BY timestamp DESC LIMIT ?"
+            cursor.execute(query, (limit * 2,))  # Get more to filter
+            
+            rows = cursor.fetchall()
+            conn.close()
+            
+            # Convert to dict format
+            signals = []
+            for row in rows:
+                signal = {
+                    "symbol": row["symbol"],
+                    "action": row["action"],
+                    "confidence": row["confidence"],
+                    "price": row["entry_price"],
+                    "entry_price": row["entry_price"],
+                    "stop_loss": row["stop_price"],
+                    "take_profit": row["target_price"],
+                    "target_price": row["target_price"],
+                    "timestamp": row["timestamp"],
+                    "strategy": row.get("strategy", "weighted_consensus"),
+                    "sha256": row.get("sha256", "")
+                }
+                
+                # Apply premium filter if requested
+                if premium_only and signal["confidence"] < 95:
+                    continue
+                
+                signals.append(signal)
+            
+            # Apply limit after filtering
+            limited = signals[:limit]
+            
+            if limited:
+                logger.info(f"📊 Returning {len(limited)} signals from database")
+                return limited
+        
+        # Fallback: Generate on-demand if no database signals
+        logger.warning("⚠️  No signals in database, generating on-demand")
+        all_signals = (await get_signals())["signals"]
+        
+        if premium_only:
+            filtered = [s for s in all_signals if s.get("confidence", 0) >= 95]
+        else:
+            filtered = all_signals
+        
+        return filtered[:limit]
     
-    # Apply premium filter if requested
-    if premium_only:
-        filtered = [s for s in all_signals if s.get("confidence", 0) >= 95]
-    else:
-        filtered = all_signals
-    
-    # Apply limit
-    limited = filtered[:limit]
-    
-    # Return array directly (not wrapped) for frontend compatibility
-    return limited
+    except Exception as e:
+        logger.error(f"❌ Error fetching signals from database: {e}")
+        # Fallback to on-demand generation
+        all_signals = (await get_signals())["signals"]
+        if premium_only:
+            filtered = [s for s in all_signals if s.get("confidence", 0) >= 95]
+        else:
+            filtered = all_signals
+        return filtered[:limit]
 
 
 @app.get("/api/signals/{plan}")
