@@ -52,6 +52,11 @@ pnpm-debug.log*
 *~
 .DS_Store
 
+# Cursor - allow BUGBOT.md and settings.json for Bugbot, ignore other files
+.cursor/*
+!.cursor/BUGBOT.md
+!.cursor/settings.json
+
 # Turbo
 .turbo/
 
@@ -105,3 +110,8 @@ argo/config.json
 # Local development
 .local/
 .cache/
+
+# Conversation logs (LOCAL ONLY - Privacy Protection)
+conversation_logs/
+!conversation_logs/.gitignore
+!conversation_logs/README.md

@@ -15,8 +15,9 @@ pnpm dev
 pnpm test
 
 # Deploy to production
-pnpm deploy:argo    # Deploy Argo to 178.156.194.174
-pnpm deploy:alpine  # Deploy Alpine to 91.98.153.49
+./commands/deploy all to production    # Deploy all services (recommended)
+./commands/deploy argo to production   # Deploy Argo only
+./commands/deploy alpine to production # Deploy Alpine only
 ```
 
 ## 📦 Packages
@@ -24,7 +25,7 @@ pnpm deploy:alpine  # Deploy Alpine to 91.98.153.49
 - **packages/argo-trading/** - Trading engine (Python/FastAPI)
 - **packages/alpine-backend/** - User/subscription API (Python/FastAPI)
 - **packages/alpine-frontend/** - Web dashboard (Next.js)
-- **packages/shared/** - Shared utilities (TypeScript + Python)
+**✅ REMOVED:** `packages/shared/` has been removed per Rule 10 (Entity Separation). Each entity now has its own utilities.
 
 ## 🛠️ Development
 
@@ -58,24 +59,54 @@ cd packages/alpine-frontend && pnpm test
 
 ## 🚢 Deployment
 
-### Argo (178.156.194.174)
-```bash
-pnpm deploy:argo
-```
+**See:** [commands/README.md](commands/README.md) for complete command reference
 
-### Alpine (91.98.153.49)
+### Production Deployment (Recommended)
 ```bash
-pnpm deploy:alpine
+# Deploy all services to production
+./commands/deploy all to production
+
+# Deploy specific service
+./commands/deploy argo to production
+./commands/deploy alpine to production
 ```
 
 ### Health Checks
 ```bash
-pnpm health
+# Production health checks
+./commands/health check all production
+./commands/health check argo production
+
+# Local health checks
+./commands/health check all
+```
+
+### Status & Logs
+```bash
+# Check status
+./commands/status check all production
+
+# View logs
+./commands/logs view all production
+./commands/logs follow argo production
 ```
 
 ### Rollback
 ```bash
-pnpm rollback
+./commands/rollback argo production
+./commands/rollback all production
+```
+
+### Local Development
+```bash
+# Start local services
+./commands/start all
+
+# Stop local services
+./commands/stop all
+
+# Restart services
+./commands/restart all
 ```
 
 ## 📊 Monitoring
@@ -104,6 +135,21 @@ The `.cursorrules` file enables Cursor to:
 - Optimize database queries
 - Suggest caching opportunities
 - Identify refactoring needs
+
+### Cursor Pro Features
+
+**Quick Access:**
+- **Composer Mode:** `Cmd+I` - Multi-file refactoring across monorepo
+- **Agent Mode:** `Cmd+Shift+A` - Autonomous task completion
+- **Codebase Chat:** `Cmd+L` - Understand your entire codebase
+
+**Automated Code Reviews:**
+- **Bugbot:** Automatically reviews PRs for security, quality, and rule compliance
+- Works through Cursor GitHub App (install from https://github.com/apps/cursor)
+- Configure in Cursor dashboard settings
+- Enforces all 25+ development rules
+
+**See:** [docs/CURSOR_PRO_QUICK_REFERENCE.md](docs/CURSOR_PRO_QUICK_REFERENCE.md) for complete guide
 
 ## 📄 License
 
