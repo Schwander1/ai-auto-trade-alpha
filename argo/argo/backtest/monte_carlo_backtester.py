@@ -42,10 +42,10 @@ else:
 
 class MonteCarloBacktester:
     """Monte Carlo simulation for strategy robustness"""
-    
+
     def __init__(self, n_simulations: int = 1000):
         self.n_simulations = n_simulations
-    
+
     def run_monte_carlo(
         self,
         trades: List[Dict],
@@ -53,60 +53,60 @@ class MonteCarloBacktester:
     ) -> Dict:
         """
         Run Monte Carlo simulation
-        
+
         Args:
             trades: List of trade dictionaries with PnL data
             strategy_backtest_func: Function to run backtest on shuffled trades
-        
+
         Returns:
             Dictionary with Monte Carlo results
         """
         if not trades:
             logger.warning("No trades provided for Monte Carlo simulation")
             return {}
-        
+
         results = []
-        
+
         logger.info(f"Running {self.n_simulations} Monte Carlo simulations...")
-        
+
         # ENHANCED: Vectorized operations where possible
         # Extract trade returns for faster processing
         trade_returns = [t.get('pnl_pct', 0) / 100 if isinstance(t, dict) else 0.0 for t in trades]
-        
+
         # ENHANCED: Use numpy for faster shuffling and calculations
         import numpy as np
         trade_returns_array = np.array(trade_returns)
-        
+
         for i in range(self.n_simulations):
             # ENHANCED: Faster shuffling using numpy
             shuffled_returns = np.random.permutation(trade_returns_array)
-            
+
             # Run backtest with shuffled trades
             try:
                 # Create shuffled trades list
                 shuffled_trades = self._create_shuffled_trades(trades, shuffled_returns)
-                
+
                 result = strategy_backtest_func(shuffled_trades)
                 if result:
                     results.append(result)
             except Exception as e:
                 logger.debug(f"Error in Monte Carlo simulation {i+1}: {e}")
                 continue
-            
+
             if (i + 1) % 100 == 0:
                 logger.info(f"Monte Carlo progress: {i+1}/{self.n_simulations}")
-        
+
         # ENHANCED: Parallel processing for large simulations
         if self.n_simulations > 500:
             logger.info("Using parallel processing for large simulation set")
             # Could implement parallel processing here if needed
-        
+
         if not results:
             logger.error("No valid results from Monte Carlo simulation")
             return {}
-        
+
         return self._analyze_results(results)
-    
+
     def _create_shuffled_trades(
         self,
         trades: List[Dict],
@@ -128,7 +128,7 @@ class MonteCarloBacktester:
                 shuffled_trade['pnl'] = entry_value * shuffled_returns[i]
             shuffled_trades.append(shuffled_trade)
         return shuffled_trades
-    
+
     def _shuffle_preserving_chronology(
         self,
         trades: List[Dict]
@@ -136,17 +136,17 @@ class MonteCarloBacktester:
         """
         Shuffle trades while maintaining temporal validity
         (entry date must be before exit date)
-        
+
         Strategy: Group trades by time periods, shuffle within periods
         """
         if len(trades) < 2:
             return trades.copy()
-        
+
         # ENHANCED: Use numpy for faster shuffling
         import numpy as np
         shuffled = trades.copy()
         np.random.shuffle(shuffled)
-        
+
         # Validate and fix chronology
         for trade in shuffled:
             entry = trade.get('entry_date')
@@ -154,19 +154,19 @@ class MonteCarloBacktester:
             if entry and exit and entry > exit:
                 # Swap if needed (shouldn't happen with real data)
                 trade['entry_date'], trade['exit_date'] = exit, entry
-        
+
         return shuffled
-    
+
     def _analyze_results(self, results: List[Dict]) -> Dict:
         """Analyze Monte Carlo results"""
         if not results:
             return {}
-        
+
         win_rates = [r.get('win_rate', 0) for r in results]
         sharpes = [r.get('sharpe', 0) for r in results if r.get('sharpe') is not None]
         max_dds = [r.get('max_drawdown', 0) for r in results]
         total_returns = [r.get('total_return', 0) for r in results]
-        
+
         return {
             'n_simulations': len(results),
             'win_rate': {
@@ -196,4 +196,3 @@ class MonteCarloBacktester:
             'probability_positive': float(np.mean([r > 0 for r in total_returns])),
             'all_results': results[:100]  # Store first 100 for analysis
         }
-
