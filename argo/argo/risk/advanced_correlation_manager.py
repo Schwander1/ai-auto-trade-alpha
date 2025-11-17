@@ -71,6 +71,10 @@ class AdvancedCorrelationManager:
         Determine if adding a new position would violate correlation limits.
         Returns (can_add, reason) tuple.
         """
+        # Auto-detect sector if not provided
+        if not new_sector:
+            new_sector = self._get_sector(new_symbol)
+        
         # Check sector exposure
         if new_sector:
             sector_exposure = self._calculate_sector_exposure(current_positions)
@@ -156,7 +160,91 @@ class AdvancedCorrelationManager:
         return np.mean(correlations) if correlations else 0.0
         
     def _get_sector(self, symbol: str) -> Optional[str]:
-        """Get sector for a symbol (simplified - would use actual sector data)"""
-        # TODO: Implement actual sector lookup
-        return None
+        """
+        Get sector for a symbol.
+        Uses a mapping of common symbols to their sectors.
+        Can be extended to use external APIs or databases for comprehensive coverage.
+        """
+        # Sector mapping for common symbols
+        # Technology
+        tech_symbols = {
+            'AAPL', 'MSFT', 'GOOGL', 'GOOG', 'META', 'NVDA', 'AMD', 'INTC', 'QCOM',
+            'AVGO', 'CRM', 'ORCL', 'ADBE', 'CSCO', 'TXN', 'AMAT', 'LRCX', 'KLAC'
+        }
+        # Consumer Discretionary
+        consumer_discretionary = {
+            'TSLA', 'AMZN', 'NFLX', 'HD', 'MCD', 'SBUX', 'NKE', 'LOW', 'TJX',
+            'BKNG', 'CMG', 'YUM', 'TGT', 'BBY', 'DKS'
+        }
+        # Financials
+        financials = {
+            'JPM', 'BAC', 'WFC', 'GS', 'MS', 'C', 'BLK', 'SCHW', 'AXP', 'COF',
+            'USB', 'PNC', 'TFC', 'BK', 'STT'
+        }
+        # Healthcare
+        healthcare = {
+            'JNJ', 'UNH', 'PFE', 'ABT', 'TMO', 'ABBV', 'MRK', 'BMY', 'AMGN',
+            'GILD', 'CVS', 'CI', 'HUM', 'ELV', 'DHR'
+        }
+        # Communication Services
+        communication = {
+            'VZ', 'T', 'CMCSA', 'DIS', 'NFLX', 'GOOGL', 'GOOG', 'META'
+        }
+        # Industrials
+        industrials = {
+            'BA', 'CAT', 'GE', 'HON', 'UPS', 'RTX', 'LMT', 'NOC', 'GD', 'DE',
+            'EMR', 'ITW', 'ETN', 'PH', 'CMI'
+        }
+        # Consumer Staples
+        consumer_staples = {
+            'PG', 'KO', 'PEP', 'WMT', 'COST', 'CL', 'KMB', 'CHD', 'CLX', 'GIS'
+        }
+        # Energy
+        energy = {
+            'XOM', 'CVX', 'COP', 'SLB', 'EOG', 'MPC', 'PSX', 'VLO', 'HAL', 'OXY'
+        }
+        # Utilities
+        utilities = {
+            'NEE', 'DUK', 'SO', 'D', 'AEP', 'EXC', 'SRE', 'XEL', 'WEC', 'ES'
+        }
+        # Real Estate
+        real_estate = {
+            'AMT', 'PLD', 'EQIX', 'PSA', 'WELL', 'SPG', 'O', 'DLR', 'VICI', 'CBRE'
+        }
+        # Materials
+        materials = {
+            'LIN', 'APD', 'SHW', 'ECL', 'DD', 'PPG', 'NEM', 'FCX', 'VALE', 'NUE'
+        }
+        
+        # Check symbol against sector mappings
+        symbol_upper = symbol.upper()
+        
+        if symbol_upper in tech_symbols:
+            return 'Technology'
+        elif symbol_upper in consumer_discretionary:
+            return 'Consumer Discretionary'
+        elif symbol_upper in financials:
+            return 'Financials'
+        elif symbol_upper in healthcare:
+            return 'Healthcare'
+        elif symbol_upper in communication:
+            return 'Communication Services'
+        elif symbol_upper in industrials:
+            return 'Industrials'
+        elif symbol_upper in consumer_staples:
+            return 'Consumer Staples'
+        elif symbol_upper in energy:
+            return 'Energy'
+        elif symbol_upper in utilities:
+            return 'Utilities'
+        elif symbol_upper in real_estate:
+            return 'Real Estate'
+        elif symbol_upper in materials:
+            return 'Materials'
+        elif symbol_upper.endswith('-USD') or symbol_upper.startswith('BTC') or symbol_upper.startswith('ETH'):
+            return 'Cryptocurrency'
+        else:
+            # Unknown symbol - return None
+            logger.debug(f"Unknown sector for symbol: {symbol}")
+            return None
 
