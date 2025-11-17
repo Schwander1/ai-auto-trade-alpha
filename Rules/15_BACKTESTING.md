@@ -1,7 +1,7 @@
 # Backtesting Rules
 
-**Last Updated:** January 15, 2025  
-**Version:** 2.0  
+**Last Updated:** November 17, 2025  
+**Version:** 3.0  
 **Applies To:** Argo Trading Engine
 
 ---
@@ -80,7 +80,7 @@ Backtesting rules and best practices for testing trading strategies, optimizing 
 
 ---
 
-## Out-of-Sample Testing (v5.0 Enhancement)
+## Out-of-Sample Testing (v6.0 Enhancement)
 
 ### Purpose
 
@@ -136,7 +136,7 @@ train_df, val_df, test_df = backtester.split_data(df, train_pct=0.6, val_pct=0.2
 
 **Rule:** Test period should be at least 20% of training period
 
-**v5.0 Update:** Walk-forward testing should use three-set split within each window
+**v6.0 Update:** Walk-forward testing should use three-set split within each window
 
 ---
 
@@ -221,7 +221,7 @@ train_df, val_df, test_df = backtester.split_data(df, train_pct=0.6, val_pct=0.2
 
 **Impact:** Reduces returns, more realistic
 
-**v5.0 Update:** Strategy backtester now includes slippage by default
+**v6.0 Update:** Strategy backtester now includes slippage by default
 
 ### Spread
 
@@ -231,7 +231,7 @@ train_df, val_df, test_df = backtester.split_data(df, train_pct=0.6, val_pct=0.2
 
 **Impact:** Reduces returns, accounts for bid-ask spread
 
-**v5.0 Update:** Strategy backtester now includes spread by default
+**v6.0 Update:** Strategy backtester now includes spread by default
 
 ### Commission
 
