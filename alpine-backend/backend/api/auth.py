@@ -215,66 +215,25 @@ async def signup(
     ```
     """
     # Rate limiting
-    client_id = authorization or request.client.host if request.client else "anonymous"
+    from backend.core.api_utils import get_client_id
+    client_id = get_client_id(request, authorization)
     if not check_rate_limit(client_id):
         raise HTTPException(
             status_code=429,
             detail=f"Rate limit exceeded. Maximum {RATE_LIMIT_MAX} requests per minute."
         )
 
-    # Validate password strength
-    is_valid, errors = PasswordValidator.validate_password(user_data.password)
-    if not is_valid:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="; ".join(errors)
-        )
-
-    # Check if user already exists
-    existing_user = db.query(User).filter(User.email == user_data.email).first()
-    if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
-        )
-
+    # Validate input
+    _validate_signup_input(user_data)
+    
+    # Check if user exists
+    _check_user_not_exists(user_data.email, db)
+    
     # Create user
-    try:
-        hashed_password = get_password_hash(user_data.password)
-        new_user = User(
-            email=user_data.email,
-            hashed_password=hashed_password,
-            full_name=user_data.full_name,
-            tier=UserTier.STARTER,
-            is_active=True,
-            is_verified=False
-        )
-
-        db.add(new_user)
-        db.commit()
-        db.refresh(new_user)
-    except Exception as e:
-        db.rollback()
-        logger.error(f"Error creating user: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create user account"
-        )
-
-    # Create access token
-    access_token = create_access_token(data={"sub": new_user.email})
-
-    return LoginResponse(
-        access_token=access_token,
-        token_type="bearer",
-        expires_in=settings.JWT_EXPIRATION_HOURS * 3600,
-        user={
-            "id": new_user.id,
-            "email": new_user.email,
-            "full_name": new_user.full_name,
-            "tier": new_user.tier.value
-        }
-    )
+    new_user = _create_new_user(user_data, db)
+    
+    # Create and return login response
+    return _create_login_response(new_user)
 
 
 @router.post("/login", response_model=LoginResponse)
@@ -310,70 +269,76 @@ async def login(
     ```
     """
     # Rate limiting
-    client_id = form_data.username or request.client.host if request.client else "anonymous"
+    from backend.core.api_utils import get_client_id
+    client_id = get_client_id(request, form_data.username)
     if not check_rate_limit(client_id):
         raise HTTPException(
             status_code=429,
             detail="Rate limit exceeded. Too many login attempts."
         )
 
-    # Check if account is locked
-    if is_account_locked(form_data.username):
-        from backend.core.account_lockout import get_lockout_remaining
-        remaining = get_lockout_remaining(form_data.username)
-        raise HTTPException(
-            status_code=status.HTTP_423_LOCKED,
-            detail=f"Account locked due to too many failed login attempts. Try again in {remaining // 60} minutes."
-        )
-
-    # Find user
-    user = db.query(User).filter(User.email == form_data.username).first()
-
-    # Verify password (always check to prevent user enumeration)
-    password_valid = False
-    if user:
-        password_valid = verify_password(form_data.password, user.hashed_password)
-
-    if not user or not password_valid:
-        # Record failed login attempt
-        record_failed_login(form_data.username, request.client.host if request.client else None, request)
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User account is inactive"
-        )
-
-    # Clear failed attempts on successful login
-    clear_failed_attempts(user.email)
-
-    # Check if 2FA is enabled
+    # Check account lockout
+    _check_account_not_locked(form_data.username)
+    
+    # Authenticate user
+    user = _authenticate_user(form_data.username, form_data.password, db, request)
+    
+    # Handle 2FA if enabled
     if user.totp_enabled:
-        # Return partial login response indicating 2FA required
-        return LoginResponse(
-            access_token="",  # No token until 2FA verified
-            token_type="bearer",
-            expires_in=0,
-            user={
-                "id": user.id,
-                "email": user.email,
-                "full_name": user.full_name,
-                "tier": user.tier.value
-            },
-            requires_2fa=True  # Indicate 2FA is required
+        return _create_2fa_required_response(user)
+    
+    # Log successful login and create response
+    log_successful_login(user.id, user.email, request.client.host if request.client else None, request)
+    return _create_login_response(user)
+
+
+def _validate_signup_input(user_data: SignupRequest):
+    """Validate signup input (password strength)"""
+    is_valid, errors = PasswordValidator.validate_password(user_data.password)
+    if not is_valid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="; ".join(errors)
         )
 
-    # Log successful login
-    log_successful_login(user.id, user.email, request.client.host if request.client else None, request)
+def _check_user_not_exists(email: str, db: Session):
+    """Check if user already exists"""
+    existing_user = db.query(User).filter(User.email == email).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
+        )
 
-    # Create access token
+def _create_new_user(user_data: SignupRequest, db: Session) -> User:
+    """Create new user in database"""
+    try:
+        hashed_password = get_password_hash(user_data.password)
+        new_user = User(
+            email=user_data.email,
+            hashed_password=hashed_password,
+            full_name=user_data.full_name,
+            tier=UserTier.STARTER,
+            is_active=True,
+            is_verified=False
+        )
+        
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+        return new_user
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error creating user: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create user account"
+        )
+
+def _create_login_response(user: User) -> LoginResponse:
+    """Create login response with access token"""
     access_token = create_access_token(data={"sub": user.email})
-
+    
     return LoginResponse(
         access_token=access_token,
         token_type="bearer",
@@ -384,6 +349,61 @@ async def login(
             "full_name": user.full_name,
             "tier": user.tier.value
         }
+    )
+
+def _check_account_not_locked(username: str):
+    """Check if account is locked"""
+    if is_account_locked(username):
+        from backend.core.account_lockout import get_lockout_remaining
+        remaining = get_lockout_remaining(username)
+        raise HTTPException(
+            status_code=status.HTTP_423_LOCKED,
+            detail=f"Account locked due to too many failed login attempts. Try again in {remaining // 60} minutes."
+        )
+
+def _authenticate_user(username: str, password: str, db: Session, request: Request) -> User:
+    """Authenticate user and return User object"""
+    # Find user
+    user = db.query(User).filter(User.email == username).first()
+    
+    # Verify password (always check to prevent user enumeration)
+    password_valid = False
+    if user:
+        password_valid = verify_password(password, user.hashed_password)
+    
+    if not user or not password_valid:
+        # Record failed login attempt
+        record_failed_login(username, request.client.host if request.client else None, request)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User account is inactive"
+        )
+    
+    # Clear failed attempts on successful login
+    clear_failed_attempts(user.email)
+    
+    return user
+
+def _create_2fa_required_response(user: User) -> LoginResponse:
+    """Create login response indicating 2FA is required"""
+    return LoginResponse(
+        access_token="",  # No token until 2FA verified
+        token_type="bearer",
+        expires_in=0,
+        user={
+            "id": user.id,
+            "email": user.email,
+            "full_name": user.full_name,
+            "tier": user.tier.value
+        },
+        requires_2fa=True  # Indicate 2FA is required
     )
 
 

@@ -486,35 +486,35 @@ async def export_signals(
     cached_export = get_cache(cache_key)
 
     if cached_export is None:
-    # Fetch signals
-    try:
-        signals = await fetch_signals_from_external_provider(limit=1000, premium_only=False)
+        # Fetch signals
+        try:
+            signals = await fetch_signals_from_external_provider(limit=1000, premium_only=False)
         except HTTPException:
             raise
-    except Exception as e:
-        logger.error(f"Error fetching signals for export: {e}")
-        raise HTTPException(
-            status_code=503,
-            detail="Failed to fetch signals for export. Please try again later."
-        )
+        except Exception as e:
+            logger.error(f"Error fetching signals for export: {e}")
+            raise HTTPException(
+                status_code=503,
+                detail="Failed to fetch signals for export. Please try again later."
+            )
 
         # Generate export content
         if export_format == "csv":
             # OPTIMIZATION: Use list comprehension for CSV generation
-        output = io.StringIO()
+            output = io.StringIO()
             fieldnames = ["id", "symbol", "action", "entry_price", "confidence", "timestamp"]
             writer = csv.DictWriter(output, fieldnames=fieldnames)
-        writer.writeheader()
+            writer.writeheader()
 
             # OPTIMIZATION: Batch write rows for better performance
             rows = [
                 {
-                "id": signal.get("id", ""),
-                "symbol": signal.get("symbol", ""),
-                "action": signal.get("action", ""),
-                "entry_price": signal.get("entry_price", 0),
-                "confidence": signal.get("confidence", 0),
-                "timestamp": signal.get("timestamp", "")
+                    "id": signal.get("id", ""),
+                    "symbol": signal.get("symbol", ""),
+                    "action": signal.get("action", ""),
+                    "entry_price": signal.get("entry_price", 0),
+                    "confidence": signal.get("confidence", 0),
+                    "timestamp": signal.get("timestamp", "")
                 }
                 for signal in signals
             ]
@@ -523,7 +523,7 @@ async def export_signals(
             cached_export = output.getvalue()
             # Cache CSV for 30 seconds
             set_cache(cache_key, cached_export, ttl=CACHE_TTL_SIGNAL_EXPORT)
-    else:
+        else:
             # OPTIMIZATION: Use orjson if available for faster JSON serialization
             try:
                 import orjson
@@ -541,13 +541,13 @@ async def export_signals(
         content=cached_export,
         media_type=media_type,
         headers={"Content-Disposition": f"attachment; filename={filename}"}
-        )
+    )
 
-        # Add rate limit headers
-        add_rate_limit_headers(
+    # Add rate limit headers
+    add_rate_limit_headers(
         export_response,
-            remaining=rate_limit_status["remaining"],
-            reset_at=int(time.time()) + rate_limit_status["reset_in"]
-        )
+        remaining=rate_limit_status["remaining"],
+        reset_at=int(time.time()) + rate_limit_status["reset_in"]
+    )
 
     return export_response
