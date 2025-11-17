@@ -2,14 +2,25 @@
 """
 Error Handling Utilities
 Standardized error handling patterns for backtesting
+ENHANCED: Added retry logic and error recovery
 """
-from typing import Optional, TypeVar, Callable, Any
+from typing import Optional, TypeVar, Callable, Any, List
 from functools import wraps
 import logging
+import asyncio
+import time
 
 logger = logging.getLogger(__name__)
 
 T = TypeVar('T')
+
+# Retryable exceptions (transient errors that can be retried)
+RETRYABLE_EXCEPTIONS = (
+    ConnectionError,
+    TimeoutError,
+    OSError,
+    IOError
+)
 
 
 def handle_backtest_error(
