@@ -261,8 +261,31 @@ CREATE TABLE signals (
 - ✅ Hash verification
 - ✅ Duplicate detection
 
+**Alpine Sync Service Implementation:**
+- **Location:** `argo/argo/core/alpine_sync.py`
+- **Features:**
+  - ✅ HTTP client with connection pooling
+  - ✅ Retry logic (3 attempts with exponential backoff)
+  - ✅ Health check endpoint monitoring
+  - ✅ Error handling and logging
+  - ✅ Failed signals queue for retry
+  - ✅ Configurable via environment variables or config.json
+  - ✅ API key authentication
+- **Configuration:**
+  - Alpine URL: `ALPINE_API_URL` env var or `config.json` → `alpine.api_url`
+  - API Key: `ARGO_API_KEY` env var or AWS Secrets Manager or `config.json`
+  - Default URL: `http://91.98.153.49:8001`
+  - Enable/Disable: `ALPINE_SYNC_ENABLED` env var (default: true)
+
 **Alpine Backend Endpoint:**
 - **Location:** `alpine-backend/backend/api/external_signal_sync.py`
+- **Endpoint:** `POST /api/v1/external-signals/sync/signal`
+- **Authentication:** X-API-Key header
+- **Features:**
+  - ✅ Hash verification
+  - ✅ Duplicate detection
+  - ✅ Signal validation
+  - ✅ Database storage
 - **Status:** ✅ **READY** - Endpoint implemented and functional
 
 **Status:** ✅ **IMPLEMENTED** - Full sync service with retry logic, health checks, and error handling. Needs production verification to confirm it's working end-to-end.
