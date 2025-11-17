@@ -24,6 +24,7 @@ from backend.core.cache_constants import CACHE_TTL_ANALYTICS, CACHE_TTL_USER_LIS
 from backend.core.response_formatter import add_rate_limit_headers, add_cache_headers
 from backend.core.error_responses import create_rate_limit_error
 from backend.core.security_logging import log_security_event, SecurityEvent
+from backend.core.input_sanitizer import sanitize_tier
 from backend.models.user import User, UserTier
 from backend.api.auth import get_current_user
 import logging
@@ -358,16 +359,12 @@ async def get_users(
         if is_active is not None:
             query = query.filter(User.is_active == is_active)
 
-        # Optimize count query: Use subquery for better performance with filters
-        # This avoids loading all records just to count them
-        count_query = db.query(func.count(User.id))
-        if tier_enum:
-            count_query = count_query.filter(User.tier == tier_enum)
-        if is_active is not None:
-            count_query = count_query.filter(User.is_active == is_active)
-        total = count_query.scalar() or 0
+        # OPTIMIZATION: Reuse query object for count to ensure same filters
+        # This is more efficient and ensures count matches filtered results exactly
+        total = query.count()
 
         # Paginate - only select needed columns for better performance
+        # Uses existing indexes on created_at for fast sorting
         users = query.order_by(User.created_at.desc()).offset(offset).limit(limit).all()
 
         users_list = [

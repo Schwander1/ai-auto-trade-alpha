@@ -65,6 +65,9 @@ pnpm-debug.log*
 *.code-workspace
 !argo-alpine.code-workspace
 
+# ESLint (track root config)
+.eslintrc.json
+
 # Cursor - allow specific files, ignore other files
 .cursor/*
 !.cursor/BUGBOT.md
