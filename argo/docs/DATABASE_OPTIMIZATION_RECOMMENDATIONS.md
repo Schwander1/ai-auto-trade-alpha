@@ -1,6 +1,6 @@
 # Database Optimization Recommendations
 
-**Date:** January 2025  
+**Date:** January 2025
 **Status:** Recommendations for Production
 
 ---
@@ -164,7 +164,7 @@ CREATE INDEX idx_signals_confidence_outcome ON signals(confidence, outcome);
 ```sql
 -- Daily signal summary
 CREATE MATERIALIZED VIEW daily_signal_summary AS
-SELECT 
+SELECT
     DATE(created_at) as date,
     symbol,
     COUNT(*) as signal_count,
@@ -257,4 +257,3 @@ Current database implementation is well-optimized for current scale. As the syst
 1. Set up database monitoring
 2. Track database size and query performance
 3. Implement optimizations as needed based on metrics
-

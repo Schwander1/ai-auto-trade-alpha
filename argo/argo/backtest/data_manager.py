@@ -90,7 +90,9 @@ class DataManager:
         symbol: str,
         period: str = "20y",
         interval: str = "1d",
-        force_refresh: bool = False
+        force_refresh: bool = False,
+        lazy_load: bool = False,
+        chunk_size: Optional[int] = None
     ) -> Optional[Union['pl.DataFrame', 'pd.DataFrame']]:
         """
         Fetch historical data for a symbol
@@ -106,9 +108,12 @@ class DataManager:
             period: Period to fetch (1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, 20y, ytd, max)
             interval: Data interval (1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo)
             force_refresh: Force refresh even if cached
+            lazy_load: If True, return a lazy-loading wrapper for large datasets (memory efficient)
+            chunk_size: For lazy loading, process data in chunks of this size
 
         Returns:
             DataFrame (Polars or Pandas) with OHLCV data or None if failed
+            If lazy_load=True, returns a LazyDataLoader instance
         """
         # Check cache first
         cache_key = f"{symbol}_{period}_{interval}"
