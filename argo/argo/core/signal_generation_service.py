@@ -298,7 +298,7 @@ class SignalGenerationService:
             from argo.tracking.outcome_tracker import OutcomeTracker
             self._outcome_tracker = OutcomeTracker()
             self._last_outcome_check = None
-        
+
         # Initialize signal quality scorer
         try:
             from argo.core.signal_quality_scorer import SignalQualityScorer
@@ -307,11 +307,11 @@ class SignalGenerationService:
         except Exception as e:
             logger.debug(f"Signal quality scorer not available: {e}")
             self._quality_scorer = None
-            self._outcome_check_interval = 300  # Check every 5 minutes
+        
+        # Set outcome check interval
+        self._outcome_check_interval = 300  # Check every 5 minutes
+        if self._outcome_tracker:
             logger.info("✅ Outcome tracker initialized")
-        except Exception as e:
-            logger.debug(f"Outcome tracker not available: {e}")
-            self._outcome_tracker = None
 
     def _init_alpine_sync(self):
         """Initialize Alpine backend sync service"""
@@ -1507,7 +1507,7 @@ class SignalGenerationService:
             'consensus_agreement': consensus.get('agreement', 0),
             'sources_count': consensus.get('sources', 0)
         }
-        
+
         # Calculate quality score if scorer is available
         if hasattr(self, '_quality_scorer') and self._quality_scorer:
             try:
@@ -1517,7 +1517,7 @@ class SignalGenerationService:
                 signal['quality_components'] = quality_result['components']
             except Exception as e:
                 logger.debug(f"Could not calculate quality score: {e}")
-        
+
         return signal
 
     def _get_entry_price(self, source_signals: Dict, symbol: str) -> float:

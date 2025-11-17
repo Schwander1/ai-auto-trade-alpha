@@ -247,7 +247,10 @@ class DataManager:
             return None
     
     def _clean_data(self, df: Union['pl.DataFrame', 'pd.DataFrame']) -> Union['pl.DataFrame', 'pd.DataFrame']:
-        """Clean and validate data (10x faster with Polars)"""
+        """
+        Clean and validate data (10x faster with Polars)
+        ENHANCED: Added memory optimization for Pandas DataFrames
+        """
         if self.use_polars and isinstance(df, pl.DataFrame):
             # Polars version (vectorized, 10x faster)
             return (
@@ -272,10 +275,14 @@ class DataManager:
             # Remove rows with missing critical data
             df = df.dropna(subset=['Open', 'High', 'Low', 'Close'])
             
-            # Ensure numeric types
-            for col in ['Open', 'High', 'Low', 'Close', 'Volume']:
+            # ENHANCED: Memory optimization - use float32 for prices (50% memory reduction)
+            for col in ['Open', 'High', 'Low', 'Close']:
                 if col in df.columns:
-                    df[col] = pd.to_numeric(df[col], errors='coerce')
+                    df[col] = pd.to_numeric(df[col], errors='coerce').astype('float32')
+            
+            # ENHANCED: Downcast Volume to int32 if possible
+            if 'Volume' in df.columns:
+                df['Volume'] = pd.to_numeric(df['Volume'], errors='coerce', downcast='integer')
             
             # Remove rows with invalid prices (negative or zero)
             df = df[(df['Close'] > 0) & (df['High'] >= df['Low'])]

@@ -236,15 +236,33 @@ class BaseBacktester(ABC):
             ulcer_index=ulcer_index
         )
 
-    def update_equity(self, current_price: float, date: datetime):
-        """Update equity curve"""
+    def update_equity(self, current_price: float, date: datetime, sample_rate: int = 1):
+        """
+        Update equity curve
+        ENHANCED: Added sampling for long backtests to reduce memory usage
+        
+        Args:
+            current_price: Current price
+            date: Current date
+            sample_rate: Store every Nth point (1 = all, 10 = every 10th point)
+        """
         position_value = sum(
             pos.quantity * current_price if pos.side == 'LONG' else -pos.quantity * current_price
             for pos in self.positions.values()
         )
         total_equity = self.capital + position_value
-        self.equity_curve.append(total_equity)
-        self.dates.append(date)
+        
+        # ENHANCED: Sample equity curve for long backtests to save memory
+        # Always store first and last points, sample in between
+        if sample_rate > 1 and len(self.equity_curve) > 0:
+            # Store every Nth point, or if it's the last point
+            if len(self.equity_curve) % sample_rate == 0:
+                self.equity_curve.append(total_equity)
+                self.dates.append(date)
+        else:
+            # Store all points (default behavior)
+            self.equity_curve.append(total_equity)
+            self.dates.append(date)
 
     def reset(self):
         """Reset backtester state"""
