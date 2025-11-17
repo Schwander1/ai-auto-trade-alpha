@@ -167,7 +167,7 @@ def _cache_user_data(user: User):
     """Cache user data for faster subsequent lookups"""
     from backend.core.cache import set_cache
     from backend.core.cache_constants import CACHE_TTL_USER_PROFILE
-    
+
     cache_key = f"user:email:{user.email}"
     user_data = {
         "id": user.id,

@@ -387,20 +387,20 @@ async def get_signal_history(
     """
     # Rate limiting and headers
     _apply_rate_limiting(request, response, current_user.email)
-    
+
     try:
         # Calculate date range and query signals
         start_date = datetime.utcnow() - timedelta(days=days)
         signals = _query_signal_history(db, start_date, limit)
-        
+
         # Map to response format
         history = _map_signals_to_history(signals)
-        
+
         # Add cache headers
         add_cache_headers(response, max_age=60, public=False)
-        
+
         return history
-    
+
     except HTTPException:
         raise
     except Exception as e:
@@ -413,7 +413,7 @@ async def get_signal_history(
 def _query_signal_history(db: Session, start_date: datetime, limit: int) -> List[Signal]:
     """Query signal history from database"""
     history_limit = min(limit, 500)  # Reasonable limit
-    
+
     return db.query(Signal).filter(
         Signal.created_at >= start_date
     ).order_by(
@@ -426,7 +426,7 @@ def _map_signals_to_history(signals: List[Signal]) -> List[SignalHistoryResponse
     for signal in signals:
         created_at_str = format_datetime_iso(signal.created_at)
         status = "active" if signal.is_active else "closed"
-        
+
         history.append(
             SignalHistoryResponse(
                 signal_id=f"SIG-{signal.id}",
@@ -440,7 +440,7 @@ def _map_signals_to_history(signals: List[Signal]) -> List[SignalHistoryResponse
                 closed_at=None  # Not available in Signal model yet
             )
         )
-    
+
     return history
 
 

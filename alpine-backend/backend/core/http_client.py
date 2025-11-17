@@ -18,18 +18,18 @@ except ImportError:
 
 class HTTPClientFactory:
     """Factory for creating optimized HTTP clients with connection pooling"""
-    
+
     # Default timeout settings
     DEFAULT_CONNECT_TIMEOUT = 5.0
     DEFAULT_READ_TIMEOUT = 10.0
     DEFAULT_WRITE_TIMEOUT = 5.0
     DEFAULT_POOL_TIMEOUT = 5.0
-    
+
     # Default connection pool settings
     DEFAULT_MAX_KEEPALIVE_CONNECTIONS = 50
     DEFAULT_MAX_CONNECTIONS = 200
     DEFAULT_KEEPALIVE_EXPIRY = 60.0
-    
+
     @staticmethod
     def create_client(
         connect_timeout: float = None,
@@ -44,7 +44,7 @@ class HTTPClientFactory:
     ) -> Optional[httpx.AsyncClient]:
         """
         Create an optimized HTTP client with connection pooling
-        
+
         Args:
             connect_timeout: Connection timeout in seconds
             read_timeout: Read timeout in seconds
@@ -55,14 +55,14 @@ class HTTPClientFactory:
             keepalive_expiry: Keepalive expiry in seconds
             http2: Enable HTTP/2
             follow_redirects: Follow redirects automatically
-        
+
         Returns:
             Configured httpx.AsyncClient or None if httpx not available
         """
         if not HTTPX_AVAILABLE:
             logger.warning("httpx not available, cannot create HTTP client")
             return None
-        
+
         return httpx.AsyncClient(
             timeout=httpx.Timeout(
                 connect=connect_timeout or HTTPClientFactory.DEFAULT_CONNECT_TIMEOUT,
@@ -78,7 +78,7 @@ class HTTPClientFactory:
             http2=http2,
             follow_redirects=follow_redirects
         )
-    
+
     @staticmethod
     def get_default_client() -> Optional[httpx.AsyncClient]:
         """Get a client with default optimized settings"""
@@ -87,21 +87,21 @@ class HTTPClientFactory:
 
 class SingletonHTTPClient:
     """Thread-safe singleton HTTP client with lazy initialization"""
-    
+
     _client: Optional[httpx.AsyncClient] = None
     _lock: Optional[asyncio.Lock] = None
-    
+
     @classmethod
     async def get_client(cls) -> Optional[httpx.AsyncClient]:
         """
         Get or create singleton HTTP client (thread-safe)
-        
+
         Returns:
             Shared httpx.AsyncClient instance or None if httpx not available
         """
         if not HTTPX_AVAILABLE:
             return None
-        
+
         # Initialize lock if needed
         if cls._lock is None:
             try:
@@ -109,7 +109,7 @@ class SingletonHTTPClient:
             except RuntimeError:
                 # No event loop available - use simple check (safe due to GIL)
                 pass
-        
+
         # Use lock if available, otherwise rely on double-check pattern
         if cls._lock is not None:
             async with cls._lock:
@@ -119,9 +119,9 @@ class SingletonHTTPClient:
             # Fallback: double-check without lock (safe due to GIL)
             if cls._client is None:
                 cls._client = HTTPClientFactory.get_default_client()
-        
+
         return cls._client
-    
+
     @classmethod
     async def close_client(cls):
         """Close and cleanup the singleton HTTP client"""
@@ -132,10 +132,9 @@ class SingletonHTTPClient:
                 logger.debug(f"Error closing HTTP client: {e}")
             finally:
                 cls._client = None
-    
+
     @classmethod
     def reset_client(cls):
         """Reset the client (useful for testing)"""
         cls._client = None
         cls._lock = None
-
