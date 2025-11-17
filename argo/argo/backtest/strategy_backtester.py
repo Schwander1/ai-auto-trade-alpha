@@ -1256,18 +1256,18 @@ class StrategyBacktester(BaseBacktester):
                 stop_loss_hit = current_price <= effective_stop_loss
             else:
                 stop_loss_hit = current_price >= effective_stop_loss
-            
+
             if stop_loss_hit:
                 exit_price = effective_stop_loss
                 exit_reason = "dynamic" if dynamic_stop is not None else "static"
-        
+
         # Check take profit (only if stop loss not hit)
         if not stop_loss_hit and trade.take_profit:
             if is_long:
                 take_profit_hit = current_price >= trade.take_profit
             else:
                 take_profit_hit = current_price <= trade.take_profit
-            
+
             if take_profit_hit:
                 exit_price = trade.take_profit
                 exit_reason = "take_profit"

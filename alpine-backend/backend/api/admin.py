@@ -227,20 +227,19 @@ async def get_analytics(
             "elite": stats.elite_count or 0
         }
 
-        # OPTIMIZATION #5: Get real signal statistics from database
+        # OPTIMIZATION: Get signal statistics in single aggregated query (N+1 fix)
         from backend.models.signal import Signal
+        from sqlalchemy import case
 
-        signals_today = db.query(func.count(Signal.id)).filter(
-            Signal.created_at >= today_start
-        ).scalar() or 0
+        signal_stats = db.query(
+            func.sum(case((Signal.created_at >= today_start, 1), else_=0)).label('signals_today'),
+            func.sum(case((Signal.created_at >= week_start, 1), else_=0)).label('signals_week'),
+            func.sum(case((Signal.created_at >= month_start, 1), else_=0)).label('signals_month')
+        ).first()
 
-        signals_this_week = db.query(func.count(Signal.id)).filter(
-            Signal.created_at >= week_start
-        ).scalar() or 0
-
-        signals_this_month = db.query(func.count(Signal.id)).filter(
-            Signal.created_at >= month_start
-        ).scalar() or 0
+        signals_today = int(signal_stats.signals_today or 0)
+        signals_this_week = int(signal_stats.signals_week or 0)
+        signals_this_month = int(signal_stats.signals_month or 0)
 
         # API requests from metrics (if available)
         # Try to get from Prometheus metrics or use fallback
