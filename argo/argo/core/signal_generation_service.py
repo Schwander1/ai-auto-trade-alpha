@@ -307,7 +307,7 @@ class SignalGenerationService:
         except Exception as e:
             logger.debug(f"Signal quality scorer not available: {e}")
             self._quality_scorer = None
-        
+
         # Set outcome check interval
         self._outcome_check_interval = 300  # Check every 5 minutes
         if self._outcome_tracker:

@@ -48,7 +48,7 @@ class DataManager:
     Manages historical data for backtesting
     OPTIMIZED: Uses Polars (10x faster) + Parquet caching (50x faster)
     """
-    
+
     def __init__(
         self,
         data_path: str = "argo/data/historical",
@@ -58,7 +58,7 @@ class DataManager:
     ):
         """
         Initialize data manager
-        
+
         Args:
             data_path: Path to store historical data
             cache_enabled: Enable caching of fetched data
@@ -70,21 +70,21 @@ class DataManager:
         self.cache_enabled = cache_enabled
         self.use_polars = use_polars and POLARS_AVAILABLE
         self.massive_s3_client = massive_s3_client
-        
+
         if self.use_polars:
             self._cache: Dict[str, 'pl.DataFrame'] = {}
             logger.info("✅ Using Polars (10x faster than Pandas)")
         else:
             self._cache: Dict[str, 'pd.DataFrame'] = {}
             logger.info("Using Pandas (Polars not available)")
-        
+
         # Initialize DuckDB if available
         if DUCKDB_AVAILABLE:
             self.duckdb_conn = duckdb.connect()
             logger.info("✅ DuckDB available for analytical queries")
         else:
             self.duckdb_conn = None
-        
+
     def fetch_historical_data(
         self,
         symbol: str,
@@ -94,19 +94,19 @@ class DataManager:
     ) -> Optional[Union['pl.DataFrame', 'pd.DataFrame']]:
         """
         Fetch historical data for a symbol
-        
+
         Priority:
         1. Parquet cache (50x faster) - if Polars available
         2. CSV cache
         3. Massive S3 download (10-20 years, automated)
         4. yfinance (fallback)
-        
+
         Args:
             symbol: Trading symbol (e.g., 'AAPL', 'BTC-USD')
             period: Period to fetch (1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, 20y, ytd, max)
             interval: Data interval (1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo)
             force_refresh: Force refresh even if cached
-        
+
         Returns:
             DataFrame (Polars or Pandas) with OHLCV data or None if failed
         """
@@ -118,7 +118,7 @@ class DataManager:
                 return self._cache[cache_key].clone()
             else:
                 return self._cache[cache_key].copy()
-        
+
         # Check Parquet cache first (fastest, 50x faster than CSV)
         if self.use_polars:
             parquet_file = self.data_path / f"{symbol}_{period}.parquet"
@@ -131,7 +131,7 @@ class DataManager:
                     return df
                 except Exception as e:
                     logger.warning(f"Failed to load Parquet cache: {e}")
-        
+
         # Check CSV cache
         csv_file = self.data_path / f"{symbol}_{period}.csv"
         if csv_file.exists() and not force_refresh:
@@ -145,20 +145,20 @@ class DataManager:
                 else:
                     df = pd.read_csv(csv_file, index_col=0, parse_dates=True)
                     logger.info(f"Loaded {symbol} data from CSV cache: {len(df)} rows")
-                
+
                 if self.cache_enabled:
                     self._cache[cache_key] = df
                 return df
             except Exception as e:
                 logger.warning(f"Failed to load cached data: {e}")
-        
+
         # Try Massive S3 download (for 10-20 year historical data)
         if self.massive_s3_client and period in ["10y", "20y"]:
             try:
                 years = int(period[:-1])
                 start_date = datetime.now() - timedelta(days=365 * years)
                 end_date = datetime.now()
-                
+
                 logger.info(f"Downloading {symbol} data from Massive S3 ({period})...")
                 df = self.massive_s3_client.download_historical_range(
                     symbol,
@@ -166,7 +166,7 @@ class DataManager:
                     end_date,
                     self.data_path
                 )
-                
+
                 if df is not None and not df.is_empty() if self.use_polars else not df.empty:
                     # Save to cache
                     if self.use_polars:
@@ -179,26 +179,26 @@ class DataManager:
                         df.to_csv(csv_file)
                         if self.cache_enabled:
                             self._cache[cache_key] = df
-                    
+
                     logger.info(f"✅ Downloaded and cached {symbol} data: {len(df)} rows")
                     return df
             except Exception as e:
                 logger.warning(f"Massive S3 download failed: {e}, falling back to yfinance")
-        
+
         # Fetch from yfinance (fallback)
         if not YFINANCE_AVAILABLE:
             logger.error("yfinance not available - cannot fetch data")
             return None
-        
+
         try:
             logger.info(f"Fetching {symbol} data from yfinance (period: {period}, interval: {interval})...")
             ticker = yf.Ticker(symbol)
             df_pandas = ticker.history(period=period, interval=interval)
-            
+
             if df_pandas.empty:
                 logger.warning(f"No data returned for {symbol}")
                 return None
-            
+
             # Convert to Polars if using Polars
             if self.use_polars:
                 # Reset index to make Date a column
@@ -212,21 +212,21 @@ class DataManager:
                     df = df.rename({'Datetime': 'Date'})
             else:
                 df = df_pandas
-            
+
             # Validate data
             required_cols = ['Open', 'High', 'Low', 'Close', 'Volume']
             if self.use_polars:
                 missing = [col for col in required_cols if col not in df.columns]
             else:
                 missing = [col for col in required_cols if col not in df.columns]
-            
+
             if missing:
                 logger.error(f"Missing required columns: {missing}")
                 return None
-            
+
             # Clean data
             df = self._clean_data(df)
-            
+
             # Save to cache
             if self.cache_enabled:
                 if self.use_polars:
@@ -237,15 +237,15 @@ class DataManager:
                     csv_file = self.data_path / f"{symbol}_{period}.csv"
                     df.to_csv(csv_file)
                     self._cache[cache_key] = df
-                
+
                 logger.info(f"Cached {symbol} data: {len(df)} rows")
-            
+
             return df
-            
+
         except Exception as e:
             logger.error(f"Failed to fetch data for {symbol}: {e}")
             return None
-    
+
     def _clean_data(self, df: Union['pl.DataFrame', 'pd.DataFrame']) -> Union['pl.DataFrame', 'pd.DataFrame']:
         """
         Clean and validate data (10x faster with Polars)
@@ -271,70 +271,70 @@ class DataManager:
             # Pandas version (backward compatibility)
             # Remove duplicates
             df = df.drop_duplicates()
-            
+
             # Remove rows with missing critical data
             df = df.dropna(subset=['Open', 'High', 'Low', 'Close'])
-            
+
             # ENHANCED: Memory optimization - use float32 for prices (50% memory reduction)
             for col in ['Open', 'High', 'Low', 'Close']:
                 if col in df.columns:
                     df[col] = pd.to_numeric(df[col], errors='coerce').astype('float32')
-            
+
             # ENHANCED: Downcast Volume to int32 if possible
             if 'Volume' in df.columns:
                 df['Volume'] = pd.to_numeric(df['Volume'], errors='coerce', downcast='integer')
-            
+
             # Remove rows with invalid prices (negative or zero)
             df = df[(df['Close'] > 0) & (df['High'] >= df['Low'])]
-            
+
             # Sort by date
             if hasattr(df.index, 'name') and df.index.name == 'Date':
                 df = df.sort_index()
             elif 'Date' in df.columns:
                 df = df.sort_values('Date')
-            
+
             return df
-    
+
     def validate_data(self, df: Union['pl.DataFrame', 'pd.DataFrame']) -> Tuple[bool, List[str]]:
         """
         Validate data quality (works with both Polars and Pandas)
-        
+
         Returns:
             (is_valid, list_of_issues)
         """
         issues = []
-        
+
         is_empty = df.is_empty() if self.use_polars and isinstance(df, pl.DataFrame) else df.empty
         if is_empty:
             issues.append("DataFrame is empty")
             return False, issues
-        
+
         # Check required columns
         required = ['Open', 'High', 'Low', 'Close', 'Volume']
         if self.use_polars and isinstance(df, pl.DataFrame):
             missing = [col for col in required if col not in df.columns]
         else:
             missing = [col for col in required if col not in df.columns]
-        
+
         if missing:
             issues.append(f"Missing columns: {missing}")
-        
+
         # Check for NaN/null values
         if self.use_polars and isinstance(df, pl.DataFrame):
             null_counts = {col: df[col].null_count() for col in required if col in df.columns}
             if any(null_counts.values()):
                 issues.append(f"Null values found: {null_counts}")
-            
+
             # Check price validity
             invalid_prices = df.filter(pl.col('Close') <= 0).height
             if invalid_prices > 0:
                 issues.append(f"Invalid prices (<=0): {invalid_prices}")
-            
+
             # Check high >= low
             invalid_hl = df.filter(pl.col('High') < pl.col('Low')).height
             if invalid_hl > 0:
                 issues.append(f"High < Low: {invalid_hl}")
-            
+
             # Check for sufficient data
             if len(df) < 100:
                 issues.append(f"Insufficient data: {len(df)} rows (minimum 100)")
@@ -343,23 +343,23 @@ class DataManager:
             nan_counts = df[required].isna().sum()
             if nan_counts.any():
                 issues.append(f"NaN values found: {nan_counts.to_dict()}")
-            
+
             # Check price validity
             invalid_prices = (df['Close'] <= 0).sum()
             if invalid_prices > 0:
                 issues.append(f"Invalid prices (<=0): {invalid_prices}")
-            
+
             # Check high >= low
             invalid_hl = (df['High'] < df['Low']).sum()
             if invalid_hl > 0:
                 issues.append(f"High < Low: {invalid_hl}")
-            
+
             # Check for sufficient data
             if len(df) < 100:
                 issues.append(f"Insufficient data: {len(df)} rows (minimum 100)")
-        
+
         return len(issues) == 0, issues
-    
+
     def query_with_duckdb(
         self,
         symbol: str,
@@ -370,25 +370,25 @@ class DataManager:
         """
         Query historical data with DuckDB (3-10x faster for filtering)
         Uses parameterized queries to prevent SQL injection.
-        
+
         Args:
             symbol: Trading symbol
             start_date: Start date (YYYY-MM-DD)
             end_date: End date (YYYY-MM-DD)
             filters: Optional filters (e.g., {'volume': '> 1000000'})
-        
+
         Returns:
             Filtered DataFrame
         """
         if not DUCKDB_AVAILABLE or not self.duckdb_conn:
             logger.warning("DuckDB not available, using standard filtering")
             return None
-        
+
         # Find parquet file
         parquet_file = self._find_parquet_file(symbol)
         if not parquet_file:
             return None
-        
+
         # Build parameterized query
         query = """
         SELECT *
@@ -396,13 +396,13 @@ class DataManager:
         WHERE Date >= ? AND Date <= ?
         """
         params = [str(parquet_file), start_date, end_date]
-        
+
         # Add filters safely
         if filters:
             query, params = self._add_safe_filters(query, params, filters)
-        
+
         query += " ORDER BY Date"
-        
+
         try:
             result = self.duckdb_conn.execute(query, params)
             if self.use_polars:
@@ -412,7 +412,7 @@ class DataManager:
         except Exception as e:
             logger.error(f"DuckDB query failed: {e}")
             return None
-    
+
     def _find_parquet_file(self, symbol: str) -> Optional[Path]:
         """Find parquet file for symbol"""
         for period in ["20y", "10y", "5y"]:
@@ -421,7 +421,7 @@ class DataManager:
                 return parquet_file
         logger.warning(f"No parquet file found for {symbol}")
         return None
-    
+
     def _add_safe_filters(self, query: str, params: List, filters: Dict) -> Tuple[str, List]:
         """
         Add filters to query safely using parameterization.
@@ -429,28 +429,28 @@ class DataManager:
         """
         # Whitelist of allowed column names
         ALLOWED_COLUMNS = {'Date', 'Open', 'High', 'Low', 'Close', 'Volume'}
-        
+
         for col, condition in filters.items():
             if col not in ALLOWED_COLUMNS:
                 logger.warning(f"Filter column '{col}' not in whitelist, skipping")
                 continue
-            
+
             # Parse condition safely
             operator, value = self._parse_condition(condition)
             if operator and value is not None:
                 query += f" AND {col} {operator} ?"
                 params.append(value)
-        
+
         return query, params
-    
+
     def _parse_condition(self, condition: str) -> Tuple[Optional[str], Optional[float]]:
         """
         Parse condition string safely.
         Only allows numeric comparisons with whitelisted operators.
-        
+
         Args:
             condition: Condition string (e.g., "> 1000000")
-        
+
         Returns:
             Tuple of (operator, value) or (None, None) if invalid
         """
@@ -467,13 +467,13 @@ class DataManager:
                     pass
         logger.warning(f"Invalid condition format: {condition}")
         return None, None
-    
+
     def get_data_summary(self, symbol: str, df: Union['pl.DataFrame', 'pd.DataFrame']) -> Dict:
         """Get summary statistics for data (works with both Polars and Pandas)"""
         is_empty = df.is_empty() if self.use_polars and isinstance(df, pl.DataFrame) else df.empty
         if is_empty:
             return {}
-        
+
         if self.use_polars and isinstance(df, pl.DataFrame):
             date_col = 'Date' if 'Date' in df.columns else df.columns[0]
             return {
@@ -505,4 +505,3 @@ class DataManager:
                     "current": float(df['Close'].iloc[-1]) if len(df) > 0 else 0
                 }
             }
-

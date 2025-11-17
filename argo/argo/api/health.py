@@ -25,14 +25,14 @@ class HealthStatus(BaseModel):
 async def health_check():
     """
     Comprehensive health check endpoint
-    
+
     Returns:
         Health status with component checks
     """
     checks = {}
     components = {}
     overall_status = 'healthy'
-    
+
     # Check signal generation service
     try:
         from argo.core.signal_generation_service import SignalGenerationService
@@ -49,7 +49,7 @@ async def health_check():
             'error': str(e)
         }
         overall_status = 'unhealthy'
-    
+
     # Check database
     try:
         from pathlib import Path
@@ -78,7 +78,7 @@ async def health_check():
             'error': str(e)
         }
         overall_status = 'unhealthy'
-    
+
     # Check Alpine sync
     try:
         from argo.core.alpine_sync import AlpineSyncService
@@ -106,7 +106,7 @@ async def health_check():
         }
         if overall_status == 'healthy':
             overall_status = 'degraded'
-    
+
     # Check trading engine
     try:
         from argo.core.paper_trading_engine import PaperTradingEngine
@@ -131,19 +131,19 @@ async def health_check():
         }
         if overall_status == 'healthy':
             overall_status = 'degraded'
-    
+
     # Check prop firm monitor (if enabled)
     try:
         from argo.core.config_loader import ConfigLoader
         config, _ = ConfigLoader.load_config()
         prop_firm_enabled = config.get('prop_firm', {}).get('enabled', False)
-        
+
         if prop_firm_enabled:
             from argo.risk.prop_firm_risk_monitor import PropFirmRiskMonitor
             risk_limits = config.get('prop_firm', {}).get('risk_limits', {})
             monitor = PropFirmRiskMonitor(risk_limits)
             stats = monitor.get_monitoring_stats()
-            
+
             components['prop_firm_monitor'] = {
                 'status': 'healthy',
                 'enabled': True,
@@ -160,13 +160,13 @@ async def health_check():
             'status': 'degraded',
             'error': str(e)
         }
-    
+
     # Overall checks
     checks['overall'] = {
         'status': overall_status,
         'timestamp': datetime.now().isoformat()
     }
-    
+
     return HealthStatus(
         status=overall_status,
         timestamp=datetime.now().isoformat(),
@@ -179,7 +179,7 @@ async def health_check():
 async def simple_health_check():
     """
     Simple health check (for load balancers)
-    
+
     Returns:
         200 OK if healthy, 503 if unhealthy
     """

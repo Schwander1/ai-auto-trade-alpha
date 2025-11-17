@@ -240,7 +240,7 @@ class BaseBacktester(ABC):
         """
         Update equity curve
         ENHANCED: Added sampling for long backtests to reduce memory usage
-        
+
         Args:
             current_price: Current price
             date: Current date
@@ -251,7 +251,7 @@ class BaseBacktester(ABC):
             for pos in self.positions.values()
         )
         total_equity = self.capital + position_value
-        
+
         # ENHANCED: Sample equity curve for long backtests to save memory
         # Always store first and last points, sample in between
         if sample_rate > 1 and len(self.equity_curve) > 0:
