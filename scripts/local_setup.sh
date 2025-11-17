@@ -172,7 +172,48 @@ mkdir -p argo/data/backtest_results
 mkdir -p argo/logs
 print_success "Data directories ready"
 
-# Step 8: Summary
+# Step 8: Setup Alpine Backend virtual environment (optional)
+echo ""
+echo "8️⃣  Setting up Alpine Backend virtual environment (optional)..."
+if [ ! -d "alpine-backend/venv" ]; then
+    print_info "Creating virtual environment for Alpine Backend..."
+    cd alpine-backend
+    python3 -m venv venv
+    cd ..
+    print_success "Virtual environment created"
+else
+    print_success "Alpine Backend virtual environment already exists"
+fi
+
+if [ -f "alpine-backend/backend/requirements.txt" ]; then
+    print_info "Installing Alpine Backend dependencies..."
+    cd alpine-backend
+    source venv/bin/activate
+    pip install --upgrade pip setuptools wheel > /dev/null 2>&1
+    pip install -r backend/requirements.txt > /dev/null 2>&1 || {
+        print_warning "Some Alpine Backend dependencies failed, installing core packages..."
+        pip install fastapi uvicorn sqlalchemy psycopg2-binary pydantic pydantic-settings redis prometheus_client > /dev/null 2>&1
+    }
+    deactivate
+    cd ..
+    print_success "Alpine Backend dependencies installed"
+else
+    print_warning "Alpine Backend requirements.txt not found, skipping..."
+fi
+
+# Step 9: Install health check dependencies
+echo ""
+echo "9️⃣  Installing health check dependencies..."
+print_info "Installing psutil and requests for health checks..."
+python3 -m pip install --user psutil requests > /dev/null 2>&1 || print_warning "Could not install health check dependencies (this is OK)"
+print_success "Health check dependencies ready"
+
+# Step 10: Verify health check dependencies
+echo ""
+echo "🔟 Verifying health check setup..."
+python3 -c "import psutil, requests; print('✅ Health check dependencies OK')" 2>/dev/null && print_success "Health check dependencies verified" || print_warning "Health check dependencies may be missing (optional)"
+
+# Step 11: Summary
 echo ""
 echo "=========================="
 echo "✅ LOCAL SETUP COMPLETE"
@@ -180,7 +221,8 @@ echo "=========================="
 echo ""
 echo "📝 Next Steps:"
 echo "   1. Run health check: ./scripts/local_health_check.sh"
-echo "   2. Run security audit: ./scripts/local_security_audit.sh"
-echo "   3. Execute test trade: python argo/scripts/execute_test_trade.py"
+echo "   2. Run comprehensive health check: python3 scripts/comprehensive_health_check.py"
+echo "   3. Run security audit: ./scripts/local_security_audit.sh"
+echo "   4. Execute test trade: python argo/scripts/execute_test_trade.py"
 echo ""
 
