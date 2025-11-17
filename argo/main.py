@@ -418,7 +418,9 @@ async def stats() -> Dict[str, Any]:
 @app.get("/api/v1/backtest/{symbol}")
 async def backtest_symbol(
     symbol: str,
-    years: int = Query(5, ge=1, le=10, description="Number of years to backtest")
+    years: int = Query(5, ge=1, le=10, description="Number of years to backtest"),
+    export: Optional[str] = Query(None, description="Export format: json, csv, excel"),
+    validate: bool = Query(True, description="Validate results")
 ) -> Dict[str, Any]:
     """
     Run backtest on symbol with input validation

@@ -77,6 +77,7 @@
   "editor": {
     "formatOnSave": true,
     "codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit",
       "source.fixAll": "explicit",
       "source.organizeImports": "explicit"
     },
@@ -156,18 +157,40 @@
       "autoImportCompletions": true,
       "diagnosticMode": "workspace",
       "indexing": true,
-      "useLibraryCodeForTypes": true
+      "useLibraryCodeForTypes": true,
+      "completeFunctionParens": true,
+      "inlayHints": {
+        "functionReturnTypes": true,
+        "variableTypes": false
+      }
     },
     "defaultInterpreterPath": "${workspaceFolder}/alpine-backend/venv/bin/python",
     "formatting": {
-      "provider": "black"
+      "provider": "black",
+      "blackArgs": ["--line-length=100"]
     },
     "linting": {
       "enabled": true,
       "pylintEnabled": true,
       "flake8Enabled": false,
-      "mypyEnabled": false
+      "mypyEnabled": false,
+      "lintOnSave": true
+    },
+    "testing": {
+      "pytestEnabled": true,
+      "unittestEnabled": false,
+      "pytestArgs": ["-v"]
     }
+  },
+  
+  "isort": {
+    "args": ["--profile", "black", "--line-length=100"],
+    "check": true
+  },
+  
+  "pythonIndent": {
+    "useTabOnHangingIndent": false,
+    "indentAfterParens": true
   },
 
   "typescript": {
@@ -182,6 +205,20 @@
     "suggest": {
       "autoImports": true,
       "includeCompletionsForImportStatements": true
+    },
+    "inlayHints": {
+      "parameterNames": {
+        "enabled": "all"
+      },
+      "variableTypes": {
+        "enabled": false
+      },
+      "propertyDeclarationTypes": {
+        "enabled": true
+      },
+      "functionLikeReturnTypes": {
+        "enabled": true
+      }
     }
   },
 
