@@ -265,7 +265,7 @@ CREATE TABLE signals (
 - **Location:** `alpine-backend/backend/api/external_signal_sync.py`
 - **Status:** ✅ **READY** - Endpoint implemented and functional
 
-**Status:** ⚠️ **NEEDS VERIFICATION** - Sync code exists but needs production verification
+**Status:** ✅ **IMPLEMENTED** - Full sync service with retry logic, health checks, and error handling. Needs production verification to confirm it's working end-to-end.
 
 ### 3.4 Signal Storage in Alpine Backend
 
@@ -431,7 +431,7 @@ class Signal(Base):
 |-----------|--------|-------|
 | Signal Generation | ✅ WORKING | Every 5s, Weighted Consensus v6.0 |
 | Argo Storage | ✅ WORKING | SQLite with batch inserts, WAL mode |
-| Alpine Sync | ⚠️ NEEDS VERIFICATION | Code exists, needs production check |
+| Alpine Sync | ✅ IMPLEMENTED | Full service with retry logic, needs production verification |
 | Alpine Storage | ✅ READY | PostgreSQL schema and indexes ready |
 | Quality Metrics | ✅ WORKING | Confidence, hash, reasoning, regime |
 | Audit Trail | ✅ WORKING | SHA-256, immutable logs |
