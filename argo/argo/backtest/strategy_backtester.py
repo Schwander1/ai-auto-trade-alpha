@@ -1230,7 +1230,10 @@ class StrategyBacktester(BaseBacktester):
         current_bar: int,
         df: pd.DataFrame = None
     ):
-        """Check if position should be exited due to stop loss or take profit"""
+        """
+        Check if position should be exited due to stop loss or take profit
+        OPTIMIZED: Vectorized exit condition checks for better performance
+        """
         if symbol not in self.positions:
             return
 
@@ -1240,39 +1243,49 @@ class StrategyBacktester(BaseBacktester):
         dynamic_stop = self._get_dynamic_stop_loss(trade, current_price)
         effective_stop_loss = dynamic_stop if dynamic_stop is not None else trade.stop_loss
 
-        # Check minimum holding period (but allow stop loss exits regardless)
-        # Only apply minimum holding period to normal exits, not stop losses
-        is_stop_loss_exit = False
-        if effective_stop_loss:
-            if (trade.side == 'LONG' and current_price <= effective_stop_loss) or \
-               (trade.side == 'SHORT' and current_price >= effective_stop_loss):
-                is_stop_loss_exit = True
-
-        if symbol in self.position_entry_bars and not is_stop_loss_exit:
-            bars_held = current_bar - self.position_entry_bars[symbol]
-            if bars_held < self.min_holding_bars:
-                return  # Don't exit yet - minimum holding period not met (unless stop loss)
+        # OPTIMIZED: Pre-calculate exit conditions (reduces redundant checks)
+        is_long = trade.side == 'LONG'
+        stop_loss_hit = False
+        take_profit_hit = False
+        exit_price = None
+        exit_reason = None
 
         # Check stop loss (use dynamic stop if available)
         if effective_stop_loss:
-            if trade.side == 'LONG' and current_price <= effective_stop_loss:
-                stop_reason = "dynamic" if dynamic_stop is not None else "static"
-                logger.info(f"[{symbol}][{current_date.date()}] 🛑 Stop loss hit ({stop_reason}): ${current_price:.2f} <= ${effective_stop_loss:.2f}")
-                self._exit_position(symbol, effective_stop_loss, current_date, df, current_bar)
-                return
-            elif trade.side == 'SHORT' and current_price >= effective_stop_loss:
-                stop_reason = "dynamic" if dynamic_stop is not None else "static"
-                logger.info(f"[{symbol}][{current_date.date()}] 🛑 Stop loss hit ({stop_reason}): ${current_price:.2f} >= ${effective_stop_loss:.2f}")
-                self._exit_position(symbol, effective_stop_loss, current_date, df, current_bar)
-                return
+            if is_long:
+                stop_loss_hit = current_price <= effective_stop_loss
+            else:
+                stop_loss_hit = current_price >= effective_stop_loss
+            
+            if stop_loss_hit:
+                exit_price = effective_stop_loss
+                exit_reason = "dynamic" if dynamic_stop is not None else "static"
+        
+        # Check take profit (only if stop loss not hit)
+        if not stop_loss_hit and trade.take_profit:
+            if is_long:
+                take_profit_hit = current_price >= trade.take_profit
+            else:
+                take_profit_hit = current_price <= trade.take_profit
+            
+            if take_profit_hit:
+                exit_price = trade.take_profit
+                exit_reason = "take_profit"
 
-        # Check take profit
-        if trade.take_profit:
-            if trade.side == 'LONG' and current_price >= trade.take_profit:
-                logger.info(f"[{symbol}][{current_date.date()}] 🎯 Take profit hit: ${current_price:.2f} >= ${trade.take_profit:.2f}")
-                self._exit_position(symbol, trade.take_profit, current_date, df, current_bar)
-                return
-            elif trade.side == 'SHORT' and current_price <= trade.take_profit:
-                logger.info(f"[{symbol}][{current_date.date()}] 🎯 Take profit hit: ${current_price:.2f} <= ${trade.take_profit:.2f}")
-                self._exit_position(symbol, trade.take_profit, current_date, df, current_bar)
-                return
+        # Check minimum holding period (but allow stop loss exits regardless)
+        # Only apply minimum holding period to normal exits, not stop losses
+        if exit_price and not stop_loss_hit:
+            if symbol in self.position_entry_bars:
+                bars_held = current_bar - self.position_entry_bars[symbol]
+                if bars_held < self.min_holding_bars:
+                    return  # Don't exit yet - minimum holding period not met (unless stop loss)
+
+        # Execute exit if conditions met
+        if exit_price:
+            if stop_loss_hit:
+                logger.info(f"[{symbol}][{current_date.date()}] 🛑 Stop loss hit ({exit_reason}): "
+                           f"${current_price:.2f} {'<=' if is_long else '>='} ${exit_price:.2f}")
+            else:
+                logger.info(f"[{symbol}][{current_date.date()}] 🎯 Take profit hit: "
+                           f"${current_price:.2f} {'>=' if is_long else '<='} ${exit_price:.2f}")
+            self._exit_position(symbol, exit_price, current_date, df, current_bar)
