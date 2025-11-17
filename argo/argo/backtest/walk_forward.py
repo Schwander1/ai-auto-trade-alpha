@@ -2,6 +2,7 @@
 """
 Walk-Forward Testing Framework
 Implements rolling window validation for robust backtesting
+ENHANCED: Added parallel processing for faster execution
 """
 import pandas as pd
 from typing import List, Dict, Optional
@@ -40,14 +41,24 @@ class WalkForwardTester:
         self,
         symbol: str,
         start_date: datetime,
-        end_date: datetime
+        end_date: datetime,
+        parallel: bool = True
     ) -> List[Dict]:
         """
         Run walk-forward test
+        ENHANCED: Added parallel processing for faster execution
+        
+        Args:
+            symbol: Trading symbol
+            start_date: Start date for walk-forward test
+            end_date: End date for walk-forward test
+            parallel: If True, run windows in parallel (faster)
         
         Returns:
             List of test results for each window
         """
+        # Generate all windows first
+        windows = []
         current_date = start_date
         
         while current_date + timedelta(days=self.train_days + self.test_days) <= end_date:
@@ -56,44 +67,101 @@ class WalkForwardTester:
             test_start = train_end
             test_end = test_start + timedelta(days=self.test_days)
             
-            logger.info(f"Window: Train {train_start.date()} to {train_end.date()}, "
-                       f"Test {test_start.date()} to {test_end.date()}")
+            windows.append({
+                'train_start': train_start,
+                'train_end': train_end,
+                'test_start': test_start,
+                'test_end': test_end
+            })
             
-            # Run backtest on test period
-            # Note: run_backtest is async, so we need to handle it properly
-            import asyncio
-            try:
-                # Check if backtester has async run_backtest
-                if asyncio.iscoroutinefunction(self.backtester.run_backtest):
-                    metrics = await self.backtester.run_backtest(
-                        symbol,
-                        start_date=test_start,
-                        end_date=test_end
-                    )
-                else:
-                    # Fallback for sync backtesters
-                    metrics = self.backtester.run_backtest(
-                        symbol,
-                        start_date=test_start,
-                        end_date=test_end
-                    )
-            except Exception as e:
-                logger.error(f"Error running backtest for window: {e}")
-                metrics = None
-            
-            if metrics:
-                self.results.append({
-                    'train_start': train_start,
-                    'train_end': train_end,
-                    'test_start': test_start,
-                    'test_end': test_end,
-                    'metrics': metrics
-                })
-            
-            # Move to next window
             current_date += timedelta(days=self.step_days)
         
+        logger.info(f"Running walk-forward test: {len(windows)} windows")
+        
+        # ENHANCED: Run windows in parallel if enabled
+        if parallel and len(windows) > 1:
+            import asyncio
+            import os
+            
+            # Determine optimal concurrency
+            num_cores = os.cpu_count() or 4
+            max_concurrent = min(num_cores, len(windows), 8)  # Cap at 8 to prevent overload
+            
+            logger.info(f"Running {len(windows)} windows in parallel (max {max_concurrent} concurrent)")
+            
+            # Process windows in batches
+            semaphore = asyncio.Semaphore(max_concurrent)
+            
+            async def run_window(window):
+                async with semaphore:
+                    return await self._run_single_window(symbol, window)
+            
+            # Run all windows
+            tasks = [run_window(window) for window in windows]
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            
+            # Process results
+            for i, result in enumerate(results):
+                if isinstance(result, Exception):
+                    logger.error(f"Error in window {i+1}: {result}")
+                    continue
+                if result:
+                    self.results.append(result)
+        else:
+            # Sequential processing (original)
+            for window in windows:
+                result = await self._run_single_window(symbol, window)
+                if result:
+                    self.results.append(result)
+        
+        # Sort results by test_start date
+        self.results.sort(key=lambda x: x['test_start'])
+        
         return self.results
+    
+    async def _run_single_window(
+        self,
+        symbol: str,
+        window: Dict
+    ) -> Optional[Dict]:
+        """Run backtest for a single window"""
+        train_start = window['train_start']
+        train_end = window['train_end']
+        test_start = window['test_start']
+        test_end = window['test_end']
+        
+        logger.info(f"Window: Train {train_start.date()} to {train_end.date()}, "
+                   f"Test {test_start.date()} to {test_end.date()}")
+        
+        import asyncio
+        try:
+            # Check if backtester has async run_backtest
+            if asyncio.iscoroutinefunction(self.backtester.run_backtest):
+                metrics = await self.backtester.run_backtest(
+                    symbol,
+                    start_date=test_start,
+                    end_date=test_end
+                )
+            else:
+                # Fallback for sync backtesters
+                metrics = self.backtester.run_backtest(
+                    symbol,
+                    start_date=test_start,
+                    end_date=test_end
+                )
+        except Exception as e:
+            logger.error(f"Error running backtest for window: {e}")
+            return None
+        
+        if metrics:
+            return {
+                'train_start': train_start,
+                'train_end': train_end,
+                'test_start': test_start,
+                'test_end': test_end,
+                'metrics': metrics
+            }
+        return None
     
     def get_summary(self) -> Dict:
         """Get summary statistics across all windows"""
