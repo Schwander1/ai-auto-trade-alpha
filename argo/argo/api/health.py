@@ -29,12 +29,12 @@ class HealthStatus(BaseModel):
 async def check_with_timeout(check_func, timeout: float = HEALTH_CHECK_TIMEOUT, component_name: str = "unknown"):
     """
     Execute a health check with timeout handling
-    
+
     Args:
         check_func: Async function to execute
         timeout: Timeout in seconds
         component_name: Name of component being checked (for logging)
-    
+
     Returns:
         Dict with status and result/error
     """
@@ -68,7 +68,7 @@ async def health_check():
             'status': 'healthy' if service.running else 'degraded',
             'running': service.running
         }
-    
+
     result = await check_with_timeout(check_signal_service, component_name="signal_generation")
     if result["status"] == "healthy":
         components['signal_generation'] = result["result"]
@@ -85,14 +85,14 @@ async def health_check():
     async def check_database():
         from pathlib import Path
         import sqlite3
-        
+
         db_path = Path(__file__).parent.parent.parent / "data" / "signals.db"
         if not db_path.exists():
             return {
                 'status': 'degraded',
                 'error': 'Database file not found'
             }
-        
+
         # Run database check in thread pool to avoid blocking
         def db_check_sync():
             conn = sqlite3.connect(str(db_path))
@@ -101,13 +101,13 @@ async def health_check():
             signal_count = cursor.fetchone()[0]
             conn.close()
             return signal_count
-        
+
         signal_count = await asyncio.to_thread(db_check_sync)
         return {
             'status': 'healthy',
             'signal_count': signal_count
         }
-    
+
     result = await check_with_timeout(check_database, component_name="database")
     if result["status"] == "healthy":
         components['database'] = result["result"]
@@ -136,7 +136,7 @@ async def health_check():
                 'enabled': False,
                 'reason': 'Sync disabled or not configured'
             }
-    
+
     result = await check_with_timeout(check_alpine_sync, component_name="alpine_sync")
     if result["status"] == "healthy":
         components['alpine_sync'] = result["result"]
@@ -168,7 +168,7 @@ async def health_check():
                 'alpaca_connected': False,
                 'reason': 'Alpaca not connected'
             }
-    
+
     result = await check_with_timeout(check_trading_engine, component_name="trading_engine")
     if result["status"] == "healthy":
         components['trading_engine'] = result["result"]
@@ -203,7 +203,7 @@ async def health_check():
                 'status': 'healthy',
                 'enabled': False
             }
-    
+
     result = await check_with_timeout(check_prop_firm, component_name="prop_firm_monitor")
     if result["status"] == "healthy":
         components['prop_firm_monitor'] = result["result"]
