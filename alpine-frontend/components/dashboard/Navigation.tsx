@@ -2,33 +2,36 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useMemo, useCallback } from 'react'
 import { 
   LayoutDashboard, Signal, BarChart3, User, 
   CreditCard, Settings, LogOut
 } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import UserMenu from './UserMenu'
+import TradingEnvironmentBadge from './TradingEnvironmentBadge'
 
 /**
  * Navigation component for dashboard pages
+ * Optimized with memoization for better performance
  */
 export default function Navigation() {
   const pathname = usePathname()
 
-  const navItems = [
+  const navItems = useMemo(() => [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/signals', label: 'Signals', icon: Signal },
     { href: '/backtest', label: 'Backtest', icon: BarChart3 },
     { href: '/account', label: 'Account', icon: User },
     { href: '/pricing', label: 'Pricing', icon: CreditCard },
-  ]
+  ], [])
 
-  const isActive = (href: string) => {
+  const isActive = useCallback((href: string) => {
     if (href === '/dashboard') {
       return pathname === '/dashboard'
     }
     return pathname?.startsWith(href)
-  }
+  }, [pathname])
 
   return (
     <nav className="bg-alpine-black-secondary border-b-border-alpine-black-border">
@@ -49,7 +52,7 @@ export default function Navigation() {
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
                       active
                         ? 'bg-alpine-neoncya-n/10 text-alpine-neon-cyan'
-                        : 'text-alpine-text-secondary hover:text-alpine-text-primary hover:bg-alpine-black-primary
+                        : 'text-alpine-text-secondary hover:text-alpine-text-primary hover:bg-alpine-black-primary'
                     }`}
                   >
                     <Icon className="w-4 h-4" />
@@ -59,7 +62,10 @@ export default function Navigation() {
               })}
             </div>
           </div>
-          <UserMenu />
+          <div className="flex items-center gap-3">
+            <TradingEnvironmentBadge />
+            <UserMenu />
+          </div>
         </div>
       </div>
     </nav>

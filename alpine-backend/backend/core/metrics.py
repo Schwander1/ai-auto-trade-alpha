@@ -94,6 +94,25 @@ integrity_failed_verifications_total = Counter(
     'Total failed integrity verifications (should be 0)'
 )
 
+# Health check metrics
+health_check_duration_seconds = Histogram(
+    'alpine_health_check_duration_seconds',
+    'Health check duration in seconds',
+    ['endpoint', 'status']
+)
+
+health_check_total = Counter(
+    'alpine_health_check_total',
+    'Total number of health checks',
+    ['endpoint', 'status']
+)
+
+health_check_cache_hits_total = Counter(
+    'alpine_health_check_cache_hits_total',
+    'Total number of health check cache hits',
+    ['endpoint']
+)
+
 
 def get_metrics() -> Response:
     """Get Prometheus metrics"""

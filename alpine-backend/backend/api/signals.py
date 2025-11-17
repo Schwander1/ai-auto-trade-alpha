@@ -267,6 +267,10 @@ async def get_subscribed_signals(
     total = len(cached_signals)
     paginated = cached_signals[offset:offset + limit]
     
+    # Add cache headers for client-side caching (short TTL since signals update frequently)
+    from backend.core.response_formatter import add_cache_headers
+    add_cache_headers(response, max_age=30, public=False)  # Cache for 30 seconds
+    
     return PaginatedSignalsResponse(
         items=[SignalResponse(**s) for s in paginated],
         total=total,
@@ -343,6 +347,10 @@ async def get_signal_history(
             created_at=signal_date.isoformat() + "Z",
             closed_at=(signal_date + timedelta(days=5)).isoformat() + "Z" if i % 3 == 0 else None
         ))
+    
+    # Add cache headers for client-side caching
+    from backend.core.response_formatter import add_cache_headers
+    add_cache_headers(response, max_age=60, public=False)  # Cache for 60 seconds
     
     return history
 

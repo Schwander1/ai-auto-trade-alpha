@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useSignals } from '@/hooks/useSignals'
 import SignalCard from '@/components/dashboard/SignalCard'
 import dynamic from 'next/dynamic'
@@ -25,15 +25,37 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 
+// Type definitions for better type safety
+interface DashboardStats {
+  totalReturn?: number
+  winRate?: number
+  totalTrades?: number
+  sharpeRatio?: number
+}
+
+interface EquityPoint {
+  date: string
+  value: number
+}
+
+interface Symbol {
+  symbol: string
+  name?: string
+  [key: string]: unknown
+}
+
 /**
  * Main Dashboard Page - Overview with signals, stats, and portfolio
+ * Optimized with proper TypeScript types, memoization, and error handling
  */
 export default function DashboardPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [stats, setStats] = useState<any>(null)
-  const [equityData, setEquityData] = useState<any[]>([])
-  const [symbols, setSymbols] = useState<any[]>([])
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [equityData, setEquityData] = useState<EquityPoint[]>([])
+  const [symbols, setSymbols] = useState<Symbol[]>([])
+  const [isLoadingStats, setIsLoadingStats] = useState(false)
+  const [statsError, setStatsError] = useState<Error | null>(null)
 
   const { signals, isLoading, error, refresh, isPolling } = useSignals({
     limit: 10,
@@ -49,39 +71,67 @@ export default function DashboardPage() {
     }
   }, [status, router])
 
-  useEffect(() => {
-    // Fetch dashboard stats
-    const fetchStats = async () => {
-      try {
-        const [statsRes, equityRes, symbolsRes] = await Promise.all([
-          fetch('/api/performance/stats').catch(() => null),
-          fetch('/api/performance/equity-curve?period=30d').catch(() => null),
-          fetch('/api/symbols').catch(() => null),
-        ])
+  // Optimized fetch function with proper error handling
+  const fetchStats = useCallback(async (abortSignal?: AbortSignal) => {
+    if (!session) return
+    
+    setIsLoadingStats(true)
+    setStatsError(null)
+    
+    try {
+      const [statsRes, equityRes, symbolsRes] = await Promise.all([
+        fetch('/api/performance/stats', { signal: abortSignal }).catch(() => null),
+        fetch('/api/performance/equity-curve?period=30d', { signal: abortSignal }).catch(() => null),
+        fetch('/api/symbols', { signal: abortSignal }).catch(() => null),
+      ])
 
-        if (statsRes?.ok) {
-          const statsData = await statsRes.json()
-          setStats(statsData)
-        }
-
-        if (equityRes?.ok) {
-          const equityData = await equityRes.json()
-          setEquityData(equityData.points || [])
-        }
-
-        if (symbolsRes?.ok) {
-          const symbolsData = await symbolsRes.json()
-          setSymbols(symbolsData.slice(0, 10))
-        }
-      } catch (err) {
-        console.error('Failed to fetch dashboard data:', err)
+      // Process stats response
+      if (statsRes?.ok) {
+        const statsData = await statsRes.json()
+        setStats(statsData as DashboardStats)
+      } else if (statsRes && !statsRes.ok) {
+        console.warn('Stats API returned error:', statsRes.status)
       }
-    }
 
-    if (session) {
-      fetchStats()
+      // Process equity data response
+      if (equityRes?.ok) {
+        const equityData = await equityRes.json()
+        setEquityData((equityData.points || []) as EquityPoint[])
+      } else if (equityRes && !equityRes.ok) {
+        console.warn('Equity API returned error:', equityRes.status)
+      }
+
+      // Process symbols response
+      if (symbolsRes?.ok) {
+        const symbolsData = await symbolsRes.json()
+        setSymbols((symbolsData.slice(0, 10) || []) as Symbol[])
+      } else if (symbolsRes && !symbolsRes.ok) {
+        console.warn('Symbols API returned error:', symbolsRes.status)
+      }
+    } catch (err) {
+      // Don't set error if request was aborted
+      if (err instanceof Error && err.name === 'AbortError') {
+        return
+      }
+      const error = err instanceof Error ? err : new Error(String(err))
+      setStatsError(error)
+      console.error('Failed to fetch dashboard data:', error)
+    } finally {
+      setIsLoadingStats(false)
     }
   }, [session])
+
+  useEffect(() => {
+    if (!session) return
+
+    const abortController = new AbortController()
+    fetchStats(abortController.signal)
+
+    // Cleanup: abort requests on unmount
+    return () => {
+      abortController.abort()
+    }
+  }, [session, fetchStats])
 
   if (status === 'loading') {
     return (

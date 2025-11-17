@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import PerformanceChart from '@/components/dashboard/PerformanceChart'
 import Navigation from '@/components/dashboard/Navigation'
 import { 
@@ -28,6 +28,7 @@ export default function BacktestPage() {
   const [results, setResults] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
   const [backtestHistory, setBacktestHistory] = useState<any[]>([])
+  const abortControllerRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -54,16 +55,37 @@ export default function BacktestPage() {
     }
   }, [session])
 
-  const handleRunBacktest = async () => {
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort()
+      }
+    }
+  }, [])
+
+  const handleRunBacktest = useCallback(async () => {
+    // Abort previous request if still running
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+    }
+
     setIsRunning(true)
     setError(null)
     setResults(null)
+
+    // Create new abort controller for cleanup
+    const abortController = new AbortController()
+    abortControllerRef.current = abortController
+
+    const pollTimeouts: NodeJS.Timeout[] = []
 
     try {
       const response = await fetch('/api/backtest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(backtestConfig),
+        signal: abortController.signal,
       })
 
       if (!response.ok) {
@@ -73,46 +95,73 @@ export default function BacktestPage() {
 
       const backtest = await response.json()
       
-      // Poll for results
-      const pollResults = async (backtestId: string) => {
-        const maxAttempts = 30
-        let attempts = 0
+      // Optimized polling with AbortController and cleanup
+      const maxAttempts = 30
+      let attempts = 0
 
-        const poll = async () => {
-          try {
-            const res = await fetch(`/api/backtest/${backtestId}`)
-            if (res.ok) {
-              const data = await res.json()
-              if (data.status === 'completed') {
-                setResults(data.results)
-                setIsRunning(false)
-                return
-              } else if (data.status === 'failed') {
-                throw new Error(data.error || 'Backtest failed')
-              }
-            }
-
-            attempts++
-            if (attempts < maxAttempts) {
-              setTimeout(poll, 2000)
-            } else {
-              throw new Error('Backtest timed out')
-            }
-          } catch (err) {
-            setIsRunning(false)
-            setError(err instanceof Error ? err.message : 'Failed to get results')
-          }
+      const poll = async () => {
+        // Check if aborted
+        if (abortController.signal.aborted) {
+          return
         }
 
-        poll()
+        try {
+          const res = await fetch(`/api/backtest/${backtest.backtest_id}`, {
+            signal: abortController.signal,
+          })
+          
+          if (abortController.signal.aborted) {
+            return
+          }
+
+          if (res.ok) {
+            const data = await res.json()
+            if (data.status === 'completed') {
+              setResults(data.results)
+              setIsRunning(false)
+              // Clear all timeouts
+              pollTimeouts.forEach(clearTimeout)
+              return
+            } else if (data.status === 'failed') {
+              throw new Error(data.error || 'Backtest failed')
+            }
+          }
+
+          attempts++
+          if (attempts < maxAttempts && !abortController.signal.aborted) {
+            const timeout = setTimeout(poll, 2000)
+            pollTimeouts.push(timeout)
+          } else {
+            throw new Error('Backtest timed out')
+          }
+        } catch (err) {
+          // Don't set error if request was aborted
+          if (err instanceof Error && err.name === 'AbortError') {
+            return
+          }
+          setIsRunning(false)
+          setError(err instanceof Error ? err.message : 'Failed to get results')
+          // Clear all timeouts on error
+          pollTimeouts.forEach(clearTimeout)
+        }
       }
 
-      pollResults(backtest.backtest_id)
+      poll()
     } catch (err) {
+      // Don't set error if request was aborted
+      if (err instanceof Error && err.name === 'AbortError') {
+        return
+      }
       setIsRunning(false)
       setError(err instanceof Error ? err.message : 'Backtest failed')
     }
-  }
+
+    // Store cleanup function in ref for unmount
+    return () => {
+      pollTimeouts.forEach(clearTimeout)
+      abortController.abort()
+    }
+  }, [backtestConfig])
 
   if (status === 'loading') {
     return (

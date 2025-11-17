@@ -137,12 +137,13 @@ app.add_middleware(
 )
 
 # Include new API routers
-from argo.api import signals, backtest, performance, symbols, health
+from argo.api import signals, backtest, performance, symbols, health, trading
 app.include_router(signals.router)
 app.include_router(backtest.router)
 app.include_router(performance.router)
 app.include_router(symbols.router)
 app.include_router(health.router)
+app.include_router(trading.router)
 
 # Price database (simulated real-time prices)
 LIVE_PRICES = {
