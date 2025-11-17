@@ -1,7 +1,7 @@
 # System Documentation Rules
 
-**Last Updated:** January 15, 2025  
-**Version:** 1.0  
+**Last Updated:** November 17, 2025  
+**Version:** 2.0  
 **Applies To:** SystemDocs directory management
 
 ---
@@ -28,7 +28,7 @@ This rule governs the management and maintenance of the `docs/SystemDocs/` direc
 #### Complete Guides (Primary References)
 1. **`BACKTESTING_COMPLETE_GUIDE.md`** - Backtesting framework guide
 2. **`RISK_MANAGEMENT_COMPLETE_GUIDE.md`** - 7-layer risk management system
-3. **`SIGNAL_GENERATION_COMPLETE_GUIDE.md`** - Weighted Consensus v6.0 algorithm
+3. **`SIGNAL_GENERATION_COMPLETE_GUIDE.md`** - Weighted Consensus v6.0 algorithm (v6.0)
 4. **`TRADING_EXECUTION_COMPLETE_GUIDE.md`** - Order execution and position sizing
 5. **`SYSTEM_MONITORING_COMPLETE_GUIDE.md`** - Health checks and monitoring
 6. **`TROUBLESHOOTING_RECOVERY_COMPLETE_GUIDE.md`** - Diagnostic and recovery procedures
@@ -106,7 +106,7 @@ When working with SystemDocs, you must know:
 
 #### 3. Key System Features
 
-- **Signal Generation:** Every 5 seconds, Weighted Consensus v6.0
+- **Signal Generation:** Every 5 seconds, Weighted Consensus v6.0 (v6.0)
 - **Data Sources:** Massive (40%), Alpha Vantage (25%), X Sentiment (20%), Sonar AI (15%)
 - **Risk Management:** 7-layer protection system
 - **Backtesting:** Strategy backtester + Profit backtester

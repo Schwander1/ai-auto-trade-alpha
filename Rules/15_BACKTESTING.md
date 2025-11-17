@@ -241,7 +241,7 @@ train_df, val_df, test_df = backtester.split_data(df, train_pct=0.6, val_pct=0.2
 
 **Impact:** Reduces returns, more realistic
 
-**v5.0 Update:** Strategy backtester now includes commission by default
+**v6.0 Update:** Strategy backtester now includes commission by default
 
 ### Total Round-Trip Cost
 
