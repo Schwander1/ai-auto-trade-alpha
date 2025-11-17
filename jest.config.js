@@ -6,36 +6,44 @@
 module.exports = {
   // Test environment
   testEnvironment: 'jsdom',
-  
+
   // File patterns to test
   testMatch: [
     '**/__tests__/**/*.[jt]s?(x)',
     '**/?(*.)+(spec|test).[jt]s?(x)',
   ],
-  
+
   // Module file extensions
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
-  
+
   // Transform files
   transform: {
     '^.+\\.(ts|tsx)$': ['ts-jest', {
       tsconfig: {
-        jsx: 'react',
+        jsx: 'react-jsx',
+        esModuleInterop: true,
+        allowSyntheticDefaultImports: true,
+        module: 'commonjs',
+        baseUrl: '.',
+        paths: {
+          '@/*': ['alpine-frontend/*'],
+        },
       },
     }],
   },
-  
-  // Module name mapping
+
+  // Module name mapping - fix path aliases
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/src/$1',
+    '^@/(.*)$': '<rootDir>/alpine-frontend/$1',
+    '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
   },
-  
+
   // Coverage configuration
-  collectCoverage: true,
+  collectCoverage: false, // Disable by default, enable with --coverage flag
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html', 'json'],
-  
-  // Coverage thresholds (95% minimum)
+
+  // Coverage thresholds (95% minimum) - only enforced when coverage is collected
   coverageThreshold: {
     global: {
       branches: 95,
@@ -44,30 +52,41 @@ module.exports = {
       statements: 95,
     },
   },
-  
+
   // Files to collect coverage from
   collectCoverageFrom: [
+    'alpine-frontend/**/*.{ts,tsx,js,jsx}',
     'packages/**/*.{ts,tsx,js,jsx}',
-    '!packages/**/*.d.ts',
-    '!packages/**/*.stories.{ts,tsx,js,jsx}',
-    '!packages/**/__tests__/**',
-    '!packages/**/node_modules/**',
-    '!packages/**/dist/**',
-    '!packages/**/build/**',
+    '!**/*.d.ts',
+    '!**/*.stories.{ts,tsx,js,jsx}',
+    '!**/__tests__/**',
+    '!**/node_modules/**',
+    '!**/dist/**',
+    '!**/build/**',
+    '!**/.next/**',
+    '!**/e2e/**',
   ],
-  
+
   // Setup files
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
-  
-  // Ignore patterns
+
+  // Ignore patterns - exclude e2e tests (they use Playwright)
   testPathIgnorePatterns: [
     '/node_modules/',
     '/dist/',
     '/build/',
     '/.next/',
+    '/e2e/',
+    'e2e/',
+    '\\.spec\\.ts$', // Exclude Playwright spec files
   ],
-  
+
+
   // Verbose output
   verbose: true,
-};
 
+  // Transform ignore patterns
+  transformIgnorePatterns: [
+    'node_modules/(?!(.*\\.mjs$|@testing-library|whatwg-fetch))',
+  ],
+};

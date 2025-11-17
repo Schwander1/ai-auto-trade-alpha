@@ -8,7 +8,7 @@ import json
 import subprocess
 import importlib.util
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass, field, asdict
 import traceback
@@ -21,7 +21,7 @@ class HealthCheckResult:
     message: str = ""
     details: Dict = field(default_factory=dict)
     error: Optional[str] = None
-    timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 class ComprehensiveHealthChecker:
     """Comprehensive health checker for the entire platform"""
@@ -29,7 +29,7 @@ class ComprehensiveHealthChecker:
     def __init__(self, workspace_root: Path):
         self.workspace_root = workspace_root
         self.results: List[HealthCheckResult] = []
-        self.start_time = datetime.utcnow()
+        self.start_time = datetime.now(timezone.utc)
 
     def check_python_imports(self) -> HealthCheckResult:
         """Check if critical Python modules can be imported"""
@@ -613,7 +613,7 @@ class ComprehensiveHealthChecker:
                 print(f"❌ FAIL (Exception: {str(e)})")
 
         # Generate summary
-        end_time = datetime.utcnow()
+        end_time = datetime.now(timezone.utc)
         duration = (end_time - self.start_time).total_seconds()
 
         summary = self._generate_summary()

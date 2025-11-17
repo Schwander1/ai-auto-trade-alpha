@@ -120,7 +120,7 @@ echo ""
 echo "5️⃣  Verifying configuration..."
 if [ -f "argo/config.json" ]; then
     print_success "config.json found"
-    
+
     # Check if auto_execute is set
     AUTO_EXECUTE=$(python3 -c "import json; print(json.load(open('argo/config.json')).get('trading', {}).get('auto_execute', False))" 2>/dev/null || echo "false")
     if [ "$AUTO_EXECUTE" = "True" ]; then
@@ -225,4 +225,3 @@ echo "   2. Run comprehensive health check: python3 scripts/comprehensive_health
 echo "   3. Run security audit: ./scripts/local_security_audit.sh"
 echo "   4. Execute test trade: python argo/scripts/execute_test_trade.py"
 echo ""
-
