@@ -11,7 +11,7 @@ import time
 import hashlib
 import json
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import List, Dict, Optional
 import sqlite3
@@ -33,35 +33,35 @@ DB_FILE = BASE_DIR / "data" / "signals.db"
 
 class IntegrityMonitor:
     """Monitors signal integrity and detects tampering"""
-    
+
     def __init__(self):
         self.db_file = DB_FILE
         self.failed_verifications = []
-    
+
     def run_integrity_check(self, sample_size: Optional[int] = None, full_check: bool = False) -> Dict:
         """
         Run integrity check on signals
-        
+
         Args:
             sample_size: Number of signals to check (None = all if full_check, else 1000)
             full_check: If True, check all signals (for daily checks)
-        
+
         Returns:
             Dictionary with check results
         """
         start_time = time.time()
-        
+
         if full_check:
             logger.info("🔍 Running FULL integrity check (all signals)")
             sample_size = None
         else:
             sample_size = sample_size or 1000
             logger.info(f"🔍 Running integrity check (sample: {sample_size} signals)")
-        
+
         try:
             # Query signals
             signals = self._query_signals(sample_size)
-            
+
             if not signals:
                 logger.warning("⚠️  No signals found in database")
                 return {
@@ -70,14 +70,16 @@ class IntegrityMonitor:
                     'checked': 0,
                     'failed': 0,
                     'status': 'PASS',
-                    'timestamp': datetime.utcnow().isoformat()
+                    'timestamp': datetime.now(timezone.utc).isoformat()
                 }
-            
-            # Verify each signal
+
+            # Verify each signal (optimized with progress logging for large batches)
             failed_count = 0
             failed_signals = []
+            max_failures_to_log = 10
+            total_checked = len(signals)
             
-            for signal in signals:
+            for i, signal in enumerate(signals):
                 is_valid = self._verify_signal_hash(signal)
                 if not is_valid:
                     failed_count += 1
@@ -87,15 +89,18 @@ class IntegrityMonitor:
                         'timestamp': signal.get('timestamp')
                     })
                     
-                    if failed_count <= 10:  # Log first 10 failures
+                    if failed_count <= max_failures_to_log:
                         logger.error(f"❌ Hash verification failed: {signal.get('signal_id')}")
+                
+                # Progress logging for large batches (every 10k signals)
+                if total_checked > 10000 and (i + 1) % 10000 == 0:
+                    logger.info(f"   Verified {i + 1}/{total_checked} signals... ({failed_count} failures)")
             
             # Calculate results
-            total_checked = len(signals)
             duration = time.time() - start_time
-            
+
             status = 'PASS' if failed_count == 0 else 'FAIL'
-            
+
             results = {
                 'success': failed_count == 0,
                 'total_signals': total_checked,
@@ -105,9 +110,9 @@ class IntegrityMonitor:
                 'status': status,
                 'duration_seconds': round(duration, 2),
                 'signals_per_second': round(total_checked / duration, 2) if duration > 0 else 0,
-                'timestamp': datetime.utcnow().isoformat()
+                'timestamp': datetime.now(timezone.utc).isoformat()
             }
-            
+
             # Log results
             if failed_count == 0:
                 logger.info(f"✅ Integrity check PASSED: {total_checked} signals verified in {duration:.2f}s")
@@ -115,60 +120,61 @@ class IntegrityMonitor:
                 logger.error(f"❌ Integrity check FAILED: {failed_count}/{total_checked} signals failed verification")
                 # Trigger alert
                 self._trigger_alert(results)
-            
+
             # Record metrics
             self._record_metrics(results)
-            
+
             # Store in integrity log (if PostgreSQL available)
             self._log_integrity_check(results)
-            
+
             return results
-            
+
         except Exception as e:
             logger.error(f"❌ Integrity check failed: {e}", exc_info=True)
             return {
                 'success': False,
                 'error': str(e),
-                'timestamp': datetime.utcnow().isoformat()
+                'timestamp': datetime.now(timezone.utc).isoformat()
             }
-    
+
     def _query_signals(self, limit: Optional[int] = None) -> List[Dict]:
         """Query signals from database"""
         if not self.db_file.exists():
             logger.warning(f"Database not found: {self.db_file}")
             return []
-        
+
         conn = sqlite3.connect(str(self.db_file))
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         
-        if limit:
-            cursor.execute("""
-                SELECT signal_id, symbol, action, entry_price, target_price, stop_price,
-                       confidence, strategy, timestamp, sha256 as verification_hash
-                FROM signals
-                ORDER BY RANDOM()
-                LIMIT ?
-            """, (limit,))
-        else:
-            cursor.execute("""
-                SELECT signal_id, symbol, action, entry_price, target_price, stop_price,
-                       confidence, strategy, timestamp, sha256 as verification_hash
-                FROM signals
-                ORDER BY timestamp DESC
-            """)
-        
-        signals = [dict(row) for row in cursor.fetchall()]
-        conn.close()
-        
-        return signals
-    
+        try:
+            if limit:
+                cursor.execute("""
+                    SELECT signal_id, symbol, action, entry_price, target_price, stop_price,
+                           confidence, strategy, timestamp, sha256 as verification_hash
+                    FROM signals
+                    ORDER BY RANDOM()
+                    LIMIT ?
+                """, (limit,))
+            else:
+                cursor.execute("""
+                    SELECT signal_id, symbol, action, entry_price, target_price, stop_price,
+                           confidence, strategy, timestamp, sha256 as verification_hash
+                    FROM signals
+                    ORDER BY timestamp DESC
+                """)
+            
+            signals = [dict(row) for row in cursor.fetchall()]
+            return signals
+        finally:
+            conn.close()
+
     def _verify_signal_hash(self, signal: Dict) -> bool:
         """Verify signal hash matches data"""
         stored_hash = signal.get('verification_hash') or signal.get('sha256')
         if not stored_hash:
             return False
-        
+
         # Recalculate hash
         hash_fields = {
             'signal_id': signal.get('signal_id'),
@@ -181,24 +187,24 @@ class IntegrityMonitor:
             'strategy': signal.get('strategy'),
             'timestamp': signal.get('timestamp')
         }
-        
+
         hash_string = json.dumps(hash_fields, sort_keys=True, default=str)
         calculated_hash = hashlib.sha256(hash_string.encode('utf-8')).hexdigest()
-        
+
         return calculated_hash == stored_hash
-    
+
     def _trigger_alert(self, results: Dict):
         """Trigger alert for integrity failures"""
         logger.critical("🚨 INTEGRITY VERIFICATION FAILURE DETECTED")
         logger.critical(f"   Failed signals: {results['failed']}/{results['checked']}")
         logger.critical("   This is a CRITICAL security incident")
-        
+
         # SECURITY: Send alerts to all configured channels (PagerDuty, Slack, Email, Notion)
         try:
             from argo.core.alerting import get_alerting_service
-            
+
             alerting = get_alerting_service()
-            
+
             # Build alert details
             details = {
                 "total_checked": results.get('checked', 0),
@@ -207,16 +213,16 @@ class IntegrityMonitor:
                 "duration_seconds": results.get('duration_seconds', 0),
                 "signals_per_second": results.get('signals_per_second', 0)
             }
-            
+
             # Add failed signal IDs if available
             if results.get('failed_signals'):
                 details["failed_signal_ids"] = [
-                    f"{s.get('signal_id')} ({s.get('symbol')})" 
+                    f"{s.get('signal_id')} ({s.get('symbol')})"
                     for s in results['failed_signals'][:10]
                 ]
                 if len(results.get('failed_signals', [])) > 10:
                     details["additional_failures"] = len(results['failed_signals']) - 10
-            
+
             # Send critical alert
             alerting.send_alert(
                 title="Signal Integrity Verification Failure",
@@ -226,15 +232,15 @@ class IntegrityMonitor:
                 source="argo-integrity-monitor"
             )
             logger.info("✅ Integrity failure alerts sent to all configured channels")
-            
+
         except ImportError:
             logger.warning("⚠️  Alerting service not available - alerts not sent")
         except Exception as e:
             logger.error(f"❌ Failed to send alerts: {e}", exc_info=True)
-        
+
         # Lock affected signals (read-only) - would need database connection
         # This is a placeholder for production implementation
-    
+
     def _record_metrics(self, results: Dict):
         """Record Prometheus metrics"""
         try:
@@ -242,14 +248,14 @@ class IntegrityMonitor:
             integrity_failed_verifications_total.inc(results['failed'])
         except (ImportError, AttributeError):
             pass  # Metrics not available
-    
+
     def _log_integrity_check(self, results: Dict):
         """Log integrity check to database (if PostgreSQL available)"""
         # This would log to integrity_checksum_log table in PostgreSQL
         # For now, just log to file
         log_file = BASE_DIR / "logs" / "integrity_checks.log"
         log_file.parent.mkdir(parents=True, exist_ok=True)
-        
+
         with open(log_file, 'a') as f:
             f.write(json.dumps(results) + '\n')
 
@@ -257,9 +263,9 @@ class IntegrityMonitor:
 def main():
     """Main execution"""
     import sys
-    
+
     monitor = IntegrityMonitor()
-    
+
     if len(sys.argv) > 1 and sys.argv[1] == 'full':
         # Full check (daily)
         results = monitor.run_integrity_check(full_check=True)
@@ -267,12 +273,11 @@ def main():
         # Sample check (hourly)
         sample_size = int(sys.argv[1]) if len(sys.argv) > 1 else 1000
         results = monitor.run_integrity_check(sample_size=sample_size)
-    
+
     # Print results
     print(json.dumps(results, indent=2, default=str))
-    
+
     exit(0 if results.get('success', False) else 1)
 
 if __name__ == '__main__':
     main()
-

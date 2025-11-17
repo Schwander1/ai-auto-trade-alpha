@@ -7,7 +7,7 @@ import boto3
 import os
 import sys
 import sqlite3
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -37,7 +37,7 @@ def get_performance_metrics():
         cursor = conn.cursor()
         
         # Get date range for this week
-        week_start = datetime.now() - timedelta(days=7)
+        week_start = datetime.now(timezone.utc) - timedelta(days=7)
         week_start_str = week_start.strftime('%Y-%m-%d')
         
         # Total signals this week
