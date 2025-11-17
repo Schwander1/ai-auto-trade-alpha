@@ -1,0 +1,25 @@
+{
+  "signal_generator": {
+    "component": "signal_generator",
+    "evaluation_date": "2025-11-17T17:19:35.244444",
+    "period_days": 7,
+    "metrics": {
+      "avg_signal_generation_time_seconds": 0.0,
+      "cache_hit_rate_percent": 0.0,
+      "skip_rate_percent": 0.0,
+      "avg_api_latency_seconds": 0.0,
+      "total_cache_hits": 0,
+      "total_cache_misses": 0,
+      "total_symbols_processed": 0,
+      "total_skipped_symbols": 0,
+      "uptime_seconds": 0.0,
+      "data_source_latencies": {},
+      "errors": {}
+    },
+    "performance_grade": "C (Fair)",
+    "recommendations": [
+      "Cache hit rate (0.00%) is below target (>80%). Consider increasing cache TTL or improving cache strategy.",
+      "Skip rate (0.00%) is low. Consider adjusting price change threshold to skip more unchanged symbols."
+    ]
+  }
+}

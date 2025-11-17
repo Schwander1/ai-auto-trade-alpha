@@ -1,0 +1,193 @@
+{
+  "workspace": "/Users/dylanneuenschwander/argo-alpine-workspace",
+  "start_time": "2025-11-17T23:31:26.836042",
+  "end_time": "2025-11-17T23:31:29.259128",
+  "duration_seconds": 2.423086,
+  "summary": {
+    "passed": 4,
+    "failed": 2,
+    "warnings": 2,
+    "skipped": 2,
+    "total": 10
+  },
+  "results": [
+    {
+      "name": "File Structure",
+      "status": "pass",
+      "message": "All 7 critical files present",
+      "details": {
+        "present": [
+          "argo/argo/api/health.py",
+          "argo/argo/core/signal_generation_service.py",
+          "alpine-backend/backend/main.py",
+          "alpine-backend/backend/api/signals.py",
+          "alpine-frontend/app/api/health/route.ts",
+          "package.json",
+          "pnpm-workspace.yaml"
+        ]
+      },
+      "error": null,
+      "timestamp": "2025-11-17T23:31:26.837043"
+    },
+    {
+      "name": "Configuration Files",
+      "status": "pass",
+      "message": "All 3 configuration files valid",
+      "details": {
+        "valid": [
+          "package.json",
+          "pnpm-workspace.yaml",
+          "argo/config.json"
+        ]
+      },
+      "error": null,
+      "timestamp": "2025-11-17T23:31:26.838957"
+    },
+    {
+      "name": "Python Imports",
+      "status": "fail",
+      "message": "0/5 imports successful",
+      "details": {
+        "successful": [],
+        "failed": [
+          "argo.core.signal_generation_service.SignalGenerationService (No module named 'argo')",
+          "argo.core.paper_trading_engine.PaperTradingEngine (No module named 'argo')",
+          "argo.core.database.get_db_connection (No module named 'argo')",
+          "backend.core.database.get_db (No module named 'backend')",
+          "backend.core.cache.redis_client (No module named 'backend')"
+        ]
+      },
+      "error": null,
+      "timestamp": "2025-11-17T23:31:26.839216"
+    },
+    {
+      "name": "Dependencies",
+      "status": "fail",
+      "message": "Python: 1/4 installed",
+      "details": {
+        "python": {
+          "fastapi": "missing",
+          "sqlalchemy": "missing",
+          "pydantic": "installed",
+          "redis": "missing"
+        },
+        "node": {
+          "package.json": "exists",
+          "node_modules": "exists"
+        }
+      },
+      "error": null,
+      "timestamp": "2025-11-17T23:31:26.875681"
+    },
+    {
+      "name": "Database Connectivity",
+      "status": "pass",
+      "message": "Checked 2 databases",
+      "details": {
+        "argo_sqlite": {
+          "status": "healthy",
+          "signal_count": 1,
+          "path": "/Users/dylanneuenschwander/argo-alpine-workspace/argo/data/signals.db"
+        },
+        "alpine_postgres": {
+          "status": "skip",
+          "message": "Cannot check (likely not configured locally): No module named 'sqlalchemy'"
+        }
+      },
+      "error": null,
+      "timestamp": "2025-11-17T23:31:26.886177"
+    },
+    {
+      "name": "Health Endpoints",
+      "status": "warning",
+      "message": "3/3 endpoints exist",
+      "details": {
+        "endpoints": {
+          "argo": {
+            "exists": true,
+            "has_timeout": false,
+            "has_error_handling": true,
+            "has_database_check": true,
+            "issues": [
+              "No timeout handling"
+            ]
+          },
+          "alpine_backend": {
+            "exists": true,
+            "has_timeout": true,
+            "has_error_handling": true,
+            "issues": []
+          },
+          "alpine_frontend": {
+            "exists": true
+          }
+        },
+        "total_issues": 1
+      },
+      "error": null,
+      "timestamp": "2025-11-17T23:31:26.887283"
+    },
+    {
+      "name": "Linting",
+      "status": "pass",
+      "message": "Checked 3 linting tools",
+      "details": {
+        "argo/argo/api/health.py": {
+          "status": "pass",
+          "errors": null
+        },
+        "alpine-backend/backend/main.py": {
+          "status": "pass",
+          "errors": null
+        },
+        "eslint": {
+          "status": "skip",
+          "message": "ESLint not available"
+        }
+      },
+      "error": null,
+      "timestamp": "2025-11-17T23:31:29.138639"
+    },
+    {
+      "name": "Git Status",
+      "status": "warning",
+      "message": "11 modified, 32 untracked files",
+      "details": {
+        "modified_count": 11,
+        "untracked_count": 32,
+        "total_changes": 44
+      },
+      "error": null,
+      "timestamp": "2025-11-17T23:31:29.164139"
+    },
+    {
+      "name": "System Resources",
+      "status": "skip",
+      "message": "psutil not available",
+      "details": {
+        "message": "Install psutil to check system resources"
+      },
+      "error": null,
+      "timestamp": "2025-11-17T23:31:29.164373"
+    },
+    {
+      "name": "Service Endpoints",
+      "status": "skip",
+      "message": "0/2 services reachable",
+      "details": {
+        "Argo API": {
+          "status": "unreachable",
+          "error": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /api/v1/health (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x109162cf0>: Failed to establish a new connection: [Errno 61] Connection refused'))",
+          "note": "Service may not be running (this is OK for local checks)"
+        },
+        "Alpine Backend": {
+          "status": "unreachable",
+          "error": "HTTPConnectionPool(host='localhost', port=9001): Max retries exceeded with url: /health (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x1091e2ad0>: Failed to establish a new connection: [Errno 61] Connection refused'))",
+          "note": "Service may not be running (this is OK for local checks)"
+        }
+      },
+      "error": null,
+      "timestamp": "2025-11-17T23:31:29.259109"
+    }
+  ]
+}

@@ -411,14 +411,25 @@ async def get_signal_history(
         )
 
 def _query_signal_history(db: Session, start_date: datetime, limit: int) -> List[Signal]:
-    """Query signal history from database"""
+    """Query signal history from database with optimized query"""
+    from backend.core.query_optimizer import optimize_pagination_query
+
     history_limit = min(limit, 500)  # Reasonable limit
 
-    return db.query(Signal).filter(
+    # Optimize query with proper pagination and ordering
+    query = db.query(Signal).filter(
         Signal.created_at >= start_date
-    ).order_by(
-        desc(Signal.created_at)
-    ).limit(history_limit).all()
+    )
+
+    # Use query optimizer for better performance
+    query = optimize_pagination_query(
+        query,
+        limit=history_limit,
+        offset=0,
+        order_by=desc(Signal.created_at)
+    )
+
+    return query.all()
 
 def _map_signals_to_history(signals: List[Signal]) -> List[SignalHistoryResponse]:
     """Map database signals to history response format"""

@@ -1,0 +1,91 @@
+{
+  "signal_generator": {
+    "component": "signal_generator",
+    "evaluation_date": "2025-11-17T17:21:23.239837",
+    "period_days": 30,
+    "metrics": {
+      "avg_signal_generation_time_seconds": 0.0,
+      "cache_hit_rate_percent": 0.0,
+      "skip_rate_percent": 0.0,
+      "avg_api_latency_seconds": 0.0,
+      "total_cache_hits": 0,
+      "total_cache_misses": 0,
+      "total_symbols_processed": 0,
+      "total_skipped_symbols": 0,
+      "uptime_seconds": 0.0,
+      "data_source_latencies": {},
+      "errors": {}
+    },
+    "performance_grade": "C (Fair)",
+    "recommendations": [
+      "Cache hit rate (0.00%) is below target (>80%). Consider increasing cache TTL or improving cache strategy.",
+      "Skip rate (0.00%) is low. Consider adjusting price change threshold to skip more unchanged symbols."
+    ]
+  },
+  "production_trading": {
+    "component": "production_trading",
+    "evaluation_date": "2025-11-17T17:21:24.371233",
+    "period_days": 30,
+    "environment": "development",
+    "account_info": {
+      "alpaca_connected": false
+    },
+    "metrics": {
+      "total_trades": 0,
+      "completed_trades": 0,
+      "pending_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate_percent": 0,
+      "total_pnl_dollars": 0,
+      "avg_pnl_per_trade": 0,
+      "profit_factor": 0,
+      "avg_win_dollars": 0,
+      "avg_loss_dollars": 0,
+      "return_percent": 0,
+      "stocks_count": 0,
+      "crypto_count": 0,
+      "stocks_win_rate": 0,
+      "crypto_win_rate": 0,
+      "long_count": 0,
+      "short_count": 0,
+      "long_win_rate": 0,
+      "short_win_rate": 0
+    },
+    "performance_grade": "N/A (No Trades)",
+    "recommendations": [
+      "No trades executed. Review signal generation and trading conditions."
+    ]
+  },
+  "prop_firm_trading": {
+    "component": "prop_firm_trading",
+    "evaluation_date": "2025-11-17T17:21:24.373378",
+    "period_days": 30,
+    "prop_firm_enabled": false,
+    "account_info": {
+      "alpaca_connected": false
+    },
+    "metrics": {
+      "total_trades": 0,
+      "completed_trades": 0,
+      "pending_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate_percent": 0,
+      "total_pnl_dollars": 0,
+      "avg_pnl_per_trade": 0,
+      "profit_factor": 0,
+      "return_percent": 0,
+      "compliance_metrics": {
+        "max_drawdown_pct": null,
+        "daily_loss_breaches": null,
+        "drawdown_breaches": null,
+        "trading_halted": null
+      }
+    },
+    "performance_grade": "N/A (No Trades)",
+    "recommendations": [
+      "No trades executed. Review signal generation and prop firm constraints."
+    ]
+  }
+}

@@ -68,7 +68,7 @@ async def get_roles(
     client_id = current_user.email
     if not check_rate_limit(client_id):
         raise create_rate_limit_error(request=request)
-    
+
     # Add rate limit headers
     rate_limit_status = get_rate_limit_status(client_id)
     add_rate_limit_headers(
@@ -76,7 +76,7 @@ async def get_roles(
         remaining=rate_limit_status["remaining"],
         reset_at=int(time.time()) + rate_limit_status["reset_in"]
     )
-    
+
     # Log admin action
     log_security_event(
         SecurityEvent.ADMIN_ACTION,
@@ -85,10 +85,15 @@ async def get_roles(
         details={"action": "view_roles"},
         request=request
     )
-    
-    # Get all roles
-    roles = db.query(Role).all()
-    
+
+    # OPTIMIZATION: Eager load permissions to prevent N+1 queries
+    from sqlalchemy.orm import joinedload
+    from backend.core.query_optimizer import optimize_query_with_relationships
+
+    query = db.query(Role)
+    query = optimize_query_with_relationships(query, Role, relationships=['permissions'], use_selectin=False)
+    roles = query.all()
+
     return [
         RoleResponse(
             id=role.id,
@@ -117,7 +122,7 @@ async def assign_role(
     client_id = current_user.email
     if not check_rate_limit(client_id):
         raise create_rate_limit_error(request=request)
-    
+
     # Add rate limit headers
     rate_limit_status = get_rate_limit_status(client_id)
     add_rate_limit_headers(
@@ -125,17 +130,22 @@ async def assign_role(
         remaining=rate_limit_status["remaining"],
         reset_at=int(time.time()) + rate_limit_status["reset_in"]
     )
-    
-    # Get user
-    user = db.query(User).filter(User.id == assign_data.user_id).first()
+
+    # OPTIMIZATION: Eager load user roles to prevent N+1 queries
+    from sqlalchemy.orm import joinedload
+    from backend.core.query_optimizer import optimize_query_with_relationships
+
+    query = db.query(User).filter(User.id == assign_data.user_id)
+    query = optimize_query_with_relationships(query, User, relationships=['roles'], use_selectin=False)
+    user = query.first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     # Get role
     role = db.query(Role).filter(Role.name == assign_data.role_name).first()
     if not role:
         raise HTTPException(status_code=404, detail="Role not found")
-    
+
     # Assign role
     if role not in user.roles:
         try:
@@ -149,7 +159,7 @@ async def assign_role(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to assign role"
             )
-        
+
         # Log admin action
         log_security_event(
             SecurityEvent.ADMIN_ACTION,
@@ -158,7 +168,7 @@ async def assign_role(
             details={"action": "assign_role", "target_user_id": user.id, "role": role.name},
             request=request
         )
-    
+
     return {"message": f"Role {role.name} assigned to user {user.email}"}
 
 
@@ -177,27 +187,33 @@ async def remove_role(
     client_id = current_user.email
     if not check_rate_limit(client_id):
         raise create_rate_limit_error(request=request)
-    
-    # Get user
-    user = db.query(User).filter(User.id == assign_data.user_id).first()
+
+    # OPTIMIZATION: Eager load user roles to prevent N+1 queries
+    from sqlalchemy.orm import joinedload
+    from backend.core.query_optimizer import optimize_query_with_relationships
+
+    query = db.query(User).filter(User.id == assign_data.user_id)
+    query = optimize_query_with_relationships(query, User, relationships=['roles'], use_selectin=False)
+    user = query.first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     # Get role
     role = db.query(Role).filter(Role.name == assign_data.role_name).first()
     if not role:
         raise HTTPException(status_code=404, detail="Role not found")
-    
+
     # Prevent removing system roles from users (optional safety check)
     if role.is_system and role.name == "admin":
-        # Additional check: prevent removing last admin
+        # OPTIMIZATION: Use optimized query for admin count
+        from sqlalchemy.orm import joinedload
         admin_count = db.query(User).join(User.roles).filter(Role.name == "admin").count()
         if admin_count <= 1:
             raise HTTPException(
                 status_code=400,
                 detail="Cannot remove last admin user"
             )
-    
+
     # Remove role
     if role in user.roles:
         try:
@@ -210,7 +226,7 @@ async def remove_role(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to remove role"
             )
-        
+
         # Log admin action
         log_security_event(
             SecurityEvent.ADMIN_ACTION,
@@ -219,7 +235,7 @@ async def remove_role(
             details={"action": "remove_role", "target_user_id": user.id, "role": role.name},
             request=request
         )
-    
+
     return {"message": f"Role {role.name} removed from user {user.email}"}
 
 
@@ -237,10 +253,10 @@ async def initialize_roles(
     client_id = current_user.email
     if not check_rate_limit(client_id):
         raise create_rate_limit_error(request=request)
-    
+
     # Initialize default roles
     initialize_default_roles(db)
-    
+
     # Log admin action
     log_security_event(
         SecurityEvent.ADMIN_ACTION,
@@ -249,6 +265,5 @@ async def initialize_roles(
         details={"action": "initialize_roles"},
         request=request
     )
-    
-    return {"message": "Default roles and permissions initialized"}
 
+    return {"message": "Default roles and permissions initialized"}

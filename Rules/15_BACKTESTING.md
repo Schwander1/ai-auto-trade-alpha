@@ -1,7 +1,7 @@
 # Backtesting Rules
 
-**Last Updated:** November 17, 2025  
-**Version:** 3.0  
+**Last Updated:** November 17, 2025
+**Version:** 3.0
 **Applies To:** Argo Trading Engine
 
 ---
@@ -392,4 +392,3 @@ print(f"Sharpe Ratio: {results.sharpe_ratio:.2f}")
 - [13_TRADING_OPERATIONS.md](13_TRADING_OPERATIONS.md) - Trading operations
 - [06_CONFIGURATION.md](06_CONFIGURATION.md) - Configuration management
 - [03_TESTING.md](03_TESTING.md) - Testing requirements
-

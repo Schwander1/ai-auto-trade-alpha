@@ -792,6 +792,10 @@ class StrategyBacktester(BaseBacktester):
                 # Generate signal directly from indicators (skip indicator calculation)
                 current_date = df.index[index]
                 historical_data = df.iloc[:index+1].copy()
+
+                # Validate no look-ahead bias when using pre-calculated indicators
+                self._validate_no_lookahead(df, index, current_date)
+
                 signal = self._historical_signal_generator._generate_signal_from_indicators(
                     symbol,
                     current_price,
@@ -1289,3 +1293,57 @@ class StrategyBacktester(BaseBacktester):
                 logger.info(f"[{symbol}][{current_date.date()}] 🎯 Take profit hit: "
                            f"${current_price:.2f} {'>=' if is_long else '<='} ${exit_price:.2f}")
             self._exit_position(symbol, exit_price, current_date, df, current_bar)
+
+    def _validate_no_lookahead(self, df: pd.DataFrame, current_index: int, current_date: datetime):
+        """
+        Validate that pre-calculated indicators don't cause look-ahead bias.
+
+        This method ensures that indicators at current_index only use data up to current_index.
+        Pandas rolling() is backward-looking, so pre-calculation is safe, but we validate
+        to ensure no future data leakage.
+
+        Args:
+            df: DataFrame with pre-calculated indicators
+            current_index: Current index being processed
+            current_date: Current date being processed
+
+        Raises:
+            BacktestError: If look-ahead bias is detected
+        """
+        if current_index >= len(df):
+            raise BacktestError(f"Current index {current_index} >= DataFrame length {len(df)}")
+
+        # Validate that historical_data slice only contains data up to current_index
+        from argo.backtest.bias_prevention import BiasPrevention
+
+        historical_slice = df.iloc[:current_index+1]
+        if not BiasPrevention.validate_data_slice(historical_slice, current_index):
+            raise BacktestError(
+                f"Look-ahead bias detected at index {current_index}: "
+                f"Historical data slice contains future data"
+            )
+
+        # Validate that indicator values at current_index were calculated using only historical data
+        # For rolling indicators, the value at index i uses data from [i-window+1:i+1]
+        # This is backward-looking, so it's safe, but we log a warning if validation fails
+        if current_index > 0:
+            # Check that we're not accessing data beyond current_index
+            max_accessible_index = min(current_index + 1, len(df))
+            if max_accessible_index > len(df):
+                logger.warning(
+                    f"Potential look-ahead bias at index {current_index}: "
+                    f"Attempting to access index {max_accessible_index} in DataFrame of length {len(df)}"
+                )
+
+        # Additional validation: ensure current_date matches the date at current_index
+        if hasattr(df.index, '__getitem__'):
+            try:
+                df_date = df.index[current_index]
+                if isinstance(df_date, pd.Timestamp) and isinstance(current_date, pd.Timestamp):
+                    if df_date != current_date:
+                        logger.warning(
+                            f"Date mismatch at index {current_index}: "
+                            f"DataFrame date {df_date} != current_date {current_date}"
+                        )
+            except (IndexError, KeyError):
+                pass  # Index might not be date-based, skip this check

@@ -4,14 +4,19 @@ Production Health Check Endpoint
 Provides comprehensive health check for production monitoring
 """
 import logging
+import asyncio
 from datetime import datetime
 from typing import Dict, Optional
+from asyncio import TimeoutError
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/health", tags=["health"])
+
+# Health check timeout configuration
+HEALTH_CHECK_TIMEOUT = 5.0  # 5 seconds timeout for each check
 
 class HealthStatus(BaseModel):
     """Health status response"""
@@ -21,10 +26,32 @@ class HealthStatus(BaseModel):
     components: Dict
     checks: Dict
 
+async def check_with_timeout(check_func, timeout: float = HEALTH_CHECK_TIMEOUT, component_name: str = "unknown"):
+    """
+    Execute a health check with timeout handling
+    
+    Args:
+        check_func: Async function to execute
+        timeout: Timeout in seconds
+        component_name: Name of component being checked (for logging)
+    
+    Returns:
+        Dict with status and result/error
+    """
+    try:
+        result = await asyncio.wait_for(check_func(), timeout=timeout)
+        return {"status": "healthy", "result": result}
+    except TimeoutError:
+        logger.warning(f"Health check for {component_name} timed out after {timeout}s")
+        return {"status": "unhealthy", "error": f"timeout after {timeout}s"}
+    except Exception as e:
+        logger.error(f"Health check for {component_name} failed: {e}")
+        return {"status": "unhealthy", "error": str(e)}
+
 @router.get("/", response_model=HealthStatus)
 async def health_check():
     """
-    Comprehensive health check endpoint
+    Comprehensive health check endpoint with timeout handling
 
     Returns:
         Health status with component checks
@@ -33,107 +60,128 @@ async def health_check():
     components = {}
     overall_status = 'healthy'
 
-    # Check signal generation service
-    try:
+    # Check signal generation service with timeout
+    async def check_signal_service():
         from argo.core.signal_generation_service import SignalGenerationService
         service = SignalGenerationService()
-        components['signal_generation'] = {
+        return {
             'status': 'healthy' if service.running else 'degraded',
             'running': service.running
         }
-        if not service.running:
+    
+    result = await check_with_timeout(check_signal_service, component_name="signal_generation")
+    if result["status"] == "healthy":
+        components['signal_generation'] = result["result"]
+        if not result["result"].get('running', False):
             overall_status = 'degraded'
-    except Exception as e:
+    else:
         components['signal_generation'] = {
             'status': 'unhealthy',
-            'error': str(e)
+            'error': result.get('error', 'unknown error')
         }
         overall_status = 'unhealthy'
 
-    # Check database
-    try:
+    # Check database with timeout
+    async def check_database():
         from pathlib import Path
+        import sqlite3
+        
         db_path = Path(__file__).parent.parent.parent / "data" / "signals.db"
-        if db_path.exists():
-            import sqlite3
+        if not db_path.exists():
+            return {
+                'status': 'degraded',
+                'error': 'Database file not found'
+            }
+        
+        # Run database check in thread pool to avoid blocking
+        def db_check_sync():
             conn = sqlite3.connect(str(db_path))
             cursor = conn.cursor()
             cursor.execute("SELECT COUNT(*) FROM signals")
             signal_count = cursor.fetchone()[0]
             conn.close()
-            components['database'] = {
-                'status': 'healthy',
-                'signal_count': signal_count
-            }
-        else:
-            components['database'] = {
-                'status': 'degraded',
-                'error': 'Database file not found'
-            }
-            if overall_status == 'healthy':
-                overall_status = 'degraded'
-    except Exception as e:
+            return signal_count
+        
+        signal_count = await asyncio.to_thread(db_check_sync)
+        return {
+            'status': 'healthy',
+            'signal_count': signal_count
+        }
+    
+    result = await check_with_timeout(check_database, component_name="database")
+    if result["status"] == "healthy":
+        components['database'] = result["result"]
+    else:
         components['database'] = {
             'status': 'unhealthy',
-            'error': str(e)
-        }
-        overall_status = 'unhealthy'
-
-    # Check Alpine sync
-    try:
-        from argo.core.alpine_sync import AlpineSyncService
-        sync_service = AlpineSyncService()
-        if sync_service._sync_enabled:
-            health_ok = await sync_service.check_health()
-            components['alpine_sync'] = {
-                'status': 'healthy' if health_ok else 'degraded',
-                'enabled': True,
-                'alpine_reachable': health_ok
-            }
-            if not health_ok:
-                if overall_status == 'healthy':
-                    overall_status = 'degraded'
-        else:
-            components['alpine_sync'] = {
-                'status': 'degraded',
-                'enabled': False,
-                'reason': 'Sync disabled or not configured'
-            }
-    except Exception as e:
-        components['alpine_sync'] = {
-            'status': 'unhealthy',
-            'error': str(e)
+            'error': result.get('error', 'unknown error')
         }
         if overall_status == 'healthy':
             overall_status = 'degraded'
 
-    # Check trading engine
-    try:
+    # Check Alpine sync with timeout
+    async def check_alpine_sync():
+        from argo.core.alpine_sync import AlpineSyncService
+        sync_service = AlpineSyncService()
+        if sync_service._sync_enabled:
+            health_ok = await sync_service.check_health()
+            return {
+                'status': 'healthy' if health_ok else 'degraded',
+                'enabled': True,
+                'alpine_reachable': health_ok
+            }
+        else:
+            return {
+                'status': 'degraded',
+                'enabled': False,
+                'reason': 'Sync disabled or not configured'
+            }
+    
+    result = await check_with_timeout(check_alpine_sync, component_name="alpine_sync")
+    if result["status"] == "healthy":
+        components['alpine_sync'] = result["result"]
+        if not result["result"].get('alpine_reachable', False) and result["result"].get('enabled', False):
+            if overall_status == 'healthy':
+                overall_status = 'degraded'
+    else:
+        components['alpine_sync'] = {
+            'status': 'unhealthy',
+            'error': result.get('error', 'unknown error')
+        }
+        if overall_status == 'healthy':
+            overall_status = 'degraded'
+
+    # Check trading engine with timeout
+    async def check_trading_engine():
         from argo.core.paper_trading_engine import PaperTradingEngine
         engine = PaperTradingEngine()
         if engine.alpaca_enabled:
             account = engine.get_account_details()
-            components['trading_engine'] = {
+            return {
                 'status': 'healthy',
                 'alpaca_connected': True,
                 'account_status': account.get('status', 'unknown') if account else 'unknown'
             }
         else:
-            components['trading_engine'] = {
+            return {
                 'status': 'degraded',
                 'alpaca_connected': False,
                 'reason': 'Alpaca not connected'
             }
-    except Exception as e:
+    
+    result = await check_with_timeout(check_trading_engine, component_name="trading_engine")
+    if result["status"] == "healthy":
+        components['trading_engine'] = result["result"]
+    else:
         components['trading_engine'] = {
             'status': 'unhealthy',
-            'error': str(e)
+            'error': result.get('error', 'unknown error')
         }
         if overall_status == 'healthy':
             overall_status = 'degraded'
 
-    # Check prop firm monitor (if enabled)
-    try:
+    # Check prop firm monitor (if enabled) with timeout
+    async def check_prop_firm():
         from argo.core.config_loader import ConfigLoader
         config, _ = ConfigLoader.load_config()
         prop_firm_enabled = config.get('prop_firm', {}).get('enabled', False)
@@ -144,21 +192,25 @@ async def health_check():
             monitor = PropFirmRiskMonitor(risk_limits)
             stats = monitor.get_monitoring_stats()
 
-            components['prop_firm_monitor'] = {
+            return {
                 'status': 'healthy',
                 'enabled': True,
                 'monitoring_active': stats.get('monitoring_active', False),
                 'risk_level': stats.get('current_risk_level', 'normal')
             }
         else:
-            components['prop_firm_monitor'] = {
+            return {
                 'status': 'healthy',
                 'enabled': False
             }
-    except Exception as e:
+    
+    result = await check_with_timeout(check_prop_firm, component_name="prop_firm_monitor")
+    if result["status"] == "healthy":
+        components['prop_firm_monitor'] = result["result"]
+    else:
         components['prop_firm_monitor'] = {
             'status': 'degraded',
-            'error': str(e)
+            'error': result.get('error', 'unknown error')
         }
 
     # Overall checks

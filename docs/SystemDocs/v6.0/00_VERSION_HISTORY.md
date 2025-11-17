@@ -1,7 +1,7 @@
 # System Documentation Version History
 
-**Current Version:** 6.0  
-**Date:** November 17, 2025  
+**Current Version:** 6.0
+**Date:** November 17, 2025
 **Status:** ✅ Complete
 
 ---
@@ -337,4 +337,3 @@
 ---
 
 **Next Version:** 7.0 (Future enhancements)
-
