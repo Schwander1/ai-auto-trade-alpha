@@ -289,16 +289,9 @@ async def get_subscribed_signals(
     )
 
 def _apply_rate_limiting(request: Request, response: Response, client_id: str):
-    """Apply rate limiting and add headers"""
-    if not check_rate_limit(client_id):
-        raise create_rate_limit_error(request=request)
-
-    rate_limit_status = get_rate_limit_status(client_id)
-    add_rate_limit_headers(
-        response,
-        remaining=rate_limit_status["remaining"],
-        reset_at=int(time.time()) + rate_limit_status["reset_in"]
-    )
+    """Apply rate limiting and add headers (uses centralized utility)"""
+    from backend.core.api_utils import apply_rate_limiting
+    apply_rate_limiting(request, response, client_id)
 
 def _adjust_limit_for_tier(limit: int, tier: UserTier) -> int:
     """Adjust limit based on user tier"""
