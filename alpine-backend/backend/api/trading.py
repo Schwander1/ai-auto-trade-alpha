@@ -17,6 +17,7 @@ import time
 from backend.core.database import get_db
 from backend.core.config import settings
 from backend.core.cache import cache_response
+from backend.core.cache_constants import CACHE_TTL_TRADING_STATUS
 from backend.core.response_formatter import add_rate_limit_headers, add_cache_headers
 from backend.core.error_responses import create_rate_limit_error
 from backend.core.rate_limit import check_rate_limit, get_rate_limit_status
@@ -51,7 +52,7 @@ class TradingStatusResponse(BaseModel):
 
 
 @router.get("/status", response_model=TradingStatusResponse)
-@cache_response(ttl=30)  # Cache for 30 seconds (trading status changes infrequently)
+@cache_response(ttl=CACHE_TTL_TRADING_STATUS)  # Cache for 30 seconds (trading status changes infrequently)
 async def get_trading_status(
     request: Request,
     response: Response,

@@ -27,11 +27,11 @@ CREATE INDEX IF NOT EXISTS idx_signals_signal_id ON signals(signal_id);
 ANALYZE signals;
 
 -- Show index information
-SELECT 
-    name, 
-    tbl_name, 
-    sql 
-FROM sqlite_master 
+SELECT
+    name,
+    tbl_name,
+    sql
+FROM sqlite_master
 WHERE type='index' AND tbl_name='signals';
 SQL
 
@@ -46,7 +46,7 @@ DB_FILE="data/signals.db"
 if [ -f "\$DB_FILE" ]; then
     echo "Optimizing database indexes..."
     sqlite3 "\$DB_FILE" < /tmp/optimize_integrity.sql
-    
+
     echo ""
     echo "✅ Database optimization complete"
     echo ""
@@ -59,4 +59,3 @@ ENDSSH
 
 echo ""
 echo -e "${GREEN}✅ Optimization complete${NC}"
-

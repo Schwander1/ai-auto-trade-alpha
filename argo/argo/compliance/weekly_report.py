@@ -30,16 +30,16 @@ def get_performance_metrics():
     if not DB_FILE.exists():
         print(f"⚠️  Database not found: {DB_FILE}")
         return None
-    
+
     try:
         conn = sqlite3.connect(str(DB_FILE))
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
-        
+
         # Get date range for this week
         week_start = datetime.now(timezone.utc) - timedelta(days=7)
         week_start_str = week_start.strftime('%Y-%m-%d')
-        
+
         # Total signals this week
         cursor.execute("""
             SELECT COUNT(*) as total
@@ -47,10 +47,10 @@ def get_performance_metrics():
             WHERE timestamp >= ?
         """, (week_start_str,))
         total_signals = cursor.fetchone()['total']
-        
+
         # Completed signals (with outcome)
         cursor.execute("""
-            SELECT 
+            SELECT
                 COUNT(*) as total,
                 SUM(CASE WHEN outcome = 'win' THEN 1 ELSE 0 END) as wins,
                 SUM(CASE WHEN outcome = 'loss' THEN 1 ELSE 0 END) as losses,
@@ -60,10 +60,10 @@ def get_performance_metrics():
             WHERE timestamp >= ? AND outcome IS NOT NULL
         """, (week_start_str,))
         completed = cursor.fetchone()
-        
+
         # Premium signals (confidence >= 95)
         cursor.execute("""
-            SELECT 
+            SELECT
                 COUNT(*) as total,
                 SUM(CASE WHEN outcome = 'win' THEN 1 ELSE 0 END) as wins,
                 SUM(CASE WHEN outcome = 'loss' THEN 1 ELSE 0 END) as losses
@@ -71,10 +71,10 @@ def get_performance_metrics():
             WHERE timestamp >= ? AND confidence >= 95 AND outcome IS NOT NULL
         """, (week_start_str,))
         premium = cursor.fetchone()
-        
+
         # All-time stats
         cursor.execute("""
-            SELECT 
+            SELECT
                 COUNT(*) as total,
                 SUM(CASE WHEN outcome = 'win' THEN 1 ELSE 0 END) as wins,
                 SUM(CASE WHEN outcome = 'loss' THEN 1 ELSE 0 END) as losses
@@ -82,23 +82,23 @@ def get_performance_metrics():
             WHERE outcome IS NOT NULL
         """)
         all_time = cursor.fetchone()
-        
+
         conn.close()
-        
+
         # Calculate win rates
         completed_total = completed['total'] or 0
         completed_wins = completed['wins'] or 0
         completed_losses = completed['losses'] or 0
         win_rate = (completed_wins / completed_total * 100) if completed_total > 0 else 0
-        
+
         premium_total = premium['total'] or 0
         premium_wins = premium['wins'] or 0
         premium_win_rate = (premium_wins / premium_total * 100) if premium_total > 0 else 0
-        
+
         all_time_total = all_time['total'] or 0
         all_time_wins = all_time['wins'] or 0
         all_time_win_rate = (all_time_wins / all_time_total * 100) if all_time_total > 0 else 0
-        
+
         return {
             'week': {
                 'total_signals': total_signals,
@@ -128,11 +128,11 @@ def get_performance_metrics():
 def generate_report():
     """Generate weekly performance report"""
     print(f"📊 Generating weekly report for week ending {datetime.now().strftime('%Y-%m-%d')}")
-    
+
     try:
         # Get performance metrics
         metrics = get_performance_metrics()
-        
+
         # Create S3 client
         s3 = boto3.client(
             's3',
@@ -140,19 +140,19 @@ def generate_report():
             aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
             region_name=os.getenv('AWS_DEFAULT_REGION')
         )
-        
+
         bucket = os.getenv('AWS_BUCKET_NAME')
-        
+
         # Create report
         report_filename = f'weekly_report_{datetime.now().strftime("%Y%m%d")}.txt'
-        
+
         with open(report_filename, 'w') as f:
             f.write(f"Argo Capital Weekly Report\n")
             f.write(f"{'=' * 50}\n")
             f.write(f"Week ending: {datetime.now().strftime('%Y-%m-%d')}\n")
             f.write(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}\n")
             f.write(f"\n")
-            
+
             if metrics:
                 f.write(f"WEEKLY PERFORMANCE SUMMARY\n")
                 f.write(f"{'-' * 50}\n")
@@ -164,14 +164,14 @@ def generate_report():
                 f.write(f"Average Win: +{metrics['week']['avg_win_pct']}%\n")
                 f.write(f"Average Loss: {metrics['week']['avg_loss_pct']}%\n")
                 f.write(f"\n")
-                
+
                 f.write(f"PREMIUM SIGNALS (95%+ Confidence)\n")
                 f.write(f"{'-' * 50}\n")
                 f.write(f"Total: {metrics['premium']['total']}\n")
                 f.write(f"Wins: {metrics['premium']['wins']}\n")
                 f.write(f"Premium Win Rate: {metrics['premium']['win_rate']}%\n")
                 f.write(f"\n")
-                
+
                 f.write(f"ALL-TIME STATISTICS\n")
                 f.write(f"{'-' * 50}\n")
                 f.write(f"Total Completed Signals: {metrics['all_time']['total']}\n")
@@ -183,7 +183,7 @@ def generate_report():
                 f.write(f"- Win Rate: Unable to retrieve\n")
                 f.write(f"- Premium Win Rate: Unable to retrieve\n")
                 f.write(f"\nNote: Database connection failed. Please check database path.\n")
-        
+
         # Upload to S3
         if bucket:
             s3_key = f'reports/{datetime.now().year}/week_{datetime.now().strftime("%Y%m%d")}.txt'
@@ -191,13 +191,13 @@ def generate_report():
             print(f"✅ Report uploaded to s3://{bucket}/{s3_key}")
         else:
             print(f"⚠️  AWS_BUCKET_NAME not set, skipping S3 upload")
-        
+
         # Clean up
         os.remove(report_filename)
-        
+
         print(f"✅ Weekly report completed successfully")
         return True
-        
+
     except Exception as e:
         print(f"❌ Report generation failed: {e}")
         import traceback

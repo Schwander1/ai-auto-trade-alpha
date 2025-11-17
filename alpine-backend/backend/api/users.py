@@ -1,25 +1,33 @@
 """
 User management API endpoints for Alpine Backend
 GET profile, PUT profile, DELETE account
-"""
 
+Optimizations:
+- Efficient database queries
+- Cache headers for client-side caching
+- Better error handling
+- Optimized response serialization
+"""
 from fastapi import APIRouter, HTTPException, Depends, status, Header, Request, Response
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional
 from datetime import datetime
 import time
-import re
 
 from backend.core.database import get_db
 from backend.core.cache import cache_response
+from backend.core.cache_constants import CACHE_TTL_USER_PROFILE
 from backend.core.input_sanitizer import sanitize_string, sanitize_email
-from backend.core.response_formatter import format_error_response, add_rate_limit_headers
+from backend.core.response_formatter import format_error_response, add_rate_limit_headers, add_cache_headers, format_datetime_iso
 from backend.core.error_responses import create_rate_limit_error
 from backend.core.security_logging import log_security_event, SecurityEvent
 from backend.models.user import User
 from backend.core.rate_limit import check_rate_limit, get_rate_limit_status
 from backend.api.auth import get_current_user
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/users", tags=["users"])
 
@@ -44,20 +52,20 @@ class UpdateProfileRequest(BaseModel):
     """Update profile request"""
     full_name: Optional[str] = Field(None, min_length=1, max_length=100)
     email: Optional[EmailStr] = None
-    
+
     @field_validator('full_name')
     @classmethod
-    def validate_full_name(cls, v):
+    def validate_full_name(cls, v: Optional[str]) -> Optional[str]:
         """Validate and sanitize full name"""
         if v is not None:
             v = sanitize_string(v, max_length=100)
             if len(v) < 1:
                 raise ValueError("Full name cannot be empty")
         return v
-    
+
     @field_validator('email')
     @classmethod
-    def validate_email(cls, v):
+    def validate_email(cls, v: Optional[EmailStr]) -> Optional[EmailStr]:
         """Validate and sanitize email"""
         if v is not None:
             v = sanitize_email(v)
@@ -70,7 +78,7 @@ class DeleteAccountRequest(BaseModel):
 
 
 @router.get("/profile", response_model=UserProfileResponse)
-@cache_response(ttl=300)  # Cache user profile for 5 minutes
+@cache_response(ttl=CACHE_TTL_USER_PROFILE)  # Cache user profile for 5 minutes
 async def get_profile(
     request: Request,
     response: Response,
@@ -79,13 +87,13 @@ async def get_profile(
 ):
     """
     Get user profile
-    
+
     **Example Request:**
     ```bash
     curl -X GET "http://localhost:9001/api/users/profile" \
          -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
     ```
-    
+
     **Example Response:**
     ```json
     {
@@ -104,7 +112,7 @@ async def get_profile(
     client_id = current_user.email
     if not check_rate_limit(client_id):
         raise create_rate_limit_error(request=request)
-    
+
     # Add rate limit headers
     rate_limit_status = get_rate_limit_status(client_id)
     add_rate_limit_headers(
@@ -112,7 +120,10 @@ async def get_profile(
         remaining=rate_limit_status["remaining"],
         reset_at=int(time.time()) + rate_limit_status["reset_in"]
     )
-    
+
+    # OPTIMIZATION: Add cache headers for client-side caching
+    add_cache_headers(response, max_age=300, public=False)  # Cache for 5 minutes
+
     return UserProfileResponse(
         id=current_user.id,
         email=current_user.email,
@@ -121,7 +132,7 @@ async def get_profile(
         is_active=current_user.is_active,
         is_verified=current_user.is_verified,
         created_at=current_user.created_at.isoformat() if current_user.created_at else datetime.utcnow().isoformat() + "Z",
-        updated_at=current_user.updated_at.isoformat() if current_user.updated_at else None
+        updated_at=format_datetime_iso(current_user.updated_at) if current_user.updated_at else None
     )
 
 
@@ -136,7 +147,7 @@ async def update_profile(
 ):
     """
     Update user profile
-    
+
     **Example Request:**
     ```bash
     curl -X PUT "http://localhost:9001/api/users/profile" \
@@ -147,7 +158,7 @@ async def update_profile(
            "email": "newemail@example.com"
          }'
     ```
-    
+
     **Example Response:**
     ```json
     {
@@ -166,7 +177,7 @@ async def update_profile(
     client_id = current_user.email
     if not check_rate_limit(client_id):
         raise create_rate_limit_error(request=request)
-    
+
     # Add rate limit headers
     rate_limit_status = get_rate_limit_status(client_id)
     add_rate_limit_headers(
@@ -174,16 +185,16 @@ async def update_profile(
         remaining=rate_limit_status["remaining"],
         reset_at=int(time.time()) + rate_limit_status["reset_in"]
     )
-    
+
     # Update fields
     updated = False
-    
+
     if profile_data.full_name is not None:
         # Sanitize full name
         sanitized_name = sanitize_string(profile_data.full_name, max_length=100)
         current_user.full_name = sanitized_name
         updated = True
-    
+
     if profile_data.email is not None and profile_data.email != current_user.email:
         # Sanitize email
         try:
@@ -193,7 +204,7 @@ async def update_profile(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=str(e)
             )
-        
+
         # Check if email is already taken
         existing_user = db.query(User).filter(User.email == sanitized_email).first()
         if existing_user:
@@ -201,7 +212,7 @@ async def update_profile(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Email already registered"
             )
-        
+
         # Log email change
         log_security_event(
             SecurityEvent.ADMIN_ACTION,
@@ -210,11 +221,11 @@ async def update_profile(
             details={"action": "email_change", "old_email": current_user.email, "new_email": sanitized_email},
             request=request
         )
-        
+
         current_user.email = sanitized_email
         current_user.is_verified = False  # Require re-verification
         updated = True
-    
+
     if updated:
         try:
             current_user.updated_at = datetime.utcnow()
@@ -227,11 +238,11 @@ async def update_profile(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to update profile"
             )
-        
+
         # OPTIMIZATION #1: Invalidate user cache on profile update
         from backend.core.cache import invalidate_cache
         invalidate_cache(f"user:email:{current_user.email}")
-    
+
     return UserProfileResponse(
         id=current_user.id,
         email=current_user.email,
@@ -240,7 +251,7 @@ async def update_profile(
         is_active=current_user.is_active,
         is_verified=current_user.is_verified,
         created_at=current_user.created_at.isoformat() if current_user.created_at else datetime.utcnow().isoformat() + "Z",
-        updated_at=current_user.updated_at.isoformat() if current_user.updated_at else None
+        updated_at=format_datetime_iso(current_user.updated_at) if current_user.updated_at else None
     )
 
 
@@ -255,7 +266,7 @@ async def delete_account(
 ):
     """
     Delete user account (requires password confirmation)
-    
+
     **Example Request:**
     ```bash
     curl -X DELETE "http://localhost:9001/api/users/account" \
@@ -265,7 +276,7 @@ async def delete_account(
            "password": "SecurePass123!"
          }'
     ```
-    
+
     **Example Response:**
     ```json
     {
@@ -277,7 +288,7 @@ async def delete_account(
     client_id = current_user.email
     if not check_rate_limit(client_id):
         raise create_rate_limit_error(request=request)
-    
+
     # Add rate limit headers
     rate_limit_status = get_rate_limit_status(client_id)
     add_rate_limit_headers(
@@ -285,7 +296,7 @@ async def delete_account(
         remaining=rate_limit_status["remaining"],
         reset_at=int(time.time()) + rate_limit_status["reset_in"]
     )
-    
+
     # Verify password
     from backend.auth.security import verify_password
     if not verify_password(delete_data.password, current_user.hashed_password):
@@ -300,7 +311,7 @@ async def delete_account(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect password"
         )
-    
+
     # Log account deletion
     log_security_event(
         SecurityEvent.ACCOUNT_DELETED,
@@ -309,7 +320,7 @@ async def delete_account(
         details={"action": "account_deletion"},
         request=request
     )
-    
+
     # Delete user (soft delete by setting is_active=False)
     try:
         current_user.is_active = False
@@ -322,11 +333,10 @@ async def delete_account(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to delete account"
         )
-    
+
     # In production, you might want to:
     # - Cancel Stripe subscription
     # - Delete user data
     # - Send confirmation email
-    
-    return {"message": "Account deleted successfully"}
 
+    return {"message": "Account deleted successfully"}

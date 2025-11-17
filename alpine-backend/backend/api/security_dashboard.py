@@ -6,14 +6,17 @@ from typing import Optional, List, Dict
 from datetime import datetime, timedelta
 import json
 import os
+import logging
 
 from backend.core.database import get_db
 from backend.core.cache import cache_response
+from backend.core.cache_constants import CACHE_TTL_SECURITY_METRICS
 from backend.core.security_logging import SecurityEvent
 from backend.api.auth import get_current_user
 from backend.api.admin import require_admin
 from backend.models.user import User
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/security", tags=["security"])
 
 
@@ -41,10 +44,11 @@ class SecurityEventLog(BaseModel):
 
 
 @router.get("/metrics", response_model=SecurityMetrics)
-@cache_response(ttl=60)  # Cache for 1 minute (security metrics update frequently)
+@cache_response(ttl=CACHE_TTL_SECURITY_METRICS)  # Cache for 1 minute (security metrics update frequently)
 async def get_security_metrics(
     current_user: User = Depends(require_admin),
-    authorization: Optional[str] = Header(None)
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_db)
 ):
     """
     Get security metrics for dashboard (admin only)
@@ -62,19 +66,19 @@ async def get_security_metrics(
         "two_fa_enabled_count": 0,
         "two_fa_usage_24h": 0
     }
-    
+
     if os.path.exists(security_log_path):
         cutoff_time = datetime.utcnow() - timedelta(hours=24)
-        
+
         with open(security_log_path, 'r') as f:
             for line in f:
                 try:
                     event = json.loads(line)
                     event_time = datetime.fromisoformat(event.get("timestamp", ""))
-                    
+
                     if event_time >= cutoff_time:
                         event_type = event.get("event_type", "")
-                        
+
                         if event_type == SecurityEvent.FAILED_LOGIN:
                             metrics["failed_logins_24h"] += 1
                         elif event_type == SecurityEvent.SUCCESSFUL_LOGIN:
@@ -91,26 +95,16 @@ async def get_security_metrics(
                             metrics["admin_actions_24h"] += 1
                 except (json.JSONDecodeError, ValueError):
                     continue
-    
+
     # Get 2FA statistics
-    # OPTIMIZATION #2: Use context manager to prevent connection leaks
-    from contextlib import contextmanager
-    
-    @contextmanager
-    def get_db_context():
-        db_gen = get_db()
-        db = next(db_gen)
-        try:
-            yield db
-        finally:
-            try:
-                next(db_gen, None)
-            except StopIteration:
-                pass
-    
-    with get_db_context() as db:
-        metrics["two_fa_enabled_count"] = db.query(User).filter(User.totp_enabled == True).count()
-    
+    try:
+        from sqlalchemy import func
+        metrics["two_fa_enabled_count"] = db.query(func.count(User.id)).filter(User.totp_enabled == True).scalar() or 0
+    except Exception as e:
+        logger.error(f"Error fetching 2FA statistics: {e}", exc_info=True)
+        # Continue with default value if query fails
+        metrics["two_fa_enabled_count"] = 0
+
     return SecurityMetrics(**metrics)
 
 
@@ -126,17 +120,17 @@ async def get_security_events(
     """
     security_log_path = "logs/security.log"
     events = []
-    
+
     if os.path.exists(security_log_path):
         with open(security_log_path, 'r') as f:
             for line in f:
                 try:
                     event = json.loads(line)
-                    
+
                     # Filter by event type if specified
                     if event_type and event.get("event_type") != event_type:
                         continue
-                    
+
                     events.append(SecurityEventLog(
                         timestamp=event.get("timestamp", ""),
                         event_type=event.get("event_type", ""),
@@ -147,8 +141,7 @@ async def get_security_events(
                     ))
                 except (json.JSONDecodeError, ValueError):
                     continue
-    
+
     # Return most recent events first
     events.reverse()
     return events[:limit]
-

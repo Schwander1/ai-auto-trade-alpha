@@ -200,12 +200,17 @@ async def stripe_webhook(
             tier = session.get("metadata", {}).get("tier")
             
             if user_id and tier:
-                user = db.query(User).filter(User.id == int(user_id)).first()
-                if user:
-                    user.tier = UserTier(tier.lower())
-                    user.stripe_subscription_id = session.get("subscription")
-                    db.commit()
-                    logger.info(f"User {user_id} upgraded to {tier}")
+                try:
+                    user = db.query(User).filter(User.id == int(user_id)).first()
+                    if user:
+                        user.tier = UserTier(tier.lower())
+                        user.stripe_subscription_id = session.get("subscription")
+                        db.commit()
+                        logger.info(f"User {user_id} upgraded to {tier}")
+                except Exception as e:
+                    db.rollback()
+                    logger.error(f"Error updating user {user_id} for checkout: {e}", exc_info=True)
+                    raise
         
         elif event_type == "customer.subscription.updated":
             # Handle subscription update
@@ -213,13 +218,18 @@ async def stripe_webhook(
             customer_id = subscription.get("customer")
             
             if customer_id:
-                user = db.query(User).filter(User.stripe_customer_id == customer_id).first()
-                if user:
-                    user.stripe_subscription_id = subscription.get("id")
-                    # Update tier based on subscription
-                    # This would need to map Stripe price IDs to tiers
-                    db.commit()
-                    logger.info(f"Subscription updated for user {user.id}")
+                try:
+                    user = db.query(User).filter(User.stripe_customer_id == customer_id).first()
+                    if user:
+                        user.stripe_subscription_id = subscription.get("id")
+                        # Update tier based on subscription
+                        # This would need to map Stripe price IDs to tiers
+                        db.commit()
+                        logger.info(f"Subscription updated for user {user.id}")
+                except Exception as e:
+                    db.rollback()
+                    logger.error(f"Error updating subscription for customer {customer_id}: {e}", exc_info=True)
+                    raise
         
         elif event_type == "customer.subscription.deleted":
             # Handle subscription cancellation
@@ -227,12 +237,17 @@ async def stripe_webhook(
             customer_id = subscription.get("customer")
             
             if customer_id:
-                user = db.query(User).filter(User.stripe_customer_id == customer_id).first()
-                if user:
-                    user.tier = UserTier.STARTER  # Downgrade to starter
-                    user.stripe_subscription_id = None
-                    db.commit()
-                    logger.info(f"Subscription cancelled for user {user.id}")
+                try:
+                    user = db.query(User).filter(User.stripe_customer_id == customer_id).first()
+                    if user:
+                        user.tier = UserTier.STARTER  # Downgrade to starter
+                        user.stripe_subscription_id = None
+                        db.commit()
+                        logger.info(f"Subscription cancelled for user {user.id}")
+                except Exception as e:
+                    db.rollback()
+                    logger.error(f"Error cancelling subscription for customer {customer_id}: {e}", exc_info=True)
+                    raise
         
         elif event_type == "invoice.payment_succeeded":
             # Handle successful payment
@@ -249,14 +264,19 @@ async def stripe_webhook(
         else:
             logger.info(f"Unhandled event type: {event_type}")
         
-        # SECURITY: Mark event as processed (idempotency)
+        # SECURITY: Mark event as processed (idempotency) - only after successful processing
+        # If marking fails, log but don't fail the webhook (idempotency is best-effort)
         if event_id:
-            mark_webhook_processed(event_id)
+            try:
+                mark_webhook_processed(event_id)
+            except Exception as e:
+                logger.warning(f"Failed to mark webhook {event_id} as processed: {e}", exc_info=True)
+                # Don't fail the webhook if idempotency marking fails
         
         return {"status": "success", "event_type": event_type, "event_id": event_id}
     
     except HTTPException:
-        # Re-raise HTTP exceptions without rollback
+        # Re-raise HTTP exceptions with rollback
         db.rollback()
         raise
     except Exception as e:

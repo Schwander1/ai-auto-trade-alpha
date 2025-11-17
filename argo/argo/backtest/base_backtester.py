@@ -51,6 +51,12 @@ class BacktestMetrics:
     avg_loss_pct: float
     largest_win_pct: float
     largest_loss_pct: float
+    # ENHANCED: Additional risk metrics
+    var_95_pct: float = 0.0  # Value at Risk (95% confidence)
+    cvar_95_pct: float = 0.0  # Conditional VaR (95% confidence)
+    calmar_ratio: float = 0.0  # Annualized return / Max drawdown
+    omega_ratio: float = 0.0  # Probability-weighted ratio of gains vs losses
+    ulcer_index: float = 0.0  # Measure of drawdown depth and duration
 
 class BaseBacktester(ABC):
     """Base class for all backtesters"""
@@ -105,7 +111,12 @@ class BaseBacktester(ABC):
             avg_win_pct=0.0,
             avg_loss_pct=0.0,
             largest_win_pct=0.0,
-            largest_loss_pct=0.0
+            largest_loss_pct=0.0,
+            var_95_pct=0.0,
+            cvar_95_pct=0.0,
+            calmar_ratio=0.0,
+            omega_ratio=0.0,
+            ulcer_index=0.0
         )
     
     def calculate_metrics(self) -> BacktestMetrics:
@@ -169,6 +180,40 @@ class BaseBacktester(ABC):
         largest_win = max([t.pnl_pct for t in winning_trades]) if winning_trades else 0.0
         largest_loss = min([t.pnl_pct for t in losing_trades]) if losing_trades else 0.0
         
+        # ENHANCED: Calculate additional risk metrics
+        # Value at Risk (VaR) - 95% confidence
+        var_95_pct = 0.0
+        cvar_95_pct = 0.0
+        if len(returns) > 0:
+            var_95 = np.percentile(returns, 5)  # 5th percentile (95% VaR)
+            var_95_pct = var_95 * 100
+            # Conditional VaR (expected loss beyond VaR)
+            cvar_95 = returns[returns <= var_95].mean() if len(returns[returns <= var_95]) > 0 else var_95
+            cvar_95_pct = cvar_95 * 100
+        
+        # Calmar Ratio (annualized return / max drawdown)
+        calmar_ratio = 0.0
+        if abs(max_drawdown) > 0.0001:  # Avoid division by zero
+            calmar_ratio = annualized_return / abs(max_drawdown)
+        
+        # Omega Ratio (probability-weighted ratio of gains vs losses)
+        omega_ratio = 0.0
+        if len(returns) > 0:
+            threshold = 0.0  # Risk-free rate (0 for simplicity)
+            gains = returns[returns > threshold] - threshold
+            losses = threshold - returns[returns < threshold]
+            if len(losses) > 0 and losses.sum() > 0:
+                omega_ratio = gains.sum() / losses.sum() if losses.sum() > 0 else 0.0
+        
+        # Ulcer Index (measure of drawdown depth and duration)
+        ulcer_index = 0.0
+        if len(equity) > 1:
+            # Calculate drawdowns
+            peak = np.maximum.accumulate(equity)
+            drawdowns = (equity - peak) / peak
+            # Square of drawdowns, then average, then square root
+            ulcer_index = np.sqrt(np.mean(drawdowns ** 2)) * 100
+        
         return BacktestMetrics(
             total_return_pct=total_return * 100,
             annualized_return_pct=annualized_return * 100,
@@ -183,7 +228,12 @@ class BaseBacktester(ABC):
             avg_win_pct=avg_win,
             avg_loss_pct=avg_loss,
             largest_win_pct=largest_win,
-            largest_loss_pct=largest_loss
+            largest_loss_pct=largest_loss,
+            var_95_pct=var_95_pct,
+            cvar_95_pct=cvar_95_pct,
+            calmar_ratio=calmar_ratio,
+            omega_ratio=omega_ratio,
+            ulcer_index=ulcer_index
         )
     
     def update_equity(self, current_price: float, date: datetime):
@@ -208,6 +258,7 @@ class BaseBacktester(ABC):
     def validate_state(self) -> List[str]:
         """
         Validate backtester state, return list of issues
+        ENHANCED: More comprehensive validation checks
         
         Returns:
             List of validation issue messages (empty if no issues)
@@ -224,6 +275,15 @@ class BaseBacktester(ABC):
         if len(self.positions) > BacktestConstants.MAX_OPEN_POSITIONS:
             issues.append(f"Too many open positions: {len(self.positions)} (max: {BacktestConstants.MAX_OPEN_POSITIONS})")
         
+        # Check positions for invalid values
+        for symbol, position in self.positions.items():
+            if position.entry_price <= 0:
+                issues.append(f"Position {symbol} has invalid entry price: {position.entry_price}")
+            if position.quantity <= 0:
+                issues.append(f"Position {symbol} has invalid quantity: {position.quantity}")
+            if position.entry_date is None:
+                issues.append(f"Position {symbol} has missing entry date")
+        
         # Check trades for unrealistic values
         for i, trade in enumerate(self.trades):
             if trade.pnl_pct is not None:
@@ -239,6 +299,11 @@ class BaseBacktester(ABC):
                 issues.append(f"Trade {i} has invalid exit price: {trade.exit_price}")
             if trade.quantity <= 0:
                 issues.append(f"Trade {i} has invalid quantity: {trade.quantity}")
+            
+            # Check date consistency
+            if trade.exit_date is not None and trade.entry_date is not None:
+                if trade.exit_date < trade.entry_date:
+                    issues.append(f"Trade {i} has exit date before entry date")
         
         # Check equity curve consistency
         if len(self.equity_curve) != len(self.dates):
@@ -247,6 +312,40 @@ class BaseBacktester(ABC):
         # Check for negative equity
         if self.equity_curve and min(self.equity_curve) < 0:
             issues.append(f"Equity curve has negative values (min: ${min(self.equity_curve):.2f})")
+        
+        # Check for decreasing equity curve (should generally increase or decrease smoothly)
+        if len(self.equity_curve) > 1:
+            # Check for NaN or Inf values
+            equity_array = np.array(self.equity_curve)
+            if np.any(np.isnan(equity_array)):
+                issues.append("Equity curve contains NaN values")
+            if np.any(np.isinf(equity_array)):
+                issues.append("Equity curve contains Inf values")
+            
+            # Check for unrealistic jumps (more than 50% in one period)
+            if len(equity_array) > 1:
+                returns = np.diff(equity_array) / equity_array[:-1]
+                extreme_returns = returns[np.abs(returns) > 0.5]
+                if len(extreme_returns) > 0:
+                    issues.append(f"Equity curve has extreme returns: {len(extreme_returns)} periods with >50% change")
+        
+        # Check dates are in order
+        if len(self.dates) > 1:
+            for i in range(1, len(self.dates)):
+                if self.dates[i] < self.dates[i-1]:
+                    issues.append(f"Dates are not in order: {self.dates[i-1]} > {self.dates[i]}")
+                    break
+        
+        # Check for look-ahead bias indicators (positions opened before data available)
+        # This is a heuristic check - if we have very early positions, might indicate bias
+        if self.trades and self.dates:
+            first_trade_date = min(t.entry_date for t in self.trades if t.entry_date is not None)
+            first_data_date = self.dates[0] if self.dates else None
+            if first_data_date and first_trade_date:
+                # Allow some warmup period (e.g., 20 days)
+                warmup_days = 20
+                if (first_trade_date - first_data_date).days < warmup_days:
+                    issues.append(f"First trade ({first_trade_date}) very close to data start ({first_data_date}), possible look-ahead bias")
         
         return issues
 

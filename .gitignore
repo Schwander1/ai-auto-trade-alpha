@@ -46,16 +46,31 @@ pnpm-debug.log*
 
 # IDE
 .vscode/
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/snippets/
 .idea/
 *.swp
 *.swo
 *~
 .DS_Store
 
-# Cursor - allow BUGBOT.md and settings.json for Bugbot, ignore other files
+# Prettier (track config files)
+.prettierrc.json
+.prettierignore
+
+# Workspace files (track workspace file)
+*.code-workspace
+!argo-alpine.code-workspace
+
+# Cursor - allow specific files, ignore other files
 .cursor/*
 !.cursor/BUGBOT.md
 !.cursor/settings.json
+!.cursor/README.md
+!.cursorignore
 
 # Turbo
 .turbo/

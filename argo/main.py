@@ -422,6 +422,7 @@ async def backtest_symbol(
 ) -> Dict[str, Any]:
     """
     Run backtest on symbol with input validation
+    FIXED: Uses StrategyBacktester with proper cost modeling instead of QuickBacktester
     
     Args:
         symbol: Trading symbol (validated)
@@ -435,13 +436,52 @@ async def backtest_symbol(
         symbol = sanitize_symbol(symbol)
         years = sanitize_integer(years, min_value=1, max_value=10)
         
-        from argo.backtest.quick_backtester import QuickBacktester
-        bt = QuickBacktester()
-        result = bt.run(symbol, years)
+        # FIX: Use StrategyBacktester with proper cost modeling
+        from argo.backtest.strategy_backtester import StrategyBacktester
+        from argo.backtest.constants import BacktestConstants
+        from datetime import datetime, timedelta
+        
+        # Initialize backtester with cost modeling enabled
+        bt = StrategyBacktester(
+            initial_capital=BacktestConstants.DEFAULT_INITIAL_CAPITAL,
+            use_cost_modeling=True,
+            use_enhanced_cost_model=True
+        )
+        
+        # Calculate date range
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=years*365)
+        
+        # Run actual backtest
+        result = await bt.run_backtest(
+            symbol,
+            start_date=start_date,
+            end_date=end_date,
+            min_confidence=BacktestConstants.DEFAULT_MIN_CONFIDENCE
+        )
         
         if result:
-            return {"success": True, "result": result.__dict__}
-        return {"success": False, "error": "No data"}
+            return {
+                "success": True,
+                "result": {
+                    "symbol": symbol,
+                    "win_rate": result.win_rate_pct,
+                    "total_return": result.total_return_pct,
+                    "annualized_return": result.annualized_return_pct,
+                    "sharpe_ratio": result.sharpe_ratio,
+                    "sortino_ratio": result.sortino_ratio,
+                    "max_drawdown": result.max_drawdown_pct,
+                    "profit_factor": result.profit_factor,
+                    "total_trades": result.total_trades,
+                    "winning_trades": result.winning_trades,
+                    "losing_trades": result.losing_trades,
+                    "avg_win_pct": result.avg_win_pct,
+                    "avg_loss_pct": result.avg_loss_pct,
+                    "largest_win_pct": result.largest_win_pct,
+                    "largest_loss_pct": result.largest_loss_pct
+                }
+            }
+        return {"success": False, "error": "No data or backtest failed"}
     
     except HTTPException:
         raise

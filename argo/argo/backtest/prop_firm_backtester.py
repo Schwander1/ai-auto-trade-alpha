@@ -178,6 +178,15 @@ class PropFirmBacktester(StrategyBacktester):
         if len(self.positions) >= self.max_positions:
             return False, f"Maximum positions reached ({self.max_positions})"
         
+        # FIX: Check daily loss limit BEFORE entering new positions
+        if self.daily_pnl and self.last_trading_date:
+            current_equity = self.equity_curve[-1] if self.equity_curve else self.initial_capital
+            if self.last_trading_date in self.daily_start_equity:
+                start_equity = self.daily_start_equity[self.last_trading_date]
+                daily_pnl_pct = ((current_equity - start_equity) / start_equity) * 100 if start_equity > 0 else 0.0
+                if daily_pnl_pct <= -self.daily_loss_limit_pct:
+                    return False, f"Daily loss limit reached ({daily_pnl_pct:.2f}% <= -{self.daily_loss_limit_pct}%)"
+        
         # Check drawdown
         can_trade, drawdown_pct = self._check_drawdown()
         if not can_trade:

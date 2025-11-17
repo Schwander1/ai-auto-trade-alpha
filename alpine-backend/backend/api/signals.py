@@ -1,32 +1,43 @@
 """
 Signals API endpoints for Alpine Backend
 GET subscribed signals, GET history, GET export
+
+Optimizations:
+- Persistent HTTP client with connection pooling
+- Efficient caching strategy
+- Parallel processing where applicable
+- Optimized response serialization
+- Better error handling and timeout management
 """
 
 from fastapi import APIRouter, HTTPException, Depends, Query, Header, Response, Request
-from sqlalchemy.orm import Session
-from pydantic import BaseModel, Field, validator
-from typing import Optional, List
+from pydantic import BaseModel
+from typing import Optional, List, Dict, Any
 from datetime import datetime, timedelta
+from sqlalchemy.orm import Session
+from sqlalchemy import desc
 import time
-import re
+import asyncio
+import json
+import csv
+import io
+import atexit
+import logging
+
 try:
     import httpx
 except ImportError:
     httpx = None
-import csv
-import io
 
-from backend.core.database import get_db
 from backend.core.config import settings
-from backend.core.cache import cache_response
-from backend.core.input_sanitizer import sanitize_symbol, sanitize_action
-from backend.core.response_formatter import add_rate_limit_headers
+from backend.core.database import get_db
+from backend.core.cache import cache_response, get_cache, set_cache
+from backend.core.response_formatter import add_rate_limit_headers, add_cache_headers, format_datetime_iso
 from backend.core.error_responses import create_rate_limit_error
 from backend.models.user import User, UserTier
+from backend.models.signal import Signal
 from backend.core.rate_limit import check_rate_limit, get_rate_limit_status
 from backend.api.auth import get_current_user
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -39,44 +50,29 @@ RATE_LIMIT_MAX = 100
 # External Signal Provider API URL
 EXTERNAL_SIGNAL_API_URL = getattr(settings, 'EXTERNAL_SIGNAL_API_URL', 'http://178.156.194.174:8000')
 
-# OPTIMIZATION #4: Persistent HTTP client with connection pooling
-_http_client: Optional[httpx.AsyncClient] = None
+# OPTIMIZATION: Use centralized HTTP client factory
+from backend.core.http_client import SingletonHTTPClient
 
-def get_http_client() -> Optional[httpx.AsyncClient]:
-    """Get or create persistent HTTP client with connection pooling"""
-    global _http_client
-    if _http_client is None and httpx:
-        _http_client = httpx.AsyncClient(
-            timeout=10.0,
-            limits=httpx.Limits(
-                max_keepalive_connections=20,
-                max_connections=100,
-                keepalive_expiry=30.0
-            ),
-            http2=True  # Enable HTTP/2 for better performance
-        )
-    return _http_client
+async def get_http_client() -> Optional[httpx.AsyncClient]:
+    """Get or create persistent HTTP client with connection pooling and optimized settings"""
+    return await SingletonHTTPClient.get_client()
 
-# Cleanup on shutdown
-import atexit
-def cleanup_http_client():
+async def cleanup_http_client() -> None:
     """Cleanup HTTP client on application shutdown"""
-    global _http_client
-    if _http_client:
-        import asyncio
-        try:
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                # Schedule cleanup
-                asyncio.create_task(_http_client.aclose())
-            else:
-                loop.run_until_complete(_http_client.aclose())
-        except (RuntimeError, AttributeError, Exception) as e:
-            # Ignore errors during cleanup - this is called at exit
-            logger.debug(f"Error during HTTP client cleanup: {e}")
-        _http_client = None
+    await SingletonHTTPClient.close_client()
 
-atexit.register(cleanup_http_client)
+def _sync_cleanup() -> None:
+    """Synchronous cleanup wrapper for atexit"""
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            asyncio.create_task(cleanup_http_client())
+        else:
+            loop.run_until_complete(cleanup_http_client())
+    except (RuntimeError, AttributeError):
+        pass
+
+atexit.register(_sync_cleanup)
 
 
 class SignalResponse(BaseModel):
@@ -127,16 +123,27 @@ def get_tier_signal_limit(tier: UserTier) -> int:
     return limits.get(tier, 1)
 
 
-async def fetch_signals_from_external_provider(limit: int = 10, premium_only: bool = False, offset: Optional[int] = None) -> List[dict]:
-    """Fetch signals from external signal provider API
-    
+async def fetch_signals_from_external_provider(
+    limit: int = 10,
+    premium_only: bool = False,
+    offset: Optional[int] = None
+) -> List[Dict[str, Any]]:
+    """Fetch signals from external signal provider API with optimized error handling
+
     Args:
         limit: Maximum number of signals to fetch
         premium_only: Filter premium signals only
         offset: Optional offset for pagination (if supported by external API)
+
+    Returns:
+        List of signal dictionaries
+
+    Raises:
+        HTTPException: If the external API is unavailable or returns an error
     """
     if not httpx:
         # Fallback to mock data if httpx not available
+        logger.warning("httpx not available, returning mock data")
         return [
             {
                 "id": f"SIG-{i}",
@@ -145,40 +152,72 @@ async def fetch_signals_from_external_provider(limit: int = 10, premium_only: bo
                 "entry_price": 175.50,
                 "confidence": 97.2,
                 "type": "PREMIUM",
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": format_datetime_iso(datetime.utcnow()),
                 "hash": "abc123"
             }
             for i in range(limit)
         ]
-    
-    try:
-        # OPTIMIZATION #4: Use persistent HTTP client with connection pooling
-        client = get_http_client()
-        if not client:
-            # Fallback if httpx not available
-            raise HTTPException(
-                status_code=503,
-                detail="HTTP client not available"
-            )
-        
-        params = {"limit": limit}
-        if premium_only:
-            params["premium_only"] = True
-        if offset is not None:
-            params["offset"] = offset
-        
-        response = await client.get(f"{EXTERNAL_SIGNAL_API_URL}/api/signals/latest", params=params)
-        response.raise_for_status()
-        return response.json()
-    except Exception as e:
+
+    client = await get_http_client()
+    if not client:
         raise HTTPException(
             status_code=503,
-            detail=f"Failed to fetch signals from Argo: {str(e)}"
+            detail="HTTP client not available"
+        )
+
+    # Build query parameters
+    params: Dict[str, Any] = {"limit": limit}
+    if premium_only:
+        params["premium_only"] = True
+    if offset is not None:
+        params["offset"] = offset
+
+    try:
+        response = await client.get(
+            f"{EXTERNAL_SIGNAL_API_URL}/api/signals/latest",
+            params=params
+        )
+        response.raise_for_status()
+        data = response.json()
+
+        # Validate response is a list
+        if not isinstance(data, list):
+            logger.error(f"Unexpected response format from external API: {type(data)}")
+            raise HTTPException(
+                status_code=502,
+                detail="Invalid response format from external signal provider"
+            )
+
+        return data
+
+    except httpx.TimeoutException as e:
+        logger.error(f"Timeout fetching signals from external provider: {e}")
+        raise HTTPException(
+            status_code=504,
+            detail="External signal provider timeout. Please try again later."
+        )
+    except httpx.HTTPStatusError as e:
+        logger.error(f"HTTP error from external provider: {e.response.status_code} - {e.response.text}")
+        raise HTTPException(
+            status_code=502,
+            detail=f"External signal provider returned error: {e.response.status_code}"
+        )
+    except httpx.RequestError as e:
+        logger.error(f"Request error fetching signals: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail="Failed to connect to external signal provider. Please try again later."
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error fetching signals: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail="An unexpected error occurred while fetching signals."
         )
 
 
 @router.get("/subscribed", response_model=PaginatedSignalsResponse)
-@cache_response(ttl=60)  # Cache for 1 minute (signals update frequently)
+@cache_response(ttl=CACHE_TTL_SIGNALS)  # Cache for 1 minute (signals update frequently)
 async def get_subscribed_signals(
     request: Request,
     response: Response,
@@ -190,13 +229,13 @@ async def get_subscribed_signals(
 ):
     """
     Get subscribed signals based on user tier
-    
+
     **Example Request:**
     ```bash
     curl -X GET "http://localhost:9001/api/signals/subscribed?limit=10&premium_only=true" \
          -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
     ```
-    
+
     **Example Response:**
     ```json
     {
@@ -220,40 +259,60 @@ async def get_subscribed_signals(
     }
     ```
     """
-    # Rate limiting
-    client_id = current_user.email
+    # Rate limiting and headers
+    _apply_rate_limiting(request, response, current_user.email)
+    
+    # Check and adjust tier limits
+    limit = _adjust_limit_for_tier(limit, current_user.tier)
+    
+    # Fetch and cache signals
+    cached_signals = await _fetch_and_cache_signals(premium_only, current_user.tier)
+    
+    # Paginate and serialize
+    items, total = _paginate_and_serialize_signals(cached_signals, offset, limit)
+    
+    # Add cache headers
+    add_cache_headers(response, max_age=30, public=False)
+    
+    return PaginatedSignalsResponse(
+        items=items,
+        total=total,
+        limit=limit,
+        offset=offset,
+        has_more=(offset + limit) < total,
+        user_tier=current_user.tier.value
+    )
+
+def _apply_rate_limiting(request: Request, response: Response, client_id: str):
+    """Apply rate limiting and add headers"""
     if not check_rate_limit(client_id):
         raise create_rate_limit_error(request=request)
     
-    # Add rate limit headers
     rate_limit_status = get_rate_limit_status(client_id)
     add_rate_limit_headers(
         response,
         remaining=rate_limit_status["remaining"],
         reset_at=int(time.time()) + rate_limit_status["reset_in"]
     )
-    
-    # Check tier limits
-    tier_limit = get_tier_signal_limit(current_user.tier)
-    if limit > tier_limit:
-        limit = tier_limit
-    
-    # Optimized pagination: Use caching strategy to avoid fetching limit+offset
-    # Cache full result set and paginate from cache
-    from backend.core.cache import get_cache, set_cache
-    
-    cache_key = f"signals:all:{premium_only}"
+
+def _adjust_limit_for_tier(limit: int, tier: UserTier) -> int:
+    """Adjust limit based on user tier"""
+    tier_limit = get_tier_signal_limit(tier)
+    return min(limit, tier_limit)
+
+async def _fetch_and_cache_signals(premium_only: bool, tier: UserTier) -> List[Dict[str, Any]]:
+    """Fetch signals from external provider and cache them"""
+    cache_key = f"signals:all:{premium_only}:{tier.value}"
     cached_signals = get_cache(cache_key)
     
     if cached_signals is None:
-        # Fetch reasonable max (1000 signals) and cache for 60 seconds
         try:
             cached_signals = await fetch_signals_from_external_provider(
                 limit=1000,  # Fetch reasonable max for caching
                 premium_only=premium_only
             )
-            # Cache for 60 seconds (signals update frequently)
-            set_cache(cache_key, cached_signals, ttl=60)
+            # Cache for configured TTL
+            set_cache(cache_key, cached_signals, ttl=CACHE_TTL_SIGNALS)
         except HTTPException:
             raise
         except Exception as e:
@@ -263,43 +322,54 @@ async def get_subscribed_signals(
                 detail="Failed to fetch signals. Please try again later."
             )
     
-    # Paginate from cached data
+    return cached_signals
+
+def _paginate_and_serialize_signals(
+    cached_signals: List[Dict[str, Any]], 
+    offset: int, 
+    limit: int
+) -> tuple[List[SignalResponse], int]:
+    """Paginate signals and serialize to response models"""
     total = len(cached_signals)
-    paginated = cached_signals[offset:offset + limit]
+    start_idx = min(offset, total)
+    end_idx = min(offset + limit, total)
+    paginated = cached_signals[start_idx:end_idx]
     
-    # Add cache headers for client-side caching (short TTL since signals update frequently)
-    from backend.core.response_formatter import add_cache_headers
-    add_cache_headers(response, max_age=30, public=False)  # Cache for 30 seconds
+    # Serialize with error handling
+    items = []
+    for signal in paginated:
+        try:
+            items.append(SignalResponse(**signal))
+        except Exception as e:
+            logger.warning(f"Skipping invalid signal: {signal.get('id', 'unknown')}: {e}")
     
-    return PaginatedSignalsResponse(
-        items=[SignalResponse(**s) for s in paginated],
-        total=total,
-        limit=limit,
-        offset=offset,
-        has_more=offset + limit < total,
-        user_tier=current_user.tier.value
-    )
+    return items, total
 
 
 @router.get("/history", response_model=List[SignalHistoryResponse])
-@cache_response(ttl=300)  # Cache for 5 minutes
+@cache_response(ttl=CACHE_TTL_SIGNAL_HISTORY)  # Cache for 5 minutes
 async def get_signal_history(
     request: Request,
     response: Response,
     limit: int = Query(50, ge=1, le=500, description="Number of historical signals"),
     days: int = Query(30, ge=1, le=365, description="Number of days to look back"),
     current_user: User = Depends(get_current_user),
-    authorization: Optional[str] = Header(None)
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_db)
 ):
     """
     Get signal history for user
-    
+
+    Returns historical signals from the database, ordered by creation date (newest first).
+    Note: exit_price, pnl_pct, and closed_at are not yet available in the Signal model
+    and will be None. These fields will be populated when trading execution data is integrated.
+
     **Example Request:**
     ```bash
     curl -X GET "http://localhost:9001/api/signals/history?limit=50&days=30" \
          -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
     ```
-    
+
     **Example Response:**
     ```json
     [
@@ -308,11 +378,11 @@ async def get_signal_history(
         "symbol": "AAPL",
         "action": "BUY",
         "entry_price": 175.50,
-        "exit_price": 184.25,
-        "pnl_pct": 4.98,
-        "status": "closed",
+        "exit_price": null,
+        "pnl_pct": null,
+        "status": "active",
         "created_at": "2024-01-15T10:30:00Z",
-        "closed_at": "2024-01-20T14:30:00Z"
+        "closed_at": null
       }
     ]
     ```
@@ -321,7 +391,7 @@ async def get_signal_history(
     client_id = current_user.email
     if not check_rate_limit(client_id):
         raise create_rate_limit_error(request=request)
-    
+
     # Add rate limit headers
     rate_limit_status = get_rate_limit_status(client_id)
     add_rate_limit_headers(
@@ -329,30 +399,53 @@ async def get_signal_history(
         remaining=rate_limit_status["remaining"],
         reset_at=int(time.time()) + rate_limit_status["reset_in"]
     )
-    
-    # Mock history data (in production, fetch from database)
-    history = []
-    start_date = datetime.utcnow() - timedelta(days=days)
-    
-    for i in range(min(limit, 50)):  # Limit to 50 for demo
-        signal_date = start_date + timedelta(days=i * (days / limit))
-        history.append(SignalHistoryResponse(
-            signal_id=f"SIG-{int(signal_date.timestamp() * 1000)}",
-            symbol=["AAPL", "NVDA", "BTC-USD", "ETH-USD"][i % 4],
-            action="BUY" if i % 2 == 0 else "SELL",
-            entry_price=175.50 + (i * 0.5),
-            exit_price=184.25 + (i * 0.5) if i % 3 == 0 else None,
-            pnl_pct=4.98 + (i * 0.1) if i % 3 == 0 else None,
-            status="closed" if i % 3 == 0 else "active",
-            created_at=signal_date.isoformat() + "Z",
-            closed_at=(signal_date + timedelta(days=5)).isoformat() + "Z" if i % 3 == 0 else None
-        ))
-    
-    # Add cache headers for client-side caching
-    from backend.core.response_formatter import add_cache_headers
-    add_cache_headers(response, max_age=60, public=False)  # Cache for 60 seconds
-    
-    return history
+
+    try:
+        # Calculate date range
+        start_date = datetime.utcnow() - timedelta(days=days)
+        history_limit = min(limit, 500)  # Reasonable limit
+
+        # Query signals from database, ordered by creation date (newest first)
+        signals = db.query(Signal).filter(
+            Signal.created_at >= start_date
+        ).order_by(
+            desc(Signal.created_at)
+        ).limit(history_limit).all()
+
+        # Map database signals to response format
+        history = []
+        for signal in signals:
+            # Format created_at as ISO string with timezone
+            created_at_str = format_datetime_iso(signal.created_at)
+
+            # Determine status based on is_active flag
+            status = "active" if signal.is_active else "closed"
+
+            history.append(
+                SignalHistoryResponse(
+                    signal_id=f"SIG-{signal.id}",
+                    symbol=signal.symbol,
+                    action=signal.action,
+                    entry_price=signal.price,
+                    exit_price=None,  # Not available in Signal model yet
+                    pnl_pct=None,  # Not available in Signal model yet
+                    status=status,
+                    created_at=created_at_str,
+                    closed_at=None  # Not available in Signal model yet
+                )
+            )
+
+        # Add cache headers for client-side caching
+        add_cache_headers(response, max_age=60, public=False)  # Cache for 60 seconds
+
+        return history
+
+    except Exception as e:
+        logger.error(f"Error fetching signal history: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail="An error occurred while fetching signal history. Please try again later."
+        )
 
 
 @router.get("/export")
@@ -366,7 +459,7 @@ async def export_signals(
 ):
     """
     Export signals to CSV or JSON
-    
+
     **Example Request:**
     ```bash
     curl -X GET "http://localhost:9001/api/signals/export?format=csv&days=30" \
@@ -378,7 +471,7 @@ async def export_signals(
     client_id = current_user.email
     if not check_rate_limit(client_id):
         raise create_rate_limit_error(request=request)
-    
+
     # Add rate limit headers
     rate_limit_status = get_rate_limit_status(client_id)
     add_rate_limit_headers(
@@ -386,62 +479,79 @@ async def export_signals(
         remaining=rate_limit_status["remaining"],
         reset_at=int(time.time()) + rate_limit_status["reset_in"]
     )
-    
+
     # Validate and sanitize format
-    format = format.lower().strip()
-    if format not in ["csv", "json"]:
+    export_format = format.lower().strip()
+    if export_format not in ["csv", "json"]:
         raise HTTPException(status_code=400, detail="Invalid format. Must be 'csv' or 'json'")
-    
+
+    # OPTIMIZATION: Check cache first for export data
+    cache_key = f"signals:export:{export_format}"
+    cached_export = get_cache(cache_key)
+
+    if cached_export is None:
     # Fetch signals
     try:
         signals = await fetch_signals_from_external_provider(limit=1000, premium_only=False)
+        except HTTPException:
+            raise
     except Exception as e:
         logger.error(f"Error fetching signals for export: {e}")
         raise HTTPException(
             status_code=503,
             detail="Failed to fetch signals for export. Please try again later."
         )
-    
-    if format == "csv":
-        # Generate CSV
+
+        # Generate export content
+        if export_format == "csv":
+            # OPTIMIZATION: Use list comprehension for CSV generation
         output = io.StringIO()
-        writer = csv.DictWriter(output, fieldnames=["id", "symbol", "action", "entry_price", "confidence", "timestamp"])
+            fieldnames = ["id", "symbol", "action", "entry_price", "confidence", "timestamp"]
+            writer = csv.DictWriter(output, fieldnames=fieldnames)
         writer.writeheader()
-        for signal in signals:
-            writer.writerow({
+
+            # OPTIMIZATION: Batch write rows for better performance
+            rows = [
+                {
                 "id": signal.get("id", ""),
                 "symbol": signal.get("symbol", ""),
                 "action": signal.get("action", ""),
                 "entry_price": signal.get("entry_price", 0),
                 "confidence": signal.get("confidence", 0),
                 "timestamp": signal.get("timestamp", "")
-            })
-        
-        csv_response = Response(
-            content=output.getvalue(),
-            media_type="text/csv",
-            headers={"Content-Disposition": f"attachment; filename=signals_{datetime.utcnow().strftime('%Y%m%d')}.csv"}
-        )
-        # Add rate limit headers
-        add_rate_limit_headers(
-            csv_response,
-            remaining=rate_limit_status["remaining"],
-            reset_at=int(time.time()) + rate_limit_status["reset_in"]
-        )
-        return csv_response
-    else:
-        # Return JSON
-        import json as json_lib
-        json_response = Response(
-            content=json_lib.dumps(signals, indent=2, default=str),
-            media_type="application/json",
-            headers={"Content-Disposition": f"attachment; filename=signals_{datetime.utcnow().strftime('%Y%m%d')}.json"}
-        )
-        # Add rate limit headers
-        add_rate_limit_headers(
-            json_response,
-            remaining=rate_limit_status["remaining"],
-            reset_at=int(time.time()) + rate_limit_status["reset_in"]
-        )
-        return json_response
+                }
+                for signal in signals
+            ]
+            writer.writerows(rows)
 
+            cached_export = output.getvalue()
+            # Cache CSV for 30 seconds
+            set_cache(cache_key, cached_export, ttl=30)
+    else:
+            # OPTIMIZATION: Use orjson if available for faster JSON serialization
+            try:
+                import orjson
+                cached_export = orjson.dumps(signals, option=orjson.OPT_INDENT_2).decode()
+            except ImportError:
+                cached_export = json.dumps(signals, indent=2, default=str)
+            # Cache JSON for 30 seconds
+            set_cache(cache_key, cached_export, ttl=30)
+
+    # Create response with appropriate content type
+    filename = f"signals_{datetime.utcnow().strftime('%Y%m%d')}.{export_format}"
+    media_type = "text/csv" if export_format == "csv" else "application/json"
+
+    export_response = Response(
+        content=cached_export,
+        media_type=media_type,
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+
+        # Add rate limit headers
+        add_rate_limit_headers(
+        export_response,
+            remaining=rate_limit_status["remaining"],
+            reset_at=int(time.time()) + rate_limit_status["reset_in"]
+        )
+
+    return export_response

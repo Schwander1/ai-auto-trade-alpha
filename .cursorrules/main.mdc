@@ -1,12 +1,15 @@
 # Argo-Alpine System Rules
 
 **Last Updated:** January 15, 2025
+**Version:** 2.0 (Optimized for Cursor AI)
 
 ---
 
 ## Overview
 
 This file references the comprehensive rules system located in the `Rules/` folder. All development, deployment, and operational rules are organized there.
+
+**CRITICAL:** This workspace contains TWO SEPARATE ENTITIES - Argo Capital and Alpine Analytics LLC. They share NO code, NO dependencies, and NO relationships. Maintain strict entity separation.
 
 ---
 

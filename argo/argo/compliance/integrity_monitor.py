@@ -78,7 +78,7 @@ class IntegrityMonitor:
             failed_signals = []
             max_failures_to_log = 10
             total_checked = len(signals)
-            
+
             for i, signal in enumerate(signals):
                 is_valid = self._verify_signal_hash(signal)
                 if not is_valid:
@@ -88,14 +88,14 @@ class IntegrityMonitor:
                         'symbol': signal.get('symbol'),
                         'timestamp': signal.get('timestamp')
                     })
-                    
+
                     if failed_count <= max_failures_to_log:
                         logger.error(f"❌ Hash verification failed: {signal.get('signal_id')}")
-                
+
                 # Progress logging for large batches (every 10k signals)
                 if total_checked > 10000 and (i + 1) % 10000 == 0:
                     logger.info(f"   Verified {i + 1}/{total_checked} signals... ({failed_count} failures)")
-            
+
             # Calculate results
             duration = time.time() - start_time
 
@@ -146,7 +146,7 @@ class IntegrityMonitor:
         conn = sqlite3.connect(str(self.db_file))
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
-        
+
         try:
             if limit:
                 cursor.execute("""
@@ -163,7 +163,7 @@ class IntegrityMonitor:
                     FROM signals
                     ORDER BY timestamp DESC
                 """)
-            
+
             signals = [dict(row) for row in cursor.fetchall()]
             return signals
         finally:

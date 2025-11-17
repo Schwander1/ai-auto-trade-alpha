@@ -22,10 +22,10 @@ router = APIRouter(prefix="/api/v1/2fa", tags=["2fa"])
 class Enable2FARequest(BaseModel):
     """Request to enable 2FA"""
     token: str = Field(..., description="TOTP token to verify setup", min_length=6, max_length=6)
-    
+
     @field_validator('token')
     @classmethod
-    def validate_token(cls, v):
+    def validate_token(cls, v: str) -> str:
         """Validate TOTP token format"""
         if not re.match(r'^\d{6}$', v):
             raise ValueError("TOTP token must be 6 digits")
@@ -35,10 +35,10 @@ class Enable2FARequest(BaseModel):
 class Verify2FARequest(BaseModel):
     """Request to verify 2FA token"""
     token: str = Field(..., description="TOTP token or backup code", min_length=6, max_length=12)
-    
+
     @field_validator('token')
     @classmethod
-    def validate_token(cls, v):
+    def validate_token(cls, v: str) -> str:
         """Validate token format (6-digit TOTP or 8-12 char backup code)"""
         if not re.match(r'^[\dA-Za-z]{6,12}$', v):
             raise ValueError("Token must be 6-12 alphanumeric characters")
@@ -61,7 +61,7 @@ async def setup_2fa(
 ):
     """
     Setup 2FA - Generate secret and QR code
-    
+
     **Example Response:**
     ```json
     {
@@ -75,7 +75,7 @@ async def setup_2fa(
     client_id = current_user.email
     if not check_rate_limit(client_id):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
-    
+
     # Add rate limit headers
     rate_limit_status = get_rate_limit_status(client_id)
     add_rate_limit_headers(
@@ -83,18 +83,18 @@ async def setup_2fa(
         remaining=rate_limit_status["remaining"],
         reset_at=int(time.time()) + rate_limit_status["reset_in"]
     )
-    
+
     # Generate TOTP secret
     secret = TOTPManager.generate_secret()
-    
+
     # Generate QR code
     uri = TOTPManager.get_totp_uri(secret, current_user.email)
     qr_code = TOTPManager.generate_qr_code(uri)
-    
+
     # Generate backup codes
     backup_codes = TOTPManager.generate_backup_codes(10)
     hashed_backup_codes = [TOTPManager.hash_backup_code(code) for code in backup_codes]
-    
+
     # Store secret and backup codes (temporarily, until verified)
     try:
         current_user.totp_secret = secret
@@ -107,7 +107,7 @@ async def setup_2fa(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to setup 2FA"
         )
-    
+
     log_security_event(
         SecurityEvent.ADMIN_ACTION,
         user_id=current_user.id,
@@ -115,7 +115,7 @@ async def setup_2fa(
         details={"action": "2fa_setup_initiated"},
         request=request
     )
-    
+
     return {
         "secret": secret,
         "qr_code": f"data:image/png;base64,{qr_code}",
@@ -135,7 +135,7 @@ async def enable_2fa(
 ):
     """
     Enable 2FA - Verify token and activate
-    
+
     **Example Request:**
     ```json
     {
@@ -147,7 +147,7 @@ async def enable_2fa(
     client_id = current_user.email
     if not check_rate_limit(client_id):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
-    
+
     # Add rate limit headers
     rate_limit_status = get_rate_limit_status(client_id)
     add_rate_limit_headers(
@@ -155,20 +155,20 @@ async def enable_2fa(
         remaining=rate_limit_status["remaining"],
         reset_at=int(time.time()) + rate_limit_status["reset_in"]
     )
-    
+
     if not current_user.totp_secret:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="2FA setup not initiated. Call /setup first."
         )
-    
+
     # Verify token
     if not TOTPManager.verify_totp(current_user.totp_secret, enable_data.token):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid token. Please try again."
         )
-    
+
     # Enable 2FA
     try:
         current_user.totp_enabled = True
@@ -180,7 +180,7 @@ async def enable_2fa(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to enable 2FA"
         )
-    
+
     log_security_event(
         SecurityEvent.ADMIN_ACTION,
         user_id=current_user.id,
@@ -188,7 +188,7 @@ async def enable_2fa(
         details={"action": "2fa_enabled"},
         request=request
     )
-    
+
     return {
         "message": "2FA enabled successfully",
         "enabled": True
@@ -206,7 +206,7 @@ async def verify_2fa(
 ):
     """
     Verify 2FA token (used during login)
-    
+
     **Example Request:**
     ```json
     {
@@ -218,7 +218,7 @@ async def verify_2fa(
     client_id = current_user.email
     if not check_rate_limit(client_id):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
-    
+
     # Add rate limit headers
     rate_limit_status = get_rate_limit_status(client_id)
     add_rate_limit_headers(
@@ -226,19 +226,19 @@ async def verify_2fa(
         remaining=rate_limit_status["remaining"],
         reset_at=int(time.time()) + rate_limit_status["reset_in"]
     )
-    
+
     if not current_user.totp_enabled or not current_user.totp_secret:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="2FA is not enabled for this account"
         )
-    
+
     # Try TOTP token first
     if TOTPManager.verify_totp(current_user.totp_secret, verify_data.token):
         # Check for replay attacks (prevent same token being used twice)
         # In production, implement token replay prevention
         return {"verified": True}
-    
+
     # Try backup code
     if current_user.backup_codes:
         backup_codes = json.loads(current_user.backup_codes)
@@ -253,7 +253,7 @@ async def verify_2fa(
                 logger.error(f"Error updating backup codes: {e}", exc_info=True)
                 # Don't fail verification if backup code update fails
                 pass
-            
+
             log_security_event(
                 SecurityEvent.ADMIN_ACTION,
                 user_id=current_user.id,
@@ -261,9 +261,9 @@ async def verify_2fa(
                 details={"action": "2fa_backup_code_used"},
                 request=request
             )
-            
+
             return {"verified": True, "backup_code_used": True}
-    
+
     log_security_event(
         SecurityEvent.FAILED_LOGIN,
         user_id=current_user.id,
@@ -271,7 +271,7 @@ async def verify_2fa(
         details={"reason": "invalid_2fa_token"},
         request=request
     )
-    
+
     raise HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST,
         detail="Invalid token or backup code"
@@ -289,7 +289,7 @@ async def disable_2fa(
 ):
     """
     Disable 2FA
-    
+
     **Example Request:**
     ```json
     {
@@ -302,7 +302,7 @@ async def disable_2fa(
     client_id = current_user.email
     if not check_rate_limit(client_id):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
-    
+
     # Add rate limit headers
     rate_limit_status = get_rate_limit_status(client_id)
     add_rate_limit_headers(
@@ -310,7 +310,7 @@ async def disable_2fa(
         remaining=rate_limit_status["remaining"],
         reset_at=int(time.time()) + rate_limit_status["reset_in"]
     )
-    
+
     # Verify password
     from backend.auth.security import verify_password
     if not verify_password(disable_data.password, current_user.hashed_password):
@@ -318,7 +318,7 @@ async def disable_2fa(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect password"
         )
-    
+
     # If 2FA is enabled, require token
     if current_user.totp_enabled:
         if not disable_data.token:
@@ -326,7 +326,7 @@ async def disable_2fa(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="2FA token required to disable 2FA"
             )
-        
+
         # Verify token
         if not TOTPManager.verify_totp(current_user.totp_secret, disable_data.token):
             # Try backup code
@@ -342,7 +342,7 @@ async def disable_2fa(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Invalid 2FA token"
                 )
-    
+
     # Disable 2FA
     try:
         current_user.totp_enabled = False
@@ -356,7 +356,7 @@ async def disable_2fa(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to disable 2FA"
         )
-    
+
     log_security_event(
         SecurityEvent.ADMIN_ACTION,
         user_id=current_user.id,
@@ -364,7 +364,7 @@ async def disable_2fa(
         details={"action": "2fa_disabled"},
         request=request
     )
-    
+
     return {
         "message": "2FA disabled successfully",
         "enabled": False
@@ -383,7 +383,7 @@ async def get_2fa_status(
     client_id = current_user.email
     if not check_rate_limit(client_id):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
-    
+
     # Add rate limit headers
     rate_limit_status = get_rate_limit_status(client_id)
     add_rate_limit_headers(
@@ -391,9 +391,8 @@ async def get_2fa_status(
         remaining=rate_limit_status["remaining"],
         reset_at=int(time.time()) + rate_limit_status["reset_in"]
     )
-    
+
     return {
         "enabled": current_user.totp_enabled if current_user.totp_enabled else False,
         "has_backup_codes": bool(current_user.backup_codes)
     }
-

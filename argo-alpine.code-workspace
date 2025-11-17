@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json.schemastore.org/code-workspace.json",
+  "folders": [
+    {
+      "name": "Workspace Root",
+      "path": "."
+    },
+    {
+      "name": "Argo Trading Engine",
+      "path": "./argo"
+    },
+    {
+      "name": "Alpine Backend",
+      "path": "./alpine-backend"
+    },
+    {
+      "name": "Alpine Frontend",
+      "path": "./alpine-frontend"
+    },
+    {
+      "name": "Shared Packages",
+      "path": "./packages/shared"
+    },
+    {
+      "name": "Documentation",
+      "path": "./docs"
+    },
+    {
+      "name": "Rules",
+      "path": "./Rules"
+    }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/venv": true,
+      "**/.venv": true,
+      "**/__pycache__": true,
+      "**/.pytest_cache": true,
+      "**/dist": true,
+      "**/build": true,
+      "**/.next": true,
+      "**/out": true,
+      "**/coverage": true,
+      "**/.turbo": true,
+      "**/archive": true,
+      "**/backups": true,
+      "**/conversation_logs": true,
+      "**/pdfs": true
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/venv": true,
+      "**/.venv": true,
+      "**/__pycache__": true,
+      "**/dist": true,
+      "**/build": true,
+      "**/.next": true,
+      "**/out": true,
+      "**/coverage": true,
+      "**/.turbo": true,
+      "**/archive": true,
+      "**/backups": true,
+      "**/conversation_logs": true,
+      "**/pdfs": true,
+      "**/pnpm-lock.yaml": true
+    },
+    "files.watcherExclude": {
+      "**/node_modules/**": true,
+      "**/venv/**": true,
+      "**/.venv/**": true,
+      "**/__pycache__/**": true,
+      "**/.pytest_cache/**": true,
+      "**/dist/**": true,
+      "**/build/**": true,
+      "**/.next/**": true,
+      "**/out/**": true,
+      "**/coverage/**": true,
+      "**/.turbo/**": true,
+      "**/logs/**": true,
+      "**/*.log": true
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-python.python",
+      "ms-python.vscode-pylance",
+      "ms-python.black-formatter",
+      "dbaeumer.vscode-eslint",
+      "esbenp.prettier-vscode",
+      "bradlc.vscode-tailwindcss",
+      "ms-azuretools.vscode-docker",
+      "eamodio.gitlens"
+    ]
+  }
+}
+

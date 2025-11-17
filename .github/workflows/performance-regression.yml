@@ -1,0 +1,136 @@
+name: Performance Regression Testing
+
+# Performance regression testing
+# Runs on every PR and weekly
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+  schedule:
+    # Run weekly on Monday at 3 AM UTC
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+
+jobs:
+  performance-test:
+    name: Performance Regression Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'pnpm'
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Start services
+        run: |
+          docker-compose up -d postgres redis
+          sleep 10  # Wait for services to start
+
+      - name: Setup k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+
+      - name: Start backend services
+        run: |
+          cd alpine-backend
+          python -m uvicorn backend.main:app --port 8001 &
+          sleep 5
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/alpine_test
+          REDIS_URL: redis://localhost:6379/0
+
+      - name: Run performance tests
+        id: performance-test
+        run: |
+          k6 run --out json=performance-results.json scripts/load-tests/k6/basic-test.js || true
+        env:
+          BASE_URL: http://localhost:8001
+        continue-on-error: true
+
+      - name: Download baseline results
+        uses: actions/download-artifact@v3
+        with:
+          name: performance-baseline
+          path: baseline/
+        continue-on-error: true
+
+      - name: Compare with baseline
+        if: steps.performance-test.outcome == 'success'
+        run: |
+          python scripts/load-tests/compare-performance.py \
+            baseline/performance-baseline.json \
+            performance-results.json \
+            --threshold 0.1
+        continue-on-error: true
+
+      - name: Upload performance results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: performance-results
+          path: performance-results.json
+          retention-days: 30
+
+      - name: Update baseline
+        if: github.ref == 'refs/heads/main' && steps.performance-test.outcome == 'success'
+        uses: actions/upload-artifact@v3
+        with:
+          name: performance-baseline
+          path: performance-results.json
+          retention-days: 90
+
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            if (fs.existsSync('performance-results.json')) {
+              const results = JSON.parse(fs.readFileSync('performance-results.json', 'utf8'));
+              const metrics = results.metrics || {};
+
+              let comment = '## Performance Test Results\n\n';
+
+              if (metrics.http_req_duration) {
+                const p95 = metrics.http_req_duration.values.p95;
+                const p99 = metrics.http_req_duration.values.p99;
+                comment += `- **P95 Response Time**: ${p95.toFixed(2)}ms\n`;
+                comment += `- **P99 Response Time**: ${p99.toFixed(2)}ms\n`;
+              }
+
+              if (metrics.http_req_failed) {
+                const errorRate = metrics.http_req_failed.values.rate * 100;
+                comment += `- **Error Rate**: ${errorRate.toFixed(2)}%\n`;
+              }
+
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            }

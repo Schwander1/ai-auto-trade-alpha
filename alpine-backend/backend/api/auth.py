@@ -16,7 +16,9 @@ from backend.core.database import get_db
 from backend.core.config import settings
 from backend.core.rate_limit import check_rate_limit
 from backend.core.cache import cache_response
+from backend.core.cache_constants import CACHE_TTL_USER_PROFILE
 from backend.core.token_blacklist import is_token_blacklisted, blacklist_token
+from backend.core.response_formatter import format_datetime_iso
 from backend.core.account_lockout import is_account_locked, record_failed_login, clear_failed_attempts
 from backend.core.security_logging import log_successful_login, log_failed_login, SecurityEvent
 from backend.auth.password_validator import PasswordValidator
@@ -30,6 +32,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
 
 # Rate limiting and token blacklist now handled by backend.core modules
 # Imported above: check_rate_limit, is_token_blacklisted, blacklist_token
+RATE_LIMIT_MAX = 10  # Lower limit for auth endpoints (security)
 
 
 class SignupRequest(BaseModel):
@@ -37,10 +40,10 @@ class SignupRequest(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=12, description="Password must be at least 12 characters with uppercase, lowercase, numbers, and special characters")
     full_name: str = Field(..., min_length=1, max_length=100)
-    
+
     @field_validator('password')
     @classmethod
-    def validate_password(cls, v):
+    def validate_password(cls, v: str) -> str:
         """Validate password strength"""
         is_valid, errors = PasswordValidator.validate_password(v)
         if not is_valid:
@@ -77,18 +80,12 @@ async def get_current_user(
     db: Session = Depends(get_db)
 ) -> User:
     """Get current authenticated user with caching optimization"""
-    from backend.core.error_responses import create_error_response, ErrorCodes, create_rate_limit_error
-    from backend.core.cache import get_cache, set_cache
+    from backend.core.error_responses import create_error_response, ErrorCodes
     
-    # Check if token is blacklisted (using Redis)
-    if is_token_blacklisted(token):
-        raise create_error_response(
-            ErrorCodes.AUTH_002,
-            "Token has been revoked",
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            request=None  # Request not available in dependency
-        )
+    # Validate token
+    _validate_token(token)
     
+    # Extract email from token
     payload = verify_token(token)
     if not payload:
         raise create_error_response(
@@ -100,23 +97,53 @@ async def get_current_user(
     
     email = payload.get("sub")
     
-    # OPTIMIZATION #1: Try cache first (5 minute TTL)
+    # Try to get user from cache first
+    user = _get_user_from_cache(email, db)
+    if user:
+        return user
+    
+    # Cache miss - query database and cache result
+    user = _get_user_from_database(email, db)
+    _cache_user_data(user)
+    
+    return user
+
+def _validate_token(token: str):
+    """Validate token is not blacklisted"""
+    from backend.core.error_responses import create_error_response, ErrorCodes
+    
+    if is_token_blacklisted(token):
+        raise create_error_response(
+            ErrorCodes.AUTH_002,
+            "Token has been revoked",
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            request=None
+        )
+
+def _get_user_from_cache(email: str, db: Session) -> Optional[User]:
+    """Get user from cache if available and valid"""
+    from backend.core.cache import get_cache
+    from backend.core.cache_constants import CACHE_TTL_USER_PROFILE
+    
     cache_key = f"user:email:{email}"
     cached_user_data = get_cache(cache_key)
     
     if cached_user_data:
         # Cache hit - query database to get SQLAlchemy object (needed for relationships)
-        # But we know user exists and is active from cache, so this is just to get the object
         user = db.query(User).filter(User.email == email).first()
         if user:
             # Verify cached data matches (quick validation)
-            if (user.id == cached_user_data.get("id") and 
+            if (user.id == cached_user_data.get("id") and
                 user.is_active == cached_user_data.get("is_active", False)):
-                # Cache is valid - return user (still need DB object for relationships)
+                # Cache is valid - return user
                 return user
-            # If mismatch, cache is stale, continue to refresh
     
-    # Cache miss or stale - query database
+    return None
+
+def _get_user_from_database(email: str, db: Session) -> User:
+    """Get user from database and validate"""
+    from backend.core.error_responses import create_error_response, ErrorCodes
+    
     user = db.query(User).filter(User.email == email).first()
     if not user:
         raise create_error_response(
@@ -134,6 +161,22 @@ async def get_current_user(
             request=None
         )
     
+    return user
+
+def _cache_user_data(user: User):
+    """Cache user data for faster subsequent lookups"""
+    from backend.core.cache import set_cache
+    from backend.core.cache_constants import CACHE_TTL_USER_PROFILE
+    
+    cache_key = f"user:email:{user.email}"
+    user_data = {
+        "id": user.id,
+        "email": user.email,
+        "is_active": user.is_active,
+        "tier": user.tier.value if hasattr(user.tier, 'value') else str(user.tier)
+    }
+    set_cache(cache_key, user_data, ttl=CACHE_TTL_USER_PROFILE)
+
     # Cache user data (exclude sensitive fields, but keep hashed_password for verification)
     user_data = {
         "id": user.id,
@@ -144,8 +187,9 @@ async def get_current_user(
         "is_verified": user.is_verified,
         "hashed_password": user.hashed_password  # Needed for password verification in some endpoints
     }
-    set_cache(cache_key, user_data, ttl=300)  # 5 minutes
-    
+
+    set_cache(cache_key, user_data, ttl=CACHE_TTL_USER_PROFILE)  # 5 minutes
+
     return user
 
 
@@ -158,7 +202,7 @@ async def signup(
 ):
     """
     Create a new user account
-    
+
     **Example Request:**
     ```bash
     curl -X POST "http://localhost:9001/api/auth/signup" \
@@ -169,7 +213,7 @@ async def signup(
            "full_name": "John Doe"
          }'
     ```
-    
+
     **Example Response:**
     ```json
     {
@@ -192,7 +236,7 @@ async def signup(
             status_code=429,
             detail=f"Rate limit exceeded. Maximum {RATE_LIMIT_MAX} requests per minute."
         )
-    
+
     # Validate password strength
     is_valid, errors = PasswordValidator.validate_password(user_data.password)
     if not is_valid:
@@ -200,7 +244,7 @@ async def signup(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="; ".join(errors)
         )
-    
+
     # Check if user already exists
     existing_user = db.query(User).filter(User.email == user_data.email).first()
     if existing_user:
@@ -208,7 +252,7 @@ async def signup(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered"
         )
-    
+
     # Create user
     try:
         hashed_password = get_password_hash(user_data.password)
@@ -220,7 +264,7 @@ async def signup(
             is_active=True,
             is_verified=False
         )
-        
+
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
@@ -231,10 +275,10 @@ async def signup(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create user account"
         )
-    
+
     # Create access token
     access_token = create_access_token(data={"sub": new_user.email})
-    
+
     return LoginResponse(
         access_token=access_token,
         token_type="bearer",
@@ -257,14 +301,14 @@ async def login(
 ):
     """
     Login and get access token
-    
+
     **Example Request:**
     ```bash
     curl -X POST "http://localhost:9001/api/auth/login" \
          -H "Content-Type: application/x-www-form-urlencoded" \
          -d "username=user@example.com&password=SecurePass123!"
     ```
-    
+
     **Example Response:**
     ```json
     {
@@ -287,7 +331,7 @@ async def login(
             status_code=429,
             detail="Rate limit exceeded. Too many login attempts."
         )
-    
+
     # Check if account is locked
     if is_account_locked(form_data.username):
         from backend.core.account_lockout import get_lockout_remaining
@@ -296,15 +340,15 @@ async def login(
             status_code=status.HTTP_423_LOCKED,
             detail=f"Account locked due to too many failed login attempts. Try again in {remaining // 60} minutes."
         )
-    
+
     # Find user
     user = db.query(User).filter(User.email == form_data.username).first()
-    
+
     # Verify password (always check to prevent user enumeration)
     password_valid = False
     if user:
         password_valid = verify_password(form_data.password, user.hashed_password)
-    
+
     if not user or not password_valid:
         # Record failed login attempt
         record_failed_login(form_data.username, request.client.host if request.client else None, request)
@@ -313,16 +357,16 @@ async def login(
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User account is inactive"
         )
-    
+
     # Clear failed attempts on successful login
     clear_failed_attempts(user.email)
-    
+
     # Check if 2FA is enabled
     if user.totp_enabled:
         # Return partial login response indicating 2FA required
@@ -338,13 +382,13 @@ async def login(
             },
             requires_2fa=True  # Indicate 2FA is required
         )
-    
+
     # Log successful login
     log_successful_login(user.id, user.email, request.client.host if request.client else None, request)
-    
+
     # Create access token
     access_token = create_access_token(data={"sub": user.email})
-    
+
     return LoginResponse(
         access_token=access_token,
         token_type="bearer",
@@ -365,13 +409,13 @@ async def logout(
 ):
     """
     Logout and revoke token
-    
+
     **Example Request:**
     ```bash
     curl -X POST "http://localhost:9001/api/auth/logout" \
          -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
     ```
-    
+
     **Example Response:**
     ```json
     {
@@ -383,30 +427,30 @@ async def logout(
     client_id = current_user.email
     if not check_rate_limit(client_id):
         raise create_rate_limit_error(request=request)
-    
+
     # Extract token from authorization header
     if authorization and authorization.startswith("Bearer "):
         token = authorization.split(" ")[1]
         # Add to blacklist (using Redis)
         blacklist_token(token, ttl=settings.JWT_EXPIRATION_HOURS * 3600)
-    
+
     return {"message": "Successfully logged out"}
 
 
 @router.get("/me", response_model=UserResponse)
-@cache_response(ttl=300)  # Cache user info for 5 minutes
+@cache_response(ttl=CACHE_TTL_USER_PROFILE)  # Cache user info for 5 minutes
 async def get_current_user_info(
     current_user: User = Depends(get_current_user)
 ):
     """
     Get current user information
-    
+
     **Example Request:**
     ```bash
     curl -X GET "http://localhost:9001/api/auth/me" \
          -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
     ```
-    
+
     **Example Response:**
     ```json
     {
@@ -428,7 +472,6 @@ async def get_current_user_info(
         tier=current_user.tier.value,
         is_active=current_user.is_active,
         is_verified=current_user.is_verified,
-        created_at=current_user.created_at.isoformat() if current_user.created_at else datetime.utcnow().isoformat() + "Z",
-        updated_at=current_user.updated_at.isoformat() if current_user.updated_at else None
+        created_at=format_datetime_iso(current_user.created_at),
+        updated_at=format_datetime_iso(current_user.updated_at) if current_user.updated_at else None
     )
-

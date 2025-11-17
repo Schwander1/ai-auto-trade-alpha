@@ -2,6 +2,7 @@
 import redis
 import json
 import hashlib
+import logging
 from functools import wraps
 from typing import Optional, Callable, Any
 from backend.core.config import settings
@@ -9,6 +10,8 @@ from backend.core.metrics import (
     record_cache_hit,
     record_cache_miss,
 )
+
+logger = logging.getLogger(__name__)
 
 # Initialize Redis client
 try:
@@ -25,7 +28,7 @@ try:
     # Test connection
     redis_client.ping()
 except Exception as e:
-    print(f"Warning: Redis connection failed: {e}. Caching disabled.")
+    logger.warning(f"Redis connection failed: {e}. Caching disabled.")
     redis_client = None
 
 
@@ -38,7 +41,7 @@ def cache_key(*args, **kwargs) -> str:
 def cache_response(ttl: int = 300, prefix: str = "cache"):
     """
     Decorator to cache function responses in Redis
-    
+
     Args:
         ttl: Time to live in seconds (default: 5 minutes)
         prefix: Cache key prefix
@@ -49,10 +52,10 @@ def cache_response(ttl: int = 300, prefix: str = "cache"):
             if redis_client is None:
                 # If Redis is unavailable, execute function without caching
                 return await func(*args, **kwargs)
-            
+
             # Generate cache key
             key = f"{prefix}:{func.__name__}:{cache_key(*args, **kwargs)}"
-            
+
             # Try to get from cache
             try:
                 cached = redis_client.get(key)
@@ -62,19 +65,19 @@ def cache_response(ttl: int = 300, prefix: str = "cache"):
                 else:
                     record_cache_miss('response')
             except Exception as e:
-                print(f"Cache read error: {e}")
-            
+                logger.warning(f"Cache read error: {e}", exc_info=True)
+
             # Execute function
             result = await func(*args, **kwargs)
-            
+
             # Store in cache
             try:
                 redis_client.setex(key, ttl, json.dumps(result, default=str))
             except Exception as e:
-                print(f"Cache write error: {e}")
-            
+                logger.warning(f"Cache write error: {e}", exc_info=True)
+
             return result
-        
+
         return wrapper
     return decorator
 
@@ -82,33 +85,33 @@ def cache_response(ttl: int = 300, prefix: str = "cache"):
 def invalidate_cache(pattern: str):
     """
     Invalidate cache entries matching pattern
-    
+
     Args:
         pattern: Redis key pattern (e.g., "cache:signals:*")
     """
     if redis_client is None:
         return
-    
+
     try:
         keys = redis_client.keys(pattern)
         if keys:
             redis_client.delete(*keys)
     except Exception as e:
-        print(f"Cache invalidation error: {e}")
+        logger.warning(f"Cache invalidation error: {e}", exc_info=True)
 
 
 def get_cache(key: str) -> Optional[Any]:
     """Get value from cache"""
     if redis_client is None:
         return None
-    
+
     try:
         cached = redis_client.get(key)
         if cached:
             return json.loads(cached)
     except Exception as e:
-        print(f"Cache get error: {e}")
-    
+        logger.warning(f"Cache get error: {e}", exc_info=True)
+
     return None
 
 
@@ -116,9 +119,8 @@ def set_cache(key: str, value: Any, ttl: int = 300):
     """Set value in cache"""
     if redis_client is None:
         return
-    
+
     try:
         redis_client.setex(key, ttl, json.dumps(value, default=str))
     except Exception as e:
-        print(f"Cache set error: {e}")
-
+        logger.warning(f"Cache set error: {e}", exc_info=True)

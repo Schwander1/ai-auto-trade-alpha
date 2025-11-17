@@ -1,31 +1,37 @@
 """
 Notifications API endpoints for Alpine Backend
 GET unread, POST read, DELETE
-"""
 
+Optimizations:
+- Thread-safe notification storage
+- Efficient pagination
+- Cache headers for client-side caching
+- Better error handling
+"""
 from fastapi import APIRouter, HTTPException, Depends, Query, Header, Request, Response
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from pydantic import BaseModel, Field, field_validator
-from typing import Optional, List
+from typing import Optional, List, Dict
 from datetime import datetime
 import time
 import re
 
 from backend.core.database import get_db
 from backend.core.input_sanitizer import sanitize_string
-from backend.core.response_formatter import add_rate_limit_headers
+from backend.core.response_formatter import add_rate_limit_headers, add_cache_headers, format_datetime_iso
 from backend.models.user import User
 from backend.core.rate_limit import check_rate_limit, get_rate_limit_status
 from backend.api.auth import get_current_user
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/notifications", tags=["notifications"])
 
 # Rate limiting
 RATE_LIMIT_WINDOW = 60
 RATE_LIMIT_MAX = 100
-
-# Mock notifications database (in production, use real database)
-NOTIFICATIONS_DB = {}
 
 
 class NotificationResponse(BaseModel):
@@ -53,10 +59,10 @@ class PaginatedNotificationsResponse(BaseModel):
 class MarkReadRequest(BaseModel):
     """Mark notification as read request"""
     notification_ids: List[str] = Field(..., description="List of notification IDs to mark as read")
-    
+
     @field_validator('notification_ids')
     @classmethod
-    def validate_notification_ids(cls, v):
+    def validate_notification_ids(cls, v: List[str]) -> List[str]:
         """Validate notification IDs"""
         if not v or len(v) == 0:
             raise ValueError("At least one notification ID is required")
@@ -74,11 +80,33 @@ class MarkReadRequest(BaseModel):
         return sanitized
 
 
-def get_user_notifications(user_id: int) -> List[dict]:
-    """Get notifications for user"""
-    if user_id not in NOTIFICATIONS_DB:
-        NOTIFICATIONS_DB[user_id] = []
-    return NOTIFICATIONS_DB[user_id]
+def get_user_notifications(user_id: int, db: Session) -> List[Dict]:
+    """Get notifications for user from database"""
+    from backend.models.notification import Notification
+
+    try:
+        notifications = db.query(Notification).filter(
+            Notification.user_id == user_id
+        ).order_by(Notification.created_at.desc()).all()
+
+        # Convert to dict format for compatibility
+        return [
+            {
+                "id": f"notif-{n.id}",
+                "user_id": n.user_id,
+                "title": n.title,
+                "message": n.message,
+                "type": n.type,
+                "is_read": n.is_read,
+                "created_at": format_datetime_iso(n.created_at),
+                "read_at": format_datetime_iso(n.read_at) if n.read_at else None
+            }
+            for n in notifications
+        ]
+    except Exception as e:
+        logger.error(f"Error fetching notifications for user {user_id}: {e}", exc_info=True)
+        # Return empty list on error to prevent endpoint failure
+        return []
 
 
 @router.get("/unread", response_model=PaginatedNotificationsResponse)
@@ -88,17 +116,18 @@ async def get_unread_notifications(
     limit: int = Query(20, ge=1, le=100, description="Number of notifications to return"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
     current_user: User = Depends(get_current_user),
-    authorization: Optional[str] = Header(None)
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_db)
 ):
     """
     Get unread notifications
-    
+
     **Example Request:**
     ```bash
     curl -X GET "http://localhost:9001/api/notifications/unread?limit=20" \
          -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
     ```
-    
+
     **Example Response:**
     ```json
     {
@@ -126,7 +155,7 @@ async def get_unread_notifications(
     client_id = current_user.email
     if not check_rate_limit(client_id):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
-    
+
     # Add rate limit headers
     rate_limit_status = get_rate_limit_status(client_id)
     add_rate_limit_headers(
@@ -134,25 +163,67 @@ async def get_unread_notifications(
         remaining=rate_limit_status["remaining"],
         reset_at=int(time.time()) + rate_limit_status["reset_in"]
     )
-    
-    # Get user notifications
-    all_notifications = get_user_notifications(current_user.id)
-    unread_notifications = [n for n in all_notifications if not n.get("is_read", False)]
-    
-    # Sort by created_at (newest first)
-    unread_notifications.sort(key=lambda x: x.get("created_at", ""), reverse=True)
-    
-    # Paginate
-    total = len(unread_notifications)
-    paginated = unread_notifications[offset:offset + limit]
-    
+
+    # OPTIMIZATION: Query unread notifications directly from database with pagination
+    # This is much more efficient than fetching all and filtering in Python
+    from backend.models.notification import Notification
+
+    try:
+        # Count total unread notifications
+        total = db.query(func.count(Notification.id)).filter(
+            Notification.user_id == current_user.id,
+            Notification.is_read == False
+        ).scalar() or 0
+
+        # Query unread notifications with pagination (already sorted by created_at DESC via index)
+        unread_notifications_db = db.query(Notification).filter(
+            Notification.user_id == current_user.id,
+            Notification.is_read == False
+        ).order_by(Notification.created_at.desc()).offset(offset).limit(limit).all()
+
+        # Convert to dict format
+        paginated = [
+            {
+                "id": f"notif-{n.id}",
+                "user_id": n.user_id,
+                "title": n.title,
+                "message": n.message,
+                "type": n.type,
+                "is_read": n.is_read,
+                "created_at": format_datetime_iso(n.created_at),
+                "read_at": format_datetime_iso(n.read_at) if n.read_at else None
+            }
+            for n in unread_notifications_db
+        ]
+    except Exception as e:
+        logger.error(f"Error fetching unread notifications for user {current_user.id}: {e}", exc_info=True)
+        total = 0
+        paginated = []
+
+    # OPTIMIZATION: Add cache headers for client-side caching
+    from backend.core.response_formatter import add_cache_headers
+    add_cache_headers(response, max_age=30, public=False)  # Cache for 30 seconds
+
+    # OPTIMIZATION: Use list comprehension with error handling for serialization
+    try:
+        items = [NotificationResponse(**n) for n in paginated]
+    except Exception as e:
+        logger.error(f"Error serializing notifications: {e}")
+        # Filter out invalid notifications and continue
+        items = []
+        for n in paginated:
+            try:
+                items.append(NotificationResponse(**n))
+            except Exception:
+                logger.warning(f"Skipping invalid notification: {n.get('id', 'unknown')}")
+
     return PaginatedNotificationsResponse(
-        items=[NotificationResponse(**n) for n in paginated],
+        items=items,
         total=total,
         unread_count=total,
         limit=limit,
         offset=offset,
-        has_more=offset + limit < total
+        has_more=end_idx < total
     )
 
 
@@ -162,11 +233,12 @@ async def mark_notifications_read(
     request: Request,
     response: Response,
     current_user: User = Depends(get_current_user),
-    authorization: Optional[str] = Header(None)
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_db)
 ):
     """
     Mark notifications as read
-    
+
     **Example Request:**
     ```bash
     curl -X POST "http://localhost:9001/api/notifications/read" \
@@ -176,7 +248,7 @@ async def mark_notifications_read(
            "notification_ids": ["notif-1234567890", "notif-1234567891"]
          }'
     ```
-    
+
     **Example Response:**
     ```json
     {
@@ -189,7 +261,7 @@ async def mark_notifications_read(
     client_id = current_user.email
     if not check_rate_limit(client_id):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
-    
+
     # Add rate limit headers
     rate_limit_status = get_rate_limit_status(client_id)
     add_rate_limit_headers(
@@ -197,25 +269,52 @@ async def mark_notifications_read(
         remaining=rate_limit_status["remaining"],
         reset_at=int(time.time()) + rate_limit_status["reset_in"]
     )
-    
-    # Get user notifications
-    notifications = get_user_notifications(current_user.id)
-    
-    # Mark as read
-    count = 0
-    for notification in notifications:
-        if notification.get("id") in read_data.notification_ids:
-            notification["is_read"] = True
-            notification["read_at"] = datetime.utcnow().isoformat() + "Z"
-            count += 1
-    
-    if count == 0:
-        raise HTTPException(status_code=404, detail="No notifications found with provided IDs")
-    
-    return {
-        "message": "Notifications marked as read",
-        "count": count
-    }
+
+    # OPTIMIZATION: Update notifications in database
+    from backend.models.notification import Notification
+
+    try:
+        # Extract numeric IDs from "notif-{id}" format
+        numeric_ids = []
+        for nid in read_data.notification_ids:
+            if nid.startswith("notif-"):
+                try:
+                    numeric_ids.append(int(nid.replace("notif-", "")))
+                except ValueError:
+                    continue
+
+        if not numeric_ids:
+            raise HTTPException(status_code=400, detail="Invalid notification ID format")
+
+        # Update notifications in database
+        read_at = datetime.utcnow()
+        count = db.query(Notification).filter(
+            Notification.id.in_(numeric_ids),
+            Notification.user_id == current_user.id,
+            Notification.is_read == False
+        ).update({
+            Notification.is_read: True,
+            Notification.read_at: read_at
+        }, synchronize_session=False)
+
+        db.commit()
+
+        if count == 0:
+            raise HTTPException(status_code=404, detail="No unread notifications found with provided IDs")
+
+        return {
+            "message": "Notifications marked as read",
+            "count": count
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error marking notifications as read: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Error updating notifications"
+        )
 
 
 @router.delete("/{notification_id}", status_code=200)
@@ -224,17 +323,18 @@ async def delete_notification(
     response: Response,
     notification_id: str,
     current_user: User = Depends(get_current_user),
-    authorization: Optional[str] = Header(None)
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_db)
 ):
     """
     Delete a notification
-    
+
     **Example Request:**
     ```bash
     curl -X DELETE "http://localhost:9001/api/notifications/notif-1234567890" \
          -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
     ```
-    
+
     **Example Response:**
     ```json
     {
@@ -246,7 +346,7 @@ async def delete_notification(
     client_id = current_user.email
     if not check_rate_limit(client_id):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
-    
+
     # Add rate limit headers
     rate_limit_status = get_rate_limit_status(client_id)
     add_rate_limit_headers(
@@ -254,28 +354,49 @@ async def delete_notification(
         remaining=rate_limit_status["remaining"],
         reset_at=int(time.time()) + rate_limit_status["reset_in"]
     )
-    
+
     # Input sanitization - validate notification_id format
     if not notification_id or len(notification_id) > 100:
         raise HTTPException(status_code=400, detail="Invalid notification ID format")
-    
+
     # Sanitize notification_id (alphanumeric, hyphens, underscores only)
     if not re.match(r'^[A-Za-z0-9_-]+$', notification_id):
         raise HTTPException(status_code=400, detail="Invalid notification ID format")
-    
-    # Get user notifications
-    notifications = get_user_notifications(current_user.id)
-    
-    # Find and remove notification
-    found = False
-    for i, notification in enumerate(notifications):
-        if notification.get("id") == notification_id:
-            notifications.pop(i)
-            found = True
-            break
-    
-    if not found:
-        raise HTTPException(status_code=404, detail="Notification not found")
-    
-    return {"message": "Notification deleted successfully"}
 
+    # OPTIMIZATION: Delete notification from database
+    from backend.models.notification import Notification
+
+    try:
+        # Extract numeric ID from "notif-{id}" format
+        if not notification_id.startswith("notif-"):
+            raise HTTPException(status_code=400, detail="Invalid notification ID format")
+
+        try:
+            numeric_id = int(notification_id.replace("notif-", ""))
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid notification ID format")
+
+        # Delete notification (only if it belongs to the user)
+        notification = db.query(Notification).filter(
+            Notification.id == numeric_id,
+            Notification.user_id == current_user.id
+        ).first()
+
+        if not notification:
+            raise HTTPException(status_code=404, detail="Notification not found")
+
+        db.delete(notification)
+        db.commit()
+
+        return {
+            "message": "Notification deleted successfully"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error deleting notification: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Error deleting notification"
+        )

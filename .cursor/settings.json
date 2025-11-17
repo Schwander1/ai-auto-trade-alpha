@@ -1,33 +1,304 @@
 {
-  "cursor.ai.model": "claude-sonnet-4",
-  "cursor.ai.contextWindow": "large",
-  "cursor.composer.enabled": true,
-  "cursor.composer.monorepoMode": true,
-  "cursor.codebase.enabled": true,
-  "cursor.codebase.indexing": "automatic",
-  "cursor.agent.enabled": true,
-  "cursor.chat.model": "claude-sonnet-4",
-  "cursor.chat.contextWindow": "large",
-  "cursor.rules.enabled": true,
-  "cursor.rules.path": ".cursorrules",
-  "files.exclude": {
-    "**/node_modules": true,
-    "**/__pycache__": true,
-    "**/.pytest_cache": true,
-    "**/venv": true,
-    "**/.next": true,
-    "**/dist": true,
-    "**/build": true
-  },
-  "search.exclude": {
-    "**/node_modules": true,
-    "**/__pycache__": true,
-    "**/venv": true,
-    "**/.next": true,
-    "**/dist": true,
-    "**/build": true,
-    "**/coverage": true,
-    "**/logs": true
-  }
-}
+  "$schema": "https://json.schemastore.org/cursor-settings.json",
+  "version": "1.0.0",
+  "description": "Cursor settings optimized for Argo-Alpine monorepo workspace",
 
+  "cursor": {
+    "codebase": {
+      "enabled": true,
+      "indexing": {
+        "excludePatterns": [
+          "**/node_modules/**",
+          "**/venv/**",
+          "**/.venv/**",
+          "**/__pycache__/**",
+          "**/dist/**",
+          "**/build/**",
+          "**/.next/**",
+          "**/out/**",
+          "**/coverage/**",
+          "**/.pytest_cache/**",
+          "**/logs/**",
+          "**/*.log",
+          "**/.turbo/**",
+          "**/archive/**",
+          "**/backups/**",
+          "**/conversation_logs/**",
+          "**/pdfs/**",
+          "**/data/*.db",
+          "**/data/*.sqlite",
+          "**/data/*.sqlite3",
+          "**/prometheus_data/**",
+          "**/grafana_data/**",
+          "**/*.pyc",
+          "**/*.pyo",
+          "**/*.pyd",
+          "**/.DS_Store",
+          "**/Thumbs.db"
+        ],
+        "includePatterns": [
+          "**/*.py",
+          "**/*.ts",
+          "**/*.tsx",
+          "**/*.js",
+          "**/*.jsx",
+          "**/*.json",
+          "**/*.md",
+          "**/*.yml",
+          "**/*.yaml",
+          "**/*.toml",
+          "**/*.sql",
+          "**/*.sh"
+        ]
+      }
+    },
+
+    "composer": {
+      "enabled": true,
+      "contextWindow": "large",
+      "monorepoMode": true
+    },
+
+    "agent": {
+      "enabled": true,
+      "maxSteps": 50,
+      "timeout": 300
+    },
+
+    "rules": {
+      "autoLoad": true,
+      "paths": [
+        ".cursorrules/**/*.mdc",
+        "Rules/**/*.md"
+      ]
+    }
+  },
+
+  "editor": {
+    "formatOnSave": true,
+    "codeActionsOnSave": {
+      "source.fixAll": "explicit",
+      "source.organizeImports": "explicit"
+    },
+    "defaultFormatter": {
+      "python": "ms-python.black-formatter",
+      "typescript": "esbenp.prettier-vscode",
+      "typescriptreact": "esbenp.prettier-vscode",
+      "javascript": "esbenp.prettier-vscode",
+      "javascriptreact": "esbenp.prettier-vscode",
+      "json": "esbenp.prettier-vscode",
+      "markdown": "esbenp.prettier-vscode"
+    }
+  },
+
+  "files": {
+    "exclude": {
+      "**/node_modules": true,
+      "**/venv": true,
+      "**/.venv": true,
+      "**/__pycache__": true,
+      "**/.pytest_cache": true,
+      "**/dist": true,
+      "**/build": true,
+      "**/.next": true,
+      "**/out": true,
+      "**/coverage": true,
+      "**/.turbo": true,
+      "**/archive": true,
+      "**/backups": true,
+      "**/conversation_logs": true,
+      "**/pdfs": true,
+      "**/prometheus_data": true,
+      "**/grafana_data": true
+    },
+    "watcherExclude": {
+      "**/node_modules/**": true,
+      "**/venv/**": true,
+      "**/.venv/**": true,
+      "**/__pycache__/**": true,
+      "**/.pytest_cache/**": true,
+      "**/dist/**": true,
+      "**/build/**": true,
+      "**/.next/**": true,
+      "**/out/**": true,
+      "**/coverage/**": true,
+      "**/.turbo/**": true,
+      "**/logs/**": true,
+      "**/*.log": true
+    }
+  },
+
+  "search": {
+    "exclude": {
+      "**/node_modules": true,
+      "**/venv": true,
+      "**/.venv": true,
+      "**/__pycache__": true,
+      "**/dist": true,
+      "**/build": true,
+      "**/.next": true,
+      "**/out": true,
+      "**/coverage": true,
+      "**/.turbo": true,
+      "**/archive": true,
+      "**/backups": true,
+      "**/conversation_logs": true,
+      "**/pdfs": true,
+      "**/prometheus_data": true,
+      "**/grafana_data": true,
+      "**/pnpm-lock.yaml": true
+    }
+  },
+
+  "python": {
+    "analysis": {
+      "typeCheckingMode": "basic",
+      "autoImportCompletions": true,
+      "diagnosticMode": "workspace",
+      "indexing": true,
+      "useLibraryCodeForTypes": true
+    },
+    "defaultInterpreterPath": "${workspaceFolder}/alpine-backend/venv/bin/python",
+    "formatting": {
+      "provider": "black"
+    },
+    "linting": {
+      "enabled": true,
+      "pylintEnabled": true,
+      "flake8Enabled": false,
+      "mypyEnabled": false
+    }
+  },
+
+  "typescript": {
+    "preferences": {
+      "importModuleSpecifier": "relative",
+      "includePackageJsonAutoImports": "auto"
+    },
+    "tsdk": "node_modules/typescript/lib",
+    "updateImportsOnFileMove": {
+      "enabled": "always"
+    },
+    "suggest": {
+      "autoImports": true,
+      "includeCompletionsForImportStatements": true
+    }
+  },
+
+  "javascript": {
+    "preferences": {
+      "importModuleSpecifier": "relative"
+    },
+    "updateImportsOnFileMove": {
+      "enabled": "always"
+    }
+  },
+
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"
+    },
+    "editor.rulers": [100, 120],
+    "editor.tabSize": 4
+  },
+
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "explicit",
+      "source.organizeImports": "explicit"
+    },
+    "editor.tabSize": 2
+  },
+
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "explicit",
+      "source.organizeImports": "explicit"
+    },
+    "editor.tabSize": 2
+  },
+
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "explicit",
+      "source.organizeImports": "explicit"
+    },
+    "editor.tabSize": 2
+  },
+
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "explicit",
+      "source.organizeImports": "explicit"
+    },
+    "editor.tabSize": 2
+  },
+
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.tabSize": 2
+  },
+
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.tabSize": 2
+  },
+
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.wordWrap": "on",
+    "editor.tabSize": 2
+  },
+
+  "[yaml]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.tabSize": 2
+  },
+
+  "[dockerfile]": {
+    "editor.defaultFormatter": "ms-azuretools.vscode-docker",
+    "editor.formatOnSave": true
+  },
+
+  "files.associations": {
+    "*.mdc": "markdown",
+    "Dockerfile*": "dockerfile",
+    "docker-compose*.yml": "dockercompose",
+    "docker-compose*.yaml": "dockercompose"
+  },
+
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+
+  "editor.rulers": [88, 120],
+  "editor.wordWrap": "off",
+  "editor.minimap.enabled": true,
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": true,
+  "editor.inlineSuggest.enabled": true,
+
+  "workbench.editor.enablePreview": false,
+  "workbench.startupEditor": "none",
+
+  "git.enableSmartCommit": true,
+  "git.confirmSync": false,
+  "git.autofetch": true,
+
+  "terminal.integrated.defaultProfile.osx": "zsh",
+  "terminal.integrated.fontSize": 12
+}

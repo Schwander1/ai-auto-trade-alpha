@@ -1,6 +1,6 @@
 /**
  * API client for fetching signals from external signal provider.
- * Includes retry logic and error handling.
+ * Includes retry logic, error handling, and request deduplication.
  */
 
 import type { Signal } from '@/types/signal'
@@ -9,6 +9,9 @@ const EXTERNAL_SIGNAL_API_BASE_URL = process.env.NEXT_PUBLIC_EXTERNAL_SIGNAL_API
 
 const DEFAULT_RETRY_ATTEMPTS = 3
 const DEFAULT_RETRY_DELAY = 1000 // 1 second
+
+// OPTIMIZATION: Request deduplication cache to prevent duplicate requests
+const pendingRequests = new Map<string, Promise<Response>>()
 
 /**
  * API Error class for better error handling
@@ -41,31 +44,45 @@ const sleep = (ms: number): Promise<void> => {
 }
 
 /**
- * Fetch with retry logic
+ * Fetch with retry logic and request deduplication
  */
 async function fetchWithRetry(
-  url: string,
-  options: RequestInit = {},
-  retryConfig: RetryConfig = {}
+    url: string,
+    options: RequestInit = {},
+    retryConfig: RetryConfig = {}
 ): Promise<Response> {
-  const {
-    maxAttempts = DEFAULT_RETRY_ATTEMPTS,
-    delay = DEFAULT_RETRY_DELAY,
-    backoff = true,
-  } = retryConfig
+    const {
+        maxAttempts = DEFAULT_RETRY_ATTEMPTS,
+        delay = DEFAULT_RETRY_DELAY,
+        backoff = true,
+    } = retryConfig
 
-  let lastError: Error | null = null
+    // OPTIMIZATION: Request deduplication - reuse pending requests
+    const requestKey = `${options.method || 'GET'}:${url}`
+    if (pendingRequests.has(requestKey) && !options.signal?.aborted) {
+        const pendingRequest = pendingRequests.get(requestKey)!
+        try {
+            return await pendingRequest
+        } catch (error) {
+            // If pending request failed, continue with new request
+            pendingRequests.delete(requestKey)
+        }
+    }
 
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    try {
-      const response = await fetch(url, {
-        ...options,
-        signal: options.signal,
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers,
-        },
-      })
+    let lastError: Error | null = null
+
+    // Create the fetch promise
+    const fetchPromise = (async () => {
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    signal: options.signal,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers,
+                    },
+                })
 
       // If successful, return immediately
       if (response.ok) {
@@ -113,13 +130,13 @@ async function fetchWithRetry(
 
 /**
  * Fetch latest trading signals from external signal provider API
- * 
+ *
  * @param limit - Maximum number of signals to fetch (default: 10)
  * @param premiumOnly - If true, only fetch premium signals (95%+ confidence)
  * @param signal - Optional AbortSignal to cancel the request
  * @returns Promise resolving to array of Signal objects
  * @throws ApiError if request fails after retries
- * 
+ *
  * @example
  * ```typescript
  * const signals = await fetchLatestSignals(20, true)
@@ -168,11 +185,11 @@ export async function fetchLatestSignals(
 
 /**
  * Fetch a single signal by ID from external signal provider API
- * 
+ *
  * @param id - Signal ID to fetch
  * @returns Promise resolving to Signal object
  * @throws ApiError if signal not found or request fails
- * 
+ *
  * @example
  * ```typescript
  * const signal = await fetchSignalById('SIG_20241111_123456')
@@ -216,7 +233,7 @@ export async function fetchSignalById(id: string): Promise<Signal> {
 
 /**
  * Health check for external signal provider API
- * 
+ *
  * @returns Promise resolving to health status
  */
 export async function checkApiHealth(): Promise<{ status: string; version?: string }> {
@@ -235,4 +252,3 @@ export async function checkApiHealth(): Promise<{ status: string; version?: stri
     )
   }
 }
-

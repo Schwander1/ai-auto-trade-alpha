@@ -22,7 +22,7 @@ execute_remote() {
     local user=$2
     local command=$3
     local name=$4
-    
+
     echo "📡 Executing on $name ($user@$server)..."
     ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no ${user}@${server} "$command" || {
         echo "⚠️  Failed to execute on $name - may require manual intervention"
@@ -90,4 +90,3 @@ echo ""
 echo "  3. Monitor logs:"
 echo "     ssh ${ARGO_USER}@${ARGO_SERVER} 'tail -f ${ARGO_PATH}/argo/logs/integrity_checks.log'"
 echo ""
-

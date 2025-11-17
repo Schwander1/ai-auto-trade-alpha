@@ -805,50 +805,72 @@ class StrategyBacktester(BaseBacktester):
         if not self.use_cost_modeling:
             return price
         
-        # Use enhanced cost model if available and all required params provided
-        if (self.use_enhanced_cost_model and 
-            self.enhanced_cost_model and 
-            symbol and 
-            trade_size is not None and 
-            df is not None and 
-            index is not None):
+        # FIX: Always try to use enhanced cost model when enabled
+        # Try to get required parameters even if not explicitly provided
+        if self.use_enhanced_cost_model and self.enhanced_cost_model:
+            # Try to infer missing parameters
+            inferred_symbol = symbol or "UNKNOWN"
+            inferred_trade_size = trade_size if trade_size is not None else 100  # Default fallback
+            inferred_df = df
+            inferred_index = index
             
-            try:
-                # Get volume and volatility data
-                if 'Volume' in df.columns and index < len(df):
-                    # Calculate average volume (20-day)
-                    volume_window = min(20, index + 1)
-                    avg_volume = float(df.iloc[max(0, index - volume_window + 1):index + 1]['Volume'].mean())
-                else:
-                    avg_volume = 1_000_000  # Default fallback
-                
-                # Get volatility from indicators or calculate
-                if 'volatility' in df.columns and index < len(df):
-                    volatility = float(df.iloc[index]['volatility'])
-                    # Convert annualized to daily
-                    if volatility > 1.0:  # Likely annualized
-                        volatility = volatility / np.sqrt(252)
-                else:
-                    # Calculate from returns
-                    if index >= 20:
-                        returns = df.iloc[max(0, index - 20):index + 1]['Close'].pct_change().dropna()
-                        volatility = float(returns.std() * np.sqrt(252)) / np.sqrt(252) if len(returns) > 0 else 0.02
+            # If df/index not provided but we have symbol, try to get from data_manager
+            if inferred_df is None and inferred_symbol != "UNKNOWN":
+                try:
+                    # Try to get current data from data_manager (if available)
+                    if hasattr(self, 'data_manager') and self.data_manager:
+                        temp_df = self.data_manager.fetch_historical_data(inferred_symbol, period="1y")
+                        if temp_df is not None:
+                            from argo.backtest.data_converter import DataConverter
+                            inferred_df = DataConverter.to_pandas(temp_df)
+                            if inferred_df is not None and len(inferred_df) > 0:
+                                inferred_index = len(inferred_df) - 1
+                except Exception as e:
+                    logger.debug(f"Could not infer df/index for enhanced cost model: {e}")
+            
+            # Use enhanced model if we have minimum required parameters
+            if inferred_df is not None and inferred_index is not None:
+                try:
+                    # Get volume and volatility data
+                    if 'Volume' in inferred_df.columns and inferred_index < len(inferred_df):
+                        # Calculate average volume (20-day)
+                        volume_window = min(20, inferred_index + 1)
+                        avg_volume = float(inferred_df.iloc[max(0, inferred_index - volume_window + 1):inferred_index + 1]['Volume'].mean())
                     else:
-                        volatility = 0.02  # Default 2% daily volatility
-                
-                # Apply enhanced cost model
-                return self.enhanced_cost_model.apply_costs_to_price(
-                    price=price,
-                    side=side,
-                    symbol=symbol,
-                    trade_size=trade_size,
-                    avg_volume=avg_volume,
-                    volatility=volatility,
-                    is_entry=is_entry
-                )
-            except Exception as e:
-                logger.warning(f"[{symbol}] Enhanced cost model failed, falling back to simple model: {e}")
-                # Fall through to simple model
+                        avg_volume = 1_000_000  # Default fallback
+                    
+                    # Get volatility from indicators or calculate
+                    if 'volatility' in inferred_df.columns and inferred_index < len(inferred_df):
+                        volatility = float(inferred_df.iloc[inferred_index]['volatility'])
+                        # Convert annualized to daily
+                        if volatility > 1.0:  # Likely annualized
+                            volatility = volatility / np.sqrt(252)
+                    else:
+                        # Calculate from returns
+                        if inferred_index >= 20:
+                            returns = inferred_df.iloc[max(0, inferred_index - 20):inferred_index + 1]['Close'].pct_change().dropna()
+                            volatility = float(returns.std() * np.sqrt(252)) / np.sqrt(252) if len(returns) > 0 else 0.02
+                        else:
+                            volatility = 0.02  # Default 2% daily volatility
+                    
+                    # Apply enhanced cost model
+                    result = self.enhanced_cost_model.apply_costs_to_price(
+                        price=price,
+                        side=side,
+                        symbol=inferred_symbol,
+                        trade_size=inferred_trade_size,
+                        avg_volume=avg_volume,
+                        volatility=volatility,
+                        is_entry=is_entry
+                    )
+                    logger.debug(f"[{inferred_symbol}] Using enhanced cost model: ${price:.4f} -> ${result:.4f}")
+                    return result
+                except Exception as e:
+                    logger.warning(f"[{inferred_symbol}] Enhanced cost model failed, falling back to simple model: {e}")
+                    # Fall through to simple model
+            elif symbol and trade_size is not None:
+                # Have symbol and trade_size but not df/index - log warning
+                logger.debug(f"[{symbol}] Enhanced cost model requires df/index, using simple model")
         
         # Simple cost model (fallback or default)
         slippage = price * self.slippage_pct

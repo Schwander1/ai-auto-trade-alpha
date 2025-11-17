@@ -1,0 +1,136 @@
+# Cursor Ignore File
+# Optimizes indexing performance by excluding unnecessary files
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+venv/
+env/
+ENV/
+.venv
+
+# Testing
+coverage/
+*.coverage
+.coverage
+.pytest_cache/
+.tox/
+htmlcov/
+*.pyc
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Production builds
+dist/
+build/
+.next/
+out/
+*.egg-info/
+*.egg
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+pnpm-debug.log*
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Turbo
+.turbo/
+
+# Python
+*.so
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+*.db
+*.sqlite
+*.sqlite3
+
+# TypeScript
+*.tsbuildinfo
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# OS
+Thumbs.db
+
+# Deployment
+*.tar.gz
+*.zip
+deploy-*.sh
+rollback-*.sh
+
+# Monitoring
+prometheus_data/
+grafana_data/
+
+# Secrets
+*.pem
+*.key
+*.cert
+secrets/
+
+# API Keys and Config Files (except package.json, tsconfig.json, jsconfig.json)
+**/config.json
+argo/config.json
+**/*config*.json
+!package.json
+!tsconfig.json
+!jsconfig.json
+
+# Local development
+.local/
+.cache/
+
+# Conversation logs (exclude from indexing for privacy)
+conversation_logs/
+
+# Large report files
+**/signal_traces.jsonl
+argo/**/signal_traces.jsonl
+*.jsonl
+!**/package.jsonl
+
+# Archive and backups (exclude from indexing for performance)
+archive/
+backups/
+
+# PDFs (exclude from indexing)
+pdfs/
+
+# Large data files
+data/*.db
+data/*.sqlite
+data/*.sqlite3
+
+# Documentation that's archived
+**/*.backup
+**/*.backup2
+
+# Lock files (too large and not useful for codebase search)
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
