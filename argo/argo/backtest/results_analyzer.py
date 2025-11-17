@@ -18,10 +18,10 @@ class ResultsAnalyzer:
     Analyze and compare backtest results
     ENHANCED: Comprehensive analysis utilities
     """
-    
+
     def __init__(self, results_storage: Optional[ResultsStorage] = None):
         self.storage = results_storage or ResultsStorage()
-    
+
     def analyze_performance_trends(
         self,
         symbol: str,
@@ -29,34 +29,34 @@ class ResultsAnalyzer:
     ) -> Dict:
         """
         Analyze performance trends over time for a symbol
-        
+
         Args:
             symbol: Trading symbol
             days: Number of days to analyze
-        
+
         Returns:
             Dictionary with trend analysis
         """
         results = self.storage.get_results(symbol=symbol, limit=100)
-        
+
         if not results:
             return {"error": f"No results found for {symbol}"}
-        
+
         # Filter by date
         cutoff_date = datetime.now().timestamp() - (days * 24 * 60 * 60)
         recent_results = [
             r for r in results
             if r.get('created_at') and datetime.fromisoformat(r['created_at']).timestamp() > cutoff_date
         ]
-        
+
         if not recent_results:
             return {"error": f"No recent results found for {symbol}"}
-        
+
         # Extract metrics
         returns = [r.get('total_return_pct', 0) for r in recent_results]
         sharpe_ratios = [r.get('sharpe_ratio', 0) for r in recent_results]
         win_rates = [r.get('win_rate_pct', 0) for r in recent_results]
-        
+
         # Calculate trends
         trend_analysis = {
             'symbol': symbol,
@@ -83,9 +83,9 @@ class ResultsAnalyzer:
                 }
             }
         }
-        
+
         return trend_analysis
-    
+
     def find_best_strategies(
         self,
         symbol: Optional[str] = None,
@@ -94,53 +94,53 @@ class ResultsAnalyzer:
     ) -> List[Dict]:
         """
         Find best performing strategies
-        
+
         Args:
             symbol: Optional symbol filter
             metric: Metric to rank by (sharpe_ratio, total_return_pct, etc.)
             limit: Number of results to return
-        
+
         Returns:
             List of best performing backtests
         """
         results = self.storage.get_results(symbol=symbol, limit=1000)
-        
+
         if not results:
             return []
-        
+
         # Sort by metric
         sorted_results = sorted(
             results,
             key=lambda x: x.get(metric, 0),
             reverse=True
         )
-        
+
         return sorted_results[:limit]
-    
+
     def analyze_risk_return_tradeoff(
         self,
         symbol: Optional[str] = None
     ) -> Dict:
         """
         Analyze risk-return tradeoff
-        
+
         Args:
             symbol: Optional symbol filter
-        
+
         Returns:
             Risk-return analysis
         """
         results = self.storage.get_results(symbol=symbol, limit=1000)
-        
+
         if not results:
             return {"error": "No results found"}
-        
+
         # Extract risk and return metrics
         returns = [r.get('total_return_pct', 0) for r in results]
         drawdowns = [abs(r.get('max_drawdown_pct', 0)) for r in results]
         sharpe_ratios = [r.get('sharpe_ratio', 0) for r in results]
         var_95 = [r.get('var_95_pct', 0) for r in results]
-        
+
         # Calculate correlations
         correlation_matrix = np.corrcoef([
             returns,
@@ -148,7 +148,7 @@ class ResultsAnalyzer:
             sharpe_ratios,
             var_95
         ])
-        
+
         analysis = {
             'total_backtests': len(results),
             'statistics': {
@@ -182,19 +182,19 @@ class ResultsAnalyzer:
                 'best_sharpe': max(sharpe_ratios) if sharpe_ratios else 0
             }
         }
-        
+
         return analysis
-    
+
     def generate_performance_report(
         self,
         backtest_ids: List[str]
     ) -> Dict:
         """
         Generate comprehensive performance report for multiple backtests
-        
+
         Args:
             backtest_ids: List of backtest IDs to analyze
-        
+
         Returns:
             Comprehensive performance report
         """
@@ -203,10 +203,10 @@ class ResultsAnalyzer:
             result = self.storage.get_results(backtest_id=backtest_id)
             if result:
                 results.append(result[0])
-        
+
         if not results:
             return {"error": "No results found"}
-        
+
         # Aggregate metrics
         report = {
             'backtest_ids': backtest_ids,
@@ -231,6 +231,5 @@ class ResultsAnalyzer:
                 'avg_ulcer_index': np.mean([r.get('ulcer_index', 0) for r in results])
             }
         }
-        
-        return report
 
+        return report

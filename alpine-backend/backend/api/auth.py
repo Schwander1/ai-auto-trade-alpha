@@ -225,13 +225,13 @@ async def signup(
 
     # Validate input
     _validate_signup_input(user_data)
-    
+
     # Check if user exists
     _check_user_not_exists(user_data.email, db)
-    
+
     # Create user
     new_user = _create_new_user(user_data, db)
-    
+
     # Create and return login response
     return _create_login_response(new_user)
 
@@ -279,14 +279,14 @@ async def login(
 
     # Check account lockout
     _check_account_not_locked(form_data.username)
-    
+
     # Authenticate user
     user = _authenticate_user(form_data.username, form_data.password, db, request)
-    
+
     # Handle 2FA if enabled
     if user.totp_enabled:
         return _create_2fa_required_response(user)
-    
+
     # Log successful login and create response
     log_successful_login(user.id, user.email, request.client.host if request.client else None, request)
     return _create_login_response(user)
@@ -322,7 +322,7 @@ def _create_new_user(user_data: SignupRequest, db: Session) -> User:
             is_active=True,
             is_verified=False
         )
-        
+
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
@@ -338,7 +338,7 @@ def _create_new_user(user_data: SignupRequest, db: Session) -> User:
 def _create_login_response(user: User) -> LoginResponse:
     """Create login response with access token"""
     access_token = create_access_token(data={"sub": user.email})
-    
+
     return LoginResponse(
         access_token=access_token,
         token_type="bearer",
@@ -365,12 +365,12 @@ def _authenticate_user(username: str, password: str, db: Session, request: Reque
     """Authenticate user and return User object"""
     # Find user
     user = db.query(User).filter(User.email == username).first()
-    
+
     # Verify password (always check to prevent user enumeration)
     password_valid = False
     if user:
         password_valid = verify_password(password, user.hashed_password)
-    
+
     if not user or not password_valid:
         # Record failed login attempt
         record_failed_login(username, request.client.host if request.client else None, request)
@@ -379,16 +379,16 @@ def _authenticate_user(username: str, password: str, db: Session, request: Reque
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User account is inactive"
         )
-    
+
     # Clear failed attempts on successful login
     clear_failed_attempts(user.email)
-    
+
     return user
 
 def _create_2fa_required_response(user: User) -> LoginResponse:

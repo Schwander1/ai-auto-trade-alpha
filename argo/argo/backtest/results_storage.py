@@ -21,13 +21,13 @@ class ResultsStorage:
     Stores backtest results with connection pooling and enhanced metrics
     ENHANCED: Added new risk metrics, connection pooling, query optimization
     """
-    
+
     def __init__(self, db_path: str = "argo/data/backtest_results.db"):
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._local = threading.local()  # Thread-local storage for connections
         self._init_database()
-        
+
     def _get_connection(self) -> sqlite3.Connection:
         """Get thread-local database connection with pooling"""
         if not hasattr(self._local, 'connection') or self._local.connection is None:
@@ -44,12 +44,12 @@ class ResultsStorage:
             conn.row_factory = sqlite3.Row  # Enable column access by name
             self._local.connection = conn
         return self._local.connection
-    
+
     def _init_database(self):
         """Initialize database tables with enhanced schema"""
         conn = self._get_connection()
         cursor = conn.cursor()
-        
+
         # ENHANCED: Added new risk metrics columns
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS backtest_results (
@@ -86,7 +86,7 @@ class ResultsStorage:
                 updated_at TEXT DEFAULT CURRENT_TIMESTAMP
             )
         ''')
-        
+
         # Create indexes for faster queries
         cursor.execute('''
             CREATE INDEX IF NOT EXISTS idx_symbol ON backtest_results(symbol)
@@ -100,10 +100,10 @@ class ResultsStorage:
         cursor.execute('''
             CREATE INDEX IF NOT EXISTS idx_total_return ON backtest_results(total_return_pct)
         ''')
-        
+
         conn.commit()
         logger.info("Database initialized with enhanced schema and indexes")
-    
+
     def save_results(
         self,
         backtest_id: str,
@@ -120,12 +120,12 @@ class ResultsStorage:
         """
         conn = self._get_connection()
         cursor = conn.cursor()
-        
+
         if initial_capital is None:
             initial_capital = 100000.0
-        
+
         final_capital = initial_capital * (1 + metrics.total_return_pct / 100)
-        
+
         # ENHANCED: Include all metrics including new risk metrics
         metrics_dict = {
             'total_return_pct': metrics.total_return_pct,
@@ -149,7 +149,7 @@ class ResultsStorage:
             'omega_ratio': getattr(metrics, 'omega_ratio', 0.0),
             'ulcer_index': getattr(metrics, 'ulcer_index', 0.0)
         }
-        
+
         cursor.execute('''
             INSERT OR REPLACE INTO backtest_results (
                 backtest_id, symbol, start_date, end_date, strategy_type,
@@ -190,10 +190,10 @@ class ResultsStorage:
             getattr(metrics, 'ulcer_index', 0.0),
             json.dumps(metrics_dict)
         ))
-        
+
         conn.commit()
         logger.info(f"Saved backtest results: {backtest_id} for {symbol}")
-    
+
     def get_results(
         self,
         backtest_id: Optional[str] = None,
@@ -207,10 +207,10 @@ class ResultsStorage:
         """
         conn = self._get_connection()
         cursor = conn.cursor()
-        
+
         query = "SELECT * FROM backtest_results WHERE 1=1"
         params = []
-        
+
         if backtest_id:
             query += " AND backtest_id = ?"
             params.append(backtest_id)
@@ -220,13 +220,13 @@ class ResultsStorage:
         if strategy_type:
             query += " AND strategy_type = ?"
             params.append(strategy_type)
-        
+
         query += " ORDER BY created_at DESC LIMIT ?"
         params.append(limit)
-        
+
         cursor.execute(query, params)
         rows = cursor.fetchall()
-        
+
         results = []
         for row in rows:
             result = dict(row)
@@ -234,9 +234,9 @@ class ResultsStorage:
             if result.get('metrics_json'):
                 result['metrics'] = json.loads(result['metrics_json'])
             results.append(result)
-        
+
         return results
-    
+
     def compare_results(
         self,
         backtest_ids: List[str]
@@ -250,23 +250,23 @@ class ResultsStorage:
             result = self.get_results(backtest_id=backtest_id)
             if result:
                 results.append(result[0])
-        
+
         if len(results) < 2:
             return {"error": "Need at least 2 backtests to compare"}
-        
+
         comparison = {
             'backtest_ids': backtest_ids,
             'count': len(results),
             'metrics': {}
         }
-        
+
         # Compare key metrics
         metrics_to_compare = [
             'total_return_pct', 'annualized_return_pct', 'sharpe_ratio',
             'sortino_ratio', 'max_drawdown_pct', 'win_rate_pct',
             'profit_factor', 'calmar_ratio', 'var_95_pct'
         ]
-        
+
         for metric in metrics_to_compare:
             values = [r.get(metric, 0) for r in results]
             comparison['metrics'][metric] = {
@@ -276,12 +276,11 @@ class ResultsStorage:
                 'average': sum(values) / len(values) if values else 0,
                 'std_dev': (sum((x - sum(values)/len(values))**2 for x in values) / len(values))**0.5 if len(values) > 1 else 0
             }
-        
+
         return comparison
-    
+
     def close(self):
         """Close database connection"""
         if hasattr(self._local, 'connection') and self._local.connection:
             self._local.connection.close()
             self._local.connection = None
-
