@@ -392,65 +392,63 @@ async def get_signal_history(
     ]
     ```
     """
-    # Rate limiting
-    client_id = current_user.email
-    if not check_rate_limit(client_id):
-        raise create_rate_limit_error(request=request)
-
-    # Add rate limit headers
-    rate_limit_status = get_rate_limit_status(client_id)
-    add_rate_limit_headers(
-        response,
-        remaining=rate_limit_status["remaining"],
-        reset_at=int(time.time()) + rate_limit_status["reset_in"]
-    )
-
+    # Rate limiting and headers
+    _apply_rate_limiting(request, response, current_user.email)
+    
     try:
-        # Calculate date range
+        # Calculate date range and query signals
         start_date = datetime.utcnow() - timedelta(days=days)
-        history_limit = min(limit, 500)  # Reasonable limit
-
-        # Query signals from database, ordered by creation date (newest first)
-        signals = db.query(Signal).filter(
-            Signal.created_at >= start_date
-        ).order_by(
-            desc(Signal.created_at)
-        ).limit(history_limit).all()
-
-        # Map database signals to response format
-        history = []
-        for signal in signals:
-            # Format created_at as ISO string with timezone
-            created_at_str = format_datetime_iso(signal.created_at)
-
-            # Determine status based on is_active flag
-            status = "active" if signal.is_active else "closed"
-
-            history.append(
-                SignalHistoryResponse(
-                    signal_id=f"SIG-{signal.id}",
-                    symbol=signal.symbol,
-                    action=signal.action,
-                    entry_price=signal.price,
-                    exit_price=None,  # Not available in Signal model yet
-                    pnl_pct=None,  # Not available in Signal model yet
-                    status=status,
-                    created_at=created_at_str,
-                    closed_at=None  # Not available in Signal model yet
-                )
-            )
-
-        # Add cache headers for client-side caching
-        add_cache_headers(response, max_age=60, public=False)  # Cache for 60 seconds
-
+        signals = _query_signal_history(db, start_date, limit)
+        
+        # Map to response format
+        history = _map_signals_to_history(signals)
+        
+        # Add cache headers
+        add_cache_headers(response, max_age=60, public=False)
+        
         return history
-
+    
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error fetching signal history: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
             detail="An error occurred while fetching signal history. Please try again later."
         )
+
+def _query_signal_history(db: Session, start_date: datetime, limit: int) -> List[Signal]:
+    """Query signal history from database"""
+    history_limit = min(limit, 500)  # Reasonable limit
+    
+    return db.query(Signal).filter(
+        Signal.created_at >= start_date
+    ).order_by(
+        desc(Signal.created_at)
+    ).limit(history_limit).all()
+
+def _map_signals_to_history(signals: List[Signal]) -> List[SignalHistoryResponse]:
+    """Map database signals to history response format"""
+    history = []
+    for signal in signals:
+        created_at_str = format_datetime_iso(signal.created_at)
+        status = "active" if signal.is_active else "closed"
+        
+        history.append(
+            SignalHistoryResponse(
+                signal_id=f"SIG-{signal.id}",
+                symbol=signal.symbol,
+                action=signal.action,
+                entry_price=signal.price,
+                exit_price=None,  # Not available in Signal model yet
+                pnl_pct=None,  # Not available in Signal model yet
+                status=status,
+                created_at=created_at_str,
+                closed_at=None  # Not available in Signal model yet
+            )
+        )
+    
+    return history
 
 
 @router.get("/export")
