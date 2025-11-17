@@ -1,0 +1,180 @@
+# Deployment Exclusion List
+# Files and directories that should NEVER be deployed to production
+# Similar to .gitignore but specifically for deployment
+
+# ============================================
+# LOCAL-ONLY SCRIPTS (Development/Testing)
+# ============================================
+
+# Local setup and validation scripts
+scripts/local_*.sh
+scripts/local_*.py
+scripts/*local*.sh
+scripts/*local*.py
+scripts/local_setup.sh
+scripts/local_health_check.sh
+scripts/local_security_audit.sh
+scripts/setup_local_dev.sh
+scripts/start-all.sh
+
+# Test trade scripts (local testing only)
+argo/scripts/execute_test_trade.py
+argo/scripts/enable_full_trading.py
+
+# ============================================
+# DEVELOPMENT FILES
+# ============================================
+
+# Test files
+*_test.py
+*_tests.py
+tests/
+test_*.py
+argo/test_*.py
+alpine-backend/tests/
+alpine-frontend/__tests__/
+
+# Development documentation
+docs/LOCAL_*.md
+docs/*LOCAL*.md
+docs/SystemDocs/LOCAL_*.md
+docs/SystemDocs/*LOCAL*.md
+
+# Local development configs
+*.local.json
+*.dev.json
+.env.local
+.env.development
+.env.development.local
+.env.test.local
+argo/.env.local
+alpine-backend/.env.local
+alpine-frontend/.env.local
+
+# ============================================
+# IDE AND EDITOR FILES
+# ============================================
+
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.cursor/
+
+# ============================================
+# OS FILES
+# ============================================
+
+.DS_Store
+Thumbs.db
+.directory
+
+# ============================================
+# TEMPORARY FILES
+# ============================================
+
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+
+# ============================================
+# DEVELOPMENT DATABASES
+# ============================================
+
+*.db-journal
+*.db-wal
+*.db-shm
+argo/data/signals_local.db
+argo/data/*local*.db
+
+# ============================================
+# LOCAL LOGS
+# ============================================
+
+logs/*.log
+*.log
+argo/logs/
+alpine-backend/logs/
+
+# ============================================
+# NODE MODULES (if any)
+# ============================================
+
+node_modules/
+.pnp
+.pnp.js
+
+# ============================================
+# PYTHON CACHE
+# ============================================
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg-info/
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ============================================
+# VIRTUAL ENVIRONMENTS
+# ============================================
+
+venv/
+env/
+ENV/
+.venv
+
+# ============================================
+# CONVERSATION LOGGING (LOCAL ONLY)
+# ============================================
+
+conversation_logs/
+scripts/conversation_logger_service.py
+scripts/cleanup_conversation_logs.py
+scripts/setup_conversation_logging.sh
+
+# ============================================
+# BACKUP DIRECTORIES
+# ============================================
+
+backups/
+*.backup
+*.tar.gz
+*.zip
+
+# ============================================
+# BUILD ARTIFACTS
+# ============================================
+
+dist/
+build/
+.next/
+out/
+.turbo/
+
+# ============================================
+# GIT FILES
+# ============================================
+
+.git/
+.gitignore
+.gitattributes
+
+# ============================================
+# DOCUMENTATION (keep in repo, but optional in production)
+# ============================================
+
+# Note: Documentation can be deployed but is optional
+# Uncomment if you don't want docs in production:
+# docs/
+# README.md
+# *.md
+

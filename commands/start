@@ -1,0 +1,38 @@
+#!/bin/bash
+# Start local services command
+# Usage: ./commands/start {project}
+# Examples:
+#   ./commands/start all
+#   ./commands/start argo
+#   ./commands/start alpine
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_DIR="${SCRIPT_DIR}/lib"
+WORKSPACE_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+# Parse arguments
+PROJECT="${1:-all}"
+
+# Route to appropriate script
+case "$PROJECT" in
+    all)
+        echo "🚀 Starting all local services..."
+        "${LIB_DIR}/start-local-services.sh" all
+        ;;
+    argo)
+        echo "🚀 Starting Argo local..."
+        "${LIB_DIR}/start-local-services.sh" argo
+        ;;
+    alpine)
+        echo "🚀 Starting Alpine local..."
+        "${LIB_DIR}/start-local-services.sh" alpine
+        ;;
+    *)
+        echo "❌ Error: Invalid project '$PROJECT'"
+        echo "  Valid projects: all, argo, alpine"
+        exit 1
+        ;;
+esac
+

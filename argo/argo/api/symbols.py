@@ -9,6 +9,13 @@ from datetime import datetime, timedelta
 from pydantic import BaseModel, Field
 import time
 
+# Import rate limiting
+try:
+    from argo.core.rate_limit import check_rate_limit, add_rate_limit_headers, get_rate_limit_status
+except ImportError:
+    # Fallback if running from argo directory
+    from core.rate_limit import check_rate_limit, add_rate_limit_headers, get_rate_limit_status
+
 router = APIRouter(prefix="/api/v1/symbols", tags=["symbols"])
 
 # Rate limiting

@@ -62,6 +62,18 @@ cd packages/alpine-frontend && pnpm test
 **See:** [commands/README.md](commands/README.md) for complete command reference
 
 ### Production Deployment (Recommended)
+
+**Agentic Deployment (Automated - Recommended):**
+```bash
+# Automated deployment with all 11 safety gates
+pnpm agentic:deploy:auto argo production
+pnpm agentic:deploy:auto alpine production
+
+# Or use direct script
+./scripts/agentic/automated-deployment.sh argo production
+```
+
+**Traditional Deployment:**
 ```bash
 # Deploy all services to production
 ./commands/deploy all to production
@@ -70,6 +82,8 @@ cd packages/alpine-frontend && pnpm test
 ./commands/deploy argo to production
 ./commands/deploy alpine to production
 ```
+
+**See:** `docs/AGENTIC_SETUP_GUIDE.md` for agentic features setup
 
 ### Health Checks
 ```bash
@@ -96,6 +110,33 @@ cd packages/alpine-frontend && pnpm test
 ./commands/rollback argo production
 ./commands/rollback all production
 ```
+
+### Agentic Features (AI-Powered Automation)
+
+**Automated Workflows:**
+```bash
+# Automated deployment
+pnpm agentic:deploy:auto argo production
+
+# Automated troubleshooting
+pnpm agentic:troubleshoot health_check
+pnpm agentic:troubleshoot api_failure
+
+# Weekly code quality review
+pnpm agentic:code-review argo/argo/core
+
+# Test coverage analysis
+pnpm agentic:test-coverage argo/argo/core
+
+# Monthly documentation update
+pnpm agentic:docs-update
+
+# Usage monitoring
+pnpm agentic:usage
+pnpm agentic:monitor
+```
+
+**See:** `docs/AGENTIC_QUICK_REFERENCE.md` for complete guide
 
 ### Local Development
 ```bash
@@ -150,6 +191,15 @@ The `.cursorrules` file enables Cursor to:
 - Enforces all 25+ development rules
 
 **See:** [docs/CURSOR_PRO_QUICK_REFERENCE.md](docs/CURSOR_PRO_QUICK_REFERENCE.md) for complete guide
+
+**Profiles Strategy:**
+- **Argo Trading Profile** - For `argo/` trading system work
+- **Alpine Full-Stack Profile** - For `alpine-backend/` + `alpine-frontend/` work
+- **Security-Sensitive Profile** - For IP/trade secret work
+- **Monorepo Refactoring Profile** - For cross-service refactoring
+- **Dev Workflow Profile** - For fast iteration
+
+**See:** [docs/CURSOR_PROFILES_STRATEGY.md](docs/CURSOR_PROFILES_STRATEGY.md) for optimal profile configurations
 
 ## 📄 License
 

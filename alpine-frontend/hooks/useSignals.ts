@@ -37,7 +37,7 @@ interface UseSignalsOptions {
 }
 
 /**
- * Custom hook for fetching and polling trading signals from Argo API.
+ * Custom hook for fetching and polling trading signals from external signal provider API.
  * 
  * Features:
  * - Automatic polling every 30 seconds (configurable)

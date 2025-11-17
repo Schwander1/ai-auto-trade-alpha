@@ -1,0 +1,252 @@
+{
+  "services": {
+    "Argo": {
+      "service_name": "Argo",
+      "endpoints": [
+        {
+          "path": "/health",
+          "method": "GET",
+          "file": "argo/main.py",
+          "line": 127,
+          "checks": [
+            "Data sources",
+            "Performance metrics",
+            "System metrics (CPU, Memory, Disk)"
+          ],
+          "dependencies": [
+            "Data Sources"
+          ],
+          "metrics": [
+            "Prometheus metrics",
+            "Uptime",
+            "System resources",
+            "Trading metrics"
+          ],
+          "issues": [
+            "No timeout specified - may hang indefinitely"
+          ]
+        },
+        {
+          "path": "/metrics",
+          "method": "GET",
+          "file": "argo/main.py",
+          "line": 152,
+          "checks": [],
+          "dependencies": [],
+          "metrics": [
+            "Prometheus metrics",
+            "System resources",
+            "Trading metrics"
+          ],
+          "issues": []
+        },
+        {
+          "path": "/api/v1/health",
+          "method": "GET",
+          "file": "argo/argo/api/health.py",
+          "line": 48,
+          "checks": [
+            "Redis connectivity",
+            "Secrets manager",
+            "Data sources",
+            "Performance metrics",
+            "System metrics (CPU, Memory, Disk)"
+          ],
+          "dependencies": [
+            "Redis",
+            "Data Sources",
+            "Database",
+            "Secrets Manager"
+          ],
+          "metrics": [
+            "Uptime",
+            "System resources"
+          ],
+          "issues": [
+            "No timeout specified - may hang indefinitely"
+          ]
+        },
+        {
+          "path": "/api/v1/health/metrics",
+          "method": "GET",
+          "file": "argo/argo/api/health.py",
+          "line": 188,
+          "checks": [],
+          "dependencies": [],
+          "metrics": [
+            "Prometheus metrics",
+            "Uptime",
+            "Trading metrics"
+          ],
+          "issues": [
+            "No error handling - may crash on failures",
+            "No timeout specified - may hang indefinitely",
+            "No logging - failures may go unnoticed"
+          ]
+        },
+        {
+          "path": "/api/v1/health/uptime",
+          "method": "GET",
+          "file": "argo/argo/api/health.py",
+          "line": 221,
+          "checks": [],
+          "dependencies": [],
+          "metrics": [
+            "Prometheus metrics",
+            "Uptime"
+          ],
+          "issues": [
+            "No error handling - may crash on failures",
+            "No timeout specified - may hang indefinitely",
+            "No logging - failures may go unnoticed"
+          ]
+        },
+        {
+          "path": "/api/v1/health/prometheus",
+          "method": "GET",
+          "file": "argo/argo/api/health.py",
+          "line": 257,
+          "checks": [],
+          "dependencies": [],
+          "metrics": [
+            "Prometheus metrics"
+          ],
+          "issues": [
+            "No error handling - may crash on failures",
+            "No timeout specified - may hang indefinitely",
+            "No logging - failures may go unnoticed"
+          ]
+        },
+        {
+          "path": "/health",
+          "method": "GET",
+          "file": "argo/argo/api/server.py",
+          "line": 36,
+          "checks": [],
+          "dependencies": [],
+          "metrics": [
+            "Uptime",
+            "Trading metrics"
+          ],
+          "issues": [
+            "No error handling - may crash on failures",
+            "No timeout specified - may hang indefinitely",
+            "No logging - failures may go unnoticed"
+          ]
+        }
+      ],
+      "router_registered": true,
+      "total_endpoints": 7
+    },
+    "Alpine Backend": {
+      "service_name": "Alpine Backend",
+      "endpoints": [
+        {
+          "path": "/health",
+          "method": "GET",
+          "file": "alpine-backend/backend/main.py",
+          "line": 144,
+          "checks": [
+            "Database connectivity",
+            "Database query",
+            "Redis connectivity",
+            "Secrets manager"
+          ],
+          "dependencies": [
+            "Redis",
+            "Database",
+            "Secrets Manager"
+          ],
+          "metrics": [
+            "Prometheus metrics"
+          ],
+          "issues": [
+            "No timeout specified - may hang indefinitely"
+          ]
+        },
+        {
+          "path": "/metrics",
+          "method": "GET",
+          "file": "alpine-backend/backend/main.py",
+          "line": 195,
+          "checks": [],
+          "dependencies": [],
+          "metrics": [
+            "Prometheus metrics"
+          ],
+          "issues": []
+        }
+      ],
+      "router_registered": false,
+      "total_endpoints": 2
+    },
+    "Alpine Frontend": {
+      "service_name": "Alpine Frontend",
+      "endpoints": [
+        {
+          "path": "/health",
+          "method": "GET",
+          "file": "alpine-frontend/lib/api.ts",
+          "line": 222,
+          "checks": [
+            "API connectivity"
+          ],
+          "dependencies": [],
+          "metrics": [],
+          "issues": []
+        }
+      ],
+      "router_registered": false,
+      "total_endpoints": 1
+    }
+  },
+  "gaps": {
+    "Argo": [
+      "Missing: Database connectivity",
+      "Missing: Uptime tracking",
+      "Missing: Error rate monitoring"
+    ],
+    "Alpine Backend": [
+      "Missing: System metrics (CPU, Memory, Disk)",
+      "Missing: Uptime tracking",
+      "Missing: Error rate monitoring"
+    ],
+    "Alpine Frontend": [
+      "Missing: Database connectivity",
+      "Missing: Redis connectivity",
+      "Missing: System metrics (CPU, Memory, Disk)",
+      "Missing: Uptime tracking",
+      "Missing: Error rate monitoring"
+    ]
+  },
+  "opportunities": {
+    "Argo": [
+      "Duplicate endpoints: /health - consider consolidating",
+      "Consider separate /health/readiness and /health/liveness endpoints for Kubernetes",
+      "/health: No timeout specified - may hang indefinitely",
+      "/health: No error handling - may crash on failures",
+      "/health: No timeout specified - may hang indefinitely",
+      "/health: No logging - failures may go unnoticed"
+    ],
+    "Alpine Backend": [
+      "Consider separate /health/readiness and /health/liveness endpoints for Kubernetes",
+      "/health: No timeout specified - may hang indefinitely"
+    ],
+    "Alpine Frontend": [
+      "Health endpoint could be more comprehensive - add more dependency checks",
+      "Missing /metrics endpoint for Prometheus monitoring",
+      "Consider separate /health/readiness and /health/liveness endpoints for Kubernetes"
+    ]
+  },
+  "summary": {
+    "total_services": 3,
+    "total_endpoints": 10,
+    "total_health_checks": 13,
+    "total_issues_found": 15,
+    "services_analyzed": [
+      "Argo",
+      "Alpine Backend",
+      "Alpine Frontend"
+    ]
+  }
+}

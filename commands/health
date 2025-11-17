@@ -1,0 +1,88 @@
+#!/bin/bash
+# Health check command dispatcher
+# Usage: ./commands/health check {project} {environment}
+# Examples:
+#   ./commands/health check all production
+#   ./commands/health check argo production
+#   ./commands/health check all (local)
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_DIR="${SCRIPT_DIR}/lib"
+
+# Parse arguments
+ACTION=""
+PROJECT=""
+ENVIRONMENT=""
+
+# Parse: health check {project} {environment}
+for arg in "$@"; do
+    if [ -z "$ACTION" ]; then
+        ACTION="$arg"
+    elif [ -z "$PROJECT" ]; then
+        PROJECT="$arg"
+    elif [ -z "$ENVIRONMENT" ]; then
+        ENVIRONMENT="$arg"
+    fi
+done
+
+# Validation
+if [ "$ACTION" != "check" ]; then
+    echo "❌ Error: Invalid action '$ACTION'"
+    echo "Usage: ./commands/health check {project} {environment}"
+    echo "  Projects: all, argo, alpine"
+    echo "  Environment: production (or omit for local)"
+    exit 1
+fi
+
+if [ -z "$PROJECT" ]; then
+    echo "❌ Error: Project not specified"
+    echo "Usage: ./commands/health check {project} {environment}"
+    echo "  Projects: all, argo, alpine"
+    echo "  Environment: production (or omit for local)"
+    exit 1
+fi
+
+# Default to local if environment not specified
+if [ -z "$ENVIRONMENT" ]; then
+    ENVIRONMENT="local"
+fi
+
+# Route to appropriate script
+if [ "$ENVIRONMENT" = "production" ]; then
+    case "$PROJECT" in
+        all)
+            "${LIB_DIR}/health-check-production.sh" all
+            ;;
+        argo)
+            "${LIB_DIR}/health-check-production.sh" argo
+            ;;
+        alpine)
+            "${LIB_DIR}/health-check-production.sh" alpine
+            ;;
+        *)
+            echo "❌ Error: Invalid project '$PROJECT'"
+            echo "  Valid projects: all, argo, alpine"
+            exit 1
+            ;;
+    esac
+else
+    case "$PROJECT" in
+        all)
+            "${LIB_DIR}/health-check-local.sh" all
+            ;;
+        argo)
+            "${LIB_DIR}/health-check-local.sh" argo
+            ;;
+        alpine)
+            "${LIB_DIR}/health-check-local.sh" alpine
+            ;;
+        *)
+            echo "❌ Error: Invalid project '$PROJECT'"
+            echo "  Valid projects: all, argo, alpine"
+            exit 1
+            ;;
+    esac
+fi
+

@@ -23,6 +23,7 @@ ALPINE_USER="root"
 echo "📝 Generating secure secrets..."
 JWT_SECRET=$(generate_secret)
 ARGO_API_SECRET=$(generate_secret)
+ARGO_ALPINE_API_KEY=$(generate_secret)
 
 echo "✅ Secrets generated"
 echo ""
@@ -34,6 +35,11 @@ cd /root/argo-production
 cat > .env << EOL
 # Argo Trading Engine Environment Variables
 ARGO_API_SECRET=${ARGO_API_SECRET}
+
+# Alpine Backend Sync Configuration
+ALPINE_API_URL=http://91.98.153.49:8001
+ARGO_API_KEY=${ARGO_ALPINE_API_KEY}
+ALPINE_SYNC_ENABLED=true
 EOL
 echo "✅ Argo .env created"
 EOF
@@ -64,6 +70,9 @@ FRONTEND_URL=http://91.98.153.49:3000
 
 # Argo API
 ARGO_API_URL=http://178.156.194.174:8000
+
+# External Signal Provider (Argo) API Key
+EXTERNAL_SIGNAL_API_KEY=${ARGO_ALPINE_API_KEY}
 
 # Optional: Email (SendGrid)
 SENDGRID_API_KEY=

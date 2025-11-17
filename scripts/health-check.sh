@@ -28,21 +28,25 @@ print_info() {
 check_health() {
     local url=$1
     local project_name=$2
+    local endpoint_path=$3
     
     echo ""
     echo "Checking: $project_name"
-    echo "URL: $url/api/health"
+    echo "URL: $url$endpoint_path"
     
-    if response=$(curl -sf -w "\n%{http_code}" "$url/api/health" 2>/dev/null); then
+    if response=$(curl -sfL -w "\n%{http_code}" "$url$endpoint_path" 2>/dev/null); then
         http_code=$(echo "$response" | tail -n1)
         body=$(echo "$response" | sed '$d')
         
         if [ "$http_code" = "200" ]; then
             print_success "Health check passed (HTTP $http_code)"
-            echo "Response: $body" | head -5
+            echo ""
+            echo "Response:"
+            echo "$body" | python3 -m json.tool 2>/dev/null || echo "$body"
             return 0
         else
             print_error "Health check failed (HTTP $http_code)"
+            echo "Response: $body" | head -5
             return 1
         fi
     else
@@ -64,18 +68,24 @@ main() {
     
     if [ "$PROJECT" = "argo" ]; then
         if [ "$ENVIRONMENT" = "production" ]; then
-            URL="https://argo-capital-production.vercel.app"
+            # Production Argo server is at the server IP on port 8000
+            URL="http://178.156.194.174:8000"
+            ENDPOINT="/health"
         else
             URL="https://staging-argo.vercel.app"
+            ENDPOINT="/health"
         fi
-        check_health "$URL" "Argo Capital"
+        check_health "$URL" "Argo Capital" "$ENDPOINT"
     elif [ "$PROJECT" = "alpine" ]; then
         if [ "$ENVIRONMENT" = "production" ]; then
-            URL="https://alpineanalytics.ai"
+            # Production backend is at the server IP on port 8001
+            URL="http://91.98.153.49:8001"
+            ENDPOINT="/health"
         else
             URL="https://staging-alpine.vercel.app"
+            ENDPOINT="/health"
         fi
-        check_health "$URL" "Alpine Analytics"
+        check_health "$URL" "Alpine Analytics" "$ENDPOINT"
     else
         print_error "Unknown project: $PROJECT"
         exit 1

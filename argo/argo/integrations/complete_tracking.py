@@ -1,6 +1,7 @@
 """
 Complete Live Tracking
 Every signal → Notion Pro (instant) + Tradervue Gold (instant) + Power BI (streaming)
+Enhanced with complete trade lifecycle tracking
 """
 import requests
 import os
@@ -8,16 +9,19 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-# Add shared package to path
-shared_path = Path(__file__).parent.parent.parent.parent.parent / "packages" / "shared"
-if shared_path.exists():
-    sys.path.insert(0, str(shared_path))
-
+# Use Argo-specific secrets manager
 try:
-    from utils.secrets_manager import get_secret
+    from argo.utils.secrets_manager import get_secret
     SECRETS_MANAGER_AVAILABLE = True
 except ImportError:
     SECRETS_MANAGER_AVAILABLE = False
+
+# Enhanced Tradervue integration
+try:
+    from argo.integrations.tradervue_integration import get_tradervue_integration
+    TRADERVUE_INTEGRATION_AVAILABLE = True
+except ImportError:
+    TRADERVUE_INTEGRATION_AVAILABLE = False
 
 class LiveTracker:
     def __init__(self):
@@ -38,18 +42,19 @@ class LiveTracker:
         self.notion_enabled = bool(self.notion_key and self.notion_trades)
         
         # Tradervue Gold - Try AWS Secrets Manager first, fallback to env
+        # Tradervue uses username and password (not API token)
         if SECRETS_MANAGER_AVAILABLE:
             try:
                 self.tradervue_user = get_secret("tradervue-username", service=service) or os.getenv('TRADERVUE_USERNAME', '')
-                self.tradervue_token = get_secret("tradervue-api-token", service=service) or os.getenv('TRADERVUE_API_TOKEN', '')
+                self.tradervue_password = get_secret("tradervue-password", service=service) or os.getenv('TRADERVUE_PASSWORD', '')
             except Exception:
                 self.tradervue_user = os.getenv('TRADERVUE_USERNAME', '')
-                self.tradervue_token = os.getenv('TRADERVUE_API_TOKEN', '')
+                self.tradervue_password = os.getenv('TRADERVUE_PASSWORD', '')
         else:
             self.tradervue_user = os.getenv('TRADERVUE_USERNAME', '')
-            self.tradervue_token = os.getenv('TRADERVUE_API_TOKEN', '')
+            self.tradervue_password = os.getenv('TRADERVUE_PASSWORD', '')
         
-        self.tradervue_enabled = bool(self.tradervue_user)
+        self.tradervue_enabled = bool(self.tradervue_user and self.tradervue_password)
         
         # Power BI - Try AWS Secrets Manager first, fallback to env
         if SECRETS_MANAGER_AVAILABLE:
@@ -62,7 +67,20 @@ class LiveTracker:
         
         self.powerbi_enabled = bool(self.powerbi_url)
         
-        print(f"✅ Tracking: Notion {'✅' if self.notion_enabled else '❌'} | Tradervue {'✅' if self.tradervue_enabled else '❌'} | Power BI {'✅' if self.powerbi_enabled else '❌'}")
+        # Enhanced Tradervue integration (if available)
+        if self.tradervue_enabled and TRADERVUE_INTEGRATION_AVAILABLE:
+            try:
+                self.tradervue_integration = get_tradervue_integration()
+                self.tradervue_enhanced = self.tradervue_integration.client.enabled
+            except Exception as e:
+                print(f"⚠️  Tradervue enhanced integration not available: {e}")
+                self.tradervue_enhanced = False
+                self.tradervue_integration = None
+        else:
+            self.tradervue_enhanced = False
+            self.tradervue_integration = None
+        
+        print(f"✅ Tracking: Notion {'✅' if self.notion_enabled else '❌'} | Tradervue {'✅' if self.tradervue_enabled else '❌'} {'(Enhanced)' if self.tradervue_enhanced else ''} | Power BI {'✅' if self.powerbi_enabled else '❌'}")
     
     def track_signal_live(self, signal):
         """Track signal in ALL systems IMMEDIATELY"""
@@ -95,12 +113,38 @@ class LiveTracker:
             except Exception as e:
                 print(f"Notion error: {e}")
         
-        # Log to Tradervue Gold (real-time, not daily batch)
+        # Enhanced Tradervue tracking (if trade_id available, use enhanced integration)
         if self.tradervue_enabled:
+            if self.tradervue_enhanced and signal.get('trade_id'):
+                # Use enhanced integration for complete trade tracking
+                try:
+                    from argo.tracking.unified_tracker import UnifiedPerformanceTracker
+                    tracker = UnifiedPerformanceTracker()
+                    trade = tracker._get_trade(signal['trade_id'])
+                    if trade:
+                        tradervue_id = self.tradervue_integration.sync_trade_entry(trade)
+                        if tradervue_id:
+                            print(f"✅ Tradervue (Enhanced): {signal['symbol']} synced live")
+                        else:
+                            # Fallback to basic sync
+                            self._track_tradervue_basic(signal)
+                    else:
+                        # Fallback to basic sync
+                        self._track_tradervue_basic(signal)
+                except Exception as e:
+                    print(f"Tradervue enhanced sync error: {e}")
+                    # Fallback to basic sync
+                    self._track_tradervue_basic(signal)
+            else:
+                # Basic sync (backward compatible)
+                self._track_tradervue_basic(signal)
+    
+    def _track_tradervue_basic(self, signal):
+        """Basic Tradervue tracking (backward compatible)"""
             try:
                 requests.post(
                     "https://www.tradervue.com/api/v1/trades",
-                    auth=(self.tradervue_user, self.tradervue_token),
+                auth=(self.tradervue_user, self.tradervue_password),
                     json={
                         "symbol": signal['symbol'],
                         "quantity": signal.get('quantity', 10),

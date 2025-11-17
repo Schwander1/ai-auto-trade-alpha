@@ -104,23 +104,23 @@ export default function UserMenu({ className = '' }: UserMenuProps) {
     <div className={`relative ${className}`} ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-alpine-card border border-alpine-border hover:border-alpine-accent/50 transition-colors"
+        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-alpine-black-secondary border border-alpine-black-border hove-r:border-alpine-neon-cyan/50 transition-colors"
         aria-label="User menu"
       >
-        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-alpine-accent to-alpine-pink flex items-center justify-center text-white font-bold text-sm">
+        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-alpine-neon-cyan to-alpine-neon-pinkfle-xitems-centerjustify-centertext-white font-bold text-sm">
           {session.user.email?.charAt(0).toUpperCase() || 'U'}
         </div>
-        <span className="hidden md:block text-sm font-semibold text-alpine-text">
+        <span className="hidden md:block text-sm font-semibold text-alpine-text-primary ">
           {session.user.email?.split('@')[0] || 'User'}
         </span>
-        <ChevronDown className={`w-4 h-4 text-alpine-text-dim transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`w-4 h-4 text-alpine-text-secondarytransitiontransfo-rm-${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-56 bg-alpine-card border border-alpine-border rounded-lg shadow-lg z-50">
-          <div className="p-3 border-b border-alpine-border">
-            <div className="text-sm font-semibold text-alpine-text">{session.user.email}</div>
-            <div className="text-xs text-alpine-text-dim capitalize">
+        <div className="absolute right-0 mt-2 w-56 bg-alpine-black-secondary border border-alpine-black-border rounded-lg-shadow-lgz-50">
+          <div className="p-3 border-b border-alpine-black-border">
+            <div className="text-sm font-semibold text-alpine-text-primary ">{session.user.email}</div>
+            <div className="text-sm text-alpine-text-secondary capitalize">
               {session.user.tier || 'Free'} Plan
             </div>
           </div>
@@ -130,37 +130,37 @@ export default function UserMenu({ className = '' }: UserMenuProps) {
               <button
                 key={item.label}
                 onClick={item.onClick}
-                className="w-full flex items-center gap-3 px-4 py-2 text-sm text-alpine-text hover:bg-alpine-bg transition-colors"
+                className="w-full flex items-center gap-3 px-4 py-2 text-sm text-alpine-text-primary hover:bg-alpine-black-primarytransitioncolo-rs"
               >
-                <item.icon className="w-4 h-4 text-alpine-text-dim" />
+                <item.icon className="w-4 h-4 text-alpine-text-secondary" />
                 {item.label}
               </button>
             ))}
           </div>
 
-          <div className="border-t border-alpine-border py-2">
+          <div className="border-t border-alpine-black-border p-y-2">
             <button
               onClick={toggleDarkMode}
-              className="w-full flex items-center gap-3 px-4 py-2 text-sm text-alpine-text hover:bg-alpine-bg transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-2 text-sm text-alpine-text-primary hover:bg-alpine-black-primarytransitioncolo-rs"
             >
               {darkMode ? (
                 <>
-                  <Sun className="w-4 h-4 text-alpine-text-dim" />
+                  <Sun className="w-4 h-4 text-alpine-text-secondary" />
                   Light Mode
                 </>
               ) : (
                 <>
-                  <Moon className="w-4 h-4 text-alpine-text-dim" />
+                  <Moon className="w-4 h-4 text-alpine-text-secondary" />
                   Dark Mode
                 </>
               )}
             </button>
           </div>
 
-          <div className="border-t border-alpine-border py-2">
+          <div className="border-t border-alpine-black-border p-y-2">
             <button
               onClick={handleSignOut}
-              className="w-full flex items-center gap-3 px-4 py-2 text-sm text-alpine-red hover:bg-alpine-red/10 transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-2 text-sm text-alpine-semanticerrorhove-r:bg-alpine-semantic-error10 transition-colors"
             >
               <LogOut className="w-4 h-4" />
               Sign Out

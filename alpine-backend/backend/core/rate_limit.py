@@ -73,7 +73,19 @@ def check_rate_limit(
         return allowed
     
     except Exception as e:
-        print(f"Rate limit check error: {e}. Allowing request.")
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Rate limit check error: {e}")
+        
+        # SECURITY: Fail closed in production, fail open in development
+        from backend.core.config import settings
+        if settings.ENVIRONMENT == "production":
+            # In production, fail closed to prevent DoS if Redis is down
+            logger.critical("Rate limiting failed in production - rejecting request for safety")
+            return False  # Fail closed
+        else:
+            # In development, fail open to allow testing
+            logger.warning("Rate limiting failed in development - allowing request")
         return True  # Fail open
 
 

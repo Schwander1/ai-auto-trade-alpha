@@ -8,6 +8,7 @@ import json
 import os
 
 from backend.core.database import get_db
+from backend.core.cache import cache_response
 from backend.core.security_logging import SecurityEvent
 from backend.api.auth import get_current_user
 from backend.api.admin import require_admin
@@ -40,6 +41,7 @@ class SecurityEventLog(BaseModel):
 
 
 @router.get("/metrics", response_model=SecurityMetrics)
+@cache_response(ttl=60)  # Cache for 1 minute (security metrics update frequently)
 async def get_security_metrics(
     current_user: User = Depends(require_admin),
     authorization: Optional[str] = Header(None)
@@ -91,8 +93,23 @@ async def get_security_metrics(
                     continue
     
     # Get 2FA statistics
-    db = next(get_db())
-    metrics["two_fa_enabled_count"] = db.query(User).filter(User.totp_enabled == True).count()
+    # OPTIMIZATION #2: Use context manager to prevent connection leaks
+    from contextlib import contextmanager
+    
+    @contextmanager
+    def get_db_context():
+        db_gen = get_db()
+        db = next(db_gen)
+        try:
+            yield db
+        finally:
+            try:
+                next(db_gen, None)
+            except StopIteration:
+                pass
+    
+    with get_db_context() as db:
+        metrics["two_fa_enabled_count"] = db.query(User).filter(User.totp_enabled == True).count()
     
     return SecurityMetrics(**metrics)
 

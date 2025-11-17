@@ -59,11 +59,11 @@ export default function PaymentModal({ isOpen, onClose, tier, price, priceId }: 
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="bg-alpine-card border border-alpine-border rounded-lg max-w-md w-full p-6 relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-alpine-black-primary/80 backdrop-blur-sm">
+      <div className="bg-alpine-black-secondary border border-alpine-black-border rounded-lg max-w-md w-full p-6 relative">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-alpine-text-dim hover:text-alpine-text transition-colors"
+          className="absolute top-4 right-4 text-alpine-text-secondary hover:text-alpine-text-primary transition-colors"
           aria-label="Close"
         >
           <X className="w-5 h-5" />
@@ -71,28 +71,28 @@ export default function PaymentModal({ isOpen, onClose, tier, price, priceId }: 
 
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-lg bg-alpine-accent/10 flex items-center justify-center">
-              <CreditCard className="w-6 h-6 text-alpine-accent" />
+            <div className="w-12 h-12 rounded-lg bg-alpine-neon-cyan/10 flex items-center justify-center">
+              <CreditCard className="w-6 h-6 text-alpine-neon-cyan" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-alpine-text">Upgrade to {tier}</h2>
-              <p className="text-alpine-text-dim">Complete your subscription</p>
+              <h2 className="text-2xl font-bold text-alpine-text-primary ">Upgrade to {tier}</h2>
+              <p className="text-alpine-text-secondary">Complete your subscription</p>
             </div>
           </div>
 
-          <div className="bg-alpine-bg rounded-lg p-4 mb-4">
+          <div className="bg-alpine-black-primaryroundedl-g-p-4 mb-4">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-alpine-text-dim">Plan</span>
-              <span className="text-alpine-text font-semibold capitalize">{tier}</span>
+              <span className="text-alpine-text-secondary">Plan</span>
+              <span className="text-alpine-text-primary font-semiboldcapitaliz-e">{tier}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-alpine-text-dim">Price</span>
-              <span className="text-2xl font-black text-alpine-text">${price}/month</span>
+              <span className="text-alpine-text-secondary">Price</span>
+              <span className="text-2xl font-black text-alpine-text-primary ">${price}/month</span>
             </div>
           </div>
 
           {error && (
-            <div className="mb-4 p-3 bg-alpine-red/10 border border-alpine-red/30 rounded-lg text-sm text-alpine-red">
+            <div className="mb-4 p-3 bg-alpine-semantic-error/10 border border-alpine-semantic-error/30 rounded-lg text-sm text-alpine-semantic-error">
               {error}
             </div>
           )}
@@ -101,7 +101,7 @@ export default function PaymentModal({ isOpen, onClose, tier, price, priceId }: 
             <button
               onClick={handleCheckout}
               disabled={isLoading || !stripe}
-              className="w-full bg-gradient-to-r from-alpine-accent to-alpine-pink hover:from-alpine-pink hover:to-alpine-accent text-white font-bold py-3 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-gradient-to-r from-alpine-neon-cyan to-alpine-neon-pinkhove-r:from-alpine-neon-pinkhove-r:to-alpine-neon-cyantext-white-fontbol-dpy-3 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>
@@ -118,13 +118,13 @@ export default function PaymentModal({ isOpen, onClose, tier, price, priceId }: 
 
             <button
               onClick={onClose}
-              className="w-full bg-alpine-border hover:bg-alpine-border/80 text-alpine-text font-semibold py-3 rounded-lg transition-colors"
+              className="w-full bg-alpine-black-border hover:bg-alpine-black-border/80 text-alpine-text-primary font-semibold py-3 rounded-lg transition-colors"
             >
               Cancel
             </button>
           </div>
 
-          <p className="mt-4 text-xs text-alpine-text-dim text-center">
+          <p className="mt-4 text-sm text-alpine-text-secondary text-center">
             Secure payment powered by Stripe
           </p>
         </div>

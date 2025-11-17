@@ -75,12 +75,12 @@ export default function Hero() {
       id="home"
       className="relative min-h-screen flex items-center justify-center overflow-hidden"
       style={{
-        background: 'linear-gradient(180deg, #000000 0%, #0a0a0f 100%)',
+        background: 'linear-gradient(180deg, var(--alpine-black-pure) 0%, var(--alpine-black-primary) 100%)',
       }}
     >
       {/* Floating Blob */}
       <motion.div
-        className="absolute top-1/4 right-1/4 w-96 h-96 bg-alpine-accent/10 rounded-full blur-3xl pointer-events-none"
+        className="absolute top-1/4 right-1/4 w-96 h-96 bg-alpine-neon-cyan/10 rounded-full blur-3xl pointer-events-none"
         animate={{
           x: [0, 100, 0],
           y: [0, -100, 0],
@@ -103,11 +103,11 @@ export default function Hero() {
           {/* Heading */}
           <motion.h1
             variants={item}
-            className="font-display text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight mb-6"
+            className="font-display text-5xl sm:text-6xl lg:text-7xl font-black tracking-[0.15em] mb-6"
           >
             <span className="text-white">Beat the Market.</span>
             <br />
-            <span className="bg-gradient-to-r from-alpine-accent via-alpine-pink to-alpine-blue bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-alpine-neon-cyanvia-alpine-neon-pink-to-alpine-neon-purplebg-cliptex-ttext-transparent">
               Provably.
             </span>
           </motion.h1>
@@ -115,14 +115,14 @@ export default function Hero() {
           {/* Subheading */}
           <motion.p
             variants={item}
-            className="text-2xl md:text-3xl text-alpine-text-dim mb-8 max-w-4xl mx-auto leading-relaxed"
+            className="text-2xl md:text-3xl text-alpine-text-secondary mb-8 max-w-4xl mx-auto leading-relaxed"
           >
             20-year backtest: <strong className="text-white">+565% return</strong>. Beat SPY by{' '}
-            <strong className="text-alpine-accent">165%</strong>.
+            <strong className="text-alpine-neon-cyan">165%</strong>.
             <br />
             <span className="text-xl">Now launching live with cryptographic verification.</span>
             <br />
-            <span className="text-lg text-alpine-accent font-semibold">Founding members lock in 50% off forever.</span>
+            <span className="text-lg text-alpine-neon-cyan font-semibold">Founding members lock in 50% off forever.</span>
           </motion.p>
 
           {/* Stats Grid */}
@@ -136,12 +136,12 @@ export default function Hero() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.8 + index * 0.1 }}
-                className="bg-alpine-card border border-alpine-border rounded-lg p-4"
+                className="bg-alpine-black-secondary border border-alpine-black-border rounded-lg p-4"
               >
-                <div className="text-alpine-accent font-black text-lg mb-1">{stat.value}</div>
-                <div className="text-alpine-text font-semibold text-sm mb-1">{stat.label}</div>
+                <div className="text-alpine-neon-cyan font-black-text-lgmb-1">{stat.value}</div>
+                <div className="text-alpine-text-primary font-semibold-texts-mmb-1">{stat.label}</div>
                 {stat.sublabel && (
-                  <div className="text-alpine-text-dim text-xs">{stat.sublabel}</div>
+                  <div className="text-alpine-text-secondary text-sm">{stat.sublabel}</div>
                 )}
               </motion.div>
             ))}
@@ -152,32 +152,32 @@ export default function Hero() {
             variants={item}
             className="mt-8 mb-8 text-center"
           >
-            <div className="inline-block bg-gradient-to-r from-alpine-accent/10 via-alpine-pink/10 to-alpine-accent/10 border-2 border-alpine-accent/30 rounded-xl p-6 shadow-lg">
-              <p className="text-sm font-medium text-alpine-text-dim mb-2">🚀 Live Launch Countdown</p>
+            <div className="inline-block bg-gradient-to-r from-alpine-neon-cyan/10 via-alpine-neon-pink/10 to-alpine-neoncya-n/10 border-2 border-alpine-neon-cyan/30 rounded-xl p-6 shadow-lg">
+              <p className="text-sm font-medium text-alpine-text-secondary mb-2">🚀 Live Launch Countdown</p>
               <div className="flex gap-4 justify-center mb-2">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-alpine-accent">
+                  <div className="text-3xl font-bold text-alpine-neon-cyan">
                     {String(timeLeft.hours).padStart(2, '0')}
                   </div>
-                  <div className="text-xs text-alpine-text-dim uppercase">Hours</div>
+                  <div className="text-sm text-alpine-text-secondary uppercase">Hours</div>
                 </div>
-                <div className="text-3xl font-bold text-alpine-accent">:</div>
+                <div className="text-3xl font-bold text-alpine-neon-cyan">:</div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-alpine-accent">
+                  <div className="text-3xl font-bold text-alpine-neon-cyan">
                     {String(timeLeft.minutes).padStart(2, '0')}
                   </div>
-                  <div className="text-xs text-alpine-text-dim uppercase">Minutes</div>
+                  <div className="text-sm text-alpine-text-secondary uppercase">Minutes</div>
                 </div>
-                <div className="text-3xl font-bold text-alpine-accent">:</div>
+                <div className="text-3xl font-bold text-alpine-neon-cyan">:</div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-alpine-accent">
+                  <div className="text-3xl font-bold text-alpine-neon-cyan">
                     {String(timeLeft.seconds).padStart(2, '0')}
                   </div>
-                  <div className="text-xs text-alpine-text-dim uppercase">Seconds</div>
+                  <div className="text-sm text-alpine-text-secondary uppercase">Seconds</div>
                 </div>
               </div>
-              <p className="text-sm font-semibold text-alpine-text">Wednesday, November 12, 2025 at 9:00 AM ET</p>
-              <p className="text-xs text-alpine-text-dim mt-1">Cryptographic verification goes live</p>
+              <p className="text-sm font-semibold text-alpine-text-primary ">Wednesday, November 12, 2025 at 9:00 AM ET</p>
+              <p className="text-sm text-alpine-text-secondary mt-1">Cryptographic verification goes live</p>
             </div>
           </motion.div>
 
@@ -188,23 +188,23 @@ export default function Hero() {
           >
             <a
               href="/api/download-backtest"
-              className="group relative inline-flex items-center justify-center gap-3 px-10 py-5 bg-gradient-to-r from-alpine-accent to-alpine-pink hover:from-alpine-pink hover:to-alpine-accent text-white font-black text-lg rounded-xl shadow-2xl shadow-alpine-accent/50 transform transition-all duration-300 hover:scale-105 hover:shadow-alpine-pink/50"
+              className="group relative inline-flex items-center justify-center gap-3 px-10 py-5 bg-gradient-to-r from-alpine-neon-cyan to-alpine-neon-pinkhove-r:from-alpine-neon-pinkhove-r:to-alpine-neon-cyantext-white-fontblac-ktext-lgrounded-xlshadow-2xl shadow-alpine-neoncya-n/50 transform transition-all duration-300 hover:scale-105 hover:shadow-alpine-neonpin-k/50"
             >
               <span className="relative z-10 flex items-center gap-3">
                 <Download className="w-6 h-6" />
                 Download Backtest Data
               </span>
-              <div className="absolute inset-0 bg-gradient-to-r from-alpine-pink to-alpine-accent opacity-0 group-hover:opacity-100 rounded-xl blur transition-opacity duration-300"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-alpine-neon-pink-to-alpine-neoncyanopacit-y-0 group-hover:opacity-100 rounded-xl blur transition-opacity duration-300"></div>
             </a>
             <button
               onClick={() => {
                 const pricing = document.getElementById('pricing')
                 pricing?.scrollIntoView({ behavior: 'smooth' })
               }}
-              className="group relative px-10 py-5 bg-gradient-to-r from-alpine-accent to-alpine-pink hover:from-alpine-pink hover:to-alpine-accent text-white font-black text-lg rounded-xl shadow-2xl shadow-alpine-accent/50 transform transition-all duration-300 hover:scale-105 hover:shadow-alpine-pink/50"
+              className="group relative px-10 py-5 bg-gradient-to-r from-alpine-neon-cyan to-alpine-neon-pinkhove-r:from-alpine-neon-pinkhove-r:to-alpine-neon-cyantext-white-fontblac-ktext-lgrounded-xlshadow-2xl shadow-alpine-neoncya-n/50 transform transition-all duration-300 hover:scale-105 hover:shadow-alpine-neonpin-k/50"
             >
               <span className="relative z-10">Start 7-Day Trial →</span>
-              <div className="absolute inset-0 bg-gradient-to-r from-alpine-pink to-alpine-accent opacity-0 group-hover:opacity-100 rounded-xl blur transition-opacity duration-300"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-alpine-neon-pink-to-alpine-neoncyanopacit-y-0 group-hover:opacity-100 rounded-xl blur transition-opacity duration-300"></div>
             </button>
           </motion.div>
         </motion.div>
@@ -219,7 +219,7 @@ export default function Hero() {
           <motion.div
             animate={{ y: [0, 10, 0] }}
             transition={{ duration: 2, repeat: Infinity }}
-            className="text-alpine-text-dim"
+            className="text-alpine-text-secondary"
           >
             <ArrowDown className="w-6 h-6" />
           </motion.div>

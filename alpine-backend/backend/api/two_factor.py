@@ -96,9 +96,17 @@ async def setup_2fa(
     hashed_backup_codes = [TOTPManager.hash_backup_code(code) for code in backup_codes]
     
     # Store secret and backup codes (temporarily, until verified)
-    current_user.totp_secret = secret
-    current_user.backup_codes = json.dumps(hashed_backup_codes)
-    db.commit()
+    try:
+        current_user.totp_secret = secret
+        current_user.backup_codes = json.dumps(hashed_backup_codes)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error setting up 2FA: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to setup 2FA"
+        )
     
     log_security_event(
         SecurityEvent.ADMIN_ACTION,
@@ -162,8 +170,16 @@ async def enable_2fa(
         )
     
     # Enable 2FA
-    current_user.totp_enabled = True
-    db.commit()
+    try:
+        current_user.totp_enabled = True
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error enabling 2FA: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to enable 2FA"
+        )
     
     log_security_event(
         SecurityEvent.ADMIN_ACTION,
@@ -228,9 +244,15 @@ async def verify_2fa(
         backup_codes = json.loads(current_user.backup_codes)
         if TOTPManager.verify_backup_code(backup_codes, verify_data.token):
             # Remove used backup code
-            backup_codes.remove(TOTPManager.hash_backup_code(verify_data.token))
-            current_user.backup_codes = json.dumps(backup_codes) if backup_codes else None
-            db.commit()
+            try:
+                backup_codes.remove(TOTPManager.hash_backup_code(verify_data.token))
+                current_user.backup_codes = json.dumps(backup_codes) if backup_codes else None
+                db.commit()
+            except Exception as e:
+                db.rollback()
+                logger.error(f"Error updating backup codes: {e}", exc_info=True)
+                # Don't fail verification if backup code update fails
+                pass
             
             log_security_event(
                 SecurityEvent.ADMIN_ACTION,
@@ -322,10 +344,18 @@ async def disable_2fa(
                 )
     
     # Disable 2FA
-    current_user.totp_enabled = False
-    current_user.totp_secret = None
-    current_user.backup_codes = None
-    db.commit()
+    try:
+        current_user.totp_enabled = False
+        current_user.totp_secret = None
+        current_user.backup_codes = None
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error disabling 2FA: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to disable 2FA"
+        )
     
     log_security_event(
         SecurityEvent.ADMIN_ACTION,

@@ -115,3 +115,9 @@ argo/config.json
 conversation_logs/
 !conversation_logs/.gitignore
 !conversation_logs/README.md
+
+# Large report files
+**/signal_traces.jsonl
+argo/**/signal_traces.jsonl
+*.jsonl
+!**/package.jsonl

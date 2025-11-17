@@ -4,13 +4,9 @@ import requests
 from pathlib import Path
 from anthropic import Anthropic
 
-# Add shared package to path
-shared_path = Path(__file__).parent.parent.parent.parent.parent / "packages" / "shared"
-if shared_path.exists():
-    sys.path.insert(0, str(shared_path))
-
+# Use Argo-specific secrets manager
 try:
-    from utils.secrets_manager import get_secret
+    from argo.utils.secrets_manager import get_secret
     SECRETS_MANAGER_AVAILABLE = True
 except ImportError:
     SECRETS_MANAGER_AVAILABLE = False

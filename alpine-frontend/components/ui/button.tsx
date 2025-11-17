@@ -4,14 +4,14 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-electric-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-alpine-neon-cyanfocusvisibl-e:ring-offset-2 focus-visible:ring-offset-alpine-blackprimarydisable-d:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
-        default: 'bg-gradient-cta text-black hover:scale-105 shadow-glow-cyan',
-        outline: 'border-2 border-electric-cyan text-electric-cyan hover:bg-electric-cyan/10 hover:shadow-glow-cyan',
-        ghost: 'hover:bg-electric-cyan/10 text-ice-blue',
-        secondary: 'bg-space-gray text-ice-blue hover:bg-space-gray/80',
+        default: 'bg-gradient-to-r from-alpine-neon-cyan to-alpine-neon-pink-textblac-khover:scale-105 shadow-glow-cyan',
+        outline: 'border-2 border-alpine-neon-cyantext-alpine-neoncyanhove-r:bg-alpine-neoncya-n/10 hover:shadow-glow-cyan',
+        ghost: 'hover:bg-alpine-neoncya-n/10 text-alpine-text-primary',
+        secondary: 'bg-alpine-black-secondary text-alpine-text-primary hover:bg-alpine-black-secondary/80',
       },
       size: {
         default: 'h-11 px-6',

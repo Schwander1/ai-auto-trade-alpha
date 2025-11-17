@@ -83,19 +83,53 @@ export default function SignalCard({
 
   // 4. HELPER FUNCTIONS
   const verifySignalHash = async (): Promise<SignalVerification> => {
-    // TODO: Implement actual SHA-256 verification
-    // This is a placeholder - replace with actual verification logic
     try {
-      // Simulate verification (replace with actual API call)
-      await new Promise(resolve => setTimeout(resolve, 500))
+      // Check if hash exists and has correct format
+      if (!signal.hash || signal.hash.length !== 64 || !/^[a-f0-9]+$/i.test(signal.hash)) {
+        return {
+          isValid: false,
+          verifiedAt: new Date().toISOString(),
+          error: 'Invalid hash format',
+        }
+      }
+
+      // Build hash fields object (must match backend format exactly)
+      const hashFields = {
+        signal_id: signal.signal_id || signal.id,
+        symbol: signal.symbol,
+        action: signal.action,
+        entry_price: signal.entry_price,
+        target_price: signal.target_price || signal.take_profit || null,
+        stop_price: signal.stop_price || signal.stop_loss || null,
+        confidence: signal.confidence,
+        strategy: signal.strategy || null,
+        timestamp: signal.timestamp,
+      }
+
+      // Convert to JSON string with sorted keys (must match backend)
+      const sortedKeys = Object.keys(hashFields).sort()
+      const sortedFields: Record<string, any> = {}
+      sortedKeys.forEach(key => {
+        sortedFields[key] = hashFields[key as keyof typeof hashFields]
+      })
+      const hashString = JSON.stringify(sortedFields)
+
+      // Calculate SHA-256 hash using Web Crypto API
+      const encoder = new TextEncoder()
+      const data = encoder.encode(hashString)
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data)
       
-      // For now, assume valid if hash exists and has correct length
-      const isValid = signal.hash.length === 64 && /^[a-f0-9]+$/i.test(signal.hash)
-      
+      // Convert to hex string
+      const hashArray = Array.from(new Uint8Array(hashBuffer))
+      const calculatedHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+
+      // Compare with stored hash
+      const isValid = calculatedHash.toLowerCase() === signal.hash.toLowerCase()
+
       return {
         isValid,
         verifiedAt: new Date().toISOString(),
-        error: isValid ? undefined : 'Invalid hash format',
+        error: isValid ? undefined : 'Hash verification failed - signal data may have been tampered with',
       }
     } catch (error) {
       return {
@@ -129,15 +163,15 @@ export default function SignalCard({
   }
 
   const getConfidenceColor = (confidence: number): string => {
-    if (confidence >= 95) return 'text-alpine-accent'
-    if (confidence >= 90) return 'text-alpine-pink'
-    return 'text-alpine-text-dim'
+    if (confidence >= 95) return 'text-alpine-neon-cyan'
+    if (confidence >= 90) return 'text-alpine-neon-pink'
+    return 'text-alpine-text-secondary'
   }
 
   const getConfidenceBg = (confidence: number): string => {
-    if (confidence >= 95) return 'bg-alpine-accent/10 border-alpine-accent/30'
-    if (confidence >= 90) return 'bg-alpine-pink/10 border-alpine-pink/30'
-    return 'bg-alpine-card border-alpine-border'
+    if (confidence >= 95) return 'bg-alpine-neon-cyan/10 border-alpine-neon-cyan/30'
+    if (confidence >= 90) return 'bg-alpine-neonpin-k/10 border-alpine-neonpin-k/30'
+    return 'bg-alpine-black-secondary border-alpine-black-border
   }
 
   const getOutcomeDisplay = () => {
@@ -145,8 +179,8 @@ export default function SignalCard({
 
     const isWin = signal.outcome === 'win'
     const Icon = isWin ? CheckCircle2 : XCircle
-    const color = isWin ? 'text-alpine-accent' : 'text-alpine-red'
-    const bgColor = isWin ? 'bg-alpine-accent/10' : 'bg-alpine-red/10'
+    const color = isWin ? 'text-alpine-neon-cyan' : 'text-alpine-semantic-error
+    const bgColor = isWin ? 'bg-alpine-neon-cyan/10' : 'bg-alpine-semantic-error10'
 
     return (
       <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${bgColor}`}>
@@ -156,7 +190,7 @@ export default function SignalCard({
             {isWin ? 'Win' : signal.outcome === 'expired' ? 'Expired' : 'Loss'}
           </div>
           {signal.pnl_pct !== null && signal.pnl_pct !== undefined && (
-            <div className={`text-xs ${color}`}>
+            <div className={`text-sm ${color}`}>
               {signal.pnl_pct >= 0 ? '+' : ''}{signal.pnl_pct.toFixed(2)}%
             </div>
           )}
@@ -171,33 +205,33 @@ export default function SignalCard({
   // 6. RENDER
   return (
     <div
-      className={`bg-alpine-card border border-alpine-border rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow ${className}`}
+      className={`bg-alpine-black-secondary border border-alpine-black-border rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow ${className}`}
       role="article"
       aria-label={`Trading signal for ${signal.symbol}`}
     >
       {/* Header: Symbol and Action */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <h3 className="text-xl font-display font-bold text-alpine-text">
+          <h3 className="text-xl font-display font-bold text-alpine-text-primary ">
             {signal.symbol}
           </h3>
           {signal.regime && (
-            <span className="px-2 py-1 text-xs font-semibold rounded border border-alpine-border text-alpine-text-dim">
+            <span className="px-2 py-1 text-sm font-semibold rounded border border-alpine-black-border text-alpine-text-secondary">
               {signal.regime}
             </span>
           )}
         </div>
         <div className="flex items-center gap-2">
           {signal.action === 'BUY' ? (
-            <TrendingUp className="w-5 h-5 text-alpine-accent" aria-hidden="true" />
+            <TrendingUp className="w-5 h-5 text-alpine-neon-cyan" aria-hidden="true" />
           ) : (
-            <TrendingDown className="w-5 h-5 text-alpine-red" aria-hidden="true" />
+            <TrendingDown className="w-5 h-5 text-alpine-semantic-errorariahidd-en="true" />
           )}
           <span
             className={`px-3 py-1 rounded-lg text-sm font-bold ${
               signal.action === 'BUY'
-                ? 'bg-alpine-accent/20 text-alpine-accent border border-alpine-accent/30'
-                : 'bg-alpine-red/20 text-alpine-red border border-alpine-red/30'
+                ? 'bg-alpine-neon-cyan/20 text-alpine-neon-cyan border-border-alpine-neon-cyan/30'
+                : 'bg-alpine-semantic-error20 text-alpine-semantic-errorborder border-alpine-semantic-error30'
             }`}
           >
             {signal.action}
@@ -210,13 +244,13 @@ export default function SignalCard({
         className={`mb-4 p-3 rounded-lg border ${getConfidenceBg(signal.confidence)}`}
       >
         <div className="flex items-center justify-between">
-          <span className="text-sm text-alpine-text-dim">Confidence</span>
+          <span className="text-sm text-alpine-text-secondary">Confidence</span>
           <span className={`text-lg font-black ${getConfidenceColor(signal.confidence)}`}>
             {formatConfidence(signal.confidence)}
           </span>
         </div>
         {signal.type && (
-          <div className="mt-1 text-xs text-alpine-text-dim">
+          <div className="mt-1 text-sm text-alpine-text-secondary">
             {signal.type} Signal
           </div>
         )}
@@ -226,23 +260,23 @@ export default function SignalCard({
       {showDetails && (
         <div className="space-y-2 mb-4">
           <div className="flex justify-between items-center">
-            <span className="text-sm text-alpine-text-dim">Entry Price</span>
-            <span className="text-alpine-text font-semibold">
+            <span className="text-sm text-alpine-text-secondary">Entry Price</span>
+            <span className="text-alpine-text-primary font-semibold">
               {formatPrice(signal.entry_price)}
             </span>
           </div>
           {signal.stop_loss && (
             <div className="flex justify-between items-center">
-              <span className="text-sm text-alpine-text-dim">Stop Loss</span>
-              <span className="text-alpine-red font-semibold">
+              <span className="text-sm text-alpine-text-secondary">Stop Loss</span>
+              <span className="text-alpine-semantic-error font-semibold">
                 {formatPrice(signal.stop_loss)}
               </span>
             </div>
           )}
           {signal.take_profit && (
             <div className="flex justify-between items-center">
-              <span className="text-sm text-alpine-text-dim">Take Profit</span>
-              <span className="text-alpine-accent font-semibold">
+              <span className="text-sm text-alpine-text-secondary">Take Profit</span>
+              <span className="text-alpine-neon-cyan font-semibold">
                 {formatPrice(signal.take_profit)}
               </span>
             </div>
@@ -258,18 +292,18 @@ export default function SignalCard({
       {/* Verification Status */}
       <div className="mb-4 flex items-center gap-2">
         {isVerified ? (
-          <div className="flex items-center gap-2 text-alpine-accent">
+          <div className="flex items-center gap-2 text-alpine-neon-cyan">
             <Shield className="w-4 h-4" aria-hidden="true" />
             <span className="text-sm font-semibold">SHA-256 Verified</span>
           </div>
         ) : (
-          <div className="flex items-center gap-2 text-alpine-text-dim">
+          <div className="flex items-center gap-2 text-alpine-text-secondary">
             <Clock className="w-4 h-4" aria-hidden="true" />
             <span className="text-sm">Not verified</span>
           </div>
         )}
         {signal.hash && (
-          <span className="text-xs text-alpine-text-dim font-mono ml-auto">
+          <span className="text-sm text-alpine-text-secondary font-mono-mlau-to">
             {signal.hash.slice(0, 8)}...
           </span>
         )}
@@ -277,13 +311,13 @@ export default function SignalCard({
 
       {/* Verification Error */}
       {verificationError && (
-        <div className="mb-4 p-2 bg-alpine-red/10 border border-alpine-red/30 rounded text-sm text-alpine-red">
+        <div className="mb-4 p-2 bg-alpine-semantic-error10 border border-alpine-semantic-error30 rounded text-sm text-alpine-semantic-error">
           {verificationError}
         </div>
       )}
 
       {/* Timestamp */}
-      <div className="mb-4 text-xs text-alpine-text-dim">
+      <div className="mb-4 text-sm text-alpine-text-secondary">
         {formatTimestamp(signal.timestamp)}
       </div>
 
@@ -292,7 +326,7 @@ export default function SignalCard({
         <button
           onClick={handleVerifyClick}
           disabled={isLoading}
-          className="w-full px-4 py-2 bg-gradient-to-r from-alpine-accent to-alpine-pink hover:from-alpine-pink hover:to-alpine-accent text-white font-black rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="w-full px-4 py-2 bg-gradient-to-r from-alpine-neon-cyan to-alpine-neon-pinkhove-r:from-alpine-neon-pinkhove-r:to-alpine-neon-cyantext-white-fontblac-krounded-lg transition-allduration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           aria-label="Verify signal hash"
         >
           {isLoading ? (

@@ -14,16 +14,37 @@ security_logger.setLevel(logging.INFO)
 import os
 os.makedirs("logs", exist_ok=True)
 
-# Create file handler for security logs
-handler = logging.FileHandler("logs/security.log")
-handler.setLevel(logging.INFO)
+# SECURITY: Implement log rotation to prevent disk space issues
+from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
+
+# Size-based rotation: 10MB per file, keep 5 backup files
+size_handler = RotatingFileHandler(
+    "logs/security.log",
+    maxBytes=10 * 1024 * 1024,  # 10MB
+    backupCount=5,
+    encoding='utf-8'
+)
+size_handler.setLevel(logging.INFO)
+
+# Time-based rotation: Daily rotation, keep 30 days
+time_handler = TimedRotatingFileHandler(
+    "logs/security.log",
+    when='midnight',
+    interval=1,
+    backupCount=30,  # Keep 30 days of logs
+    encoding='utf-8'
+)
+time_handler.setLevel(logging.INFO)
 
 # Create formatter
 formatter = logging.Formatter(
     '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
-handler.setFormatter(formatter)
-security_logger.addHandler(handler)
+size_handler.setFormatter(formatter)
+time_handler.setFormatter(formatter)
+
+# Use size-based rotation (more reliable for high-volume logs)
+security_logger.addHandler(size_handler)
 
 
 class SecurityEvent:
@@ -88,6 +109,14 @@ def log_failed_login(email: str, ip_address: Optional[str] = None, request: Opti
         request=request,
         details={"reason": "invalid_credentials"}
     )
+    # Send alert if threshold exceeded
+    from backend.core.alerting import send_security_alert
+    send_security_alert(
+        event_type="failed_login",
+        message=f"Multiple failed login attempts for {email}",
+        identifier=email or ip_address or "unknown",
+        details={"email": email, "ip_address": ip_address}
+    )
 
 
 def log_successful_login(user_id: int, email: str, ip_address: Optional[str] = None, request: Optional[Request] = None):
@@ -110,6 +139,14 @@ def log_account_locked(email: str, ip_address: Optional[str] = None, request: Op
         request=request,
         details={"reason": "too_many_failed_attempts"}
     )
+    # Send critical alert for account lockout
+    from backend.core.alerting import send_security_alert
+    send_security_alert(
+        event_type="account_locked",
+        message=f"Account locked: {email}",
+        identifier=email or ip_address or "unknown",
+        details={"email": email, "ip_address": ip_address, "reason": "too_many_failed_attempts"}
+    )
 
 
 def log_rate_limit_exceeded(client_id: str, endpoint: str, ip_address: Optional[str] = None, request: Optional[Request] = None):
@@ -120,6 +157,14 @@ def log_rate_limit_exceeded(client_id: str, endpoint: str, ip_address: Optional[
         ip_address=ip_address,
         request=request,
         details={"endpoint": endpoint, "client_id": client_id}
+    )
+    # Send alert if threshold exceeded
+    from backend.core.alerting import send_security_alert
+    send_security_alert(
+        event_type="rate_limit",
+        message=f"Rate limit abuse detected: {client_id} on {endpoint}",
+        identifier=client_id or ip_address or "unknown",
+        details={"endpoint": endpoint, "client_id": client_id, "ip_address": ip_address}
     )
 
 
@@ -142,6 +187,14 @@ def log_csrf_violation(ip_address: Optional[str] = None, request: Optional[Reque
         request=request,
         details={"reason": "token_mismatch_or_missing"}
     )
+    # Send alert if threshold exceeded
+    from backend.core.alerting import send_security_alert
+    send_security_alert(
+        event_type="csrf_violation",
+        message=f"CSRF violation detected from {ip_address}",
+        identifier=ip_address or "unknown",
+        details={"ip_address": ip_address, "reason": "token_mismatch_or_missing"}
+    )
 
 
 def log_unauthorized_access(user_id: Optional[int], email: Optional[str], resource: str, request: Optional[Request] = None):
@@ -152,5 +205,14 @@ def log_unauthorized_access(user_id: Optional[int], email: Optional[str], resour
         email=email,
         request=request,
         details={"resource": resource, "reason": "insufficient_permissions"}
+    )
+    # Send alert if threshold exceeded
+    from backend.core.alerting import send_security_alert
+    identifier = email or (f"user_{user_id}" if user_id else "unknown")
+    send_security_alert(
+        event_type="unauthorized_access",
+        message=f"Unauthorized access attempt: {identifier} tried to access {resource}",
+        identifier=identifier,
+        details={"user_id": user_id, "email": email, "resource": resource}
     )
 

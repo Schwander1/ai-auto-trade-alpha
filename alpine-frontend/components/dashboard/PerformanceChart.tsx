@@ -43,8 +43,8 @@ export default function PerformanceChart({ data, type = 'equity', className = ''
             },
           })
 
-          const lineSeries = chartInstance.addLineSeries({
-            color: type === 'equity' ? '#00d9ff' : type === 'winrate' ? '#00ff88' : '#ff0080',
+          const lineSeries = (chartInstance as any).addLineSeries({
+            color: type === 'equity' ? '#18e0ff' : type === 'winrate' ? '#00ff88' : '#fe1c80',
             lineWidth: 2,
             priceFormat: {
               type: 'price',
@@ -94,9 +94,9 @@ export default function PerformanceChart({ data, type = 'equity', className = ''
 
   if (isLoading) {
     return (
-      <div className={`bg-alpine-card border border-alpine-border rounded-lg p-6 ${className}`}>
+      <div className={`card-neon border border-alpine-neon-cyan/20 rounded-lg p-6 ${className}`}>
         <div className="flex items-center justify-center h-[300px]">
-          <BarChart3 className="w-8 h-8 text-alpine-text-dim animate-pulse" />
+          <BarChart3 className="w-8 h-8 text-alpine-text-secondaryanimatepul-se" />
         </div>
       </div>
     )
@@ -121,10 +121,10 @@ export default function PerformanceChart({ data, type = 'equity', className = ''
   }
 
   return (
-    <div className={`bg-alpine-card border border-alpine-border rounded-lg p-6 ${className}`}>
+    <div className={`card-neon border border-alpine-neon-cyan/20 rounded-lg p-6 ${className}`}>
       <div className="flex items-center gap-2 mb-4">
         {getIcon()}
-        <h3 className="text-lg font-bold text-alpine-text">{getTitle()}</h3>
+        <h3 className="text-lg font-bold text-alpine-text-primary font-heading">{getTitle()}</h3>
       </div>
       <div ref={chartContainerRef} className="w-full h-[300px]" />
     </div>

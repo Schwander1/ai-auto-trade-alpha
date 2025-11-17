@@ -1,0 +1,20 @@
+{
+  "symbols": [
+    "SPY",
+    "QQQ",
+    "AAPL",
+    "NVDA"
+  ],
+  "results": {
+    "SPY": null,
+    "QQQ": null,
+    "AAPL": null,
+    "NVDA": null
+  },
+  "summary": {
+    "total_symbols": 4,
+    "successful": 0,
+    "compliant": 0,
+    "non_compliant": 4
+  }
+}

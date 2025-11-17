@@ -1,29 +1,26 @@
 # Monorepo Context Detection Rules
 
-## Project Detection
+**This file references the comprehensive monorepo rules in the `Rules/` folder.**
 
-When files are modified, automatically detect project context:
+## Primary Reference
 
-- Files in `argo/**` → Argo Capital project
-- Files in `alpine-backend/**` → Alpine Analytics (backend)
-- Files in `alpine-frontend/**` → Alpine Analytics (frontend)
-- Files in `packages/**` → Shared code (affects all projects)
+**See:** `Rules/10_MONOREPO.md` for complete monorepo structure, project coupling, and shared package management rules.
 
-## Project Coupling
+## Quick Reference
 
+### Project Detection
+When files are modified, automatically detect project context. See `Rules/10_MONOREPO.md` for details.
+
+### Project Coupling
 - `alpine-backend/` and `alpine-frontend/` are coupled
 - Always deploy both together as "alpine-analytics"
 - Test both when either changes
 
-## Cross-Project Changes
-
+### Cross-Project Changes
 If changes detected in BOTH `argo/` AND `alpine-*/`:
 - STOP and ask user to clarify which project to deploy
 - Never deploy both in single operation
 
-## Shared Package Changes
-
-When `packages/` changes:
-- Test ALL projects: `argo`, `alpine-backend`, `alpine-frontend`
-- All must pass before deployment
-- Warn if package version not updated
+### Related Rules
+- **Deployment:** `Rules/04_DEPLOYMENT.md`
+- **Project-Specific:** `Rules/11_FRONTEND.md`, `Rules/12_BACKEND.md`

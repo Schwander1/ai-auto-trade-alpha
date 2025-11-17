@@ -18,7 +18,7 @@ services:
     ports:
       - "8001:8000"
     environment:
-      - ARGO_API_URL=http://178.156.194.174:8000
+      - EXTERNAL_SIGNAL_API_URL=http://178.156.194.174:8000
       - ENVIRONMENT=production
     restart: unless-stopped
     networks:

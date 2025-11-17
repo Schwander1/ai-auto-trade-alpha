@@ -264,7 +264,7 @@ const faqs: Array<{ question: string; answer: string | React.ReactNode }> = [
 
 export default function FAQ() {
   return (
-    <section id="faq" className="py-24 bg-alpine-dark">
+    <section id="faq" className="py-24 bg-alpine-black-primary">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <h2 className="text-4xl md:text-6xl font-display font-black text-white text-center mb-16">
           Frequently Asked Questions
@@ -276,12 +276,12 @@ export default function FAQ() {
               <AccordionItem
                 key={index}
                 value={`item-${index}`}
-                className="border-alpine-border"
+                className="border-alpine-black-border
               >
-                <AccordionTrigger className="text-left text-alpine-text font-semibold hover:no-underline hover:text-alpine-accent transition-colors">
+                <AccordionTrigger className="text-left text-alpine-text-primary font-semiboldhove-r:no-underline hover:text-alpine-neon-cyantransitioncolo-rs">
                   {faq.question}
                 </AccordionTrigger>
-                <AccordionContent className="text-alpine-text-dim leading-relaxed">
+                <AccordionContent className="text-alpine-text-secondary leading-relaxed">
                   {faq.answer}
                 </AccordionContent>
               </AccordionItem>

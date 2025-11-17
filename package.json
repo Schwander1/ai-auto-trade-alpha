@@ -24,7 +24,17 @@
     "optimize": "./scripts/optimize.sh",
     "prepare": "husky install",
     "version": "changeset version",
-    "release": "changeset publish"
+    "release": "changeset publish",
+    "agentic:deploy": "./scripts/agentic/copilot-with-rules.sh deploy",
+    "agentic:refactor": "./scripts/agentic/copilot-with-rules.sh refactor",
+    "agentic:usage": "python scripts/agentic/usage_tracker.py report",
+    "agentic:monitor": "python scripts/agentic/monitor.py report",
+    "agentic:limits": "python scripts/agentic/rate_limiter.py status",
+    "agentic:deploy:auto": "./scripts/agentic/automated-deployment.sh",
+    "agentic:troubleshoot": "./scripts/agentic/automated-troubleshooting.sh",
+    "agentic:code-review": "./scripts/agentic/weekly-code-review.sh",
+    "agentic:test-coverage": "./scripts/agentic/test-coverage-analysis.sh",
+    "agentic:docs-update": "./scripts/agentic/monthly-docs-update.sh"
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.1",

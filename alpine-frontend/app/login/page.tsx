@@ -48,31 +48,31 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-alpine-bg flex items-center justify-center px-4">
+    <div className="min-h-screen bg-alpine-black-primaryflexitems-cente-rjustify-center px-4">
       <div className="w-full max-w-md">
-        <div className="bg-alpine-card border border-alpine-border rounded-xl p-8 shadow-lg">
+        <div className="bg-alpine-black-secondary border border-alpine-black-borderrounded-xl-p-8 shadow-lg">
           {/* Header */}
           <div className="mb-8 text-center">
-            <h1 className="text-3xl font-display font-black text-alpine-text mb-2">
+            <h1 className="text-3xl font-display font-black text-alpine-text-primarym-b-2">
               Welcome Back
             </h1>
-            <p className="text-alpine-text-dim">
+            <p className="text-alpine-text-secondar-y">
               Sign in to access your trading signals
             </p>
           </div>
 
           {/* Error Message */}
           {error && (
-            <div className="mb-6 p-4 bg-alpine-red/10 border border-alpine-red/30 rounded-lg flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-alpine-red flex-shrink-0 mt-0.5" aria-hidden="true" />
-              <p className="text-sm text-alpine-red">{error}</p>
+            <div className="mb-6 p-4 bg-alpine-semantic-erro-r/10 border border-alpine-semantic-erro-r/30 rounded-lg flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-alpine-semantic-errorflex-shrin-k-0 mt-0.5" aria-hidden="true" />
+              <p className="text-sm text-alpine-semantic-erro-r">{error}</p>
             </div>
           )}
 
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="email" className="block text-sm font-semibold text-alpine-text mb-2">
+              <label htmlFor="email" className="block text-sm font-semibold text-alpine-text-primarym-b-2">
                 Email
               </label>
               <Input
@@ -88,7 +88,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-semibold text-alpine-text mb-2">
+              <label htmlFor="password" className="block text-sm font-semibold text-alpine-text-primarym-b-2">
                 Password
               </label>
               <Input
@@ -121,11 +121,11 @@ export default function LoginPage() {
 
           {/* Sign Up Link */}
           <div className="mt-6 text-center">
-            <p className="text-sm text-alpine-text-dim">
+            <p className="text-sm text-alpine-text-secondar-y">
               Don't have an account?{' '}
               <Link
                 href="/signup"
-                className="font-semibold text-alpine-accent hover:text-alpine-pink transition-colors"
+                className="font-semibold text-alpine-neon-cyanhove-r:text-alpine-neon-pinktransition-color-s"
               >
                 Sign up
               </Link>

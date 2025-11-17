@@ -43,8 +43,8 @@ export default function SymbolTable({ symbols, onSymbolClick, className = '' }: 
   const sortedSymbols = [...symbols]
     .filter(s => s.symbol.toLowerCase().includes(searchQuery.toLowerCase()))
     .sort((a, b) => {
-      let aVal: any = a[sortField]
-      let bVal: any = b[sortField]
+      let aVal: any = (a as any)[sortField]
+      let bVal: any = (b as any)[sortField]
 
       if (sortField === 'symbol') {
         aVal = aVal.toLowerCase()
@@ -62,25 +62,25 @@ export default function SymbolTable({ symbols, onSymbolClick, className = '' }: 
   const formatPercent = (value: number) => `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`
 
   return (
-    <div className={`bg-alpine-card border border-alpine-border rounded-lg overflow-hidden ${className}`}>
+    <div className={`bg-alpine-black-secondary border border-alpine-black-border rounded-lg-overflowhidd-en ${className}`}>
       {/* Search */}
-      <div className="p-4 border-b border-alpine-border">
+      <div className="p-4 border-b border-alpine-black-border">
         <input
           type="text"
           placeholder="Search symbols..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full px-4 py-2 bg-alpine-bg border border-alpine-border rounded-lg text-alpine-text placeholder-alpine-text-dim focus:outline-none focus:border-alpine-accent"
+          className="w-full px-4 py-2 bg-alpine-black-primary border border-alpine-black-border rounded-lg-text-alpine-text-primaryplaceholder-alpine-textsecondaryfocu-s:outline-none focus:border-alpine-neoncya-n"
         />
       </div>
 
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-alpine-bg border-b border-alpine-border">
+          <thead className="bg-alpine-black-primary border-b-border-alpine-black-border">
             <tr>
               <th
-                className="px-4 py-3 text-left text-xs font-semibold text-alpine-text-dim uppercase cursor-pointer hover:text-alpine-text transition-colors"
+                className="px-4 py-3 text-left text-sm font-semibold text-alpine-text-secondaryuppercase-cursorpoint-erhover:text-alpine-text-primarytransitioncolor-s"
                 onClick={() => handleSort('symbol')}
               >
                 <div className="flex items-center gap-2">
@@ -89,7 +89,7 @@ export default function SymbolTable({ symbols, onSymbolClick, className = '' }: 
                 </div>
               </th>
               <th
-                className="px-4 py-3 text-right text-xs font-semibold text-alpine-text-dim uppercase cursor-pointer hover:text-alpine-text transition-colors"
+                className="px-4 py-3 text-right text-sm font-semibold text-alpine-text-secondaryuppercase-cursorpoint-erhover:text-alpine-text-primarytransitioncolor-s"
                 onClick={() => handleSort('price')}
               >
                 <div className="flex items-center justify-end gap-2">
@@ -98,7 +98,7 @@ export default function SymbolTable({ symbols, onSymbolClick, className = '' }: 
                 </div>
               </th>
               <th
-                className="px-4 py-3 text-right text-xs font-semibold text-alpine-text-dim uppercase cursor-pointer hover:text-alpine-text transition-colors"
+                className="px-4 py-3 text-right text-sm font-semibold text-alpine-text-secondaryuppercase-cursorpoint-erhover:text-alpine-text-primarytransitioncolor-s"
                 onClick={() => handleSort('change')}
               >
                 <div className="flex items-center justify-end gap-2">
@@ -107,7 +107,7 @@ export default function SymbolTable({ symbols, onSymbolClick, className = '' }: 
                 </div>
               </th>
               <th
-                className="px-4 py-3 text-right text-xs font-semibold text-alpine-text-dim uppercase cursor-pointer hover:text-alpine-text transition-colors"
+                className="px-4 py-3 text-right text-sm font-semibold text-alpine-text-secondaryuppercase-cursorpoint-erhover:text-alpine-text-primarytransitioncolor-s"
                 onClick={() => handleSort('winRate')}
               >
                 <div className="flex items-center justify-end gap-2">
@@ -116,7 +116,7 @@ export default function SymbolTable({ symbols, onSymbolClick, className = '' }: 
                 </div>
               </th>
               <th
-                className="px-4 py-3 text-right text-xs font-semibold text-alpine-text-dim uppercase cursor-pointer hover:text-alpine-text transition-colors"
+                className="px-4 py-3 text-right text-sm font-semibold text-alpine-text-secondaryuppercase-cursorpoint-erhover:text-alpine-text-primarytransitioncolor-s"
                 onClick={() => handleSort('trades')}
               >
                 <div className="flex items-center justify-end gap-2">
@@ -124,27 +124,27 @@ export default function SymbolTable({ symbols, onSymbolClick, className = '' }: 
                   <ArrowUpDown className="w-3 h-3" />
                 </div>
               </th>
-              <th className="px-4 py-3 text-right text-xs font-semibold text-alpine-text-dim uppercase">
+              <th className="px-4 py-3 text-right text-sm font-semibold text-alpine-text-secondary uppercase">
                 Avg Return
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-alpine-border">
+          <tbody className="divide-y divide-alpine-blackborde-r">
             {sortedSymbols.map((symbol) => (
               <tr
                 key={symbol.symbol}
-                className="hover:bg-alpine-bg/50 cursor-pointer transition-colors"
+                className="hover:bg-alpine-black-primary50 cursor-pointer transition-colors"
                 onClick={() => onSymbolClick?.(symbol.symbol)}
               >
                 <td className="px-4 py-3">
-                  <div className="font-semibold text-alpine-text">{symbol.symbol}</div>
+                  <div className="font-semibold text-alpine-text-primary ">{symbol.symbol}</div>
                 </td>
-                <td className="px-4 py-3 text-right text-alpine-text font-semibold">
+                <td className="px-4 py-3 text-right text-alpine-text-primary font-semibold">
                   {formatPrice(symbol.currentPrice)}
                 </td>
                 <td className="px-4 py-3 text-right">
                   <div className={`flex items-center justify-end gap-1 ${
-                    symbol.change24h >= 0 ? 'text-alpine-accent' : 'text-alpine-red'
+                    symbol.change24h >= 0 ? 'text-alpine-neon-cyan' : 'text-alpine-semantic-error
                   }`}>
                     {symbol.change24h >= 0 ? (
                       <TrendingUp className="w-4 h-4" />
@@ -156,23 +156,23 @@ export default function SymbolTable({ symbols, onSymbolClick, className = '' }: 
                 </td>
                 <td className="px-4 py-3 text-right">
                   {symbol.winRate !== undefined ? (
-                    <span className="text-alpine-text">{symbol.winRate.toFixed(1)}%</span>
+                    <span className="text-alpine-text-primary ">{symbol.winRate.toFixed(1)}%</span>
                   ) : (
-                    <span className="text-alpine-text-dim">-</span>
+                    <span className="text-alpine-text-secondary">-</span>
                   )}
                 </td>
-                <td className="px-4 py-3 text-right text-alpine-text">
+                <td className="px-4 py-3 text-right text-alpine-text-primary ">
                   {symbol.totalTrades ?? '-'}
                 </td>
                 <td className="px-4 py-3 text-right">
                   {symbol.avgReturn !== undefined ? (
                     <span className={`font-semibold ${
-                      symbol.avgReturn >= 0 ? 'text-alpine-accent' : 'text-alpine-red'
+                      symbol.avgReturn >= 0 ? 'text-alpine-neon-cyan' : 'text-alpine-semantic-error
                     }`}>
                       {formatPercent(symbol.avgReturn)}
                     </span>
                   ) : (
-                    <span className="text-alpine-text-dim">-</span>
+                    <span className="text-alpine-text-secondary">-</span>
                   )}
                 </td>
               </tr>
@@ -182,7 +182,7 @@ export default function SymbolTable({ symbols, onSymbolClick, className = '' }: 
       </div>
 
       {sortedSymbols.length === 0 && (
-        <div className="p-8 text-center text-alpine-text-dim">
+        <div className="p-8 text-center text-alpine-text-secondary">
           No symbols found
         </div>
       )}

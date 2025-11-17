@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Multi-source data aggregation from Massive.com"""
-import json, logging, pandas as pd, requests, time
+import json, logging, pandas as pd, requests
 from datetime import datetime, timedelta
 
 logging.basicConfig(level=logging.INFO)
@@ -35,7 +35,6 @@ class MultiSourceAggregator:
             df = df.set_index('Date')[['Open', 'High', 'Low', 'Close', 'Volume']]
             
             logger.info(f"✅ {symbol}: {len(df)} bars from Massive.com")
-            time.sleep(0.15)
             return df
             
         except Exception as e:

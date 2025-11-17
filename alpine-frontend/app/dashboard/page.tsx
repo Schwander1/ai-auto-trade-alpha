@@ -5,9 +5,19 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useSignals } from '@/hooks/useSignals'
 import SignalCard from '@/components/dashboard/SignalCard'
-import PerformanceChart from '@/components/dashboard/PerformanceChart'
-import SymbolTable from '@/components/dashboard/SymbolTable'
+import dynamic from 'next/dynamic'
 import Navigation from '@/components/dashboard/Navigation'
+
+// Lazy load heavy chart and table components
+const PerformanceChart = dynamic(() => import('@/components/dashboard/PerformanceChart'), {
+  loading: () => <div className="h-64 animate-pulse bg-alpine-black-secondary rounded-lg" />,
+  ssr: false  // Charts require browser APIs
+})
+
+const SymbolTable = dynamic(() => import('@/components/dashboard/SymbolTable'), {
+  loading: () => <div className="h-96 animate-pulse bg-gray-800 rounded-lg" />,
+  ssr: false
+})
 import { 
   TrendingUp, TrendingDown, DollarSign, Activity, 
   RefreshCw, AlertCircle, Loader2, BarChart3,
@@ -75,8 +85,8 @@ export default function DashboardPage() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-alpine-bg flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-alpine-accent animate-spin" />
+      <div className="min-h-screen bg-alpine-black-primary flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-alpine-neon-cyan animate-spin" />
       </div>
     )
   }
@@ -86,7 +96,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-alpine-bg">
+    <div className="min-h-screen bg-alpine-black-primary">
       {/* Navigation */}
       <Navigation />
 
@@ -98,49 +108,49 @@ export default function DashboardPage() {
             value={stats?.win_rate ? `${stats.win_rate.toFixed(1)}%` : '-'}
             icon={<TrendingUp className="w-5 h-5" />}
             trend={stats?.win_rate ? 'up' : undefined}
-            color="alpine-accent"
+            color="alpine-neoncya-n"
           />
           <StatCard
             title="Total ROI"
             value={stats?.total_roi ? `${stats.total_roi.toFixed(1)}%` : '-'}
             icon={<DollarSign className="w-5 h-5" />}
             trend={stats?.total_roi > 0 ? 'up' : stats?.total_roi < 0 ? 'down' : undefined}
-            color="alpine-pink"
+            color="alpine-neonpin-k"
           />
           <StatCard
             title="Active Signals"
             value={signals?.length || 0}
             icon={<SignalIcon className="w-5 h-5" />}
-            color="alpine-blue"
+            color="alpine-neon-purple"
           />
           <StatCard
             title="Total Trades"
             value={stats?.total_trades || 0}
             icon={<Activity className="w-5 h-5" />}
-            color="alpine-green"
+            color="alpine-semanticsucces-s
           />
         </div>
 
         {/* Charts Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <PerformanceChart data={equityData} type="equity" />
-          <div className="bg-alpine-card border border-alpine-border rounded-lg p-6">
+          <div className="bg-alpine-black-secondary border border-alpine-black-border rounded-lg p-6">
             <div className="flex items-center gap-2 mb-4">
-              <BarChart3 className="w-5 h-5 text-alpine-accent" />
-              <h3 className="text-lg font-bold text-alpine-text">Recent Activity</h3>
+              <BarChart3 className="w-5 h-5 text-alpine-neon-cyan" />
+              <h3 className="text-lg font-bold text-alpine-text-primary">Recent Activity</h3>
             </div>
             <div className="space-y-3">
               {signals?.slice(0, 5).map((signal: any) => (
-                <div key={signal.id} className="flex items-center justify-between p-3 bg-alpine-bg rounded-lg">
+                  <div key={signal.id} className="flex items-center justify-between p-3 bg-alpine-black-primary rounded-lg">
                   <div>
-                    <div className="font-semibold text-alpine-text">{signal.symbol}</div>
-                    <div className="text-xs text-alpine-text-dim">{signal.action}</div>
+                    <div className="font-semibold text-alpine-text-primary ">{signal.symbol}</div>
+                    <div className="text-sm text-alpine-text-secondary">{signal.action}</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm font-semibold text-alpine-text">
+                    <div className="text-sm font-semibold text-alpine-text-primary ">
                       {signal.confidence.toFixed(1)}%
                     </div>
-                    <div className="text-xs text-alpine-text-dim">
+                    <div className="text-sm text-alpine-text-secondary">
                       {new Date(signal.timestamp).toLocaleTimeString()}
                     </div>
                   </div>
@@ -153,24 +163,24 @@ export default function DashboardPage() {
         {/* Latest Signals */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-alpine-text">Latest Signals</h2>
+            <h2 className="text-xl font-bold text-alpine-text-primary ">Latest Signals</h2>
             <div className="flex items-center gap-2">
               {isPolling && (
-                <div className="flex items-center gap-2 text-sm text-alpine-text-dim">
-                  <div className="w-2 h-2 bg-alpine-accent rounded-full animate-pulse" />
+                <div className="flex items-center gap-2 text-sm text-alpine-text-secondary">
+                  <div className="w-2 h-2 bg-alpine-neon-cyan rounded-full animate-pulse" />
                   Live
                 </div>
               )}
               <button
                 onClick={refresh}
                 disabled={isLoading}
-                className="p-2 rounded-lg bg-alpine-card border border-alpine-border hover:border-alpine-accent/50 transition-colors disabled:opacity-50"
+                className="p-2 rounded-lg bg-alpine-black-secondary border border-alpine-black-border hov-er:border-alpine-neon-cyan/50 transition-colors disabled:opacity-50"
               >
-                <RefreshCw className={`w-4 h-4 text-alpine-text ${isLoading ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`w-4 h-4 text-alpine-text-primary ${isLoading ? 'animate-spin' : ''}`} />
               </button>
               <Link
                 href="/signals"
-                className="flex items-center gap-1 text-sm text-alpine-accent hover:text-alpine-pink transition-colors"
+                className="flex items-center gap-1 text-sm text-alpine-neon-cyan hover:text-alpine-neon-pink transition-colors"
               >
                 View All
                 <ArrowRight className="w-4 h-4" />
@@ -179,7 +189,7 @@ export default function DashboardPage() {
           </div>
 
           {error && (
-            <div className="mb-4 p-4 bg-alpine-red/10 border border-alpine-red/30 rounded-lg flex items-center gap-2 text-alpine-red">
+            <div className="mb-4 p-4 bg-alpine-semantic-error/10 border border-alpine-semantic-error/30 rounded-lg flex items-center gap-2 text-alpine-semantic-error>
               <AlertCircle className="w-5 h-5" />
               <span>{error.message || 'Failed to load signals'}</span>
             </div>
@@ -187,7 +197,7 @@ export default function DashboardPage() {
 
           {isLoading && signals.length === 0 ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 text-alpine-accent animate-spin" />
+              <Loader2 className="w-8 h-8 text-alpine-neon-cyan animate-spin" />
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -201,10 +211,10 @@ export default function DashboardPage() {
         {/* Symbols Table */}
         {symbols.length > 0 && (
           <div>
-            <h2 className="text-xl font-bold text-alpine-text mb-4">Market Overview</h2>
+            <h2 className="text-xl font-bold text-alpine-text-primary mb-4">Market Overview</h2>
             <SymbolTable
               symbols={symbols}
-              onSymbolClick={(symbol) => router.push(`/signals?symbol=${symbol}`)}
+              onSymbolClick={(symbol: string) => router.push(`/signals?symbol=${symbol}`)}
             />
           </div>
         )}
@@ -227,14 +237,14 @@ function StatCard({
   color: string
 }) {
   return (
-    <div className="bg-alpine-card border border-alpine-border rounded-lg p-6">
+    <div className="bg-alpine-black-secondary border border-alpine-black-border rounded-lg p-6">
       <div className="flex items-center justify-between mb-2">
         <div className={`p-2 rounded-lg bg-${color}/10 text-${color}`}>
           {icon}
         </div>
         {trend && (
           <div className={`flex items-center gap-1 text-sm ${
-            trend === 'up' ? 'text-alpine-accent' : 'text-alpine-red'
+            trend === 'up' ? 'text-alpine-neon-cyan' : 'text-alpine-semantic-error
           }`}>
             {trend === 'up' ? (
               <TrendingUp className="w-4 h-4" />
@@ -244,8 +254,8 @@ function StatCard({
           </div>
         )}
       </div>
-      <div className="text-2xl font-black text-alpine-text mb-1">{value}</div>
-      <div className="text-sm text-alpine-text-dim">{title}</div>
+      <div className="text-2xl font-black text-alpine-text-primary mb-1">{value}</div>
+      <div className="text-sm text-alpine-text-secondary">{title}</div>
     </div>
   )
 }

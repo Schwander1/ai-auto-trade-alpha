@@ -36,7 +36,7 @@ class TradeOutcome(Enum):
 
 @dataclass
 class Trade:
-    """Unified trade tracking"""
+    """Unified trade tracking with comprehensive validation fields"""
     id: str
     signal_id: str
     asset_class: str  # Use string to avoid serialization issues
@@ -58,11 +58,44 @@ class Trade:
     created_at: str = ""
     updated_at: str = ""
     
+    # Enhanced validation fields
+    regime: Optional[str] = None  # Market regime at entry (BULL, BEAR, CHOP, CRISIS)
+    exit_regime: Optional[str] = None  # Market regime at exit
+    exit_reason: Optional[str] = None  # stop_loss, take_profit, manual, expired, risk_limit, time_based
+    exit_method: Optional[str] = None  # automatic, manual
+    signal_entry_price: Optional[float] = None  # Original signal price
+    actual_entry_price: Optional[float] = None  # Actual fill price from broker
+    actual_exit_price: Optional[float] = None  # Actual exit fill price
+    slippage_entry: Optional[float] = None  # Entry slippage (actual - signal)
+    slippage_exit: Optional[float] = None  # Exit slippage
+    slippage_entry_pct: Optional[float] = None  # Entry slippage percentage
+    slippage_exit_pct: Optional[float] = None  # Exit slippage percentage
+    commission: Optional[float] = None  # Trading costs
+    stop_price: Optional[float] = None  # Stop loss price
+    target_price: Optional[float] = None  # Take profit price
+    expired: bool = False  # Whether signal expired before execution
+    cancelled: bool = False  # Whether trade was cancelled
+    rejection_reason: Optional[str] = None  # If order rejected, reason
+    filled_qty: Optional[float] = None  # Actual filled quantity (for partial fills)
+    partial_fill: bool = False  # Whether order was partially filled
+    
     def __post_init__(self):
         if not self.created_at:
             self.created_at = datetime.utcnow().isoformat()
         if not self.updated_at:
             self.updated_at = datetime.utcnow().isoformat()
+        
+        # Set signal_entry_price if not provided (backward compatibility)
+        if self.signal_entry_price is None:
+            self.signal_entry_price = self.entry_price
+        
+        # Set actual_entry_price if not provided (backward compatibility)
+        if self.actual_entry_price is None:
+            self.actual_entry_price = self.entry_price
+        
+        # Set actual_exit_price if exit_price exists but actual_exit_price doesn't
+        if self.exit_price is not None and self.actual_exit_price is None:
+            self.actual_exit_price = self.exit_price
 
 
 class UnifiedPerformanceTracker:
@@ -90,11 +123,31 @@ class UnifiedPerformanceTracker:
         quantity: float,
         confidence: float,
         alpaca_order_id: Optional[str] = None,
-        exchange_order_id: Optional[str] = None
+        exchange_order_id: Optional[str] = None,
+        regime: Optional[str] = None,
+        signal_entry_price: Optional[float] = None,
+        actual_entry_price: Optional[float] = None,
+        stop_price: Optional[float] = None,
+        target_price: Optional[float] = None,
+        filled_qty: Optional[float] = None
     ) -> Trade:
         """Record signal entry"""
         
         trade_id = f"trade_{datetime.utcnow().strftime('%Y%m%d_%H%M%S_%f')}"
+        
+        # Use actual_entry_price if provided, otherwise use entry_price
+        actual_entry = actual_entry_price if actual_entry_price is not None else entry_price
+        signal_entry = signal_entry_price if signal_entry_price is not None else entry_price
+        
+        # Calculate entry slippage if both prices provided
+        slippage_entry = None
+        slippage_entry_pct = None
+        if actual_entry_price is not None and signal_entry_price is not None:
+            slippage_entry = actual_entry_price - signal_entry_price
+            slippage_entry_pct = ((actual_entry_price - signal_entry_price) / signal_entry_price) * 100
+        
+        # Check for partial fill
+        partial_fill = filled_qty is not None and filled_qty < quantity
         
         trade = Trade(
             id=trade_id,
@@ -102,9 +155,9 @@ class UnifiedPerformanceTracker:
             asset_class=asset_class,
             symbol=symbol,
             signal_type=signal_type,
-            entry_price=entry_price,
+            entry_price=actual_entry,  # Use actual fill price
             exit_price=None,
-            quantity=quantity,
+            quantity=filled_qty if filled_qty is not None else quantity,
             entry_timestamp=datetime.utcnow().isoformat(),
             exit_timestamp=None,
             holding_period_hours=None,
@@ -114,7 +167,16 @@ class UnifiedPerformanceTracker:
             confidence=confidence,
             verification_hash="",
             alpaca_order_id=alpaca_order_id,
-            exchange_order_id=exchange_order_id
+            exchange_order_id=exchange_order_id,
+            regime=regime,
+            signal_entry_price=signal_entry,
+            actual_entry_price=actual_entry,
+            slippage_entry=slippage_entry,
+            slippage_entry_pct=slippage_entry_pct,
+            stop_price=stop_price,
+            target_price=target_price,
+            filled_qty=filled_qty,
+            partial_fill=partial_fill
         )
         
         # Create verification hash
@@ -128,9 +190,14 @@ class UnifiedPerformanceTracker:
     def record_signal_exit(
         self,
         trade_id: str,
-        exit_price: float
+        exit_price: float,
+        actual_exit_price: Optional[float] = None,
+        exit_reason: Optional[str] = None,
+        exit_method: Optional[str] = None,
+        exit_regime: Optional[str] = None,
+        commission: Optional[float] = None
     ) -> Optional[Trade]:
-        """Record signal exit"""
+        """Record signal exit with enhanced tracking"""
         
         trade = self._get_trade(trade_id)
         if not trade:
@@ -141,17 +208,57 @@ class UnifiedPerformanceTracker:
         exit_time = datetime.utcnow()
         entry_time = datetime.fromisoformat(trade.entry_timestamp)
         
-        trade.exit_price = exit_price
+        # Use actual exit price if provided, otherwise use exit_price
+        actual_exit = actual_exit_price if actual_exit_price is not None else exit_price
+        
+        trade.exit_price = exit_price  # Signal exit price
+        trade.actual_exit_price = actual_exit  # Actual fill price
         trade.exit_timestamp = exit_time.isoformat()
         trade.holding_period_hours = (exit_time - entry_time).total_seconds() / 3600
         
-        # Calculate P&L
+        # Calculate exit slippage
+        if actual_exit_price is not None:
+            trade.slippage_exit = actual_exit_price - exit_price
+            trade.slippage_exit_pct = ((actual_exit_price - exit_price) / exit_price) * 100
+        
+        # Set exit metadata
+        if exit_reason:
+            trade.exit_reason = exit_reason
+        if exit_method:
+            trade.exit_method = exit_method
+        if exit_regime:
+            trade.exit_regime = exit_regime
+        if commission is not None:
+            trade.commission = commission
+        
+        # Determine exit reason if not provided
+        if not trade.exit_reason and trade.stop_price and trade.target_price:
+            if trade.signal_type == "long":
+                if actual_exit <= trade.stop_price:
+                    trade.exit_reason = "stop_loss"
+                elif actual_exit >= trade.target_price:
+                    trade.exit_reason = "take_profit"
+            else:  # short
+                if actual_exit >= trade.stop_price:
+                    trade.exit_reason = "stop_loss"
+                elif actual_exit <= trade.target_price:
+                    trade.exit_reason = "take_profit"
+        
+        # Default exit method if not provided
+        if not trade.exit_method:
+            trade.exit_method = "automatic"
+        
+        # Calculate P&L using actual prices
         if trade.signal_type == "long":
-            trade.pnl_dollars = (exit_price - trade.entry_price) * trade.quantity
-            trade.pnl_percent = ((exit_price - trade.entry_price) / trade.entry_price) * 100
+            trade.pnl_dollars = (actual_exit - trade.actual_entry_price) * trade.quantity
+            trade.pnl_percent = ((actual_exit - trade.actual_entry_price) / trade.actual_entry_price) * 100
         else:  # short
-            trade.pnl_dollars = (trade.entry_price - exit_price) * trade.quantity
-            trade.pnl_percent = ((trade.entry_price - exit_price) / trade.entry_price) * 100
+            trade.pnl_dollars = (trade.actual_entry_price - actual_exit) * trade.quantity
+            trade.pnl_percent = ((trade.actual_entry_price - actual_exit) / trade.actual_entry_price) * 100
+        
+        # Subtract commission if provided
+        if trade.commission:
+            trade.pnl_dollars -= trade.commission
         
         # Determine outcome
         trade.outcome = "win" if trade.pnl_dollars > 0 else "loss"

@@ -1,0 +1,182 @@
+{
+  "deployment_rules": {
+    "description": "Deployment manifest defining what should and shouldn't be deployed",
+    "version": "1.0.0",
+    "last_updated": "2025-01-15",
+    
+    "local_only": {
+      "description": "Files that should NEVER be deployed to production - local development/testing only",
+      "patterns": [
+        "scripts/local_*.sh",
+        "scripts/local_*.py",
+        "scripts/setup_local_dev.sh",
+        "scripts/start-all.sh",
+        "argo/scripts/execute_test_trade.py",
+        "argo/scripts/enable_full_trading.py",
+        "docs/LOCAL_*.md",
+        "*.local.json",
+        ".env.local",
+        "tests/",
+        "*_test.py",
+        "*.db-journal",
+        "*.db-wal",
+        "conversation_logs/",
+        "scripts/conversation_logger_service.py",
+        "scripts/cleanup_conversation_logs.py",
+        "scripts/setup_conversation_logging.sh"
+      ],
+      "reason": "These are for local development, testing, and validation only"
+    },
+    
+    "production_useful": {
+      "description": "Files that ARE useful in production and should be deployed",
+      "files": [
+        "argo/scripts/check_account_status.py",
+        "argo/scripts/monitor_aws_secrets_health.py",
+        "argo/scripts/add_alpaca_secrets_to_aws.py",
+        "argo/scripts/setup_aws_secrets_manager.sh",
+        "argo/scripts/test_end_to_end.py",
+        "argo/scripts/generate_docs.sh",
+        "scripts/health-check.sh",
+        "scripts/full-health-check.sh",
+        "scripts/security-audit.sh",
+        "scripts/security-monitor.sh",
+        "scripts/deploy-argo.sh",
+        "scripts/deploy-alpine.sh"
+      ],
+      "reason": "These are operational tools needed in production"
+    },
+    
+    "environment_aware": {
+      "description": "Files that adapt based on environment (deploy but behave differently)",
+      "files": [
+        "argo/argo/core/paper_trading_engine.py",
+        "argo/argo/core/signal_generation_service.py",
+        "argo/argo/core/environment.py",
+        "argo/scripts/health_check_unified.py",
+        "scripts/security_audit_complete.py",
+        "scripts/system_audit_complete.py"
+      ],
+      "reason": "These detect environment and work in both local and production"
+    },
+    
+    "always_deploy": {
+      "description": "Core application files that should always be deployed",
+      "patterns": [
+        "argo/argo/**/*.py",
+        "argo/main.py",
+        "argo/requirements.txt",
+        "argo/config.json.example",
+        "alpine-backend/**/*.py",
+        "alpine-frontend/**/*.{ts,tsx,js,jsx}",
+        "packages/**/*.{py,ts,js}",
+        "argo/argo/backtest/**/*.py"
+      ],
+      "reason": "Core application code"
+    },
+    
+    "never_deploy": {
+      "description": "Files that should NEVER be deployed under any circumstances",
+      "patterns": [
+        "venv/",
+        "__pycache__/",
+        "*.pyc",
+        ".git/",
+        "node_modules/",
+        ".next/",
+        "*.log",
+        ".env",
+        "*.db",
+        "backups/",
+        ".DS_Store"
+      ],
+      "reason": "Build artifacts, dependencies, secrets, and temporary files"
+    }
+  },
+  
+  "deployment_targets": {
+    "argo": {
+      "server": "178.156.194.174",
+      "path": "/root/argo-production",
+      "description": "Argo Trading Engine production server",
+      "excludes": [
+        "venv/",
+        "__pycache__/",
+        "*.pyc",
+        "data/",
+        "*.db",
+        "*.log",
+        "scripts/local_*.sh",
+        "scripts/local_*.py",
+        "argo/scripts/execute_test_trade.py",
+        "argo/scripts/enable_full_trading.py",
+        "tests/",
+        "*_test.py",
+        "*.local.json",
+        ".env.local",
+        "docs/LOCAL_*.md",
+        ".vscode/",
+        ".idea/",
+        ".DS_Store",
+        "backups/",
+        "conversation_logs/",
+        "scripts/conversation_logger_service.py",
+        "scripts/cleanup_conversation_logs.py",
+        "scripts/setup_conversation_logging.sh"
+      ],
+      "includes": [
+        "argo/argo/**/*.py",
+        "argo/main.py",
+        "argo/requirements.txt",
+        "argo/config.json.example",
+        "argo/scripts/check_account_status.py",
+        "argo/scripts/monitor_aws_secrets_health.py",
+        "argo/scripts/add_alpaca_secrets_to_aws.py",
+        "argo/scripts/setup_aws_secrets_manager.sh",
+        "argo/scripts/test_end_to_end.py",
+        "argo/scripts/generate_docs.sh",
+        "argo/argo/backtest/**/*.py"
+      ]
+    },
+    
+    "alpine": {
+      "server": "91.98.153.49",
+      "path": "/root/alpine-production",
+      "description": "Alpine Analytics production server",
+      "excludes": [
+        "venv/",
+        "__pycache__/",
+        "*.pyc",
+        "node_modules/",
+        ".next/",
+        "tests/",
+        "scripts/local_*.sh",
+        "*.local.json",
+        ".env.local",
+        ".vscode/",
+        ".idea/",
+        ".DS_Store",
+        "backups/",
+        "conversation_logs/",
+        "scripts/conversation_logger_service.py",
+        "scripts/cleanup_conversation_logs.py",
+        "scripts/setup_conversation_logging.sh"
+      ],
+      "includes": [
+        "alpine-backend/**/*.py",
+        "alpine-frontend/**/*.{ts,tsx,js,jsx}",
+        "alpine-backend/requirements.txt",
+        "alpine-frontend/package.json"
+      ]
+    }
+  },
+  
+  "notes": [
+    "Local-only scripts are for development and testing",
+    "Production scripts are operational tools needed in production",
+    "Environment-aware scripts detect where they're running",
+    "Always verify exclusions before deployment",
+    "Use .deployignore as the source of truth for exclusions"
+  ]
+}
+

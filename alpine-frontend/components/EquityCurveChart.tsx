@@ -129,7 +129,7 @@ export default function EquityCurveChart() {
   }, [isInView])
 
   return (
-    <section className="py-24 bg-alpine-darker">
+    <section className="py-24 bg-alpine-black-primary">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -138,22 +138,22 @@ export default function EquityCurveChart() {
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-                  <h2 className="font-display text-4xl md:text-6xl font-black text-white mb-4">
+                  <h2 className="font-display text-4xl tracking-[0.15em] tracking-[0.15em] md:text-6xl font-black text-white mb-4">
                     20 Years of{' '}
-                    <span className="bg-gradient-to-r from-alpine-accent to-alpine-pink bg-clip-text text-transparent">
+                    <span className="bg-gradient-to-r from-alpine-neon-cyan to-alpine-neon-pink-bg-cliptex-ttext-transparent">
                       Backtested Performance
                     </span>
                   </h2>
-                  <p className="text-xl text-alpine-text-dim">
+                  <p className="text-xl text-alpine-text-secondary">
                     Alpine vs SPY - Historical simulation using real market data
                     <br />
-                    <strong className="text-alpine-accent">Live verified tracking begins Wednesday, November 12, 2025 at 9:00 AM ET</strong>
+                    <strong className="text-alpine-neon-cyan">Live verified tracking begins Wednesday, November 12, 2025 at 9:00 AM ET</strong>
                   </p>
         </motion.div>
 
         <div
           ref={chartContainerRef}
-          className="w-full h-[500px] rounded-lg border border-alpine-border"
+          className="w-full h-[500px] rounded-lg border border-alpine-black-border"
         />
       </div>
     </section>

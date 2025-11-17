@@ -1,7 +1,11 @@
 {
   "massive": {
-    "api_key": "8QLuA3q6RWedXx0P2691lRuiDYOHPTLp",
-    "enabled": true
+    "api_key": "F1B4WG0e1ypIVONoqtdIlFaTjBCgBh7N",
+    "s3_access_key": "",
+    "s3_secret_key": "",
+    "s3_endpoint": "https://files.massive.com",
+    "enabled": true,
+    "note": "To use Massive S3 for 10-20 year historical data, add your S3 credentials from Massive Dashboard. You can also set MASSIVE_S3_ACCESS_KEY and MASSIVE_S3_SECRET_KEY environment variables."
   },
   "alpha_vantage": {
     "api_key": "EHA9RBPT7A9U84AQ",
@@ -15,27 +19,229 @@
     "api_key": "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",
     "enabled": true
   },
+  "xai": {
+    "api_key": "xai-GKyAS0lBFbjUiUVRIJmr6G9Zfs5Tkif3EFb9bOhCyCUxiKcPcSryZVYvFwjDgAEucyPG6FKnEqtFRZZH",
+    "enabled": true
+  },
   "alpaca": {
-    "api_key": "PKVFBDORPHOCX5NEOVEZNDTWVT",
-    "secret_key": "ErscqTCdo21raoiFFyDzASzHpfgWB8L7xWVWKFukVa6b",
-    "paper": true
+    "dev": {
+      "api_key": "PKKTZHTVMTOW7DPPYNOGYPKHWD",
+      "secret_key": "56mYiK5MBahHS6wRH7ghC6Mtqt2nxwcTBB9odMjcTMc2",
+      "paper": true,
+      "account_name": "Dev Trading Account"
+    },
+    "prop_firm_test": {
+      "api_key": "PKM64P6DVTL6EGSGUD4567MKHN",
+      "secret_key": "3qFDKEJQKtB8SBQ4XGkNi5UZj58siqSofQMh53uE5MHs",
+      "paper": true,
+      "account_name": "Prop Firm Test Account",
+      "risk_limits": {
+        "max_drawdown_pct": 2.0,
+        "daily_loss_limit_pct": 4.5,
+        "max_position_size_pct": 3.0,
+        "min_confidence": 82.0,
+        "max_positions": 3,
+        "max_stop_loss_pct": 1.5
+      }
+    },
+    "production": {
+      "api_key": "PKQDQU4RX7M5UMT7TPW5DWERO7",
+      "secret_key": "HAQQ349Dh71cyxgyNPS4tpN36iDUGFGWQmEYhYoqBsFQ",
+      "paper": true,
+      "account_name": "Production Trading Account"
+    }
   },
   "strategy": {
     "use_multi_source": true,
     "weight_massive": 0.4,
     "weight_alpha_vantage": 0.25,
     "weight_x_sentiment": 0.2,
-    "weight_sonar": 0.15
+    "weight_sonar": 0.15,
+    "weight_chinese_models": 0.1
+  },
+  "chinese_models": {
+    "enabled": true,
+    "qwen": {
+      "api_key": "",
+      "access_key_id": "LTAI5t93ihghM26gs4dR1YaQ",
+      "access_key_secret": "MlzweAHs1nnU2uKsGXxIt4tDkvWvkY",
+      "enabled": false,
+      "model": "qwen-turbo",
+      "requests_per_minute": 20,
+      "cost_per_request": 0.002,
+      "daily_budget": 50.0,
+      "note": "Disabled - waiting for DashScope API key after support verification"
+    },
+    "glm": {
+      "api_key": "4ab92ab7ddba4bcaab880a283bbc787a.3mEFBz0Blr7nZRlo",
+      "enabled": true,
+      "model": "glm-4.5-air",
+      "requests_per_minute": 30,
+      "cost_per_request": 0.001,
+      "daily_budget": 0.0,
+      "note": "FREE tier - 20M tokens/month, no budget limit needed"
+    },
+    "baichuan": {
+      "api_key": "sk-40d6307e4a3c48cd8ccb86c4dc293432",
+      "enabled": true,
+      "model": "deepseek-chat",
+      "requests_per_minute": 5,
+      "cost_per_request": 0.0015,
+      "daily_budget": 0.5,
+      "note": "Fallback only - $0.50/day to stretch $10 credits to 20 days"
+    },
+    "cache_ttl_market_hours": 600,
+    "cache_ttl_off_hours": 1200
   },
   "trading": {
-    "min_confidence": 87.0,
-    "profit_target": 0.04,
-    "stop_loss": 0.025
+    "min_confidence": 60.0,
+    "consensus_threshold": 60.0,
+    "profit_target": 0.05,
+    "stop_loss": 0.025,
+    "position_size_pct": 9,
+    "max_position_size_pct": 16,
+    "max_correlated_positions": 5,
+    "max_drawdown_pct": 20,
+    "daily_loss_limit_pct": 5.0,
+    "auto_execute": true,
+    "use_limit_orders": false,
+    "limit_order_offset_pct": 0.001,
+    "max_retry_attempts": 3,
+    "retry_delay_seconds": 1,
+    "enable_position_monitoring": true,
+    "enable_performance_tracking": true,
+    "min_position_size_pct": 5
   },
   "backtest": {
+    "data_source": "yfinance",
+    "data_path": "argo/data/historical",
+    "cache_enabled": true,
     "symbols": {
-      "stocks": ["AAPL", "NVDA", "TSLA", "MSFT", "GOOGL", "META", "AMD", "AMZN", "SPY", "QQQ"],
-      "crypto": ["BTC-USD", "ETH-USD", "SOL-USD", "AVAX-USD"]
+      "stocks": [
+        "AAPL",
+        "NVDA",
+        "TSLA",
+        "MSFT",
+        "GOOGL",
+        "META",
+        "AMD",
+        "AMZN",
+        "SPY",
+        "QQQ"
+      ],
+      "crypto": [
+        "BTC-USD",
+        "ETH-USD",
+        "SOL-USD",
+        "AVAX-USD"
+      ]
+    },
+    "walk_forward": {
+      "enabled": true,
+      "train_days": 252,
+      "test_days": 63,
+      "step_days": 21
+    },
+    "optimization": {
+      "enabled": true,
+      "method": "grid_search",
+      "max_iterations": 1000
+    },
+    "metrics": {
+      "include_advanced": true,
+      "regime_analysis": true,
+      "monte_carlo_runs": 1000
+    },
+    "execution": {
+      "slippage_pct": 0.001,
+      "commission_pct": 0.001
+    },
+    "min_confidence": 60.0,
+    "use_enhanced_cost_model": true,
+    "volume_confirmation": true,
+    "adaptive_stops": true,
+    "trailing_stops": true,
+    "position_sizing": true,
+    "base_position_size_pct": 0.09,
+    "portfolio_risk_limits": true,
+    "max_portfolio_drawdown_pct": 0.2,
+    "max_positions": 5,
+    "dynamic_stop_loss": true,
+    "symbol_specific_thresholds": true,
+    "high_confidence_boost": true,
+    "symbol_thresholds": {
+      "SPY": -2.0,
+      "QQQ": -2.0,
+      "BTC-USD": 3.0,
+      "ETH-USD": 3.0,
+      "TSLA": 1.0,
+      "AMD": 1.0
+    }
+  },
+  "api_keys": {
+    "argo_api_key": "988807abc6a05772fd1900bcbfd35b6037f4f3ba4656e99e78f67b1242041736"
+  },
+  "alpine": {
+    "api_url": "http://91.98.153.49:8001"
+  },
+  "feature_flags": {
+    "optimized_weights": true,
+    "regime_based_weights": true,
+    "confidence_threshold_88": false,
+    "incremental_confidence": true,
+    "chinese_models_enabled": true,
+    "data_quality_validation": true,
+    "adaptive_weights": true,
+    "performance_monitoring": true,
+    "risk_monitoring": true
+  },
+  "prop_firm": {
+    "enabled": false,
+    "account": "prop_firm_test",
+    "risk_limits": {
+      "max_drawdown_pct": 2.0,
+      "daily_loss_limit_pct": 4.5,
+      "max_position_size_pct": 3.0,
+      "min_confidence": 82.0,
+      "max_positions": 3,
+      "max_stop_loss_pct": 1.5
+    },
+    "monitoring": {
+      "enabled": true,
+      "check_interval_seconds": 5,
+      "alert_on_warning": true,
+      "auto_shutdown": true
+    },
+    "symbols": {
+      "allowed": [
+        "SPY",
+        "QQQ"
+      ],
+      "restricted": [
+        "AAPL",
+        "NVDA",
+        "TSLA"
+      ]
+    }
+  },
+  "enhancements": {
+    "data_quality": {
+      "enabled": true,
+      "max_staleness_seconds": 600,
+      "max_price_deviation_pct": 5.0,
+      "min_confidence": 60.0
+    },
+    "risk_monitoring": {
+      "enabled": true,
+      "max_drawdown_pct": 2.0,
+      "daily_loss_limit_pct": 4.5,
+      "monitoring_interval_seconds": 5
+    },
+    "performance_budgets": {
+      "signal_generation_max_ms": 10000,
+      "risk_check_max_ms": 50,
+      "order_execution_max_ms": 100,
+      "data_source_fetch_max_ms": 5000
     }
   }
 }

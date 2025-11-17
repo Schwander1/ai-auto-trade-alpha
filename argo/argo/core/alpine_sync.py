@@ -1,204 +1,307 @@
 #!/usr/bin/env python3
 """
-Alpine Backend API Sync
-Syncs signals from Argo to Alpine Analytics via secure API
-Maintains separation: Argo sends via API, Alpine stores in its own database
+Alpine Backend Signal Sync Service
+Sends signals from Argo to Alpine backend for storage in production database
+
+This service handles:
+- HTTP POST requests to Alpine backend
+- Authentication with API key
+- Retry logic for failed syncs
+- Error handling and logging
 """
+import httpx
 import logging
 import os
-import sys
-from pathlib import Path
-from typing import Optional, Dict
+import asyncio
+from typing import Dict, Optional, List
 from datetime import datetime
+from pathlib import Path
+import json
 
-logger = logging.getLogger("AlpineSync")
+logger = logging.getLogger(__name__)
 
-# Try to import httpx for API calls
-try:
-    import httpx
-    HTTPX_AVAILABLE = True
-except ImportError:
-    HTTPX_AVAILABLE = False
-    logger.warning("httpx not available - Alpine sync disabled")
 
-class AlpineBackendSync:
-    """
-    Syncs signals to Alpine Analytics via secure API
-    Maintains separation: Argo sends via API, Alpine stores in its own database
-    """
+class AlpineSyncService:
+    """Sync signals from Argo to Alpine backend"""
     
     def __init__(self):
-        self.enabled = False
-        self.api_url = None
-        self.api_key = None
-        
-        if not HTTPX_AVAILABLE:
-            logger.warning("⚠️  Alpine sync disabled: httpx not available")
-            return
-        
-        # Get Alpine API URL and API key
-        self.api_url = self._get_alpine_api_url()
+        # Get configuration from environment or config
+        self.alpine_url = self._get_alpine_url()
         self.api_key = self._get_api_key()
+        self.endpoint = f"{self.alpine_url}/api/v1/external-signals/sync/signal"
+        self.health_endpoint = f"{self.alpine_url}/api/v1/external-signals/sync/health"
         
-        if not self.api_url or not self.api_key:
-            logger.warning("⚠️  Alpine sync disabled: API URL or API key not configured")
-            return
+        # HTTP client with timeout
+        self.client = httpx.AsyncClient(
+            timeout=httpx.Timeout(10.0, connect=5.0),
+            limits=httpx.Limits(max_keepalive_connections=5, max_connections=10)
+        )
         
-        self.enabled = True
-        logger.info("✅ Alpine Backend API sync initialized")
+        # Retry configuration
+        self.max_retries = 3
+        self.retry_delay = 1.0  # seconds
+        
+        # Failed signals queue (for retry)
+        self._failed_signals: List[Dict] = []
+        self._sync_enabled = self._check_sync_enabled()
+        
+        if self._sync_enabled:
+            logger.info(f"✅ Alpine sync service initialized: {self.alpine_url}")
+        else:
+            logger.warning("⚠️  Alpine sync disabled (missing configuration)")
     
-    def _get_alpine_api_url(self) -> Optional[str]:
-        """Get Alpine Backend API URL from AWS Secrets Manager or environment"""
+    def _get_alpine_url(self) -> str:
+        """Get Alpine API URL from environment or config"""
+        # Try environment variable first
+        alpine_url = os.getenv('ALPINE_API_URL')
+        if alpine_url:
+            return alpine_url.rstrip('/')
+        
+        # Try config.json
         try:
-            # Try AWS Secrets Manager first
-            import sys
-            from pathlib import Path
-            
-            shared_path = Path(__file__).parent.parent.parent.parent.parent / "packages" / "shared"
-            if shared_path.exists():
-                sys.path.insert(0, str(shared_path))
-            
-            try:
-                from utils.secrets_manager import get_secret
-                api_url = get_secret("alpine-api-url", service="argo")
-                if api_url:
-                    return api_url
-            except ImportError:
-                pass
-            except Exception as e:
-                logger.debug(f"Secrets Manager error: {e}")
-            
-            # Fallback to environment variable
-            return os.getenv("ALPINE_API_URL") or "http://localhost:9001"
-        
+            from argo.core.config_loader import ConfigLoader
+            config, _ = ConfigLoader.load_config()
+            if config and 'alpine' in config:
+                alpine_url = config['alpine'].get('api_url')
+                if alpine_url:
+                    return alpine_url.rstrip('/')
         except Exception as e:
-            logger.debug(f"Error getting Alpine API URL: {e}")
-            return None
+            logger.debug(f"Could not load Alpine URL from config: {e}")
+        
+        # Default (production)
+        return 'http://91.98.153.49:8001'
     
-    def _get_api_key(self) -> Optional[str]:
-        """Get Argo API key for authenticating with Alpine Backend"""
+    def _get_api_key(self) -> str:
+        """Get API key from environment or secrets manager"""
+        # Try environment variable first
+        api_key = os.getenv('ARGO_API_KEY')
+        if api_key:
+            return api_key
+        
+        # Try AWS Secrets Manager
         try:
-            # Try AWS Secrets Manager first
-            import sys
-            from pathlib import Path
-            
-            shared_path = Path(__file__).parent.parent.parent.parent.parent / "packages" / "shared"
-            if shared_path.exists():
-                sys.path.insert(0, str(shared_path))
-            
-            try:
-                from utils.secrets_manager import get_secret
-                api_key = get_secret("argo-api-key", service="argo")
-                if api_key:
-                    return api_key
-            except ImportError:
-                pass
-            except Exception as e:
-                logger.debug(f"Secrets Manager error: {e}")
-            
-            # Fallback to environment variable
-            return os.getenv("ARGO_API_KEY")
-        
+            from argo.utils.secrets_manager import get_secret
+            api_key = get_secret('argo-api-key', service='argo')
+            if api_key:
+                return api_key
         except Exception as e:
-            logger.debug(f"Error getting API key: {e}")
-            return None
+            logger.debug(f"Could not get API key from secrets manager: {e}")
+        
+        # Try config.json
+        try:
+            from argo.core.config_loader import ConfigLoader
+            config_api_keys, _ = ConfigLoader.load_api_keys()
+            if config_api_keys and 'argo_api_key' in config_api_keys:
+                return config_api_keys['argo_api_key']
+        except Exception as e:
+            logger.debug(f"Could not load API key from config: {e}")
+        
+        return ''
     
-    def sync_signal(self, signal: Dict) -> bool:
+    def _check_sync_enabled(self) -> bool:
+        """Check if sync is enabled (has required configuration)"""
+        if not self.alpine_url or not self.api_key:
+            return False
+        
+        # Check if explicitly disabled
+        sync_enabled = os.getenv('ALPINE_SYNC_ENABLED', 'true').lower()
+        if sync_enabled == 'false':
+            return False
+        
+        return True
+    
+    async def check_health(self) -> bool:
+        """Check if Alpine backend is reachable"""
+        try:
+            response = await self.client.get(self.health_endpoint, timeout=5.0)
+            if response.status_code == 200:
+                logger.debug("✅ Alpine backend health check passed")
+                return True
+            else:
+                logger.warning(f"⚠️  Alpine backend health check failed: {response.status_code}")
+                return False
+        except Exception as e:
+            logger.warning(f"⚠️  Alpine backend health check error: {e}")
+            return False
+    
+    async def sync_signal(self, signal: Dict, retry_count: int = 0) -> bool:
         """
-        Sync a signal to Alpine Analytics via secure API
+        Send signal to Alpine backend
         
         Args:
-            signal: Signal dictionary with all signal data
+            signal: Signal dictionary with all required fields
+            retry_count: Current retry attempt (for internal use)
         
         Returns:
-            bool: True if synced successfully, False otherwise
+            True if sync successful, False otherwise
         """
-        if not self.enabled:
+        if not self._sync_enabled:
+            logger.debug("Alpine sync disabled, skipping")
             return False
         
         try:
-            # Prepare signal data for API
-            verification_hash = signal.get('sha256') or signal.get('verification_hash')
-            if not verification_hash:
-                logger.warning("Signal missing verification hash, skipping sync")
-                return False
-            
             # Prepare payload
             payload = {
                 "signal_id": signal.get('signal_id', ''),
-                "symbol": signal.get('symbol'),
-                "action": signal.get('action'),
-                "entry_price": signal.get('entry_price') or signal.get('price'),
+                "symbol": signal.get('symbol', ''),
+                "action": signal.get('action', ''),
+                "entry_price": float(signal.get('entry_price', 0)),
                 "target_price": signal.get('target_price') or signal.get('take_profit'),
                 "stop_price": signal.get('stop_price') or signal.get('stop_loss'),
-                "confidence": signal.get('confidence', 0),
+                "confidence": float(signal.get('confidence', 0)),
                 "strategy": signal.get('strategy', 'weighted_consensus_v6'),
                 "asset_type": signal.get('asset_type', 'stock'),
                 "data_source": signal.get('data_source', 'weighted_consensus'),
                 "timestamp": signal.get('timestamp', datetime.utcnow().isoformat()),
-                "sha256": verification_hash,
-                "verification_hash": verification_hash,
-                "reasoning": signal.get('reasoning'),
+                "sha256": signal.get('sha256') or signal.get('verification_hash', ''),
+                "verification_hash": signal.get('sha256') or signal.get('verification_hash', ''),
+                "reasoning": signal.get('reasoning') or signal.get('rationale', ''),
                 "regime": signal.get('regime'),
                 "consensus_agreement": signal.get('consensus_agreement'),
                 "sources_count": signal.get('sources_count')
             }
             
-            # Send to Alpine API (use sync httpx for compatibility)
-            sync_url = f"{self.api_url}/api/v1/argo/sync/signal"
+            # Remove None values
+            payload = {k: v for k, v in payload.items() if v is not None}
             
-            try:
-                # Use sync client (works in both sync and async contexts)
-                with httpx.Client(timeout=10.0) as client:
-                    response = client.post(
-                        sync_url,
-                        json=payload,
-                        headers={
-                            "X-API-Key": self.api_key,
-                            "Content-Type": "application/json"
-                        }
-                    )
-                    response.raise_for_status()
-                    result = response.json()
-                    logger.info(f"✅ Signal synced to Alpine: {signal.get('symbol')} {signal.get('action')}")
-                    return True
-            except httpx.HTTPStatusError as e:
-                if e.response.status_code == 409 or "duplicate" in str(e.response.text).lower():
-                    logger.debug(f"Signal {verification_hash[:8]} already exists in Alpine")
-                    return True  # Not an error, just a duplicate
-                logger.error(f"❌ Alpine API error: {e.response.status_code} - {e.response.text}")
+            # Prepare headers
+            headers = {
+                "X-API-Key": self.api_key,
+                "Content-Type": "application/json"
+            }
+            
+            # Send request
+            response = await self.client.post(
+                self.endpoint,
+                json=payload,
+                headers=headers
+            )
+            
+            # Handle response
+            if response.status_code == 201:
+                result = response.json()
+                logger.info(
+                    f"✅ Signal synced to Alpine: {signal.get('signal_id', 'unknown')} "
+                    f"({signal.get('symbol', 'unknown')} {signal.get('action', 'unknown')})"
+                )
+                return True
+            elif response.status_code == 409:
+                # Duplicate signal (already exists) - this is OK
+                logger.debug(f"Signal already exists in Alpine: {signal.get('signal_id', 'unknown')}")
+                return True
+            elif response.status_code == 401:
+                logger.error("❌ Authentication failed - check ARGO_API_KEY")
                 return False
-            except Exception as e:
-                logger.error(f"❌ Error syncing signal to Alpine API: {e}")
+            elif response.status_code == 400:
+                logger.error(f"❌ Bad request: {response.text}")
                 return False
-        
+            else:
+                logger.error(
+                    f"❌ Failed to sync signal: HTTP {response.status_code} - {response.text[:200]}"
+                )
+                
+                # Retry on server errors (5xx)
+                if response.status_code >= 500 and retry_count < self.max_retries:
+                    await asyncio.sleep(self.retry_delay * (retry_count + 1))
+                    return await self.sync_signal(signal, retry_count + 1)
+                
+                return False
+                
+        except httpx.TimeoutException:
+            logger.error(f"❌ Timeout syncing signal to Alpine: {signal.get('signal_id', 'unknown')}")
+            
+            # Retry on timeout
+            if retry_count < self.max_retries:
+                await asyncio.sleep(self.retry_delay * (retry_count + 1))
+                return await self.sync_signal(signal, retry_count + 1)
+            
+            return False
+            
+        except httpx.ConnectError:
+            logger.error(f"❌ Connection error - Alpine backend unreachable: {self.alpine_url}")
+            return False
+            
         except Exception as e:
-            logger.error(f"❌ Alpine sync error: {e}")
+            logger.error(f"❌ Error syncing signal to Alpine: {e}", exc_info=True)
             return False
     
-    def test_connection(self) -> bool:
-        """Test connection to Alpine Backend API"""
-        if not self.enabled:
-            return False
+    async def sync_signal_batch(self, signals: List[Dict]) -> Dict[str, int]:
+        """
+        Sync multiple signals in batch
         
+        Returns:
+            Dictionary with success and failure counts
+        """
+        if not self._sync_enabled:
+            return {"success": 0, "failed": len(signals), "skipped": len(signals)}
+        
+        results = {"success": 0, "failed": 0}
+        
+        # Sync signals in parallel (with limit)
+        semaphore = asyncio.Semaphore(5)  # Max 5 concurrent requests
+        
+        async def sync_with_limit(signal):
+            async with semaphore:
+                success = await self.sync_signal(signal)
+                return success
+        
+        tasks = [sync_with_limit(signal) for signal in signals]
+        results_list = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        for result in results_list:
+            if isinstance(result, Exception):
+                logger.error(f"Exception in batch sync: {result}")
+                results["failed"] += 1
+            elif result:
+                results["success"] += 1
+            else:
+                results["failed"] += 1
+        
+        logger.info(
+            f"📊 Batch sync complete: {results['success']} success, "
+            f"{results['failed']} failed out of {len(signals)} signals"
+        )
+        
+        return results
+    
+    def queue_failed_signal(self, signal: Dict):
+        """Queue a failed signal for retry later"""
+        self._failed_signals.append(signal)
+        logger.debug(f"Queued failed signal for retry: {signal.get('signal_id', 'unknown')}")
+    
+    async def retry_failed_signals(self) -> int:
+        """Retry all queued failed signals"""
+        if not self._failed_signals:
+            return 0
+        
+        signals_to_retry = self._failed_signals.copy()
+        self._failed_signals.clear()
+        
+        logger.info(f"🔄 Retrying {len(signals_to_retry)} failed signals")
+        results = await self.sync_signal_batch(signals_to_retry)
+        
+        # Re-queue signals that still failed
+        # (This would require tracking which signals failed, simplified here)
+        
+        return results["success"]
+    
+    async def close(self):
+        """Close HTTP client"""
         try:
-            with httpx.Client(timeout=5.0) as client:
-                response = client.get(
-                    f"{self.api_url}/api/v1/argo/sync/health",
-                    headers={"X-API-Key": self.api_key} if self.api_key else {}
-                )
-                return response.status_code == 200
+            await self.client.aclose()
+            logger.debug("Alpine sync service closed")
         except Exception as e:
-            logger.error(f"❌ Alpine API connection test failed: {e}")
-            return False
+            logger.debug(f"Error closing Alpine sync service: {e}")
+
 
 # Global instance
-_alpine_sync: Optional[AlpineBackendSync] = None
+_alpine_sync_service: Optional[AlpineSyncService] = None
 
-def get_alpine_sync() -> AlpineBackendSync:
-    """Get or create global Alpine sync instance"""
-    global _alpine_sync
-    if _alpine_sync is None:
-        _alpine_sync = AlpineBackendSync()
-    return _alpine_sync
+
+def get_alpine_sync_service() -> AlpineSyncService:
+    """Get or create global Alpine sync service instance"""
+    global _alpine_sync_service
+    if _alpine_sync_service is None:
+        _alpine_sync_service = AlpineSyncService()
+    return _alpine_sync_service
 

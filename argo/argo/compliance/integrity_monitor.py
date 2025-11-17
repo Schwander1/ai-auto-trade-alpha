@@ -193,8 +193,44 @@ class IntegrityMonitor:
         logger.critical(f"   Failed signals: {results['failed']}/{results['checked']}")
         logger.critical("   This is a CRITICAL security incident")
         
-        # TODO: Send to PagerDuty, Slack, email, etc.
-        # For now, just log
+        # SECURITY: Send alerts to all configured channels (PagerDuty, Slack, Email, Notion)
+        try:
+            from argo.core.alerting import get_alerting_service
+            
+            alerting = get_alerting_service()
+            
+            # Build alert details
+            details = {
+                "total_checked": results.get('checked', 0),
+                "failed_count": results.get('failed', 0),
+                "success_rate": f"{((results.get('checked', 0) - results.get('failed', 0)) / results.get('checked', 1) * 100):.2f}%",
+                "duration_seconds": results.get('duration_seconds', 0),
+                "signals_per_second": results.get('signals_per_second', 0)
+            }
+            
+            # Add failed signal IDs if available
+            if results.get('failed_signals'):
+                details["failed_signal_ids"] = [
+                    f"{s.get('signal_id')} ({s.get('symbol')})" 
+                    for s in results['failed_signals'][:10]
+                ]
+                if len(results.get('failed_signals', [])) > 10:
+                    details["additional_failures"] = len(results['failed_signals']) - 10
+            
+            # Send critical alert
+            alerting.send_alert(
+                title="Signal Integrity Verification Failure",
+                message=f"{results['failed']} out of {results['checked']} signals failed integrity verification. This indicates potential tampering or data corruption.",
+                severity="critical",
+                details=details,
+                source="argo-integrity-monitor"
+            )
+            logger.info("✅ Integrity failure alerts sent to all configured channels")
+            
+        except ImportError:
+            logger.warning("⚠️  Alerting service not available - alerts not sent")
+        except Exception as e:
+            logger.error(f"❌ Failed to send alerts: {e}", exc_info=True)
         
         # Lock affected signals (read-only) - would need database connection
         # This is a placeholder for production implementation

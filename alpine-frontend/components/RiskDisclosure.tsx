@@ -23,48 +23,48 @@ export default function RiskDisclosure() {
           <div className="grid md:grid-cols-2 gap-8">
             {/* What Our Data Shows */}
             <div>
-              <h3 className="text-xl font-bold text-alpine-text mb-4">What Our Data Shows:</h3>
+              <h3 className="text-xl font-bold text-alpine-text-primary mb-4">What Our Data Shows:</h3>
               <ul className="space-y-3">
                 <li className="flex items-start">
-                  <Check className="w-5 h-5 text-alpine-accent mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-alpine-text">
-                    <strong className="text-alpine-accent">45.2% win rate</strong> in 20-year backtest (4,374 signals)
+                  <Check className="w-5 h-5 text-alpine-neon-cyan mr-3 mt-0.5 flex-shrink-0" />
+                  <span className="text-alpine-text-primary ">
+                    <strong className="text-alpine-neon-cyan">45.2% win rate</strong> in 20-year backtest (4,374 signals)
                   </span>
                 </li>
                 <li className="flex items-start">
-                  <Check className="w-5 h-5 text-alpine-accent mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-alpine-text">
-                    <strong className="text-alpine-blue">+565%</strong> backtested return (9.94% CAGR)
+                  <Check className="w-5 h-5 text-alpine-neon-cyan mr-3 mt-0.5 flex-shrink-0" />
+                  <span className="text-alpine-text-primary ">
+                    <strong className="text-alpine-neon-purple">+565%</strong> backtested return (9.94% CAGR)
                   </span>
                 </li>
                 <li className="flex items-start">
-                  <Check className="w-5 h-5 text-alpine-accent mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-alpine-text">
-                    <strong className="text-alpine-red">-36.1%</strong> maximum drawdown (significant)
+                  <Check className="w-5 h-5 text-alpine-neon-cyan mr-3 mt-0.5 flex-shrink-0" />
+                  <span className="text-alpine-text-primary ">
+                    <strong className="text-alpine-semantic-error">-36.1%</strong> maximum drawdown (significant)
                   </span>
                 </li>
                 <li className="flex items-start">
-                  <Check className="w-5 h-5 text-alpine-accent mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-alpine-text">
-                    Beat SPY by <strong className="text-alpine-accent">165%</strong> (backtested, same period)
+                  <Check className="w-5 h-5 text-alpine-neon-cyan mr-3 mt-0.5 flex-shrink-0" />
+                  <span className="text-alpine-text-primary ">
+                    Beat SPY by <strong className="text-alpine-neon-cyan">165%</strong> (backtested, same period)
                   </span>
                 </li>
                 <li className="flex items-start">
-                  <Check className="w-5 h-5 text-alpine-accent mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-alpine-text">
-                    Signal confidence range: <strong className="text-alpine-accent">87-98%</strong> (median 89%)
+                  <Check className="w-5 h-5 text-alpine-neon-cyan mr-3 mt-0.5 flex-shrink-0" />
+                  <span className="text-alpine-text-primary ">
+                    Signal confidence range: <strong className="text-alpine-neon-cyan">87-98%</strong> (median 89%)
                   </span>
                 </li>
                 <li className="flex items-start">
-                  <Check className="w-5 h-5 text-alpine-accent mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-alpine-text">
+                  <Check className="w-5 h-5 text-alpine-neon-cyan mr-3 mt-0.5 flex-shrink-0" />
+                  <span className="text-alpine-text-primary ">
                     High selectivity: Only generate when strict criteria met
                   </span>
                 </li>
                 <li className="flex items-start">
-                  <Check className="w-5 h-5 text-alpine-accent mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-alpine-text">
-                    <strong className="text-alpine-accent">Live verified track record begins Wednesday, November 12, 2025 at 9:00 AM ET</strong>
+                  <Check className="w-5 h-5 text-alpine-neon-cyan mr-3 mt-0.5 flex-shrink-0" />
+                  <span className="text-alpine-text-primary ">
+                    <strong className="text-alpine-neon-cyan">Live verified track record begins Wednesday, November 12, 2025 at 9:00 AM ET</strong>
                   </span>
                 </li>
               </ul>
@@ -72,39 +72,39 @@ export default function RiskDisclosure() {
 
             {/* What This DOES NOT Mean */}
             <div>
-              <h3 className="text-xl font-bold text-alpine-text mb-4">What This DOES NOT Mean:</h3>
+              <h3 className="text-xl font-bold text-alpine-text-primary mb-4">What This DOES NOT Mean:</h3>
               <ul className="space-y-3">
                 <li className="flex items-start">
-                  <X className="w-5 h-5 text-alpine-red mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-alpine-text">You will achieve these same results</span>
+                  <X className="w-5 h-5 text-alpine-semantic-error mr-3 mt-0.5 flex-shrink-0" />
+                  <span className="text-alpine-text-primary ">You will achieve these same results</span>
                 </li>
                 <li className="flex items-start">
-                  <X className="w-5 h-5 text-alpine-red mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-alpine-text">Past performance guarantees future results</span>
+                  <X className="w-5 h-5 text-alpine-semantic-error mr-3 mt-0.5 flex-shrink-0" />
+                  <span className="text-alpine-text-primary ">Past performance guarantees future results</span>
                 </li>
                 <li className="flex items-start">
-                  <X className="w-5 h-5 text-alpine-red mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-alpine-text">Our signals will always be profitable</span>
+                  <X className="w-5 h-5 text-alpine-semantic-error mr-3 mt-0.5 flex-shrink-0" />
+                  <span className="text-alpine-text-primary ">Our signals will always be profitable</span>
                 </li>
                 <li className="flex items-start">
-                  <X className="w-5 h-5 text-alpine-red mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-alpine-text">You can't lose money</span>
+                  <X className="w-5 h-5 text-alpine-semantic-error mr-3 mt-0.5 flex-shrink-0" />
+                  <span className="text-alpine-text-primary ">You can't lose money</span>
                 </li>
                 <li className="flex items-start">
-                  <X className="w-5 h-5 text-alpine-red mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-alpine-text">Backtested results equal future live performance</span>
+                  <X className="w-5 h-5 text-alpine-semantic-error mr-3 mt-0.5 flex-shrink-0" />
+                  <span className="text-alpine-text-primary ">Backtested results equal future live performance</span>
                 </li>
                 <li className="flex items-start">
-                  <X className="w-5 h-5 text-alpine-red mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-alpine-text">Historical simulation represents actual trading</span>
+                  <X className="w-5 h-5 text-alpine-semantic-error mr-3 mt-0.5 flex-shrink-0" />
+                  <span className="text-alpine-text-primary ">Historical simulation represents actual trading</span>
                 </li>
                 <li className="flex items-start">
-                  <X className="w-5 h-5 text-alpine-red mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-alpine-text">Confidence scores guarantee signal success</span>
+                  <X className="w-5 h-5 text-alpine-semantic-error mr-3 mt-0.5 flex-shrink-0" />
+                  <span className="text-alpine-text-primary ">Confidence scores guarantee signal success</span>
                 </li>
                 <li className="flex items-start">
-                  <X className="w-5 h-5 text-alpine-red mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-alpine-text">Higher confidence always means higher win probability</span>
+                  <X className="w-5 h-5 text-alpine-semantic-error mr-3 mt-0.5 flex-shrink-0" />
+                  <span className="text-alpine-text-primary ">Higher confidence always means higher win probability</span>
                 </li>
               </ul>
             </div>
@@ -112,37 +112,37 @@ export default function RiskDisclosure() {
 
           {/* Your Responsibilities */}
           <div className="mt-8">
-            <h3 className="text-xl font-bold text-alpine-text mb-4">Your Responsibilities:</h3>
+            <h3 className="text-xl font-bold text-alpine-text-primary mb-4">Your Responsibilities:</h3>
             <ul className="space-y-2">
               <li className="flex items-start">
                 <span className="text-alpine-orange mr-3 mt-1">•</span>
-                <span className="text-alpine-text">Position sizing is YOUR decision</span>
+                <span className="text-alpine-text-primary ">Position sizing is YOUR decision</span>
               </li>
               <li className="flex items-start">
                 <span className="text-alpine-orange mr-3 mt-1">•</span>
-                <span className="text-alpine-text">Risk management is YOUR responsibility</span>
+                <span className="text-alpine-text-primary ">Risk management is YOUR responsibility</span>
               </li>
               <li className="flex items-start">
                 <span className="text-alpine-orange mr-3 mt-1">•</span>
-                <span className="text-alpine-text">You can lose your entire investment</span>
+                <span className="text-alpine-text-primary ">You can lose your entire investment</span>
               </li>
               <li className="flex items-start">
                 <span className="text-alpine-orange mr-3 mt-1">•</span>
-                <span className="text-alpine-text">Consult a licensed advisor before trading</span>
+                <span className="text-alpine-text-primary ">Consult a licensed advisor before trading</span>
               </li>
               <li className="flex items-start">
                 <span className="text-alpine-orange mr-3 mt-1">•</span>
-                <span className="text-alpine-text">Only trade with capital you can afford to lose</span>
+                <span className="text-alpine-text-primary ">Only trade with capital you can afford to lose</span>
               </li>
             </ul>
           </div>
 
           {/* Final Statement */}
-          <div className="bg-alpine-card rounded-lg p-6 border border-alpine-border mt-8">
-            <p className="text-lg font-semibold text-alpine-text text-center">
+          <div className="bg-alpine-black-secondary rounded-lg p-6 border border-alpine-black-border m-t-8">
+            <p className="text-lg font-semibold text-alpine-text-primary text-center">
               We provide signals for educational purposes.
             </p>
-            <p className="text-lg font-semibold text-alpine-accent text-center mt-2">
+            <p className="text-lg font-semibold text-alpine-neon-cyan text-center-mt-2">
               YOU make trading decisions. YOU accept the risks.
             </p>
           </div>

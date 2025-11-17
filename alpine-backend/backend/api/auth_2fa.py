@@ -5,8 +5,11 @@ from pydantic import BaseModel, Field, field_validator
 from typing import Optional
 import re
 import time
+import logging
 
 from backend.core.database import get_db
+
+logger = logging.getLogger(__name__)
 from backend.core.config import settings
 from backend.core.rate_limit import check_rate_limit, get_rate_limit_status
 from backend.core.response_formatter import add_rate_limit_headers
@@ -96,9 +99,15 @@ async def verify_2fa_login(
             token_valid = True
             backup_code_used = True
             # Remove used backup code
-            backup_codes.remove(TOTPManager.hash_backup_code(verify_data.token))
-            user.backup_codes = json.dumps(backup_codes) if backup_codes else None
-            db.commit()
+            try:
+                backup_codes.remove(TOTPManager.hash_backup_code(verify_data.token))
+                user.backup_codes = json.dumps(backup_codes) if backup_codes else None
+                db.commit()
+            except Exception as e:
+                db.rollback()
+                logger.error(f"Error updating backup codes: {e}", exc_info=True)
+                # Don't fail verification if backup code update fails
+                pass
     
     if not token_valid:
         log_failed_login(user.email, request.client.host if request.client else None, request)

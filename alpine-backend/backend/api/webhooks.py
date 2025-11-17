@@ -1,4 +1,4 @@
-"""Stripe webhook handler with signature verification"""
+"""Stripe webhook handler with signature verification, idempotency, and replay protection"""
 from fastapi import APIRouter, Request, HTTPException, Depends, status, Header
 from sqlalchemy.orm import Session
 import stripe
@@ -6,17 +6,23 @@ import hmac
 import hashlib
 import logging
 from typing import Optional
+from datetime import datetime, timedelta
 
 from backend.core.database import get_db
 from backend.core.config import settings
 from backend.models.user import User, UserTier
 from backend.core.security_logging import log_security_event, SecurityEvent
+from backend.core.cache import redis_client
 
 router = APIRouter(prefix="/api/v1/webhooks", tags=["webhooks"])
 logger = logging.getLogger(__name__)
 
 # Initialize Stripe
 stripe.api_key = settings.STRIPE_SECRET_KEY
+
+# SECURITY: Webhook idempotency and replay protection
+WEBHOOK_EVENT_TTL = 300  # 5 minutes - reject events older than this
+WEBHOOK_IDEMPOTENCY_TTL = 86400  # 24 hours - remember processed events
 
 
 def verify_stripe_webhook(payload: bytes, signature: str) -> bool:
@@ -44,6 +50,72 @@ def verify_stripe_webhook(payload: bytes, signature: str) -> bool:
     except stripe.error.SignatureVerificationError as e:
         logger.error(f"Invalid signature: {e}")
         return False
+
+
+def check_webhook_idempotency(event_id: str) -> bool:
+    """
+    Check if webhook event has already been processed (idempotency)
+    
+    Args:
+        event_id: Stripe event ID
+    
+    Returns:
+        True if event already processed, False otherwise
+    """
+    if not redis_client:
+        # Fallback to in-memory if Redis not available
+        if not hasattr(check_webhook_idempotency, '_processed_events'):
+            check_webhook_idempotency._processed_events = set()
+        return event_id in check_webhook_idempotency._processed_events
+    
+    try:
+        key = f"webhook:processed:{event_id}"
+        return redis_client.exists(key) > 0
+    except Exception as e:
+        logger.error(f"Error checking webhook idempotency: {e}")
+        return False
+
+
+def mark_webhook_processed(event_id: str):
+    """
+    Mark webhook event as processed (idempotency)
+    
+    Args:
+        event_id: Stripe event ID
+    """
+    if not redis_client:
+        # Fallback to in-memory if Redis not available
+        if not hasattr(mark_webhook_processed, '_processed_events'):
+            mark_webhook_processed._processed_events = set()
+        check_webhook_idempotency._processed_events.add(event_id)
+        return
+    
+    try:
+        key = f"webhook:processed:{event_id}"
+        redis_client.setex(key, WEBHOOK_IDEMPOTENCY_TTL, "1")
+    except Exception as e:
+        logger.error(f"Error marking webhook as processed: {e}")
+
+
+def validate_webhook_timestamp(event_created: int) -> bool:
+    """
+    Validate webhook event timestamp to prevent replay attacks
+    
+    Args:
+        event_created: Unix timestamp when event was created
+    
+    Returns:
+        True if event is recent enough, False if too old
+    """
+    event_time = datetime.fromtimestamp(event_created)
+    now = datetime.utcnow()
+    age = (now - event_time).total_seconds()
+    
+    if age > WEBHOOK_EVENT_TTL:
+        logger.warning(f"Rejected old webhook event: {age:.0f} seconds old (max: {WEBHOOK_EVENT_TTL}s)")
+        return False
+    
+    return True
 
 
 @router.post("/stripe")
@@ -95,11 +167,30 @@ async def stripe_webhook(
             detail="Invalid signature"
         )
     
+    # SECURITY: Check idempotency (prevent duplicate processing)
+    event_id = event.get("id")
+    if event_id and check_webhook_idempotency(event_id):
+        logger.info(f"Webhook event {event_id} already processed, skipping (idempotency)")
+        return {"status": "success", "event_type": event.get("type"), "idempotent": True}
+    
+    # SECURITY: Validate event timestamp (prevent replay attacks)
+    event_created = event.get("created")
+    if event_created and not validate_webhook_timestamp(event_created):
+        log_security_event(
+            SecurityEvent.SUSPICIOUS_ACTIVITY,
+            details={"type": "stripe_webhook_replay_attempt", "event_id": event_id, "age_seconds": (datetime.utcnow() - datetime.fromtimestamp(event_created)).total_seconds()},
+            request=request
+        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Webhook event is too old (replay attack prevention)"
+        )
+    
     # Handle different event types
     event_type = event.get("type")
     event_data = event.get("data", {}).get("object", {})
     
-    logger.info(f"Processing Stripe webhook: {event_type}")
+    logger.info(f"Processing Stripe webhook: {event_type} (ID: {event_id})")
     
     try:
         if event_type == "checkout.session.completed":
@@ -158,10 +249,19 @@ async def stripe_webhook(
         else:
             logger.info(f"Unhandled event type: {event_type}")
         
-        return {"status": "success", "event_type": event_type}
+        # SECURITY: Mark event as processed (idempotency)
+        if event_id:
+            mark_webhook_processed(event_id)
+        
+        return {"status": "success", "event_type": event_type, "event_id": event_id}
     
+    except HTTPException:
+        # Re-raise HTTP exceptions without rollback
+        db.rollback()
+        raise
     except Exception as e:
         logger.error(f"Error processing webhook: {e}", exc_info=True)
+        db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error processing webhook"

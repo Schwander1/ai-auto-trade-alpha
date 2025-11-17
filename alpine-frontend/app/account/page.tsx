@@ -124,8 +124,8 @@ export default function AccountPage() {
 
   if (status === 'loading' || isLoading) {
     return (
-      <div className="min-h-screen bg-alpine-bg flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-alpine-accent animate-spin" />
+      <div className="min-h-screen bg-alpine-black-primary flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-alpine-neon-cyan animate-spin" />
       </div>
     )
   }
@@ -142,7 +142,7 @@ export default function AccountPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-alpine-bg">
+    <div className="min-h-screen bg-alpine-black-primary">
       {/* Navigation */}
       <Navigation />
 
@@ -150,7 +150,7 @@ export default function AccountPage() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-alpine-card border border-alpine-border rounded-lg p-4 space-y-2">
+            <div className="bg-alpine-black-secondary border border-alpine-black-border rounded-lg p-4 space-y-2">
               {tabs.map((tab) => {
                 const Icon = tab.icon
                 const isActive = activeTab === tab.id
@@ -160,8 +160,8 @@ export default function AccountPage() {
                     onClick={() => router.push(`/account?tab=${tab.id}`)}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                       isActive
-                        ? 'bg-alpine-accent/10 text-alpine-accent border border-alpine-accent/30'
-                        : 'text-alpine-text hover:bg-alpine-bg'
+                        ? 'bg-alpine-neon-cyan/10 text-alpine-neon-cyan border border-alpine-neon-cyan/30'
+                        : 'text-alpine-text-primary hover:bg-alpine-black-primary'
                     }`}
                   >
                     <Icon className="w-5 h-5" />
@@ -175,18 +175,18 @@ export default function AccountPage() {
           {/* Content */}
           <div className="lg:col-span-3">
             {activeTab === 'profile' && (
-              <div className="bg-alpine-card border border-alpine-border rounded-lg p-6">
-                <h2 className="text-xl font-bold text-alpine-text mb-6">Profile Information</h2>
+              <div className="bg-alpine-black-secondary border border-alpine-black-border rounded-lg p-6">
+                <h2 className="text-xl font-bold text-alpine-text-primary mb-6">Profile Information</h2>
 
                 {error && (
-                  <div className="mb-4 p-3 bg-alpine-red/10 border border-alpine-red/30 rounded-lg text-sm text-alpine-red flex items-center gap-2">
+                  <div className="mb-4 p-3 bg-alpine-semantic-error/10 border border-alpine-semantic-error/30 rounded-lg text-sm text-alpine-semantic-error flex items-center gap-2">
                     <AlertCircle className="w-4 h-4" />
                     {error}
                   </div>
                 )}
 
                 {success && (
-                  <div className="mb-4 p-3 bg-alpine-accent/10 border border-alpine-accent/30 rounded-lg text-sm text-alpine-accent flex items-center gap-2">
+                  <div className="mb-4 p-3 bg-alpine-neon-cyan/10 border border-alpine-neon-cyan/30 rounded-lg text-sm text-alpine-neon-cyan flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4" />
                     {success}
                   </div>
@@ -194,22 +194,22 @@ export default function AccountPage() {
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm text-alpine-text-dim mb-2">Full Name</label>
+                    <label className="block text-sm text-alpine-text-secondary mb-2">Full Name</label>
                     <input
                       type="text"
                       value={profileData.fullName}
                       onChange={(e) => setProfileData({ ...profileData, fullName: e.target.value })}
-                      className="w-full px-4 py-2 bg-alpine-bg border border-alpine-border rounded-lg text-alpine-text focus:outline-none focus:border-alpine-accent"
+                      className="w-full px-4 py-2 bg-alpine-black-primary border border-alpine-black-border rounded-lg text-alpine-text-primary focus:outline-none focus:border-alpine-neon-cyan"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm text-alpine-text-dim mb-2">Email</label>
+                    <label className="block text-sm text-alpine-text-secondary mb-2">Email</label>
                     <input
                       type="email"
                       value={profileData.email}
                       onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-                      className="w-full px-4 py-2 bg-alpine-bg border border-alpine-border rounded-lg text-alpine-text focus:outline-none focus:border-alpine-accent"
+                      className="w-full px-4 py-2 bg-alpine-black-primary border border-alpine-black-border rounded-lg text-alpine-text-primary focus:outline-none focus:border-alpine-neon-cyan"
                     />
                   </div>
 
@@ -217,7 +217,7 @@ export default function AccountPage() {
                     <Button
                       onClick={handleSaveProfile}
                       disabled={isSaving}
-                      className="bg-gradient-to-r from-alpine-accent to-alpine-pink hover:from-alpine-pink hover:to-alpine-accent text-white font-bold"
+                      className="bg-gradient-to-r from-alpine-neon-cyan to-alpine-neon-pink hover:from-alpine-neon-pink hover:to-alpine-neon-cyan text-white font-bold"
                     >
                       {isSaving ? (
                         <>
@@ -237,39 +237,39 @@ export default function AccountPage() {
             )}
 
             {activeTab === 'billing' && (
-              <div className="bg-alpine-card border border-alpine-border rounded-lg p-6">
-                <h2 className="text-xl font-bold text-alpine-text mb-6">Billing & Subscription</h2>
+              <div className="bg-alpine-black-secondary border border-alpine-black-border rounded-lg p-6">
+                <h2 className="text-xl font-bold text-alpine-text-primary mb-6">Billing & Subscription</h2>
 
                 {subscription && (
                   <div className="space-y-6">
-                    <div className="bg-alpine-bg rounded-lg p-4">
+                    <div className="bg-alpine-black-primary rounded-lg p-4">
                       <div className="flex items-center justify-between mb-4">
                         <div>
-                          <div className="text-sm text-alpine-text-dim">Current Plan</div>
-                          <div className="text-2xl font-bold text-alpine-text capitalize">
+                          <div className="text-sm text-alpine-text-secondary">Current Plan</div>
+                          <div className="text-2xl font-bold text-alpine-text-primary capitalize">
                             {subscription.tier}
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-sm text-alpine-text-dim">Price</div>
-                          <div className="text-2xl font-bold text-alpine-text">
+                          <div className="text-sm text-alpine-text-secondary">Price</div>
+                          <div className="text-2xl font-bold text-alpine-text-primary ">
                             ${subscription.price}/month
                           </div>
                         </div>
                       </div>
 
                       {subscription.current_period_end && (
-                        <div className="text-sm text-alpine-text-dim">
+                        <div className="text-sm text-alpine-text-secondary">
                           Renews on {new Date(subscription.current_period_end).toLocaleDateString()}
                         </div>
                       )}
                     </div>
 
                     <div>
-                      <h3 className="text-lg font-bold text-alpine-text mb-4">Invoices</h3>
+                      <h3 className="text-lg font-bold text-alpine-text-primary mb-4">Invoices</h3>
                       <div className="space-y-2">
                         {/* Invoice list would go here */}
-                        <div className="text-sm text-alpine-text-dim">
+                        <div className="text-sm text-alpine-text-secondary">
                           No invoices yet
                         </div>
                       </div>
@@ -278,7 +278,7 @@ export default function AccountPage() {
                     <div>
                       <Button
                         onClick={() => router.push('/pricing')}
-                        className="bg-gradient-to-r from-alpine-accent to-alpine-pink hover:from-alpine-pink hover:to-alpine-accent text-white font-bold"
+                        className="bg-gradient-to-r from-alpine-neon-cyan to-alpine-neon-pink hover:from-alpine-neon-pink hover:to-alpine-neon-cyan text-white font-bold"
                       >
                         Upgrade Plan
                       </Button>
@@ -289,18 +289,18 @@ export default function AccountPage() {
             )}
 
             {activeTab === 'settings' && (
-              <div className="bg-alpine-card border border-alpine-border rounded-lg p-6">
-                <h2 className="text-xl font-bold text-alpine-text mb-6">Settings</h2>
+              <div className="bg-alpine-black-secondary border border-alpine-black-border rounded-lg p-6">
+                <h2 className="text-xl font-bold text-alpine-text-primary mb-6">Settings</h2>
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-lg font-semibold text-alpine-text mb-4">Security</h3>
+                    <h3 className="text-lg font-semibold text-alpine-text-primary mb-4">Security</h3>
                     <div className="space-y-4">
-                      <button className="w-full flex items-center justify-between p-4 bg-alpine-bg rounded-lg hover:bg-alpine-bg/80 transition-colors">
+                      <button className="w-full flex items-center justify-between p-4 bg-alpine-black-primary rounded-lg hover:bg-alpine-black-primary/80 transition-colors">
                         <div className="flex items-center gap-3">
-                          <Lock className="w-5 h-5 text-alpine-text-dim" />
+                          <Lock className="w-5 h-5 text-alpine-text-secondary" />
                           <div className="text-left">
-                            <div className="font-semibold text-alpine-text">Change Password</div>
-                            <div className="text-sm text-alpine-text-dim">Update your password</div>
+                            <div className="font-semibold text-alpine-text-primary ">Change Password</div>
+                            <div className="text-sm text-alpine-text-secondary">Update your password</div>
                           </div>
                         </div>
                       </button>
@@ -308,10 +308,10 @@ export default function AccountPage() {
                   </div>
 
                   <div>
-                    <h3 className="text-lg font-semibold text-alpine-text mb-4">Danger Zone</h3>
+                    <h3 className="text-lg font-semibold text-alpine-text-primary mb-4">Danger Zone</h3>
                     <button
                       onClick={handleDeleteAccount}
-                      className="w-full flex items-center justify-between p-4 bg-alpine-red/10 border border-alpine-red/30 rounded-lg hover:bg-alpine-red/20 transition-colors text-alpine-red"
+                      className="w-full flex items-center justify-between p-4 bg-alpine-semantic-error/10 border border-alpine-semantic-error/30 rounded-lg hover:bg-alpine-semantic-error20 transition-colors text-alpine-semantic-error
                     >
                       <div className="flex items-center gap-3">
                         <Trash2 className="w-5 h-5" />
@@ -327,11 +327,11 @@ export default function AccountPage() {
             )}
 
             {activeTab === 'notifications' && (
-              <div className="bg-alpine-card border border-alpine-border rounded-lg p-6">
-                <h2 className="text-xl font-bold text-alpine-text mb-6">Notifications</h2>
+              <div className="bg-alpine-black-secondary border border-alpine-black-border rounded-lg p-6">
+                <h2 className="text-xl font-bold text-alpine-text-primary mb-6">Notifications</h2>
                 <div className="space-y-4">
                   {/* Notification settings would go here */}
-                  <div className="text-alpine-text-dim">
+                  <div className="text-alpine-text-secondary">
                     Notification preferences coming soon
                   </div>
                 </div>

@@ -1,0 +1,138 @@
+{
+  "symbols": {
+    "AAPL": {
+      "profit_factor": 0.9903344345287077,
+      "win_rate": 42.19001610305958,
+      "avg_win_pct": 3.852154807578728,
+      "avg_loss_pct": -2.798983775956573,
+      "win_loss_ratio": 1.3762690733218794,
+      "total_trades": 621,
+      "winning_trades": 262,
+      "losing_trades": 359
+    },
+    "NVDA": {
+      "profit_factor": 0.9772249481249756,
+      "win_rate": 41.509433962264154,
+      "avg_win_pct": 6.247141764513367,
+      "avg_loss_pct": -4.51983427223351,
+      "win_loss_ratio": 1.382161687407688,
+      "total_trades": 583,
+      "winning_trades": 242,
+      "losing_trades": 341
+    },
+    "TSLA": {
+      "profit_factor": 0.930763199719807,
+      "win_rate": 43.77777777777778,
+      "avg_win_pct": 6.562406574823387,
+      "avg_loss_pct": -5.727304474140723,
+      "win_loss_ratio": 1.1458106696532762,
+      "total_trades": 450,
+      "winning_trades": 197,
+      "losing_trades": 253
+    },
+    "MSFT": {
+      "profit_factor": 0.8181854345984511,
+      "win_rate": 43.61525704809287,
+      "avg_win_pct": 2.892534987223026,
+      "avg_loss_pct": -2.7703256942305527,
+      "win_loss_ratio": 1.0441136914865226,
+      "total_trades": 603,
+      "winning_trades": 263,
+      "losing_trades": 340
+    },
+    "GOOGL": {
+      "profit_factor": 0.995867103285842,
+      "win_rate": 45.289256198347104,
+      "avg_win_pct": 3.2880844824915014,
+      "avg_loss_pct": -2.7263881967250243,
+      "win_loss_ratio": 1.2060221234970114,
+      "total_trades": 605,
+      "winning_trades": 274,
+      "losing_trades": 331
+    },
+    "META": {
+      "profit_factor": 0.9531780065110785,
+      "win_rate": 43.26424870466321,
+      "avg_win_pct": 4.839399583767117,
+      "avg_loss_pct": -4.060753514146829,
+      "win_loss_ratio": 1.1917491586001576,
+      "total_trades": 386,
+      "winning_trades": 167,
+      "losing_trades": 219
+    },
+    "AMD": {
+      "profit_factor": 0.8495185707651758,
+      "win_rate": 43.80530973451327,
+      "avg_win_pct": 5.690416740175283,
+      "avg_loss_pct": -5.201704372888829,
+      "win_loss_ratio": 1.0939523533543376,
+      "total_trades": 678,
+      "winning_trades": 297,
+      "losing_trades": 381
+    },
+    "AMZN": {
+      "profit_factor": 0.7457549656524236,
+      "win_rate": 39.76311336717428,
+      "avg_win_pct": 4.059409504416773,
+      "avg_loss_pct": -3.558705045731915,
+      "win_loss_ratio": 1.1406984991030293,
+      "total_trades": 591,
+      "winning_trades": 235,
+      "losing_trades": 356
+    },
+    "SPY": {
+      "profit_factor": 0.5880701882708397,
+      "win_rate": 40.44233807266983,
+      "avg_win_pct": 1.8913912602538514,
+      "avg_loss_pct": -2.1837232148871975,
+      "win_loss_ratio": 0.8661314068374518,
+      "total_trades": 633,
+      "winning_trades": 256,
+      "losing_trades": 377
+    },
+    "QQQ": {
+      "profit_factor": 0.8201435432854974,
+      "win_rate": 39.82608695652174,
+      "avg_win_pct": 2.580513857085881,
+      "avg_loss_pct": -2.1246889876056323,
+      "win_loss_ratio": 1.2145372203363891,
+      "total_trades": 575,
+      "winning_trades": 229,
+      "losing_trades": 346
+    },
+    "BTC-USD": {
+      "profit_factor": 1.1508740372739188,
+      "win_rate": 44.39461883408072,
+      "avg_win_pct": 5.757213455643157,
+      "avg_loss_pct": -3.9712958094233746,
+      "win_loss_ratio": 1.4497065270187202,
+      "total_trades": 223,
+      "winning_trades": 99,
+      "losing_trades": 124
+    },
+    "ETH-USD": {
+      "profit_factor": 1.3234467024731795,
+      "win_rate": 50.136986301369866,
+      "avg_win_pct": 7.244180554983978,
+      "avg_loss_pct": -5.425805668766943,
+      "win_loss_ratio": 1.3351345398683023,
+      "total_trades": 365,
+      "winning_trades": 183,
+      "losing_trades": 182
+    }
+  },
+  "recommendations": {
+    "AAPL": "Increase profit_multiplier by 0.2-0.3",
+    "NVDA": "Increase profit_multiplier by 0.2-0.3",
+    "TSLA": "Increase profit_multiplier by 0.2-0.3",
+    "MSFT": "Increase profit_multiplier by 0.2-0.3",
+    "GOOGL": "Increase profit_multiplier by 0.2-0.3",
+    "META": "Increase profit_multiplier by 0.2-0.3",
+    "AMD": "Increase profit_multiplier by 0.2-0.3",
+    "AMZN": "Improve entry quality or tighten stops slightly",
+    "SPY": "Tighten stops (reduce stop_multiplier by 0.1-0.2)",
+    "QQQ": "Improve entry quality or tighten stops slightly",
+    "BTC-USD": "Maintain current parameters",
+    "ETH-USD": "Maintain current parameters"
+  }
+}

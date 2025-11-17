@@ -1,0 +1,90 @@
+#!/bin/bash
+# Logs command dispatcher
+# Usage: ./commands/logs {action} {project} {environment}
+# Examples:
+#   ./commands/logs view all production
+#   ./commands/logs follow argo production
+#   ./commands/logs view all (local)
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_DIR="${SCRIPT_DIR}/lib"
+
+# Parse arguments
+ACTION=""
+PROJECT=""
+ENVIRONMENT=""
+
+# Parse: logs {action} {project} {environment}
+for arg in "$@"; do
+    if [ -z "$ACTION" ]; then
+        ACTION="$arg"
+    elif [ -z "$PROJECT" ]; then
+        PROJECT="$arg"
+    elif [ -z "$ENVIRONMENT" ]; then
+        ENVIRONMENT="$arg"
+    fi
+done
+
+# Validation
+if [ -z "$ACTION" ] || [ "$ACTION" != "view" ] && [ "$ACTION" != "follow" ]; then
+    echo "❌ Error: Invalid action '$ACTION'"
+    echo "Usage: ./commands/logs {action} {project} {environment}"
+    echo "  Actions: view, follow"
+    echo "  Projects: all, argo, alpine"
+    echo "  Environment: production (or omit for local)"
+    exit 1
+fi
+
+if [ -z "$PROJECT" ]; then
+    echo "❌ Error: Project not specified"
+    echo "Usage: ./commands/logs {action} {project} {environment}"
+    echo "  Actions: view, follow"
+    echo "  Projects: all, argo, alpine"
+    echo "  Environment: production (or omit for local)"
+    exit 1
+fi
+
+# Default to local if environment not specified
+if [ -z "$ENVIRONMENT" ]; then
+    ENVIRONMENT="local"
+fi
+
+# Route to appropriate script
+if [ "$ENVIRONMENT" = "production" ]; then
+    case "$PROJECT" in
+        all)
+            "${LIB_DIR}/view-logs-production.sh" "$ACTION" all
+            ;;
+        argo)
+            "${LIB_DIR}/view-logs-production.sh" "$ACTION" argo
+            ;;
+        alpine)
+            "${LIB_DIR}/view-logs-production.sh" "$ACTION" alpine
+            ;;
+        *)
+            echo "❌ Error: Invalid project '$PROJECT'"
+            echo "  Valid projects: all, argo, alpine"
+            exit 1
+            ;;
+    esac
+else
+    case "$PROJECT" in
+        all)
+            "${LIB_DIR}/view-logs-local.sh" "$ACTION" all
+            ;;
+        argo)
+            "${LIB_DIR}/view-logs-local.sh" "$ACTION" argo
+            ;;
+        alpine)
+            "${LIB_DIR}/view-logs-local.sh" "$ACTION" alpine
+            ;;
+        *)
+            echo "❌ Error: Invalid project '$PROJECT'"
+            echo "  Valid projects: all, argo, alpine"
+            exit 1
+            ;;
+    esac
+fi
+

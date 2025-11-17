@@ -4,7 +4,7 @@ GET all, GET by ID, GET latest, GET stats
 """
 
 from fastapi import APIRouter, HTTPException, Query, Depends, Header, Request, Response
-from typing import Optional, List
+from typing import Optional, List, Dict
 from datetime import datetime, timedelta
 from pydantic import BaseModel, Field, validator
 import hashlib
@@ -29,10 +29,25 @@ RATE_LIMIT_MAX = 100
 
 # HMAC authentication for Argo
 import os
+from argo.core.environment import detect_environment
+
 ARGO_API_SECRET = os.getenv("ARGO_API_SECRET", "argo_secret_key_change_in_production")
+
+# SECURITY: Fail fast if default secret is used in production
 if ARGO_API_SECRET == "argo_secret_key_change_in_production":
-    import warnings
-    warnings.warn("ARGO_API_SECRET is using default value. Set ARGO_API_SECRET environment variable in production!")
+    env = detect_environment()
+    if env == "production":
+        raise ValueError(
+            "CRITICAL SECURITY ERROR: ARGO_API_SECRET is using default value in production! "
+            "Set ARGO_API_SECRET environment variable or configure in AWS Secrets Manager."
+        )
+    else:
+        import warnings
+        warnings.warn(
+            "ARGO_API_SECRET is using default value. "
+            "Set ARGO_API_SECRET environment variable before deploying to production!",
+            UserWarning
+        )
 
 
 class SignalResponse(BaseModel):
@@ -111,7 +126,9 @@ def verify_hmac(authorization: Optional[str] = Header(None)) -> bool:
             hashlib.sha256
         ).hexdigest()
         return hmac.compare_digest(expected, signature)
-    except:
+    except (ValueError, TypeError, AttributeError, KeyError) as e:
+        # Invalid signature format or missing data
+        logger.debug(f"Signature verification failed: {e}")
         return False
 
 
@@ -164,52 +181,77 @@ async def get_all_signals(
     ```
     """
     # Rate limiting
-    client_id = request.client.host if request.client else "anonymous"
+    client_id = _get_client_id(request)
+    _check_rate_limit(client_id)
+    
+    # Input sanitization
+    sanitized_params = _sanitize_input_params(symbol, action)
+    
+    # Filter signals
+    filtered_signals = _filter_signals(sanitized_params, premium_only)
+    
+    # Paginate
+    paginated_result = _paginate_signals(filtered_signals, limit, offset)
+    
+    # Add rate limit headers
+    _add_rate_limit_headers(response, client_id)
+    
+    return paginated_result
+
+
+def _get_client_id(request: Request) -> str:
+    """Extract client ID from request"""
+    return request.client.host if request.client else "anonymous"
+
+
+def _check_rate_limit(client_id: str):
+    """Check and enforce rate limiting"""
     if not check_rate_limit(client_id, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW):
         raise HTTPException(
             status_code=429,
             detail=f"Rate limit exceeded. Maximum {RATE_LIMIT_MAX} requests per minute."
         )
+
+
+def _sanitize_input_params(symbol: Optional[str], action: Optional[str]) -> Dict:
+    """Sanitize and validate input parameters"""
+    sanitized = {}
     
-    # Input sanitization
-    try:
-        if symbol:
-            # Sanitize symbol (uppercase, alphanumeric and hyphens only)
-            symbol = symbol.upper().strip()
-            if not re.match(r'^[A-Z0-9_-]+$', symbol) or len(symbol) > 20:
-                raise HTTPException(status_code=400, detail="Invalid symbol format")
-        
-        if action:
-            # Sanitize action (BUY or SELL only)
-            action = action.upper().strip()
-            if action not in ["BUY", "SELL"]:
-                raise HTTPException(status_code=400, detail="Invalid action. Must be BUY or SELL")
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Input sanitization error: {e}")
-        raise HTTPException(status_code=400, detail="Invalid input parameters")
+    if symbol:
+        symbol = symbol.upper().strip()
+        if not re.match(r'^[A-Z0-9_-]+$', symbol) or len(symbol) > 20:
+            raise HTTPException(status_code=400, detail="Invalid symbol format")
+        sanitized['symbol'] = symbol
     
-    # Filter signals
+    if action:
+        action = action.upper().strip()
+        if action not in ["BUY", "SELL"]:
+            raise HTTPException(status_code=400, detail="Invalid action. Must be BUY or SELL")
+        sanitized['action'] = action
+    
+    return sanitized
+
+
+def _filter_signals(sanitized_params: Dict, premium_only: bool) -> List:
+    """Filter signals based on criteria"""
     filtered = SIGNALS_DB.copy()
     
     if premium_only:
         filtered = [s for s in filtered if s.get("confidence", 0) >= 95]
     
-    if symbol:
-        filtered = [s for s in filtered if s.get("symbol") == symbol]
+    if sanitized_params.get('symbol'):
+        filtered = [s for s in filtered if s.get("symbol") == sanitized_params['symbol']]
     
-    if action:
-        filtered = [s for s in filtered if s.get("action") == action]
+    if sanitized_params.get('action'):
+        filtered = [s for s in filtered if s.get("action") == sanitized_params['action']]
     
-    # Paginate
-    total = len(filtered)
-    paginated = filtered[offset:offset + limit]
-    
-    # Add rate limit headers
-    remaining = max(0, RATE_LIMIT_MAX - len(rate_limit_store.get(client_id, [])))
-    response.headers["X-RateLimit-Remaining"] = str(remaining)
-    response.headers["X-RateLimit-Limit"] = str(RATE_LIMIT_MAX)
+    return filtered
+
+
+def _paginate_signals(filtered_signals: List, limit: int, offset: int) -> PaginatedResponse:
+    """Paginate filtered signals"""
+    total = len(filtered_signals)
+    paginated = filtered_signals[offset:offset + limit]
     
     return PaginatedResponse(
         items=[SignalResponse(**s) for s in paginated],
@@ -218,6 +260,22 @@ async def get_all_signals(
         offset=offset,
         has_more=offset + limit < total
     )
+
+
+def _add_rate_limit_headers(response: Response, client_id: str):
+    """Add rate limit headers to response"""
+    # Note: rate_limit_store may not be available if using Redis-based rate limiting
+    # This is a fallback for when rate_limit_store is not available
+    try:
+        from argo.core.rate_limit import get_rate_limit_status
+        status = get_rate_limit_status(client_id, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW)
+        remaining = status.get('remaining', RATE_LIMIT_MAX)
+    except (ImportError, AttributeError):
+        # Fallback if rate limit status is not available
+        remaining = RATE_LIMIT_MAX
+    
+    response.headers["X-RateLimit-Remaining"] = str(remaining)
+    response.headers["X-RateLimit-Limit"] = str(RATE_LIMIT_MAX)
 
 
 @router.get("/{signal_id}", response_model=SignalResponse)

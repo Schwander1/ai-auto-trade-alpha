@@ -1,0 +1,33 @@
+{
+  "generated": "2025-11-15T04:54:27.479376",
+  "total_backtests": 60,
+  "successful": 60,
+  "errors": 0,
+  "configurations": {
+    "baseline": {
+      "successful": 12,
+      "total": 12,
+      "total_trades": 0
+    },
+    "weight_optimization": {
+      "successful": 12,
+      "total": 12,
+      "total_trades": 0
+    },
+    "regime_weights": {
+      "successful": 12,
+      "total": 12,
+      "total_trades": 0
+    },
+    "confidence_88": {
+      "successful": 12,
+      "total": 12,
+      "total_trades": 0
+    },
+    "all_optimizations": {
+      "successful": 12,
+      "total": 12,
+      "total_trades": 0
+    }
+  }
+}

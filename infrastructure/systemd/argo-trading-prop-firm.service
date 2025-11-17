@@ -1,0 +1,41 @@
+[Unit]
+Description=Argo Prop Firm Trading Service
+After=network.target redis.service
+Wants=redis.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/argo-production-prop-firm
+Environment="PATH=/root/argo-production-prop-firm/venv/bin:/usr/local/bin:/usr/bin:/bin"
+Environment="PYTHONPATH=/root/argo-production-prop-firm"
+Environment="ARGO_ENVIRONMENT=production"
+Environment="ARGO_API_SECRET=988807abc6a05772fd1900bcbfd35b6037f4f3ba4656e99e78f67b1242041736"
+# Signal generation optimizations
+Environment="USE_AWS_SECRETS=true"
+Environment="REDIS_HOST=localhost"
+Environment="REDIS_PORT=6379"
+ExecStart=/root/argo-production-prop-firm/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8001 --workers 1 --timeout-keep-alive 30
+Restart=always
+RestartSec=10
+StandardOutput=append:/tmp/argo-prop-firm.log
+StandardError=append:/tmp/argo-prop-firm.log
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Resource limits
+LimitNOFILE=65536
+MemoryMax=4G
+# Increased for signal generation with 30s timeouts and parallel data fetching
+
+# Graceful shutdown
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=60
+# Increased timeout to allow signal generation cycles to complete
+
+[Install]
+WantedBy=multi-user.target
+

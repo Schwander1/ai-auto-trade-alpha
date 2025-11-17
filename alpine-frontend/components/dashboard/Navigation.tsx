@@ -31,11 +31,11 @@ export default function Navigation() {
   }
 
   return (
-    <nav className="bg-alpine-card border-b border-alpine-border">
+    <nav className="bg-alpine-black-secondary border-b-border-alpine-black-border">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-8">
-            <Link href="/dashboard" className="text-xl font-bold text-alpine-text">
+            <Link href="/dashboard" className="text-xl font-bold text-alpine-text-primary ">
               Alpine Analytics
             </Link>
             <div className="hidden md:flex items-center gap-1">
@@ -48,8 +48,8 @@ export default function Navigation() {
                     href={item.href}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
                       active
-                        ? 'bg-alpine-accent/10 text-alpine-accent'
-                        : 'text-alpine-text-dim hover:text-alpine-text hover:bg-alpine-bg'
+                        ? 'bg-alpine-neoncya-n/10 text-alpine-neon-cyan'
+                        : 'text-alpine-text-secondary hover:text-alpine-text-primary hover:bg-alpine-black-primary
                     }`}
                   >
                     <Icon className="w-4 h-4" />

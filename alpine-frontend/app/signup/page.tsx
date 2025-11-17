@@ -89,42 +89,42 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-alpine-bg flex items-center justify-center px-4">
+    <div className="min-h-screen bg-alpine-black-primaryflex items-center justify-center px-4">
       <div className="w-full max-w-md">
-        <div className="bg-alpine-card border border-alpine-border rounded-xl p-8 shadow-lg">
+        <div className="bg-alpine-black-secondary border border-alpine-black-border rounded-xl p-8 shadow-lg">
           {/* Header */}
           <div className="mb-8 text-center">
-            <h1 className="text-3xl font-display font-black text-alpine-text mb-2">
+            <h1 className="text-3xl font-display font-black text-alpine-text-primarymb-2">
               Create Account
             </h1>
-            <p className="text-alpine-text-dim">
+            <p className="text-alpine-text-secondary">
               Start your journey with Alpine Analytics
             </p>
           </div>
 
           {/* Success Message */}
           {success && (
-            <div className="mb-6 p-4 bg-alpine-accent/10 border border-alpine-accent/30 rounded-lg flex items-start gap-3">
-              <CheckCircle2 className="w-5 h-5 text-alpine-accent flex-shrink-0 mt-0.5" aria-hidden="true" />
+            <div className="mb-6 p-4 bg-alpine-neon-cyan/10 border border-alpine-neon-cyan/30 rounded-lg flex items-start gap-3">
+              <CheckCircle2 className="w-5 h-5 text-alpine-neon-cyanflexshri-nk-0 mt-0.5" aria-hidden="true" />
               <div>
-                <p className="text-sm font-semibold text-alpine-accent mb-1">Account created!</p>
-                <p className="text-sm text-alpine-text-dim">Redirecting to login...</p>
+                <p className="text-sm font-semibold text-alpine-neon-cyan mb-1">Account created!</p>
+                <p className="text-sm text-alpine-text-secondary">Redirecting to login...</p>
               </div>
             </div>
           )}
 
           {/* Error Message */}
           {error && (
-            <div className="mb-6 p-4 bg-alpine-red/10 border border-alpine-red/30 rounded-lg flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-alpine-red flex-shrink-0 mt-0.5" aria-hidden="true" />
-              <p className="text-sm text-alpine-red">{error}</p>
+            <div className="mb-6 p-4 bg-alpine-semantic-error10 border border-alpine-semantic-error30 rounded-lg flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-alpine-semantic-errorflexshri-nk-0 mt-0.5" aria-hidden="true" />
+              <p className="text-sm text-alpine-semantic-error">{error}</p>
             </div>
           )}
 
           {/* Signup Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="email" className="block text-sm font-semibold text-alpine-text mb-2">
+              <label htmlFor="email" className="block text-sm font-semibold text-alpine-text-primary mb-2">
                 Email
               </label>
               <Input
@@ -140,7 +140,7 @@ export default function SignupPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-semibold text-alpine-text mb-2">
+              <label htmlFor="password" className="block text-sm font-semibold text-alpine-text-primary mb-2">
                 Password
               </label>
               <Input
@@ -153,13 +153,13 @@ export default function SignupPage() {
                 disabled={isLoading || success}
                 autoComplete="new-password"
               />
-              <p className="mt-1 text-xs text-alpine-text-dim">
+              <p className="mt-1 text-sm text-alpine-text-secondary">
                 Must be at least 8 characters with uppercase, lowercase, and number
               </p>
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-semibold text-alpine-text mb-2">
+              <label htmlFor="confirmPassword" className="block text-sm font-semibold text-alpine-text-primary mb-2">
                 Confirm Password
               </label>
               <Input
@@ -197,11 +197,11 @@ export default function SignupPage() {
 
           {/* Login Link */}
           <div className="mt-6 text-center">
-            <p className="text-sm text-alpine-text-dim">
+            <p className="text-sm text-alpine-text-secondary">
               Already have an account?{' '}
               <Link
                 href="/login"
-                className="font-semibold text-alpine-accent hover:text-alpine-pink transition-colors"
+                className="font-semibold text-alpine-neoncyanhove-r:text-alpine-neon-pink-transitioncolor-s"
               >
                 Sign in
               </Link>

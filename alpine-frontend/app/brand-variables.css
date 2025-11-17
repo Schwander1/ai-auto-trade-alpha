@@ -1,0 +1,32 @@
+
+/* Alpine Analytics Brand CSS Variables */
+:root {
+  /* Black Scale */
+  --alpine-black-pure: #000000;
+  --alpine-black-primary: #0a0a0f;
+  --alpine-black-secondary: #0f0f1a;
+  --alpine-black-tertiary: #15151a;
+  --alpine-black-border: #1a1a2e;
+  
+  /* Neon Colors */
+  --alpine-neon-cyan: #18e0ff;
+  --alpine-neon-cyan-dark: #00b8d4;
+  --alpine-neon-pink: #fe1c80;
+  --alpine-neon-pink-dark: #cc0066;
+  --alpine-neon-purple: #9600ff;
+  --alpine-neon-purple-dark: #5320f9;
+  --alpine-neon-orange: #ff5f01;
+  --alpine-neon-orange-dark: #cc4d00;
+  
+  /* Semantic Colors */
+  --alpine-semantic-success: #00ff88;
+  --alpine-semantic-error: #ff2d55;
+  --alpine-semantic-warning: #ff5f01;
+  --alpine-semantic-info: #18e0ff;
+  
+  /* Text Colors */
+  --alpine-text-primary: #ffffff;
+  --alpine-text-secondary: #a1a1aa;
+  --alpine-text-tertiary: #71717a;
+  --alpine-text-inverse: #000000;
+}

@@ -1,0 +1,37 @@
+#!/bin/bash
+# Stop local services command
+# Usage: ./commands/stop {project}
+# Examples:
+#   ./commands/stop all
+#   ./commands/stop argo
+#   ./commands/stop alpine
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_DIR="${SCRIPT_DIR}/lib"
+
+# Parse arguments
+PROJECT="${1:-all}"
+
+# Route to appropriate script
+case "$PROJECT" in
+    all)
+        echo "🛑 Stopping all local services..."
+        "${LIB_DIR}/stop-local-services.sh" all
+        ;;
+    argo)
+        echo "🛑 Stopping Argo local..."
+        "${LIB_DIR}/stop-local-services.sh" argo
+        ;;
+    alpine)
+        echo "🛑 Stopping Alpine local..."
+        "${LIB_DIR}/stop-local-services.sh" alpine
+        ;;
+    *)
+        echo "❌ Error: Invalid project '$PROJECT'"
+        echo "  Valid projects: all, argo, alpine"
+        exit 1
+        ;;
+esac
+

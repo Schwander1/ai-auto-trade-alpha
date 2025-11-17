@@ -1,13 +1,13 @@
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-alpine-darker text-alpine-text">
+    <div className="min-h-screen bg-alpine-black-primary text-alpine-text-primary ">
       <div className="container mx-auto px-6 py-20 max-w-4xl">
-        <h1 className="text-4xl font-display font-bold mb-8 text-alpine-green">Privacy Policy</h1>
-        <p className="text-alpine-text-dim mb-6">Last updated: November 10, 2025</p>
+        <h1 className="text-4xl font-display font-bold mb-8 text-alpine-semantic-success">Privacy Policy</h1>
+        <p className="text-alpine-text-secondary mb-6">Last updated: November 10, 2025</p>
 
-        <div className="space-y-8 text-alpine-text-dim">
+        <div className="space-y-8 text-alpine-text-secondary">
           <section>
-            <h2 className="text-2xl font-display font-bold text-alpine-text mb-4">1. Information We Collect</h2>
+            <h2 className="text-2xl font-display font-bold text-alpine-text-primary mb-4">1. Information We Collect</h2>
             <p className="mb-4">We collect information you provide directly:</p>
             <ul className="list-disc list-inside space-y-2 ml-4">
               <li>Email address (for account creation and signal delivery)</li>
@@ -18,7 +18,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-display font-bold text-alpine-text mb-4">2. How We Use Your Information</h2>
+            <h2 className="text-2xl font-display font-bold text-alpine-text-primary mb-4">2. How We Use Your Information</h2>
             <ul className="list-disc list-inside space-y-2 ml-4">
               <li>Deliver trading signals via email and SMS</li>
               <li>Process payments and manage subscriptions</li>
@@ -29,7 +29,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-display font-bold text-alpine-text mb-4">3. Data Sharing</h2>
+            <h2 className="text-2xl font-display font-bold text-alpine-text-primary mb-4">3. Data Sharing</h2>
             <p className="mb-4">We do NOT sell your personal data. We share data only with:</p>
             <ul className="list-disc list-inside space-y-2 ml-4">
               <li><strong>Payment processors</strong> (Stripe) to process transactions</li>
@@ -40,12 +40,12 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-display font-bold text-alpine-text mb-4">4. Data Security</h2>
+            <h2 className="text-2xl font-display font-bold text-alpine-text-primary mb-4">4. Data Security</h2>
             <p>We use industry-standard security measures including SSL/TLS encryption, secure password hashing, and encrypted database storage.</p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-display font-bold text-alpine-text mb-4">5. Your Rights</h2>
+            <h2 className="text-2xl font-display font-bold text-alpine-text-primary mb-4">5. Your Rights</h2>
             <p className="mb-4">You have the right to:</p>
             <ul className="list-disc list-inside space-y-2 ml-4">
               <li>Access your personal data</li>
@@ -57,18 +57,18 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-display font-bold text-alpine-text mb-4">6. Cookies</h2>
+            <h2 className="text-2xl font-display font-bold text-alpine-text-primary mb-4">6. Cookies</h2>
             <p>We use essential cookies for authentication and session management. We do not use tracking or advertising cookies.</p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-display font-bold text-alpine-text mb-4">7. Contact</h2>
-            <p>For privacy questions or to exercise your rights, contact: <a href="mailto:alpine.signals@proton.me" className="text-alpine-green hover:underline">alpine.signals@proton.me</a></p>
+            <h2 className="text-2xl font-display font-bold text-alpine-text-primary mb-4">7. Contact</h2>
+            <p>For privacy questions or to exercise your rights, contact: <a href="mailto:alpine.signals@proton.me" className="text-alpine-semanticsuccesshove-r:underline">alpine.signals@proton.me</a></p>
           </section>
         </div>
 
         <div className="mt-12">
-          <a href="/" className="text-alpine-green hover:underline">← Back to Home</a>
+          <a href="/" className="text-alpine-semanticsuccesshove-r:underline">← Back to Home</a>
         </div>
       </div>
     </div>

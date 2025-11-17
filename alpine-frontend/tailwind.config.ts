@@ -42,36 +42,71 @@ const config: Config = {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
-        // Alpine Design System
+        // Alpine Design System - Official Brand Colors
+        'alpine-black': {
+          pure: '#000000',
+          primary: '#0a0a0f',
+          secondary: '#0f0f1a',
+          tertiary: '#15151a',
+          border: '#1a1a2e',
+        },
+        'alpine-neon': {
+          cyan: '#18e0ff',
+          cyanDark: '#00b8d4',
+          pink: '#fe1c80',
+          pinkDark: '#cc0066',
+          purple: '#9600ff',
+          purpleDark: '#5320f9',
+          orange: '#ff5f01',
+          orangeDark: '#cc4d00',
+        },
+        'alpine-gradient': {
+          primary: 'linear-gradient(90deg, #18e0ff 0%, #fe1c80 50%, #9600ff 100%)',
+          cyanPink: 'linear-gradient(90deg, #18e0ff 0%, #fe1c80 100%)',
+          pinkPurple: 'linear-gradient(90deg, #fe1c80 0%, #9600ff 100%)',
+          pulse: 'linear-gradient(135deg, #18e0ff 0%, #fe1c80 50%, #9600ff 100%)',
+        },
+        'alpine-semantic': {
+          success: '#00ff88',
+          error: '#ff2d55',
+          warning: '#ff5f01',
+          info: '#18e0ff',
+        },
+        'alpine-text': {
+          primary: '#ffffff',
+          secondary: '#a1a1aa',
+          tertiary: '#71717a',
+          inverse: '#000000',
+        },
+        // Legacy colors (for backward compatibility)
         'alpine-dark': '#000000',
         'alpine-darker': '#0a0a0f',
         'alpine-card': '#0f0f1a',
         'alpine-border': '#1a1a2e',
-        'alpine-accent': '#00d9ff',
+        'alpine-accent': '#18e0ff',
         'alpine-accent-dark': '#00b8d4',
-        'alpine-pink': '#ff0080',
+        'alpine-pink': '#fe1c80',
         'alpine-pink-dark': '#cc0066',
         'alpine-blue': '#2962ff',
         'alpine-red': '#ff4560',
         'alpine-orange': '#ff9800',
-        'alpine-text': '#ffffff',
         'alpine-text-dim': '#a1a1aa',
-        // Legacy green (for gradual migration)
-        'alpine-green': '#00d9ff',
+        'alpine-green': '#00ff88',
         'alpine-green-dark': '#00b8d4',
-        // Legacy colors (keep for compatibility)
         black: '#000000',
         'space-gray': '#0F0F1E',
-        'electric-cyan': '#00F0FF',
-        'neon-pink': '#FF006E',
-        'neon-purple': '#B026FF',
-        'laser-green': '#00FF88',
-        'warning-red': '#FF2D55',
+        'electric-cyan': '#18e0ff',
+        'neon-pink': '#fe1c80',
+        'neon-purple': '#9600ff',
+        'laser-green': '#00ff88',
+        'warning-red': '#ff2d55',
         'ice-blue': '#E0F7FF',
       },
       fontFamily: {
-        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
-        display: ['var(--font-display)', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-inter)', 'Inter', 'system-ui', 'sans-serif'],
+        display: ['Orbitron', 'var(--font-display)', 'system-ui', 'sans-serif'],
+        heading: ['Montserrat', 'var(--font-inter)', 'system-ui', 'sans-serif'],
+        mono: ['JetBrains Mono', 'Menlo', 'Monaco', 'monospace'],
       },
       animation: {
         'pulse-glow-cyan': 'pulse-glow-cyan 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
@@ -79,6 +114,8 @@ const config: Config = {
         'pulse-glow-green': 'pulse-glow-green 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'pulse-glow-purple': 'pulse-glow-purple 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'pulse-glow-red': 'pulse-glow-red 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'pulse-neon': 'pulse-neon 2s ease-in-out infinite',
+        'glow-pulse': 'glow-pulse 2s ease-in-out infinite',
         'fade-in': 'fade-in 0.6s ease-out',
         'slide-up': 'slide-up 0.6s ease-out',
         'count-up': 'count-up 2s ease-out',
@@ -138,6 +175,24 @@ const config: Config = {
         'cursor-blink': {
           '0%, 50%': { opacity: '1' },
           '51%, 100%': { opacity: '0' },
+        },
+        'pulse-neon': {
+          '0%, 100%': { 
+            opacity: '1',
+            boxShadow: '0 0 20px rgba(24, 224, 255, 0.5), 0 0 40px rgba(24, 224, 255, 0.3)'
+          },
+          '50%': { 
+            opacity: '0.8',
+            boxShadow: '0 0 30px rgba(24, 224, 255, 0.8), 0 0 60px rgba(24, 224, 255, 0.5)'
+          },
+        },
+        'glow-pulse': {
+          '0%, 100%': { 
+            boxShadow: '0 0 20px rgba(24, 224, 255, 0.5), 0 0 40px rgba(24, 224, 255, 0.3)'
+          },
+          '50%': { 
+            boxShadow: '0 0 30px rgba(24, 224, 255, 0.8), 0 0 60px rgba(24, 224, 255, 0.5)'
+          },
         },
       },
       boxShadow: {

@@ -1,6 +1,21 @@
 """
+TRADE SECRET - PROPRIETARY ALGORITHM
+Argo Capital - Confidential
+
 AI Signal Explainer using Claude
-PATENT CLAIM: AI-generated reasoning for each signal must be meaningful and non-empty
+
+This code contains proprietary algorithms and trade secrets.
+Unauthorized disclosure, copying, or use is strictly prohibited.
+
+PATENT-PENDING TECHNOLOGY
+Patent Application: [Application Number]
+Filing Date: [Date]
+
+This code implements patent-pending technology.
+Unauthorized use may infringe on pending patent rights.
+
+PATENT CLAIM: [Claim Number] - AI-generated reasoning for each signal must be meaningful and non-empty
+See: docs/SystemDocs/PATENT_PENDING_TECHNOLOGY.md for patent details
 """
 import os
 import logging

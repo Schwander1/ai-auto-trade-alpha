@@ -1,0 +1,121 @@
+{
+  "dashboard": {
+    "title": "Argo Trading Engine Dashboard",
+    "tags": ["argo", "trading", "signals"],
+    "timezone": "browser",
+    "schemaVersion": 27,
+    "version": 1,
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Signals Generated",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(argo_signals_generated_total[5m])",
+            "legendFormat": "{{symbol}} - {{direction}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Data Source Health",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "argo_data_source_status",
+            "legendFormat": "{{source_name}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Signal Generation Duration",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(argo_signal_generation_duration_seconds_bucket[5m]))",
+            "legendFormat": "P95"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(argo_signal_generation_duration_seconds_bucket[5m]))",
+            "legendFormat": "P99"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+      },
+      {
+        "id": 4,
+        "title": "Data Source Success Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "argo_data_source_success_rate",
+            "legendFormat": "{{source_name}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+      },
+      {
+        "id": 5,
+        "title": "API Request Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(argo_api_requests_total[5m])",
+            "legendFormat": "{{method}} {{endpoint}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16}
+      },
+      {
+        "id": 6,
+        "title": "Active Positions",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(argo_active_positions)",
+            "legendFormat": "Total Positions"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16}
+      },
+      {
+        "id": 7,
+        "title": "Data Source Errors",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(argo_data_source_errors_total[5m])",
+            "legendFormat": "{{source_name}} - {{error_type}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 24}
+      },
+      {
+        "id": 8,
+        "title": "System Resources",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "argo_system_cpu_usage_percent",
+            "legendFormat": "CPU %"
+          },
+          {
+            "expr": "argo_system_memory_usage_percent",
+            "legendFormat": "Memory %"
+          },
+          {
+            "expr": "argo_system_disk_usage_percent",
+            "legendFormat": "Disk %"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 32}
+      }
+    ]
+  }
+}
+

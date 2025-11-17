@@ -22,6 +22,7 @@ from backend.core.config import settings
 from backend.core.cache import cache_response
 from backend.core.input_sanitizer import sanitize_symbol, sanitize_action
 from backend.core.response_formatter import add_rate_limit_headers
+from backend.core.error_responses import create_rate_limit_error
 from backend.models.user import User, UserTier
 from backend.core.rate_limit import check_rate_limit, get_rate_limit_status
 from backend.api.auth import get_current_user
@@ -35,8 +36,47 @@ router = APIRouter(prefix="/api/v1/signals", tags=["signals"])
 RATE_LIMIT_WINDOW = 60
 RATE_LIMIT_MAX = 100
 
-# Argo API URL
-ARGO_API_URL = getattr(settings, 'ARGO_API_URL', 'http://178.156.194.174:8000')
+# External Signal Provider API URL
+EXTERNAL_SIGNAL_API_URL = getattr(settings, 'EXTERNAL_SIGNAL_API_URL', 'http://178.156.194.174:8000')
+
+# OPTIMIZATION #4: Persistent HTTP client with connection pooling
+_http_client: Optional[httpx.AsyncClient] = None
+
+def get_http_client() -> Optional[httpx.AsyncClient]:
+    """Get or create persistent HTTP client with connection pooling"""
+    global _http_client
+    if _http_client is None and httpx:
+        _http_client = httpx.AsyncClient(
+            timeout=10.0,
+            limits=httpx.Limits(
+                max_keepalive_connections=20,
+                max_connections=100,
+                keepalive_expiry=30.0
+            ),
+            http2=True  # Enable HTTP/2 for better performance
+        )
+    return _http_client
+
+# Cleanup on shutdown
+import atexit
+def cleanup_http_client():
+    """Cleanup HTTP client on application shutdown"""
+    global _http_client
+    if _http_client:
+        import asyncio
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # Schedule cleanup
+                asyncio.create_task(_http_client.aclose())
+            else:
+                loop.run_until_complete(_http_client.aclose())
+        except (RuntimeError, AttributeError, Exception) as e:
+            # Ignore errors during cleanup - this is called at exit
+            logger.debug(f"Error during HTTP client cleanup: {e}")
+        _http_client = None
+
+atexit.register(cleanup_http_client)
 
 
 class SignalResponse(BaseModel):
@@ -87,8 +127,14 @@ def get_tier_signal_limit(tier: UserTier) -> int:
     return limits.get(tier, 1)
 
 
-async def fetch_signals_from_argo(limit: int = 10, premium_only: bool = False) -> List[dict]:
-    """Fetch signals from Argo API"""
+async def fetch_signals_from_external_provider(limit: int = 10, premium_only: bool = False, offset: Optional[int] = None) -> List[dict]:
+    """Fetch signals from external signal provider API
+    
+    Args:
+        limit: Maximum number of signals to fetch
+        premium_only: Filter premium signals only
+        offset: Optional offset for pagination (if supported by external API)
+    """
     if not httpx:
         # Fallback to mock data if httpx not available
         return [
@@ -106,14 +152,24 @@ async def fetch_signals_from_argo(limit: int = 10, premium_only: bool = False) -
         ]
     
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            params = {"limit": limit}
-            if premium_only:
-                params["premium_only"] = True
-            
-            response = await client.get(f"{ARGO_API_URL}/api/signals/latest", params=params)
-            response.raise_for_status()
-            return response.json()
+        # OPTIMIZATION #4: Use persistent HTTP client with connection pooling
+        client = get_http_client()
+        if not client:
+            # Fallback if httpx not available
+            raise HTTPException(
+                status_code=503,
+                detail="HTTP client not available"
+            )
+        
+        params = {"limit": limit}
+        if premium_only:
+            params["premium_only"] = True
+        if offset is not None:
+            params["offset"] = offset
+        
+        response = await client.get(f"{EXTERNAL_SIGNAL_API_URL}/api/signals/latest", params=params)
+        response.raise_for_status()
+        return response.json()
     except Exception as e:
         raise HTTPException(
             status_code=503,
@@ -167,7 +223,7 @@ async def get_subscribed_signals(
     # Rate limiting
     client_id = current_user.email
     if not check_rate_limit(client_id):
-        raise HTTPException(status_code=429, detail="Rate limit exceeded")
+        raise create_rate_limit_error(request=request)
     
     # Add rate limit headers
     rate_limit_status = get_rate_limit_status(client_id)
@@ -182,21 +238,34 @@ async def get_subscribed_signals(
     if limit > tier_limit:
         limit = tier_limit
     
-    # Fetch signals from Argo
-    try:
-        signals = await fetch_signals_from_argo(limit=limit + offset, premium_only=premium_only)
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error fetching signals from Argo: {e}")
-        raise HTTPException(
-            status_code=503,
-            detail="Failed to fetch signals. Please try again later."
-        )
+    # Optimized pagination: Use caching strategy to avoid fetching limit+offset
+    # Cache full result set and paginate from cache
+    from backend.core.cache import get_cache, set_cache
     
-    # Apply pagination
-    total = len(signals)
-    paginated = signals[offset:offset + limit]
+    cache_key = f"signals:all:{premium_only}"
+    cached_signals = get_cache(cache_key)
+    
+    if cached_signals is None:
+        # Fetch reasonable max (1000 signals) and cache for 60 seconds
+        try:
+            cached_signals = await fetch_signals_from_external_provider(
+                limit=1000,  # Fetch reasonable max for caching
+                premium_only=premium_only
+            )
+            # Cache for 60 seconds (signals update frequently)
+            set_cache(cache_key, cached_signals, ttl=60)
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Error fetching signals from external provider: {e}")
+            raise HTTPException(
+                status_code=503,
+                detail="Failed to fetch signals. Please try again later."
+            )
+    
+    # Paginate from cached data
+    total = len(cached_signals)
+    paginated = cached_signals[offset:offset + limit]
     
     return PaginatedSignalsResponse(
         items=[SignalResponse(**s) for s in paginated],
@@ -209,6 +278,7 @@ async def get_subscribed_signals(
 
 
 @router.get("/history", response_model=List[SignalHistoryResponse])
+@cache_response(ttl=300)  # Cache for 5 minutes
 async def get_signal_history(
     request: Request,
     response: Response,
@@ -246,7 +316,7 @@ async def get_signal_history(
     # Rate limiting
     client_id = current_user.email
     if not check_rate_limit(client_id):
-        raise HTTPException(status_code=429, detail="Rate limit exceeded")
+        raise create_rate_limit_error(request=request)
     
     # Add rate limit headers
     rate_limit_status = get_rate_limit_status(client_id)
@@ -299,7 +369,7 @@ async def export_signals(
     # Rate limiting
     client_id = current_user.email
     if not check_rate_limit(client_id):
-        raise HTTPException(status_code=429, detail="Rate limit exceeded")
+        raise create_rate_limit_error(request=request)
     
     # Add rate limit headers
     rate_limit_status = get_rate_limit_status(client_id)
@@ -316,7 +386,7 @@ async def export_signals(
     
     # Fetch signals
     try:
-        signals = await fetch_signals_from_argo(limit=1000, premium_only=False)
+        signals = await fetch_signals_from_external_provider(limit=1000, premium_only=False)
     except Exception as e:
         logger.error(f"Error fetching signals for export: {e}")
         raise HTTPException(

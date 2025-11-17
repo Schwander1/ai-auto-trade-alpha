@@ -28,9 +28,14 @@
     "weight_sonar": 0.15
   },
   "trading": {
-    "min_confidence": 87.0,
-    "profit_target": 0.04,
-    "stop_loss": 0.025
+    "min_confidence": 75.0,
+    "consensus_threshold": 75.0,
+    "profit_target": 0.05,
+    "stop_loss": 0.03,
+    "position_size_pct": 10,
+    "max_position_size_pct": 15,
+    "max_correlated_positions": 3,
+    "auto_execute": false
   },
   "backtest": {
     "symbols": {

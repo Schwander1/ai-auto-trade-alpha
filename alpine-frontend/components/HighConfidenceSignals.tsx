@@ -8,53 +8,53 @@ const signalFeatures = [
     icon: Target,
     title: 'Confidence Score (0-100)',
     description: 'Our signals average 90.5 confidence',
-    color: 'neon-pink',
+    color: 'alpine-neon-pink',
   },
   {
     icon: TrendingUp,
     title: 'Win Rate by Regime',
     description: '66% Bulls, 55-57% Bears/Chop/Crisis',
-    color: 'electric-cyan',
+    color: 'alpine-neon-cyan',
   },
   {
     icon: Target,
     title: 'Entry, Target, Stop',
     description: 'Complete trade plan',
-    color: 'laser-green',
+    color: 'alpine-semantic-success',
   },
   {
     icon: FileText,
     title: 'Detailed Reasoning',
     description: "Know exactly why we're entering",
-    color: 'neon-purple',
+    color: 'alpine-neon-purple',
   },
   {
     icon: Clock,
     title: 'Hold Time Estimate',
     description: 'Plan your commitment',
-    color: 'warning-red',
+    color: 'alpine-semantic-error',
   },
   {
     icon: Eye,
     title: 'Market Regime',
     description: 'Context matters',
-    color: 'electric-cyan',
+    color: 'alpine-neon-cyan',
   },
 ]
 
 const iconColors = {
-  'neon-pink': 'text-neon-pink',
-  'electric-cyan': 'text-electric-cyan',
-  'laser-green': 'text-laser-green',
-  'neon-purple': 'text-neon-purple',
-  'warning-red': 'text-warning-red',
+  'alpine-neon-pink': 'text-alpine-neon-pink',
+  'alpine-neon-cyan': 'text-alpine-neon-cyan',
+  'alpine-semantic-success': 'text-alpine-semantic-success',
+  'alpine-neon-purple': 'text-alpine-neon-purple',
+  'alpine-semantic-error': 'text-alpine-semantic-error',
 }
 
 export default function HighConfidenceSignals() {
   return (
-    <section className="bg-space-gray py-24 relative overflow-hidden">
+    <section className="bg-alpine-black-primary py-24 relative overflow-hidden">
       {/* Background Effects */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,0,110,0.05),transparent_70%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(254,28,128,0.05),transparent_70%)]" />
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <motion.div
@@ -64,10 +64,10 @@ export default function HighConfidenceSignals() {
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <h2 className="text-4xl sm:text-5xl font-bold text-ice-blue mb-4">
+          <h2 className="text-4xl sm:text-5xl font-bold text-alpine-text-primary mb-4 font-heading">
             High-Confidence Signals Only
           </h2>
-          <p className="text-xl text-ice-blue/70 max-w-3xl mx-auto mb-4">
+          <p className="text-xl text-alpine-text-secondary max-w-3xl mx-auto mb-4">
             We don't spam. We're selective.
           </p>
         </motion.div>
@@ -84,11 +84,11 @@ export default function HighConfidenceSignals() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 whileHover={{ scale: 1.05, y: -5 }}
-                className="glassmorphism rounded-xl p-6 border border-electric-cyan/20 hover:border-neon-pink/50 transition-all text-center"
+                className="card-neon rounded-xl p-6 border border-alpine-neon-cyan/20 hover:border-alpine-neonpin-k/50 transition-all text-center"
               >
                 <Icon className={`w-8 h-8 ${iconColor} mx-auto mb-4`} />
-                <h3 className="text-lg font-bold text-ice-blue mb-2">{feature.title}</h3>
-                <p className="text-ice-blue/70 text-sm">{feature.description}</p>
+                <h3 className="text-lg font-bold text-alpine-text-primary mb-2 font-heading">{feature.title}</h3>
+                <p className="text-alpine-text-secondary text-sm">{feature.description}</p>
               </motion.div>
             )
           })}
@@ -100,18 +100,18 @@ export default function HighConfidenceSignals() {
           viewport={{ once: true }}
           className="space-y-4 max-w-4xl mx-auto"
         >
-          <div className="glassmorphism rounded-xl p-6 border-2 border-neon-pink/30 text-center">
-            <p className="text-lg text-ice-blue font-semibold mb-2">
+          <div className="card-neon rounded-xl p-6 border-2 border-alpine-neonpin-k/30 text-center">
+            <p className="text-lg text-alpine-text-primary font-semibold mb-2">
               You decide position sizing based on{' '}
-              <span className="text-neon-pink">YOUR risk tolerance</span>.
+              <span className="text-alpine-neon-pink">YOUR risk tolerance</span>.
             </p>
           </div>
-          <div className="glassmorphism rounded-xl p-6 border border-electric-cyan/20">
-            <p className="text-ice-blue/90 leading-relaxed mb-2">
-              Our <span className="text-neon-pink font-semibold">58.5% average</span> includes ALL signals.
+          <div className="card-neon rounded-xl p-6 border border-alpine-neon-cyan/20">
+            <p className="text-alpine-text-primary leading-relaxed mb-2">
+              Our <span className="text-alpine-neon-pink font-semibold">58.5% average</span> includes ALL signals.
             </p>
-            <p className="text-ice-blue/90 leading-relaxed">
-              <span className="text-neon-pink font-semibold">High-confidence signals (85%+)</span> have historically performed better.
+            <p className="text-alpine-text-primary leading-relaxed">
+              <span className="text-alpine-neon-pink font-semibold">High-confidence signals (85%+)</span> have historically performed better.
             </p>
           </div>
         </motion.div>

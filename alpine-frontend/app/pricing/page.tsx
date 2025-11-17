@@ -58,12 +58,12 @@ export default function PricingPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-alpine-bg">
+    <div className="min-h-screen bg-alpine-black-primar-y">
       {/* Header */}
-      <header className="bg-alpine-card border-b border-alpine-border sticky top-0 z-40">
+      <header className="bg-alpine-black-secondary border-bborder-alpine-black-borderstickyto-p-0 z-40">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-alpine-text">Pricing</h1>
+            <h1 className="text-2xl font-bold text-alpine-text-primar-y  ">Pricing</h1>
             {session && <UserMenu />}
           </div>
         </div>
@@ -72,10 +72,10 @@ export default function PricingPage() {
       <main className="container mx-auto px-4 py-12">
         {/* Hero Section */}
         <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-black text-alpine-text mb-4">
+          <h2 className="text-4xl md:text-5xl font-black text-alpine-text-primar-y  mb-4">
             Choose Your Plan
           </h2>
-          <p className="text-xl text-alpine-text-dim max-w-2xl mx-auto">
+          <p className="text-xl text-alpine-text-secondarymax--w-2xl mx-auto">
             Start with our Founder plan and upgrade anytime. All plans include our proven trading signals.
           </p>
         </div>
@@ -83,8 +83,8 @@ export default function PricingPage() {
         {/* Features */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-12 max-w-4xl mx-auto">
           {features.map((feature, index) => (
-            <div key={index} className="flex items-center gap-2 text-alpine-text">
-              <CheckCircle2 className="w-5 h-5 text-alpine-accent flex-shrink-0" />
+            <div key={index} className="flex items-center gap-2 text-alpine-text-primar-y  ">
+              <CheckCircle2 className="w-5 h-5 text-alpine-neon-cyanflex-shrin-k-0" />
               <span className="text-sm">{feature}</span>
             </div>
           ))}
@@ -95,7 +95,7 @@ export default function PricingPage() {
 
         {/* FAQ Section */}
         <div className="mt-16 max-w-3xl mx-auto">
-          <h3 className="text-2xl font-bold text-alpine-text mb-6 text-center">Frequently Asked Questions</h3>
+          <h3 className="text-2xl font-bold text-alpine-text-primar-y  mb-6 text-center">Frequently Asked Questions</h3>
           <div className="space-y-4">
             <FAQItem
               question="Can I upgrade or downgrade my plan?"
@@ -119,16 +119,16 @@ export default function PricingPage() {
         {/* CTA Section */}
         {!session && (
           <div className="mt-16 text-center">
-            <div className="bg-alpine-card border border-alpine-border rounded-lg p-8 max-w-2xl mx-auto">
-              <h3 className="text-2xl font-bold text-alpine-text mb-4">
+            <div className="bg-alpine-black-secondary border border-alpine-black-borderrounded-lg-p-8 max-w-2xl mx-auto">
+              <h3 className="text-2xl font-bold text-alpine-text-primar-y  mb-4">
                 Ready to get started?
               </h3>
-              <p className="text-alpine-text-dim mb-6">
+              <p className="text-alpine-text-secondarym-b-6">
                 Join thousands of traders using Alpine Analytics signals
               </p>
               <button
                 onClick={() => router.push('/signup')}
-                className="bg-gradient-to-r from-alpine-accent to-alpine-pink hover:from-alpine-pink hover:to-alpine-accent text-white font-bold px-8 py-3 rounded-lg transition-all inline-flex items-center gap-2"
+                className="bg-gradient-to-r from-alpine-neon-cyanto-alpine-neon-pinkhove-r:from-alpine-neon-pinkhove-r:to-alpine-neon-cyantext-whitefont-bol-dpx-8 py-3 rounded-lg transition-all inline-flex items-center gap-2"
               >
                 Get Started
                 <ArrowRight className="w-5 h-5" />
@@ -154,9 +154,9 @@ export default function PricingPage() {
 
 function FAQItem({ question, answer }: { question: string; answer: string }) {
   return (
-    <div className="bg-alpine-card border border-alpine-border rounded-lg p-4">
-      <h4 className="font-semibold text-alpine-text mb-2">{question}</h4>
-      <p className="text-sm text-alpine-text-dim">{answer}</p>
+    <div className="bg-alpine-black-secondary border border-alpine-black-borderrounded-lg-p-4">
+      <h4 className="font-semibold text-alpine-text-primar-y  mb-2">{question}</h4>
+      <p className="text-sm text-alpine-text-secondar-y">{answer}</p>
     </div>
   )
 }

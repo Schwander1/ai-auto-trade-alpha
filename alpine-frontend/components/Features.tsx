@@ -63,14 +63,14 @@ const features = [
 
 export default function Features() {
   return (
-    <section id="features" className="bg-white py-24">
+    <section id="features" className="bg-alpine-black-primary py-24">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-4xl sm:text-5xl font-bold text-navy text-center mb-16"
+          className="text-4xl sm:text-5xl font-bold text-alpine-text-primary text-center mb-16 font-heading"
         >
           Everything You Need to Trade Smarter
         </motion.h2>
@@ -86,15 +86,15 @@ export default function Features() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: index * 0.05 }}
                 whileHover={{ scale: 1.05, y: -5 }}
-                className="bg-gray-light rounded-xl p-6 border border-gray hover:border-blue transition-all"
+                className="card-neon rounded-xl p-6 border border-alpine-neon-cyan/20 hover:border-alpine-neonpin-k/50 transition-all"
               >
-                <div className="w-12 h-12 bg-blue/10 rounded-lg flex items-center justify-center mb-4">
-                  <Icon className="w-6 h-6 text-blue" />
+                <div className="w-12 h-12 bg-alpine-neoncya-n/10 rounded-lg flex items-center justify-center mb-4">
+                  <Icon className="w-6 h-6 text-alpine-neon-cyan" />
                 </div>
-                <h3 className="text-xl font-bold text-navy mb-2">
+                <h3 className="text-xl font-bold text-alpine-text-primary mb-2 font-heading">
                   {feature.title}
                 </h3>
-                <p className="text-gray-dark">{feature.description}</p>
+                <p className="text-alpine-text-secondary">{feature.description}</p>
               </motion.div>
             )
           })}

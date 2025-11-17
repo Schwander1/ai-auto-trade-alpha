@@ -1,0 +1,150 @@
+# Argo-Alpine System Rules
+
+**Last Updated:** January 15, 2025
+
+---
+
+## Overview
+
+This file references the comprehensive rules system located in the `Rules/` folder. All development, deployment, and operational rules are organized there.
+
+---
+
+## Rules Directory
+
+**Location:** `Rules/`
+
+**Quick Access:** See `Rules/README.md` for complete index and navigation
+
+---
+
+## Critical Rules to Always Consider
+
+### When Writing Code
+- **Development Practices:** See `Rules/01_DEVELOPMENT.md`
+- **Code Quality:** See `Rules/02_CODE_QUALITY.md`
+- **Testing:** See `Rules/03_TESTING.md`
+- **Security:** See `Rules/07_SECURITY.md`
+
+### When Deploying
+- **Deployment Procedures:** See `Rules/04_DEPLOYMENT.md`
+- **Environment Management:** See `Rules/05_ENVIRONMENT.md`
+- **Dev vs Prod Differences:** See `Rules/16_DEV_PROD_DIFFERENCES.md`
+
+### When Working with Trading System
+- **Trading Operations:** See `Rules/13_TRADING_OPERATIONS.md`
+- **Monitoring:** See `Rules/14_MONITORING_OBSERVABILITY.md`
+- **Backtesting:** See `Rules/15_BACKTESTING.md`
+
+### When Managing Configuration
+- **Configuration Management:** See `Rules/06_CONFIGURATION.md`
+- **Dev vs Prod Config:** See `Rules/16_DEV_PROD_DIFFERENCES.md`
+
+### When Working with APIs
+- **API Design:** See `Rules/26_API_DESIGN.md`
+- **Error Handling:** See `Rules/29_ERROR_HANDLING.md`
+- **Performance:** See `Rules/28_PERFORMANCE.md`
+
+### When Working with Databases
+- **Database Migrations:** See `Rules/27_DATABASE_MIGRATIONS.md`
+- **Performance:** See `Rules/28_PERFORMANCE.md`
+- **Data Lifecycle:** See `Rules/32_DATA_LIFECYCLE.md`
+
+---
+
+## Key Principles
+
+### Environment & Deployment
+- **Automatic Environment Detection:** System automatically detects dev vs prod
+- **Automatic Account Switching:** Dev and prod Alpaca accounts switch automatically
+- **Deployment Consistency:** Code must be identical between dev and prod
+- **File Exclusions:** Local-only files never deployed to production
+
+### Code Quality
+- **SOLID Principles:** Always follow SOLID principles
+- **95%+ Test Coverage:** Critical paths require 95%+ coverage
+- **Type Safety:** Python type hints, TypeScript strict mode
+- **No Dead Code:** Remove unused code before committing
+
+### Security
+- **Never Commit Secrets:** Use AWS Secrets Manager for production
+- **Input Validation:** Validate all inputs at boundaries
+- **Parameterized Queries:** Never concatenate SQL
+- **PII Redaction:** Never log sensitive data
+
+### Trading System
+- **7-Layer Risk Management:** All trades must pass all 7 layers
+- **Automatic Account Selection:** Dev/prod accounts switch automatically
+- **Position Monitoring:** Real-time position tracking required
+- **Performance Tracking:** All trades recorded with SHA-256 verification
+
+---
+
+## Quick Reference
+
+### Most Common Rules
+- **Naming:** `Rules/01_DEVELOPMENT.md` - Language-specific conventions
+- **Deployment:** `Rules/04_DEPLOYMENT.md` - 11 safety gates
+- **Security:** `Rules/07_SECURITY.md` - Never commit secrets
+- **API Design:** `Rules/26_API_DESIGN.md` - API versioning and standards
+- **Error Handling:** `Rules/29_ERROR_HANDLING.md` - Resilience patterns
+- **Code Review:** `Rules/30_CODE_REVIEW.md` - PR process and guidelines
+- **Dev vs Prod:** `Rules/16_DEV_PROD_DIFFERENCES.md` - Automatic switching
+
+### By Project
+- **Frontend:** `Rules/11_FRONTEND.md`
+- **Backend:** `Rules/12_BACKEND.md`
+- **Monorepo:** `Rules/10_MONOREPO.md`
+
+### By Function
+- **Trading:** `Rules/13_TRADING_OPERATIONS.md`
+- **Monitoring:** `Rules/14_MONITORING_OBSERVABILITY.md`
+- **Backtesting:** `Rules/15_BACKTESTING.md`
+
+---
+
+## Rule Compliance
+
+**When working on any code:**
+1. Check relevant rule file in `Rules/` folder
+2. Follow the guidelines and examples
+3. Reference rules when making decisions
+4. Update rules if you find gaps
+
+**When deploying:**
+1. Review `Rules/04_DEPLOYMENT.md` - 10 safety gates
+2. Review `Rules/16_DEV_PROD_DIFFERENCES.md` - Deployment consistency
+3. Verify environment detection and account selection
+4. Ensure local-only files excluded
+
+**When making changes:**
+1. Consider dev vs prod differences (`Rules/16_DEV_PROD_DIFFERENCES.md`)
+2. Ensure code works in both environments
+3. Verify automatic switching mechanisms
+4. Test in development before production
+
+---
+
+## Important Reminders
+
+### Environment Switching
+- ✅ Environment detection is automatic (no manual config)
+- ✅ Alpaca account switching is automatic (dev vs prod)
+- ✅ Same code works in both environments
+- ✅ Verify with `argo/scripts/check_account_status.py`
+
+### Deployment Consistency
+- ✅ Code must be identical between dev and prod
+- ✅ Only configuration values differ
+- ✅ Local-only files never deployed
+- ✅ Environment-aware code adapts automatically
+
+### Security
+- ✅ Never commit secrets to version control
+- ✅ Use AWS Secrets Manager for production
+- ✅ Validate all inputs
+- ✅ Redact PII in logs
+
+---
+
+**For complete rules and details, see:** `Rules/README.md`

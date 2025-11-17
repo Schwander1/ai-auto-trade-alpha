@@ -1,0 +1,52 @@
+#!/bin/bash
+# Rollback command dispatcher (production only)
+# Usage: ./commands/rollback {project} production
+# Examples:
+#   ./commands/rollback argo production
+#   ./commands/rollback alpine production
+#   ./commands/rollback all production
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_DIR="${SCRIPT_DIR}/lib"
+
+# Parse arguments
+PROJECT="${1:-}"
+ENVIRONMENT="${2:-}"
+
+# Validation
+if [ -z "$PROJECT" ]; then
+    echo "❌ Error: Project not specified"
+    echo "Usage: ./commands/rollback {project} production"
+    echo "  Projects: all, argo, alpine"
+    echo "  Environment: production (only)"
+    exit 1
+fi
+
+if [ "$ENVIRONMENT" != "production" ]; then
+    echo "❌ Error: Rollback only available for production"
+    exit 1
+fi
+
+# Route to appropriate script
+case "$PROJECT" in
+    all)
+        echo "⏪ Rolling back all production services..."
+        "${LIB_DIR}/rollback-production.sh" all
+        ;;
+    argo)
+        echo "⏪ Rolling back Argo production..."
+        "${LIB_DIR}/rollback-production.sh" argo
+        ;;
+    alpine)
+        echo "⏪ Rolling back Alpine production..."
+        "${LIB_DIR}/rollback-production.sh" alpine
+        ;;
+    *)
+        echo "❌ Error: Invalid project '$PROJECT'"
+        echo "  Valid projects: all, argo, alpine"
+        exit 1
+        ;;
+esac
+

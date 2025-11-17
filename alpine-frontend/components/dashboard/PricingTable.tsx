@@ -93,15 +93,15 @@ export default function PricingTable({ currentTier, onUpgrade, className = '' }:
       {tiers.map((tier) => (
         <div
           key={tier.name}
-          className={`relative bg-alpine-card border rounded-lg p-6 ${
+          className={`relative bg-alpine-black-secondary border rounded-lg p-6 ${
             tier.popular
-              ? 'border-alpine-accent shadow-glow-cyan'
-              : 'border-alpine-border'
-          } ${isCurrentTier(tier.name) ? 'ring-2 ring-alpine-accent' : ''}`}
+              ? 'border-alpine-neon-cyan shadow-glow-cyan'
+              : 'border-alpine-black-border'
+          } ${isCurrentTier(tier.name) ? 'ring-2 ring-alpine-neon-cyan' : ''}`}
         >
           {tier.popular && (
             <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-              <span className="bg-gradient-to-r from-alpine-accent to-alpine-pink text-white text-xs font-bold px-3 py-1 rounded-full">
+              <span className="bg-gradient-to-r from-alpine-neon-cyan to-alpine-neon-pink text-white text-sm font-bold px-3 py-1 rounded-full">
                 Most Popular
               </span>
             </div>
@@ -109,34 +109,34 @@ export default function PricingTable({ currentTier, onUpgrade, className = '' }:
 
           {isCurrentTier(tier.name) && (
             <div className="absolute -top-3 right-4">
-              <span className="bg-alpine-accent text-alpine-dark text-xs font-bold px-3 py-1 rounded-full">
+              <span className="bg-alpine-neon-cyan text-alpine-black-primarytext-sm-fontbol-dpx-3 py-1 rounded-full">
                 Current Plan
               </span>
             </div>
           )}
 
           <div className="text-center mb-6">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-alpine-accent/10 text-alpine-accent mb-4">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-alpine-neoncya-n/10 text-alpine-neon-cyan mb-4">
               {tier.icon}
             </div>
-            <h3 className="text-2xl font-bold text-alpine-text mb-2">{tier.displayName}</h3>
+            <h3 className="text-2xl font-bold text-alpine-text-primary mb-2">{tier.displayName}</h3>
             <div className="mb-4">
-              <span className="text-4xl font-black text-alpine-text">${tier.price}</span>
-              <span className="text-alpine-text-dim">/month</span>
+              <span className="text-4xl font-black text-alpine-text-primary ">${tier.price}</span>
+              <span className="text-alpine-text-secondary">/month</span>
             </div>
           </div>
 
           <ul className="space-y-3 mb-6">
             {tier.features.map((feature, index) => (
               <li key={index} className="flex items-start gap-2">
-                <Check className="w-5 h-5 text-alpine-accent flex-shrink-0 mt-0.5" />
-                <span className="text-sm text-alpine-text">{feature}</span>
+                <Check className="w-5 h-5 text-alpine-neon-cyanflexshri-nk-0 mt-0.5" />
+                <span className="text-sm text-alpine-text-primary ">{feature}</span>
               </li>
             ))}
             {tier.limitations?.map((limitation, index) => (
               <li key={`lim-${index}`} className="flex items-start gap-2 opacity-50">
-                <X className="w-5 h-5 text-alpine-text-dim flex-shrink-0 mt-0.5" />
-                <span className="text-sm text-alpine-text-dim">{limitation}</span>
+                <X className="w-5 h-5 text-alpine-text-secondaryflexshri-nk-0 mt-0.5" />
+                <span className="text-sm text-alpine-text-secondary">{limitation}</span>
               </li>
             ))}
           </ul>
@@ -146,8 +146,8 @@ export default function PricingTable({ currentTier, onUpgrade, className = '' }:
             disabled={isCurrentTier(tier.name)}
             className={`w-full ${
               tier.popular
-                ? 'bg-gradient-to-r from-alpine-accent to-alpine-pink hover:from-alpine-pink hover:to-alpine-accent'
-                : 'bg-alpine-border hover:bg-alpine-border/80'
+                ? 'bg-gradient-to-r from-alpine-neon-cyan to-alpine-neon-pinkhove-r:from-alpine-neon-pinkhove-r:to-alpine-neoncya-n'
+                : 'bg-alpine-black-border hover:bg-alpine-black-border/80'
             } text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             {isCurrentTier(tier.name) ? 'Current Plan' : 'Upgrade'}

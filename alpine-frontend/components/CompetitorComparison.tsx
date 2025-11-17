@@ -86,7 +86,7 @@ const comparisonData = [
 
 export default function CompetitorComparison() {
   return (
-    <section className="py-24 bg-alpine-dark">
+    <section className="py-24 bg-alpine-black-primary">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -95,20 +95,20 @@ export default function CompetitorComparison() {
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <h2 className="font-display text-4xl md:text-6xl font-black text-white mb-4">
-            Why Alpine Is Different: <span className="bg-gradient-to-r from-alpine-accent to-alpine-pink bg-clip-text text-transparent">Cryptographic Proof vs Marketing Claims</span>
+          <h2 className="font-display text-4xl tracking-[0.15em] tracking-[0.15em] md:text-6xl font-black text-white mb-4">
+            Why Alpine Is Different: <span className="bg-gradient-to-r from-alpine-neon-cyan to-alpine-neon-pink-bg-cliptex-ttext-transparent">Cryptographic Proof vs Marketing Claims</span>
           </h2>
-          <p className="text-xl text-alpine-text-dim">
+          <p className="text-xl text-alpine-text-secondary">
             Many signal services hide their failures. We prove our performance.
           </p>
         </motion.div>
 
         <div className="max-w-6xl mx-auto">
           {/* Table Header */}
-          <div className="grid grid-cols-3 gap-4 mb-4 pb-4 border-b border-alpine-border">
-            <div className="font-semibold text-alpine-text">Feature</div>
-            <div className="font-semibold text-alpine-accent text-center">Alpine</div>
-            <div className="font-semibold text-alpine-red text-center">Other Services</div>
+          <div className="grid grid-cols-3 gap-4 mb-4 pb-4 border-b border-alpine-black-border">
+            <div className="font-semibold text-alpine-text-primary ">Feature</div>
+            <div className="font-semibold text-alpine-neon-cyan text-center">Alpine</div>
+            <div className="font-semibold text-alpine-semantic-error text-center">Other Services</div>
           </div>
 
           {/* Comparison Rows */}
@@ -120,28 +120,28 @@ export default function CompetitorComparison() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="grid grid-cols-3 gap-4 p-4 rounded-lg bg-alpine-card border border-alpine-border hover:border-alpine-accent/50 transition-colors"
+                className="grid grid-cols-3 gap-4 p-4 rounded-lg bg-alpine-black-secondary border border-alpine-black-border hove-r:border-alpine-neon-cyan/50 transition-colors"
               >
-                <div className="font-medium text-alpine-text">{row.feature}</div>
+                <div className="font-medium text-alpine-text-primary ">{row.feature}</div>
                 <div className="text-center">
                   {typeof row.alpine === 'boolean' ? (
                     row.alpine ? (
-                      <Check className="w-6 h-6 text-alpine-accent mx-auto" />
+                      <Check className="w-6 h-6 text-alpine-neon-cyanmxau-to" />
                     ) : (
-                      <X className="w-6 h-6 text-alpine-red mx-auto" />
+                      <X className="w-6 h-6 text-alpine-semantic-errormxau-to" />
                     )
                   ) : (
-                    <span className="text-alpine-accent font-bold">{row.alpine}</span>
+                    <span className="text-alpine-neon-cyanfontbo-ld">{row.alpine}</span>
                   )}
-                  <p className="text-xs text-alpine-text-dim mt-1">{row.alpineDetail}</p>
+                  <p className="text-sm text-alpine-text-secondary mt-1">{row.alpineDetail}</p>
                 </div>
                 <div className="text-center">
                   {typeof row.competitors === 'string' ? (
-                    <span className="text-alpine-red font-bold">{row.competitors}</span>
+                    <span className="text-alpine-semantic-errorfontbo-ld">{row.competitors}</span>
                   ) : (
-                    <X className="w-6 h-6 text-alpine-red mx-auto" />
+                    <X className="w-6 h-6 text-alpine-semantic-errormxau-to" />
                   )}
-                  <p className="text-xs text-alpine-text-dim mt-1">{row.competitorDetail}</p>
+                  <p className="text-sm text-alpine-text-secondary mt-1">{row.competitorDetail}</p>
                 </div>
               </motion.div>
             ))}
@@ -152,10 +152,10 @@ export default function CompetitorComparison() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mt-8 p-6 bg-gradient-to-r from-alpine-accent/10 via-alpine-pink/10 to-alpine-blue/10 border border-alpine-accent/30 rounded-lg text-center"
+            className="mt-8 p-6 bg-gradient-to-r from-alpine-neon-cyan/10 via-alpine-neon-pink/10 to-alpine-neon-purple/10 border border-alpine-neon-cyan/30 rounded-lg text-center"
           >
-            <p className="text-lg text-alpine-text">
-              <strong className="text-alpine-accent">
+            <p className="text-lg text-alpine-text-primary ">
+              <strong className="text-alpine-neon-cyan">
                 Many signal services show you PDFs and screenshots.
               </strong>
               <br />
@@ -170,12 +170,12 @@ export default function CompetitorComparison() {
             viewport={{ once: true }}
             className="mt-12 text-center"
           >
-            <p className="text-alpine-text font-semibold text-lg mb-4">
+            <p className="text-alpine-text-primary font-semibold-textl-gmb-4">
               Don't trust promises. Download the proof.
             </p>
             <a
               href="/api/download-backtest"
-              className="group relative inline-flex items-center justify-center gap-3 px-10 py-5 bg-gradient-to-r from-alpine-accent to-alpine-pink hover:from-alpine-pink hover:to-alpine-accent text-white font-black text-lg rounded-xl shadow-2xl shadow-alpine-accent/50 transform transition-all duration-300 hover:scale-105"
+              className="group relative inline-flex items-center justify-center gap-3 px-10 py-5 bg-gradient-to-r from-alpine-neon-cyan to-alpine-neon-pinkhove-r:from-alpine-neon-pinkhove-r:to-alpine-neon-cyantext-white-fontblac-ktext-lgrounded-xlshadow-2xl shadow-alpine-neoncya-n/50 transform transition-all duration-300 hover:scale-105"
             >
               <span className="relative z-10 flex items-center gap-3">
                 <Download className="w-6 h-6" />

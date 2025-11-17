@@ -1,0 +1,76 @@
+#!/bin/bash
+# Deployment command dispatcher
+# Usage: ./commands/deploy {project} to {environment}
+# Examples:
+#   ./commands/deploy all to production
+#   ./commands/deploy argo to production
+#   ./commands/deploy alpine to production
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_DIR="${SCRIPT_DIR}/lib"
+
+# Parse arguments
+PROJECT=""
+ENVIRONMENT=""
+TO_FOUND=false
+
+# Parse: deploy {project} to {environment}
+for arg in "$@"; do
+    if [ "$arg" = "to" ]; then
+        TO_FOUND=true
+        continue
+    fi
+    
+    if [ -z "$PROJECT" ]; then
+        PROJECT="$arg"
+    elif [ "$TO_FOUND" = true ] && [ -z "$ENVIRONMENT" ]; then
+        ENVIRONMENT="$arg"
+    fi
+done
+
+# Validation
+if [ -z "$PROJECT" ]; then
+    echo "❌ Error: Project not specified"
+    echo "Usage: ./commands/deploy {project} to {environment}"
+    echo "  Projects: all, argo, alpine"
+    echo "  Environment: production"
+    exit 1
+fi
+
+if [ "$TO_FOUND" = false ] || [ -z "$ENVIRONMENT" ]; then
+    echo "❌ Error: Environment not specified"
+    echo "Usage: ./commands/deploy {project} to {environment}"
+    echo "  Projects: all, argo, alpine"
+    echo "  Environment: production"
+    exit 1
+fi
+
+if [ "$ENVIRONMENT" != "production" ]; then
+    echo "❌ Error: Deployment only available for production"
+    echo "  For local development, use: ./commands/start"
+    exit 1
+fi
+
+# Route to appropriate script
+case "$PROJECT" in
+    all)
+        echo "🚀 Deploying all to production..."
+        "${LIB_DIR}/deploy-all-to-production.sh"
+        ;;
+    argo)
+        echo "🚀 Deploying Argo to production..."
+        "${LIB_DIR}/deploy-argo-to-production.sh"
+        ;;
+    alpine)
+        echo "🚀 Deploying Alpine to production..."
+        "${LIB_DIR}/deploy-alpine-to-production.sh"
+        ;;
+    *)
+        echo "❌ Error: Invalid project '$PROJECT'"
+        echo "  Valid projects: all, argo, alpine"
+        exit 1
+        ;;
+esac
+

@@ -1,0 +1,111 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage{geometry}
+\geometry{margin=2cm}
+
+% Fonts - Brand system (using system fonts)
+\usepackage{fontspec}
+% Use system fonts that are widely available
+\setmainfont{Arial}[Ligatures=TeX, SizeFeatures={Size=12-}]
+\setsansfont{Helvetica}[Ligatures=TeX]
+\newfontfamily\displayfont{Arial Black}[LetterSpace=3]
+\setmonofont{Menlo}[Scale=MatchLowercase]
+
+% Colors - Alpine Brand Palette
+\usepackage{xcolor}
+\definecolor{alpine-black}{RGB}{10,10,15}
+\definecolor{alpine-neon-cyan}{RGB}{24,224,255}
+\definecolor{alpine-neon-pink}{RGB}{254,28,128}
+\definecolor{alpine-neon-purple}{RGB}{150,0,255}
+\definecolor{alpine-text-primary}{RGB}{255,255,255}
+\definecolor{alpine-text-secondary}{RGB}{161,161,170}
+
+% Page background - Black
+\pagecolor{alpine-black}
+\color{alpine-text-primary}
+
+% Hyperlinks - Neon cyan
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=alpine-neon-cyan,
+    urlcolor=alpine-neon-cyan,
+    citecolor=alpine-neon-cyan,
+    filecolor=alpine-neon-cyan,
+    pdfborder={0 0 0}
+}
+
+% Header/Footer with logo and neon accents
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textcolor{alpine-neon-cyan}{\displayfont\bfseries ALPINE ANALYTICS}}
+\fancyhead[R]{\textcolor{alpine-neon-cyan}{\sffamily\bfseries\thepage}}
+\fancyfoot[C]{\textcolor{alpine-text-secondary}{\small Alpine Analytics® LLC}}
+\renewcommand{\headrulewidth}{0.5pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{alpine-neon-cyan}\leaders\hrule height \headrulewidth\hfill}}
+
+% Title formatting - Neon accents with generous spacing
+\usepackage{titlesec}
+\titleformat{\section}
+  {\normalfont\Large\bfseries\sffamily\color{alpine-neon-cyan}}
+  {\thesection}{1em}{}
+\titlespacing*{\section}{0pt}{32pt}{24pt}  % Generous spacing
+
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\sffamily\color{alpine-neon-pink}}
+  {\thesubsection}{1em}{}
+\titlespacing*{\subsection}{0pt}{24pt}{16pt}
+
+\titleformat{\subsubsection}
+  {\normalfont\normalsize\bfseries\sffamily\color{alpine-neon-purple}}
+  {\thesubsubsection}{1em}{}
+
+% Custom title page with neon gradient effect
+\renewcommand{\maketitle}{%
+  \begin{titlepage}
+    \centering
+    \vspace*{3cm}
+    {\displayfont\Huge\bfseries\color{alpine-neon-cyan}ALPINE ANALYTICS}\\[0.5cm]
+    {\Large\color{alpine-text-secondary}LLC}\\[2cm]
+    {\displayfont\Huge\bfseries\color{alpine-neon-cyan}\@title}\\[1cm]
+    {\Large\color{alpine-text-secondary}\@subtitle}\\[2cm]
+    {\large\@author}\\[1cm]
+    {\color{alpine-text-secondary}\@date}
+    \vfill
+    \textcolor{alpine-neon-cyan}{\rule{0.5\textwidth}{0.5pt}}
+  \end{titlepage}
+}
+
+% Table styling with neon borders
+\usepackage{booktabs}
+\usepackage{array}
+\arrayrulecolor{alpine-neon-cyan}
+
+\begin{document}
+$if(title)$
+\title{$title$}
+$endif$
+$if(subtitle)$
+\subtitle{$subtitle$}
+$endif$
+$if(author)$
+\author{$author$}
+$endif$
+$if(date)$
+\date{$date$}
+$endif$
+
+$if(title)$
+\maketitle
+$endif$
+
+$if(toc)$
+\tableofcontents
+\newpage
+$endif$
+
+$body$
+
+\end{document}
+

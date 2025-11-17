@@ -116,8 +116,8 @@ export default function BacktestPage() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-alpine-bg flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-alpine-accent animate-spin" />
+      <div className="min-h-screen bg-alpine-black-primary flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-alpine-neon-cyan animate-spin" />
       </div>
     )
   }
@@ -127,7 +127,7 @@ export default function BacktestPage() {
   }
 
   return (
-    <div className="min-h-screen bg-alpine-bg">
+    <div className="min-h-screen bg-alpine-black-primary">
       {/* Navigation */}
       <Navigation />
 
@@ -135,65 +135,65 @@ export default function BacktestPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Configuration Panel */}
           <div className="lg:col-span-1">
-            <div className="bg-alpine-card border border-alpine-border rounded-lg p-6 sticky top-24">
-              <h2 className="text-lg font-bold text-alpine-text mb-4">Configuration</h2>
+            <div className="bg-alpine-black-secondary border border-alpine-black-border rounded-lg p-6 sticky top-24">
+              <h2 className="text-lg font-bold text-alpine-text-primary mb-4">Configuration</h2>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm text-alpine-text-dim mb-2">Symbol</label>
+                  <label className="block text-sm text-alpine-text-secondary mb-2">Symbol</label>
                   <input
                     type="text"
                     value={backtestConfig.symbol}
                     onChange={(e) => setBacktestConfig({ ...backtestConfig, symbol: e.target.value.toUpperCase() })}
-                    className="w-full px-3 py-2 bg-alpine-bg border border-alpine-border rounded-lg text-alpine-text focus:outline-none focus:border-alpine-accent"
+                    className="w-full px-3 py-2 bg-alpine-black-primary border border-alpine-black-border rounded-lg text-alpine-text-primary focus:outline-none focus:border-alpine-neon-cyan"
                     placeholder="AAPL"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm text-alpine-text-dim mb-2">Start Date</label>
+                  <label className="block text-sm text-alpine-text-secondary mb-2">Start Date</label>
                   <input
                     type="date"
                     value={backtestConfig.startDate}
                     onChange={(e) => setBacktestConfig({ ...backtestConfig, startDate: e.target.value })}
-                    className="w-full px-3 py-2 bg-alpine-bg border border-alpine-border rounded-lg text-alpine-text focus:outline-none focus:border-alpine-accent"
+                    className="w-full px-3 py-2 bg-alpine-black-primary border border-alpine-black-border rounded-lg text-alpine-text-primary focus:outline-none focus:border-alpine-neon-cyan"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm text-alpine-text-dim mb-2">End Date</label>
+                  <label className="block text-sm text-alpine-text-secondary mb-2">End Date</label>
                   <input
                     type="date"
                     value={backtestConfig.endDate}
                     onChange={(e) => setBacktestConfig({ ...backtestConfig, endDate: e.target.value })}
-                    className="w-full px-3 py-2 bg-alpine-bg border border-alpine-border rounded-lg text-alpine-text focus:outline-none focus:border-alpine-accent"
+                    className="w-full px-3 py-2 bg-alpine-black-primary border border-alpine-black-border rounded-lg text-alpine-text-primary focus:outline-none focus:border-alpine-neon-cyan"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm text-alpine-text-dim mb-2">Initial Capital</label>
+                  <label className="block text-sm text-alpine-text-secondary mb-2">Initial Capital</label>
                   <input
                     type="number"
                     value={backtestConfig.initialCapital}
                     onChange={(e) => setBacktestConfig({ ...backtestConfig, initialCapital: parseFloat(e.target.value) })}
-                    className="w-full px-3 py-2 bg-alpine-bg border border-alpine-border rounded-lg text-alpine-text focus:outline-none focus:border-alpine-accent"
+                    className="w-full px-3 py-2 bg-alpine-black-primary border border-alpine-black-border rounded-lg text-alpine-text-primary focus:outline-none focus:border-alpine-neon-cyan"
                     min="1000"
                     step="1000"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm text-alpine-text-dim mb-2">Risk Per Trade</label>
+                  <label className="block text-sm text-alpine-text-secondary mb-2">Risk Per Trade</label>
                   <input
                     type="number"
                     value={backtestConfig.riskPerTrade}
                     onChange={(e) => setBacktestConfig({ ...backtestConfig, riskPerTrade: parseFloat(e.target.value) })}
-                    className="w-full px-3 py-2 bg-alpine-bg border border-alpine-border rounded-lg text-alpine-text focus:outline-none focus:border-alpine-accent"
+                    className="w-full px-3 py-2 bg-alpine-black-primary border border-alpine-black-border rounded-lg text-alpine-text-primary focus:outline-none focus:border-alpine-neon-cyan"
                     min="0.01"
                     max="0.1"
                     step="0.01"
                   />
-                  <p className="text-xs text-alpine-text-dim mt-1">
+                  <p className="text-sm text-alpine-text-secondary mt-1">
                     {(backtestConfig.riskPerTrade * 100).toFixed(0)}% of capital per trade
                   </p>
                 </div>
@@ -201,7 +201,7 @@ export default function BacktestPage() {
                 <button
                   onClick={handleRunBacktest}
                   disabled={isRunning}
-                  className="w-full bg-gradient-to-r from-alpine-accent to-alpine-pink hover:from-alpine-pink hover:to-alpine-accent text-white font-bold py-3 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full bg-gradient-to-r from-alpine-neon-cyan to-alpine-neon-pink hover:from-alpine-neon-pink hover:to-alpine-neon-cyan text-white font-boldpy-3 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isRunning ? (
                     <>
@@ -217,7 +217,7 @@ export default function BacktestPage() {
                 </button>
 
                 {error && (
-                  <div className="p-3 bg-alpine-red/10 border border-alpine-red/30 rounded-lg text-sm text-alpine-red flex items-center gap-2">
+                  <div className="p-3 bg-alpine-semantic-error/10 border border-alpine-semantic-error/30 rounded-lg text-sm text-alpine-semantic-error flex items-center gap-2">
                     <AlertCircle className="w-4 h-4" />
                     {error}
                   </div>
@@ -236,25 +236,25 @@ export default function BacktestPage() {
                     title="Win Rate"
                     value={`${results.win_rate?.toFixed(1)}%`}
                     icon={<TrendingUp className="w-5 h-5" />}
-                    color="alpine-accent"
+                    color="alpine-neoncya-n"
                   />
                   <MetricCard
                     title="Total Return"
                     value={`${results.total_return?.toFixed(1)}%`}
                     icon={<DollarSign className="w-5 h-5" />}
-                    color="alpine-pink"
+                    color="alpine-neonpin-k"
                   />
                   <MetricCard
                     title="Sharpe Ratio"
                     value={results.sharpe_ratio?.toFixed(2)}
                     icon={<BarChart3 className="w-5 h-5" />}
-                    color="alpine-blue"
+                    color="alpine-neon-purple"
                   />
                   <MetricCard
                     title="Max Drawdown"
                     value={`${results.max_drawdown?.toFixed(1)}%`}
                     icon={<Target className="w-5 h-5" />}
-                    color="alpine-red"
+                    color="alpine-semantic-error
                   />
                 </div>
 
@@ -264,8 +264,8 @@ export default function BacktestPage() {
                 )}
 
                 {/* Detailed Stats */}
-                <div className="bg-alpine-card border border-alpine-border rounded-lg p-6">
-                  <h3 className="text-lg font-bold text-alpine-text mb-4">Detailed Statistics</h3>
+                <div className="bg-alpine-black-secondary border border-alpine-black-border rounded-lg p-6">
+                  <h3 className="text-lg font-bold text-alpine-text-primary mb-4">Detailed Statistics</h3>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     <StatItem label="Total Trades" value={results.total_trades} />
                     <StatItem label="Winning Trades" value={results.winning_trades} />
@@ -277,10 +277,10 @@ export default function BacktestPage() {
                 </div>
               </>
             ) : (
-              <div className="bg-alpine-card border border-alpine-border rounded-lg p-12 text-center">
-                <BarChart3 className="w-16 h-16 text-alpine-text-dim mx-auto mb-4" />
-                <h3 className="text-lg font-bold text-alpine-text mb-2">No Backtest Results</h3>
-                <p className="text-alpine-text-dim">
+              <div className="bg-alpine-black-secondary border border-alpine-black-border rounded-lg p-12 text-center">
+                <BarChart3 className="w-16 h-16 text-alpine-text-secondarymx-automb-4" />
+                <h3 className="text-lg font-bold text-alpine-text-primary mb-2">No Backtest Results</h3>
+                <p className="text-alpine-text-secondary">
                   Configure your backtest parameters and click "Run Backtest" to get started
                 </p>
               </div>
@@ -288,13 +288,13 @@ export default function BacktestPage() {
 
             {/* History */}
             {backtestHistory.length > 0 && (
-              <div className="bg-alpine-card border border-alpine-border rounded-lg p-6">
-                <h3 className="text-lg font-bold text-alpine-text mb-4">Recent Backtests</h3>
+              <div className="bg-alpine-black-secondary border border-alpine-black-border rounded-lg p-6">
+                <h3 className="text-lg font-bold text-alpine-text-primary mb-4">Recent Backtests</h3>
                 <div className="space-y-2">
                   {backtestHistory.slice(0, 5).map((backtest: any) => (
                     <div
                       key={backtest.id}
-                      className="p-3 bg-alpine-bg rounded-lg flex items-center justify-between hover:bg-alpine-bg/80 transition-colors cursor-pointer"
+                      className="p-3 bg-alpine-black-primary rounded-lgflex items-center justify-between hover:bg-alpine-black-primary/80 transition-colors cursor-pointer"
                       onClick={() => {
                         setResults(backtest.results)
                         setBacktestConfig({
@@ -308,16 +308,16 @@ export default function BacktestPage() {
                       }}
                     >
                       <div>
-                        <div className="font-semibold text-alpine-text">{backtest.symbol}</div>
-                        <div className="text-xs text-alpine-text-dim">
+                        <div className="font-semibold text-alpine-text-primary ">{backtest.symbol}</div>
+                        <div className="text-sm text-alpine-text-secondary">
                           {new Date(backtest.created_at).toLocaleDateString()}
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm font-semibold text-alpine-text">
+                        <div className="text-sm font-semibold text-alpine-text-primary ">
                           {backtest.results?.total_return?.toFixed(1)}%
                         </div>
-                        <div className="text-xs text-alpine-text-dim">
+                        <div className="text-sm text-alpine-text-secondary">
                           {backtest.results?.win_rate?.toFixed(1)}% WR
                         </div>
                       </div>
@@ -335,14 +335,14 @@ export default function BacktestPage() {
 
 function MetricCard({ title, value, icon, color }: any) {
   return (
-    <div className="bg-alpine-card border border-alpine-border rounded-lg p-4">
+    <div className="bg-alpine-black-secondary border border-alpine-black-border rounded-lg p-4">
       <div className="flex items-center justify-between mb-2">
         <div className={`p-2 rounded-lg bg-${color}/10 text-${color}`}>
           {icon}
         </div>
       </div>
-      <div className="text-2xl font-black text-alpine-text mb-1">{value}</div>
-      <div className="text-xs text-alpine-text-dim">{title}</div>
+      <div className="text-2xl font-black text-alpine-text-primary mb-1">{value}</div>
+      <div className="text-sm text-alpine-text-secondary">{title}</div>
     </div>
   )
 }
@@ -350,8 +350,8 @@ function MetricCard({ title, value, icon, color }: any) {
 function StatItem({ label, value }: { label: string; value: string | number }) {
   return (
     <div>
-      <div className="text-xs text-alpine-text-dim mb-1">{label}</div>
-      <div className="text-sm font-semibold text-alpine-text">{value}</div>
+      <div className="text-sm text-alpine-text-secondary mb-1">{label}</div>
+      <div className="text-sm font-semibold text-alpine-text-primary ">{value}</div>
     </div>
   )
 }

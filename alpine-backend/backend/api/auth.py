@@ -76,35 +76,75 @@ async def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
 ) -> User:
-    """Get current authenticated user"""
+    """Get current authenticated user with caching optimization"""
+    from backend.core.error_responses import create_error_response, ErrorCodes, create_rate_limit_error
+    from backend.core.cache import get_cache, set_cache
+    
     # Check if token is blacklisted (using Redis)
     if is_token_blacklisted(token):
-        raise HTTPException(
+        raise create_error_response(
+            ErrorCodes.AUTH_002,
+            "Token has been revoked",
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token has been revoked",
-            headers={"WWW-Authenticate": "Bearer"},
+            request=None  # Request not available in dependency
         )
     
     payload = verify_token(token)
     if not payload:
-        raise HTTPException(
+        raise create_error_response(
+            ErrorCodes.AUTH_001,
+            "Invalid or expired token",
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token",
-            headers={"WWW-Authenticate": "Bearer"},
+            request=None
         )
     
-    user = db.query(User).filter(User.email == payload.get("sub")).first()
+    email = payload.get("sub")
+    
+    # OPTIMIZATION #1: Try cache first (5 minute TTL)
+    cache_key = f"user:email:{email}"
+    cached_user_data = get_cache(cache_key)
+    
+    if cached_user_data:
+        # Cache hit - query database to get SQLAlchemy object (needed for relationships)
+        # But we know user exists and is active from cache, so this is just to get the object
+        user = db.query(User).filter(User.email == email).first()
+        if user:
+            # Verify cached data matches (quick validation)
+            if (user.id == cached_user_data.get("id") and 
+                user.is_active == cached_user_data.get("is_active", False)):
+                # Cache is valid - return user (still need DB object for relationships)
+                return user
+            # If mismatch, cache is stale, continue to refresh
+    
+    # Cache miss or stale - query database
+    user = db.query(User).filter(User.email == email).first()
     if not user:
-        raise HTTPException(
+        raise create_error_response(
+            ErrorCodes.RESOURCE_001,
+            "User not found",
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            request=None
         )
     
     if not user.is_active:
-        raise HTTPException(
+        raise create_error_response(
+            ErrorCodes.AUTH_005,
+            "User account is inactive",
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="User account is inactive"
+            request=None
         )
+    
+    # Cache user data (exclude sensitive fields, but keep hashed_password for verification)
+    user_data = {
+        "id": user.id,
+        "email": user.email,
+        "full_name": user.full_name,
+        "tier": user.tier.value,
+        "is_active": user.is_active,
+        "is_verified": user.is_verified,
+        "hashed_password": user.hashed_password  # Needed for password verification in some endpoints
+    }
+    set_cache(cache_key, user_data, ttl=300)  # 5 minutes
     
     return user
 
@@ -170,19 +210,27 @@ async def signup(
         )
     
     # Create user
-    hashed_password = get_password_hash(user_data.password)
-    new_user = User(
-        email=user_data.email,
-        hashed_password=hashed_password,
-        full_name=user_data.full_name,
-        tier=UserTier.STARTER,
-        is_active=True,
-        is_verified=False
-    )
-    
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+    try:
+        hashed_password = get_password_hash(user_data.password)
+        new_user = User(
+            email=user_data.email,
+            hashed_password=hashed_password,
+            full_name=user_data.full_name,
+            tier=UserTier.STARTER,
+            is_active=True,
+            is_verified=False
+        )
+        
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error creating user: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create user account"
+        )
     
     # Create access token
     access_token = create_access_token(data={"sub": new_user.email})
@@ -334,7 +382,7 @@ async def logout(
     # Rate limiting
     client_id = current_user.email
     if not check_rate_limit(client_id):
-        raise HTTPException(status_code=429, detail="Rate limit exceeded")
+        raise create_rate_limit_error(request=request)
     
     # Extract token from authorization header
     if authorization and authorization.startswith("Bearer "):

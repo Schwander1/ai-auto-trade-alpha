@@ -12,5 +12,4 @@ packages:
   - 'packages/alpine-frontend'
   
   # Shared utilities (TypeScript + Python)
-  - 'packages/shared'
 

@@ -35,8 +35,8 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
                 )
             return response
         
-        # Skip CSRF for Argo sync endpoint (API-to-API, uses API key auth instead)
-        if request.url.path.startswith("/api/v1/argo/sync"):
+        # Skip CSRF for external signal provider sync endpoint (API-to-API, uses API key auth instead)
+        if request.url.path.startswith("/api/v1/external-signals/sync"):
             return await call_next(request)
         
         # For state-changing methods, verify CSRF token
@@ -62,10 +62,33 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
         origin = request.headers.get("Origin")
         referer = request.headers.get("Referer")
         
+        # SECURITY: Validate origin against allowed origins
         if origin:
-            # Validate origin matches expected domain
-            # In production, check against allowed origins
-            pass
+            from backend.core.config import settings
+            allowed_origins = [
+                settings.FRONTEND_URL,
+                "http://localhost:3000",
+                "http://localhost:3001",
+                "http://91.98.153.49:3000",
+                "https://91.98.153.49:3000",
+            ]
+            # Remove None and empty values
+            allowed_origins = [o for o in allowed_origins if o and o != "*"]
+            
+            # Check if origin matches any allowed origin
+            origin_match = any(
+                origin == allowed or 
+                (origin.startswith("http://") and allowed.startswith("http://") and origin.split(":")[1] == allowed.split(":")[1]) or
+                (origin.startswith("https://") and allowed.startswith("https://") and origin.split(":")[1] == allowed.split(":")[1])
+                for allowed in allowed_origins
+            )
+            
+            if not origin_match:
+                logger.warning(f"CSRF origin validation failed: {origin} not in allowed origins")
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Origin not allowed"
+                )
         
         response = await call_next(request)
         return response

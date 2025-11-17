@@ -1,0 +1,22 @@
+{
+  "timestamp": "2025-11-15T11:36:10.649255",
+  "version": "pre-enhancement",
+  "signal_generation_avg_ms": 0.0,
+  "signal_generation_p95_ms": 0,
+  "signal_generation_p99_ms": 0,
+  "api_calls_per_cycle": 0.0,
+  "cache_hit_rate": 0,
+  "data_source_latencies": {},
+  "api_costs_daily": {},
+  "api_calls_daily": {},
+  "estimated_monthly_cost": 0.0,
+  "signal_quality_score": 0.0,
+  "data_quality_issues": 0,
+  "error_rate": 0.0,
+  "risk_breaches_prevented": 0,
+  "avg_position_size": 0.0,
+  "max_drawdown": 0.0,
+  "uptime_percentage": 100.0,
+  "error_count_by_type": {},
+  "data_source_health": {}
+}

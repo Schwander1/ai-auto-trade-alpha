@@ -190,3 +190,46 @@ groups:
           summary: "Signal modification attempt detected"
           description: "{{ $value }} modification attempt(s) detected. All attempts are blocked and logged in audit trail."
 
+  - name: health_check_alerts
+    interval: 30s
+    rules:
+      # Health check failed
+      - alert: HealthCheckFailed
+        expr: probe_success{job="health-checks"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Health check failed for {{ $labels.service }}"
+          description: "Health check for {{ $labels.service }} at {{ $labels.instance }} has been failing for more than 2 minutes."
+
+      # Readiness check failed
+      - alert: ReadinessCheckFailed
+        expr: probe_success{job="health-checks",check_type="health"} == 0 and probe_http_status_code{job="health-checks"} == 503
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service not ready: {{ $labels.service }}"
+          description: "Readiness check for {{ $labels.service }} is failing. Service cannot handle traffic."
+
+      # Liveness check failed
+      - alert: LivenessCheckFailed
+        expr: probe_success{job="health-checks",check_type="health"} == 0
+        for: 3m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service not alive: {{ $labels.service }}"
+          description: "Liveness check for {{ $labels.service }} is failing. Service may need to be restarted."
+
+      # Health check slow response
+      - alert: HealthCheckSlow
+        expr: probe_http_duration_seconds{job="health-checks"} > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Health check slow for {{ $labels.service }}"
+          description: "Health check for {{ $labels.service }} is taking {{ $value }}s (threshold: 5s)."
+

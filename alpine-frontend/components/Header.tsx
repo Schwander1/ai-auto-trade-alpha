@@ -30,7 +30,7 @@ export default function Header() {
       animate={{ y: 0 }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled
-          ? 'bg-black/95 backdrop-blur-md border-b border-electric-cyan/20 shadow-glow-cyan'
+          ? 'bg-alpine-black-primary/95 backdrop-blur-md border-b border-alpine-neon-cyan/20 shadow-glow-cyan'
           : 'bg-transparent'
       }`}
     >
@@ -41,7 +41,7 @@ export default function Header() {
             <div className="w-10 h-10 bg-gradient-cta rounded-lg flex items-center justify-center shadow-glow-cyan">
               <span className="text-black font-bold text-xl">A</span>
             </div>
-            <span className="text-ice-blue font-bold text-xl">Alpine Analytics</span>
+            <span className="text-alpine-text-primary font-bold text-xl">Alpine Analytics</span>
           </a>
 
           {/* Desktop Nav */}
@@ -50,7 +50,7 @@ export default function Header() {
               <a
                 key={item.href}
                 href={item.href}
-                className="text-ice-blue/90 hover:text-electric-cyan transition-colors font-medium"
+                className="text-alpine-text-primary hover:text-alpine-neon-cyan transition-colors font-medium"
               >
                 {item.label}
               </a>
@@ -72,7 +72,7 @@ export default function Header() {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden text-ice-blue"
+            className="md:hidden text-alpine-text-primary"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle menu"
           >
@@ -87,7 +87,7 @@ export default function Header() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="md:hidden py-4 space-y-4 border-t border-electric-cyan/20"
+              className="md:hidden py-4 space-y-4 border-t border-alpine-neon-cyan/20"
             >
               {navItems.map((item) => (
                 <a

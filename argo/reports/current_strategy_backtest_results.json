@@ -1,0 +1,152 @@
+{
+  "timestamp": "2025-11-15T17:27:24.835053",
+  "iteration_id": "iterative_v11_20251115_172724",
+  "iteration_name": "iterative_v11",
+  "strategy_version": "iterative_v11",
+  "results": [
+    {
+      "symbol": "AAPL",
+      "config": "iterative_v11",
+      "method": "standard",
+      "win_rate": 53.125,
+      "total_return": 28.57776690112898,
+      "sharpe_ratio": 0.8883721271131062,
+      "max_drawdown": -20.44620111494008,
+      "total_trades": 160,
+      "profit_factor": 1.7775572460852402,
+      "annualized_return": 0.0
+    },
+    {
+      "symbol": "NVDA",
+      "config": "iterative_v11",
+      "method": "standard",
+      "win_rate": 45.56962025316456,
+      "total_return": 25.691816086609336,
+      "sharpe_ratio": 0.8549559608068354,
+      "max_drawdown": -21.81397759563823,
+      "total_trades": 158,
+      "profit_factor": 1.0484653491412443,
+      "annualized_return": 0.0
+    },
+    {
+      "symbol": "TSLA",
+      "config": "iterative_v11",
+      "method": "standard",
+      "win_rate": 43.16546762589928,
+      "total_return": 1.4335154664902947,
+      "sharpe_ratio": 0.8466245315335633,
+      "max_drawdown": -22.03301916996786,
+      "total_trades": 139,
+      "profit_factor": 1.1130712071279365,
+      "annualized_return": 0.0
+    },
+    {
+      "symbol": "MSFT",
+      "config": "iterative_v11",
+      "method": "standard",
+      "win_rate": 54.054054054054056,
+      "total_return": 20.025327111396034,
+      "sharpe_ratio": 0.8950964963269786,
+      "max_drawdown": -19.297859898838688,
+      "total_trades": 148,
+      "profit_factor": 1.5680412312219252,
+      "annualized_return": 0.0
+    },
+    {
+      "symbol": "GOOGL",
+      "config": "iterative_v11",
+      "method": "standard",
+      "win_rate": 49.685534591194966,
+      "total_return": 14.426464787387127,
+      "sharpe_ratio": 0.9187679267243356,
+      "max_drawdown": -21.046998377268483,
+      "total_trades": 159,
+      "profit_factor": 1.505063350894694,
+      "annualized_return": 0.0
+    },
+    {
+      "symbol": "META",
+      "config": "iterative_v11",
+      "method": "standard",
+      "win_rate": 49.54128440366973,
+      "total_return": 18.536718318509216,
+      "sharpe_ratio": 0.8961439349643036,
+      "max_drawdown": -23.39135351182002,
+      "total_trades": 109,
+      "profit_factor": 1.4816916305180436,
+      "annualized_return": 0.0
+    },
+    {
+      "symbol": "AMD",
+      "config": "iterative_v11",
+      "method": "standard",
+      "win_rate": 50.526315789473685,
+      "total_return": 17.418036248771692,
+      "sharpe_ratio": 0.824025785379238,
+      "max_drawdown": -27.636878581236857,
+      "total_trades": 190,
+      "profit_factor": 1.8724529815355522,
+      "annualized_return": 0.0
+    },
+    {
+      "symbol": "AMZN",
+      "config": "iterative_v11",
+      "method": "standard",
+      "win_rate": 48.8235294117647,
+      "total_return": 4.676173931380777,
+      "sharpe_ratio": 0.7512432573266027,
+      "max_drawdown": -26.201849505884788,
+      "total_trades": 170,
+      "profit_factor": 1.886603422918508,
+      "annualized_return": 0.0
+    },
+    {
+      "symbol": "SPY",
+      "config": "iterative_v11",
+      "method": "standard",
+      "win_rate": 39.375,
+      "total_return": 0.0711480723550485,
+      "sharpe_ratio": 0.6915687643585258,
+      "max_drawdown": -24.220067985173493,
+      "total_trades": 160,
+      "profit_factor": 0.830016743453467,
+      "annualized_return": 0.0
+    },
+    {
+      "symbol": "QQQ",
+      "config": "iterative_v11",
+      "method": "standard",
+      "win_rate": 44.230769230769226,
+      "total_return": 16.883747561019554,
+      "sharpe_ratio": 0.8056264955844396,
+      "max_drawdown": -21.025895425089775,
+      "total_trades": 156,
+      "profit_factor": 1.467450961253018,
+      "annualized_return": 0.0
+    },
+    {
+      "symbol": "BTC-USD",
+      "config": "iterative_v11",
+      "method": "standard",
+      "win_rate": 57.6271186440678,
+      "total_return": 14.294659264386805,
+      "sharpe_ratio": 0.5126220330199683,
+      "max_drawdown": -16.807123467613202,
+      "total_trades": 59,
+      "profit_factor": 1.7823836316759412,
+      "annualized_return": 1.2696503820244454
+    },
+    {
+      "symbol": "ETH-USD",
+      "config": "iterative_v11",
+      "method": "standard",
+      "win_rate": 56.98924731182796,
+      "total_return": -3.7411734353476493,
+      "sharpe_ratio": 0.6632651243420252,
+      "max_drawdown": -19.216527392728143,
+      "total_trades": 93,
+      "profit_factor": 1.652064457275253,
+      "annualized_return": -0.5148599633424289
+    }
+  ]
+}

@@ -9,27 +9,27 @@ const problems = [
     title: 'One Strategy for All Markets',
     description:
       'Other services use the same RSI 40-70 in both bull runs and crashes. Would you drive the same speed in sunshine and blizzard?',
-    color: 'warning-red',
+    color: 'alpine-semantic-error',
   },
   {
     icon: FileX,
     title: 'Cherry-Picked Results',
     description:
       'Show only their best 6 months. Hide the 2022 bear market. We show ALL 20 years of data.',
-    color: 'warning-red',
+    color: 'alpine-semantic-error',
   },
   {
     icon: AlertTriangle,
     title: 'No Proof, Just Marketing',
     description:
       'Fake testimonials, no verification. Anyone can claim 80% win rate. We cryptographically verify every signal.',
-    color: 'warning-red',
+    color: 'alpine-semantic-error',
   },
 ]
 
 export default function Problem() {
   return (
-    <section className="bg-space-gray py-24 relative overflow-hidden">
+    <section className="bg-alpine-black-primary py-24 relative overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,45,85,0.05),transparent_70%)]" />
 
@@ -39,10 +39,10 @@ export default function Problem() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-4xl sm:text-5xl font-bold text-ice-blue text-center mb-16"
+          className="text-4xl sm:text-5xl font-bold text-alpine-text-primary text-center mb-16 font-heading"
         >
           Why Many Signal Services{' '}
-          <span className="text-warning-red">Fail You</span>
+          <span className="text-alpine-semantic-error">Fail You</span>
         </motion.h2>
 
         <div className="grid md:grid-cols-3 gap-8">
@@ -56,17 +56,17 @@ export default function Problem() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 whileHover={{ scale: 1.05, y: -5 }}
-                className="glassmorphism rounded-xl p-8 border-warning-red/30 hover:border-warning-red/50 transition-all"
+                className="card-neon rounded-xl p-8 border-alpine-semantic-error/30 hover:border-alpine-semantic-error/50 transition-all"
               >
                 <div className="flex items-start space-x-4">
                   <div className="flex-shrink-0">
-                    <div className="w-12 h-12 rounded-lg bg-warning-red/20 flex items-center justify-center border border-warning-red/30">
-                      <Icon className="w-6 h-6 text-warning-red" />
+                    <div className="w-12 h-12 rounded-lg bg-alpine-semantic-error/20 flex items-center justify-center border border-alpine-semantic-error/30">
+                      <Icon className="w-6 h-6 text-alpine-semantic-error" />
                     </div>
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-xl font-bold text-ice-blue mb-3">{problem.title}</h3>
-                    <p className="text-ice-blue/70 leading-relaxed">{problem.description}</p>
+                    <h3 className="text-xl font-bold text-alpine-text-primary mb-3 font-heading">{problem.title}</h3>
+                    <p className="text-alpine-text-secondary leading-relaxed">{problem.description}</p>
                   </div>
                 </div>
               </motion.div>

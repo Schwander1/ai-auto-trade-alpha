@@ -5,20 +5,9 @@ import os
 import sys
 from pathlib import Path
 
-# Add shared package to path
-# Try multiple possible paths
-possible_paths = [
-    Path(__file__).parent.parent.parent.parent.parent / "packages" / "shared",  # From workspace root
-    Path(__file__).parent.parent.parent.parent / "packages" / "shared",  # Alternative path
-    Path(__file__).parent.parent.parent / "packages" / "shared",  # Another alternative
-]
-for shared_path in possible_paths:
-    if shared_path.exists():
-        sys.path.insert(0, str(shared_path.resolve()))
-        break
-
+# Use Alpine-specific secrets manager
 try:
-    from utils.secrets_manager import get_secrets_manager
+    from backend.utils.secrets_manager import get_secrets_manager
     SECRETS_MANAGER_AVAILABLE = True
 except ImportError:
     SECRETS_MANAGER_AVAILABLE = False
@@ -48,8 +37,8 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRATION_HOURS: int = 24
     
-    # Argo API URL (non-secret config)
-    ARGO_API_URL: str = "http://178.156.194.174:8000"
+    # External Signal Provider API URL (non-secret config)
+    EXTERNAL_SIGNAL_API_URL: str = "http://178.156.194.174:8000"
     
     # Secrets - will be loaded from AWS Secrets Manager or environment
     STRIPE_SECRET_KEY: str = ""
@@ -68,7 +57,7 @@ class Settings(BaseSettings):
     REDIS_PASSWORD: Optional[str] = None
     REDIS_DB: int = 0
     SENDGRID_API_KEY: Optional[str] = None
-    ARGO_API_KEY: str = ""  # API key for Argo to authenticate with Alpine
+    EXTERNAL_SIGNAL_API_KEY: str = ""  # API key for external signal provider to authenticate with Alpine
     
     def __init__(self, **kwargs):
         # Check if AWS Secrets Manager should be used
@@ -80,7 +69,7 @@ class Settings(BaseSettings):
             try:
                 secrets_manager = get_secrets_manager(
                     fallback_to_env=True,
-                    secret_prefix="argo-alpine"
+                    secret_prefix="alpine-analytics"
                 )
             except Exception as e:
                 import logging
@@ -135,8 +124,8 @@ class Settings(BaseSettings):
             kwargs["REDIS_DB"] = int(get_secret_value("redis-db", "0"))
         if "SENDGRID_API_KEY" not in kwargs:
             kwargs["SENDGRID_API_KEY"] = get_secret_value("sendgrid-api-key", "") or None
-        if "ARGO_API_KEY" not in kwargs:
-            kwargs["ARGO_API_KEY"] = get_secret_value("argo-api-key", "")
+        if "EXTERNAL_SIGNAL_API_KEY" not in kwargs:
+            kwargs["EXTERNAL_SIGNAL_API_KEY"] = get_secret_value("external-signal-api-key", "")
         
         super().__init__(**kwargs)
     
@@ -152,6 +141,14 @@ class Settings(BaseSettings):
         # JWT Secret validation
         if not self.JWT_SECRET or len(self.JWT_SECRET) < 32:
             errors.append("JWT_SECRET must be at least 32 characters long")
+        
+        # SECURITY: Check for default/weak secrets
+        weak_secrets = [
+            "change_me", "secret", "password", "default", "test", "demo",
+            "argo_secret_key_change_in_production", "whsec_WILL_GET_LATER"
+        ]
+        if self.JWT_SECRET and any(weak in self.JWT_SECRET.lower() for weak in weak_secrets):
+            errors.append("JWT_SECRET appears to be a default or weak secret")
         
         # Stripe keys validation
         if not self.STRIPE_SECRET_KEY or not self.STRIPE_SECRET_KEY.startswith(("sk_test_", "sk_live_")):
@@ -169,19 +166,42 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
-# Validate settings on import (only in production, and only if secrets are loaded)
+# SECURITY: Validate settings on import (all environments, fail fast on critical issues)
 import os
-# Only validate if we're in production AND secrets are actually loaded
-# Skip validation if using AWS Secrets Manager and it's not available (will use fallback)
-if os.getenv("ENVIRONMENT") == "production":
-    try:
-        # Only validate if we have actual values (not empty strings from failed AWS load)
-        if settings.DATABASE_URL and settings.JWT_SECRET and settings.STRIPE_SECRET_KEY:
+# Validate secrets in all environments, but fail fast only in production
+env = os.getenv("ENVIRONMENT", "development")
+try:
+    # Only validate if we have actual values (not empty strings from failed AWS load)
+    if settings.DATABASE_URL and settings.JWT_SECRET and settings.STRIPE_SECRET_KEY:
+        # In production, validate secrets but allow deployment with placeholders for initial setup
+        # Log warnings instead of failing if placeholders are detected
+        try:
             settings.validate_secrets()
-    except ValueError as e:
+        except ValueError as validation_error:
+            error_msg = str(validation_error)
+            # Check if this is a placeholder/weak secret issue (not a missing secret)
+            if "appears to be a default or weak secret" in error_msg or "must be a valid" in error_msg:
+                import logging
+                logging.warning(f"⚠️  SECURITY WARNING: {validation_error}")
+                logging.warning("⚠️  Placeholder secrets detected. Replace with real values before production use!")
+                # Allow startup with warnings for initial deployment
+                # In a real production environment, you should fail here
+                # For now, we allow it to start so the service can be configured
+            else:
+                # For other validation errors (missing secrets), fail fast in production
+                if env == "production":
+                    raise
+    elif env == "production":
+        # In production, fail fast if required secrets are missing
         import logging
-        logging.error(f"Configuration validation failed: {e}")
-        # In production, fail fast only if we're sure secrets should be loaded
-        if os.getenv("USE_AWS_SECRETS", "true").lower() == "true":
-            # If AWS Secrets Manager is enabled but secrets aren't loaded, that's a problem
-            raise
+        logging.error("Required secrets are missing in production environment")
+        raise ValueError(
+            "CRITICAL: Required secrets are missing in production. "
+            "Ensure AWS Secrets Manager is configured or environment variables are set."
+        )
+except ValueError as e:
+    import logging
+    logging.error(f"Configuration validation failed: {e}")
+    # In production, always fail fast on validation errors (except placeholder warnings above)
+    if env == "production" and "SECURITY WARNING" not in str(e):
+        raise

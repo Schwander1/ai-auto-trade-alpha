@@ -50,9 +50,7 @@ export default function SignalsPage() {
     setIsExporting(true)
     try {
       const response = await fetch(`/api/signals/export?format=csv&days=${filters.days}`, {
-        headers: {
-          'Authorization': `Bearer ${session?.accessToken}`,
-        },
+        credentials: 'include', // Include session cookie
       })
 
       if (response.ok) {
@@ -88,8 +86,8 @@ export default function SignalsPage() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-alpine-bg flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-alpine-accent animate-spin" />
+      <div className="min-h-screen bg-alpine-black-primaryflex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-alpine-neon-cyan animate-spin" />
       </div>
     )
   }
@@ -99,36 +97,36 @@ export default function SignalsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-alpine-bg">
+    <div className="min-h-screen bg-alpine-blackprima-ry">
       {/* Navigation */}
       <Navigation />
 
       <main className="container mx-auto px-4 py-6">
         {/* Filters */}
-        <div className="bg-alpine-card border border-alpine-border rounded-lg p-4 mb-6">
+        <div className="card-neon border border-alpine-neon-cyan/20 rounded-lg p-4 mb-6">
           <div className="flex items-center gap-2 mb-4">
-            <Filter className="w-5 h-5 text-alpine-text-dim" />
-            <h2 className="text-lg font-bold text-alpine-text">Filters</h2>
+            <Filter className="w-5 h-5 text-alpine-text-secondary" />
+            <h2 className="text-lg font-bold text-alpine-text-primary font-heading">Filters</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <label className="block text-sm text-alpine-text-dim mb-2">Symbol</label>
+              <label className="block text-sm text-alpine-text-secondary mb-2">Symbol</label>
               <input
                 type="text"
                 placeholder="e.g., AAPL"
                 value={filters.symbol}
                 onChange={(e) => setFilters({ ...filters, symbol: e.target.value.toUpperCase() })}
-                className="w-full px-3 py-2 bg-alpine-bg border border-alpine-border rounded-lg text-alpine-text placeholder-alpine-text-dim focus:outline-none focus:border-alpine-accent"
+                className="w-full px-3 py-2 bg-alpine-black-secondary border border-alpine-neon-cyan/20 rounded-lg text-alpine-text-primary placeholder:text-alpine-text-secondary focus:outline-none focus:border-alpine-neon-cyan"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-alpine-text-dim mb-2">Action</label>
+              <label className="block text-sm text-alpine-text-secondary mb-2">Action</label>
               <select
                 value={filters.action}
                 onChange={(e) => setFilters({ ...filters, action: e.target.value })}
-                className="w-full px-3 py-2 bg-alpine-bg border border-alpine-border rounded-lg text-alpine-text focus:outline-none focus:border-alpine-accent"
+                className="w-full px-3 py-2 bg-alpine-black-secondary border border-alpine-neon-cyan/20 rounded-lg text-alpine-text-primary focus:outline-none focus:border-alpine-neon-cyan"
               >
                 <option value="">All</option>
                 <option value="BUY">BUY</option>
@@ -137,11 +135,11 @@ export default function SignalsPage() {
             </div>
 
             <div>
-              <label className="block text-sm text-alpine-text-dim mb-2">Time Period</label>
+              <label className="block text-sm text-alpine-text-secondary mb-2">Time Period</label>
               <select
                 value={filters.days}
                 onChange={(e) => setFilters({ ...filters, days: parseInt(e.target.value) })}
-                className="w-full px-3 py-2 bg-alpine-bg border border-alpine-border rounded-lg text-alpine-text focus:outline-none focus:border-alpine-accent"
+                className="w-full px-3 py-2 bg-alpine-black-secondary border border-alpine-neon-cyan/20 rounded-lg text-alpine-text-primary focus:outline-none focus:border-alpine-neon-cyan"
               >
                 <option value="7">Last 7 days</option>
                 <option value="30">Last 30 days</option>
@@ -156,9 +154,9 @@ export default function SignalsPage() {
                   type="checkbox"
                   checked={filters.premiumOnly}
                   onChange={(e) => setFilters({ ...filters, premiumOnly: e.target.checked })}
-                  className="w-4 h-4 rounded border-alpine-border text-alpine-accent focus:ring-alpine-accent"
+                  className="w-4 h-4 rounded border-alpine-neon-cyan/20 text-alpine-neon-cyanfocus:ring-alpine-neoncy-an"
                 />
-                <span className="text-sm text-alpine-text">Premium only</span>
+                <span className="text-sm text-alpine-text-primary ">Premium only</span>
               </label>
             </div>
           </div>
@@ -166,7 +164,7 @@ export default function SignalsPage() {
           <div className="flex items-center gap-2 mt-4">
             <button
               onClick={clearFilters}
-              className="px-4 py-2 text-sm bg-alpine-border hover:bg-alpine-border/80 text-alpine-text rounded-lg transition-colors flex items-center gap-2"
+              className="px-4 py-2 text-sm bg-alpine-black-secondary hover:bg-alpine-black-secondary/80 text-alpine-text-primary rounded-lg transition-colors flex items-center gap-2 border border-alpine-neon-cyan/20"
             >
               <X className="w-4 h-4" />
               Clear
@@ -174,7 +172,7 @@ export default function SignalsPage() {
             <button
               onClick={refresh}
               disabled={isLoading}
-              className="px-4 py-2 text-sm bg-alpine-card border border-alpine-border hover:border-alpine-accent/50 text-alpine-text rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50"
+              className="px-4 py-2 text-sm card-neon border border-alpine-neon-cyan/20 hover:border-alpine-neon-cyan/50 text-alpine-text-primary rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50"
             >
               <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
               Refresh
@@ -182,7 +180,7 @@ export default function SignalsPage() {
             <button
               onClick={handleExport}
               disabled={isExporting || filteredSignals.length === 0}
-              className="px-4 py-2 text-sm bg-gradient-to-r from-alpine-accent to-alpine-pink hover:from-alpine-pink hover:to-alpine-accent text-white font-bold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 ml-auto"
+              className="px-4 py-2 text-sm bg-gradient-to-r from-alpine-neoncya-nto-alpine-neonpi-nkhover:from-alpine-neonpi-nkhover:to-alpine-neoncya-ntext-blackfont-boldrounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 ml-auto"
             >
               <Download className="w-4 h-4" />
               {isExporting ? 'Exporting...' : 'Export CSV'}
@@ -192,7 +190,7 @@ export default function SignalsPage() {
 
         {/* Signals Grid */}
         {error && (
-          <div className="mb-4 p-4 bg-alpine-red/10 border border-alpine-red/30 rounded-lg flex items-center gap-2 text-alpine-red">
+          <div className="mb-4 p-4 bg-alpine-semantic-error/10 border border-alpine-semanticerr-or/30 rounded-lg flex items-center gap-2 text-alpine-semantic-error">
             <AlertCircle className="w-5 h-5" />
             <span>{error.message || 'Failed to load signals'}</span>
           </div>
@@ -200,11 +198,11 @@ export default function SignalsPage() {
 
         {isLoading && filteredSignals.length === 0 ? (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 text-alpine-accent animate-spin" />
+            <Loader2 className="w-8 h-8 text-alpine-neon-cyan animate-spin" />
           </div>
         ) : filteredSignals.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-alpine-text-dim">No signals found matching your filters</p>
+            <p className="text-alpine-text-secondary">No signals found matching your filters</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

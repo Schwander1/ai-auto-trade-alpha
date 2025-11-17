@@ -53,7 +53,7 @@ export default function SymbolTable() {
   }, [])
 
   return (
-    <section className="py-24 bg-alpine-dark">
+    <section className="py-24 bg-alpine-black-primary">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -62,10 +62,10 @@ export default function SymbolTable() {
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <h2 className="font-display text-4xl md:text-6xl font-black text-white mb-4">
+          <h2 className="font-display text-4xl tracking-[0.15em] tracking-[0.15em] md:text-6xl font-black text-white mb-4">
             Not All Signals Are Equal
           </h2>
-          <p className="text-xl text-alpine-text-dim">
+          <p className="text-xl text-alpine-text-secondary">
             We tested 4,374 signals. Here's what we learned:
           </p>
         </motion.div>
@@ -77,14 +77,14 @@ export default function SymbolTable() {
           viewport={{ once: true }}
           className="hidden md:block mb-8"
         >
-          <div className="bg-alpine-card border border-alpine-border rounded-lg overflow-hidden">
+          <div className="bg-alpine-black-secondary border border-alpine-black-border rounded-lg overflow-hidden">
             <table className="w-full">
-              <thead className="bg-alpine-accent/10">
+              <thead className="bg-alpine-neon-cyan/10">
                 <tr>
-                  <th className="px-6 py-4 text-left text-alpine-text font-semibold">Symbol</th>
-                  <th className="px-6 py-4 text-right text-alpine-text font-semibold">Trades</th>
-                  <th className="px-6 py-4 text-right text-alpine-text font-semibold">Win Rate</th>
-                  <th className="px-6 py-4 text-right text-alpine-text font-semibold">Performance</th>
+                  <th className="px-6 py-4 text-left text-alpine-text-primary font-semibold">Symbol</th>
+                  <th className="px-6 py-4 text-right text-alpine-text-primary font-semibold">Trades</th>
+                  <th className="px-6 py-4 text-right text-alpine-text-primary font-semibold">Win Rate</th>
+                  <th className="px-6 py-4 text-right text-alpine-text-primary font-semibold">Performance</th>
                 </tr>
               </thead>
               <tbody>
@@ -95,30 +95,30 @@ export default function SymbolTable() {
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: index * 0.1 }}
-                    className={`border-t border-alpine-border ${
-                      index < 2 ? 'bg-alpine-accent/5' : ''
+                    className={`border-t border-alpine-black-border${
+                      index < 2 ? 'bg-alpine-neon-cyan/5' : ''
                     }`}
                   >
                     <td className="px-6 py-4">
-                      <span className="text-alpine-text font-bold font-mono text-lg">
+                      <span className="text-alpine-text-primary font-bold-fontmon-otext-lg">
                         {row.symbol}
                       </span>
                       {index < 2 && (
-                        <Check className="w-5 h-5 text-alpine-accent inline-block ml-2" />
+                        <Check className="w-5 h-5 text-alpine-neon-cyaninline-block-ml-2" />
                       )}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <span className="text-alpine-text-dim font-mono">
+                      <span className="text-alpine-text-secondaryfontmo-no">
                         {Math.round(animatedValues[index].trades)}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <span className="text-alpine-text-dim font-mono">
+                      <span className="text-alpine-text-secondaryfontmo-no">
                         {animatedValues[index].winRate.toFixed(1)}%
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <span className="text-alpine-accent font-bold font-mono">
+                      <span className="text-alpine-neon-cyan font-bold-fontmo-no">
                         +${Math.round(animatedValues[index].performance).toLocaleString()}
                       </span>
                     </td>
@@ -138,30 +138,30 @@ export default function SymbolTable() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
-              className={`bg-alpine-card border border-alpine-border rounded-lg p-4 ${
-                index < 2 ? 'border-alpine-accent/50' : ''
+              className={`bg-alpine-black-secondary border border-alpine-black-border rounded-lg p-4 ${
+                index < 2 ? 'border-alpine-neon-cyan/50' : ''
               }`}
             >
               <div className="flex justify-between items-center mb-2">
-                <span className="text-alpine-text font-bold font-mono text-lg">{row.symbol}</span>
-                {index < 2 && <Check className="w-5 h-5 text-alpine-accent" />}
+                <span className="text-alpine-text-primary font-bold-fontmon-otext-lg">{row.symbol}</span>
+                {index < 2 && <Check className="w-5 h-5 text-alpine-neon-cyan" />}
               </div>
               <div className="grid grid-cols-3 gap-2 text-sm">
                 <div>
-                  <div className="text-alpine-text-dim">Trades</div>
-                  <div className="text-alpine-text font-semibold">
+                  <div className="text-alpine-text-secondary">Trades</div>
+                  <div className="text-alpine-text-primary font-semibold">
                     {Math.round(animatedValues[index].trades)}
                   </div>
                 </div>
                 <div>
-                  <div className="text-alpine-text-dim">Win Rate</div>
-                  <div className="text-alpine-text font-semibold">
+                  <div className="text-alpine-text-secondary">Win Rate</div>
+                  <div className="text-alpine-text-primary font-semibold">
                     {animatedValues[index].winRate.toFixed(1)}%
                   </div>
                 </div>
                 <div>
-                  <div className="text-alpine-text-dim">Performance</div>
-                  <div className="text-alpine-accent font-bold">
+                  <div className="text-alpine-text-secondary">Performance</div>
+                  <div className="text-alpine-neon-cyan font-bold">
                     +${Math.round(animatedValues[index].performance).toLocaleString()}
                   </div>
                 </div>
@@ -175,14 +175,14 @@ export default function SymbolTable() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="bg-alpine-accent/10 border-2 border-alpine-accent rounded-lg p-6 text-center"
+          className="bg-alpine-neon-cyan/10 border-2 border-alpine-neon-cyan rounded-lg p-6 text-center"
         >
           <div className="text-3xl mb-3">💡</div>
-          <p className="text-lg text-alpine-text font-semibold">
+          <p className="text-lg text-alpine-text-primary font-semibold">
             Our Starter tier focuses on the{' '}
-            <span className="text-alpine-accent">TOP 6 PERFORMING SYMBOLS</span>.
+            <span className="text-alpine-neon-cyan">TOP 6 PERFORMING SYMBOLS</span>.
           </p>
-          <p className="text-alpine-text-dim mt-2">Not random picks. Mathematically optimized.</p>
+          <p className="text-alpine-text-secondary mt-2">Not random picks. Mathematically optimized.</p>
         </motion.div>
       </div>
     </section>

@@ -78,9 +78,9 @@ export default function CheckoutButton({
   return (
     <div className={className}>
       {error && (
-        <div className="mb-4 p-3 bg-alpine-red/10 border border-alpine-red/30 rounded-lg flex items-start gap-2">
-          <AlertCircle className="w-5 h-5 text-alpine-red flex-shrink-0 mt-0.5" aria-hidden="true" />
-          <p className="text-sm text-alpine-red">{error}</p>
+        <div className="mb-4 p-3 bg-alpine-semantic-error10 border border-alpine-semantic-error30 rounded-lg flex items-start gap-2">
+          <AlertCircle className="w-5 h-5 text-alpine-semantic-errorflexshri-nk-0 mt-0.5" aria-hidden="true" />
+          <p className="text-sm text-alpine-semantic-error">{error}</p>
         </div>
       )}
       <Button

@@ -51,24 +51,24 @@ const features = [
 ]
 
 const iconColors = {
-  'electric-cyan': 'text-electric-cyan',
-  'laser-green': 'text-laser-green',
-  'neon-pink': 'text-neon-pink',
-  'neon-purple': 'text-neon-purple',
+  'electric-cyan': 'text-alpine-neon-cyan',
+  'laser-green': 'text-alpine-semantic-success',
+  'neon-pink': 'text-alpine-neon-pink',
+  'neon-purple': 'text-alpine-neon-purple',
 }
 
 const borderColors = {
-  'electric-cyan': 'border-electric-cyan/30',
-  'laser-green': 'border-laser-green/30',
-  'neon-pink': 'border-neon-pink/30',
-  'neon-purple': 'border-neon-purple/30',
+  'electric-cyan': 'border-alpine-neon-cyan/30',
+  'laser-green': 'border-alpine-semantic-success/30',
+  'neon-pink': 'border-alpine-neon-pink/30',
+  'neon-purple': 'border-alpine-neon-purple/30',
 }
 
 export default function TechnicalInfrastructure() {
   return (
-    <section className="bg-space-gray py-24 relative overflow-hidden">
+    <section className="bg-alpine-black-primary py-24 relative overflow-hidden">
       {/* Background Effects */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,240,255,0.05),transparent_70%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(24,224,255,0.05),transparent_70%)]" />
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <motion.h2
@@ -76,7 +76,7 @@ export default function TechnicalInfrastructure() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-4xl sm:text-5xl font-bold text-ice-blue text-center mb-4"
+          className="text-4xl sm:text-5xl font-bold text-alpine-text-primary text-center mb-4"
         >
           Enterprise-Grade Systems Built for Reliability
         </motion.h2>
@@ -84,7 +84,7 @@ export default function TechnicalInfrastructure() {
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="text-center text-ice-blue/70 mb-12"
+          className="text-center text-alpine-text-secondary mb-12"
         >
           Technical details available to Institutional clients
         </motion.p>
@@ -106,12 +106,12 @@ export default function TechnicalInfrastructure() {
               >
                 <div className="flex items-center space-x-3 mb-4">
                   <Icon className={`w-8 h-8 ${iconColor}`} />
-                  <h3 className="text-xl font-bold text-ice-blue">{feature.title}</h3>
+                  <h3 className="text-xl font-bold text-alpine-text-primary">{feature.title}</h3>
                 </div>
                 <ul className="space-y-2">
                   {feature.items.map((item, i) => (
-                    <li key={i} className="flex items-start text-sm text-ice-blue/70">
-                      <span className="text-electric-cyan mr-2 mt-1">•</span>
+                    <li key={i} className="flex items-start text-sm text-alpine-text-secondary">
+                      <span className="text-alpine-neon-cyan mr-2 mt-1">•</span>
                       <span>{item}</span>
                     </li>
                   ))}

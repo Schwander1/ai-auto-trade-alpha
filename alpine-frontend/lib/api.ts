@@ -1,11 +1,11 @@
 /**
- * API client for fetching signals from Argo backend.
+ * API client for fetching signals from external signal provider.
  * Includes retry logic and error handling.
  */
 
 import type { Signal } from '@/types/signal'
 
-const ARGO_API_BASE_URL = process.env.NEXT_PUBLIC_ARGO_API_URL || 'http://178.156.194.174:8000'
+const EXTERNAL_SIGNAL_API_BASE_URL = process.env.NEXT_PUBLIC_EXTERNAL_SIGNAL_API_URL || process.env.NEXT_PUBLIC_ARGO_API_URL || 'http://178.156.194.174:8000'
 
 const DEFAULT_RETRY_ATTEMPTS = 3
 const DEFAULT_RETRY_DELAY = 1000 // 1 second
@@ -112,7 +112,7 @@ async function fetchWithRetry(
 }
 
 /**
- * Fetch latest trading signals from Argo API
+ * Fetch latest trading signals from external signal provider API
  * 
  * @param limit - Maximum number of signals to fetch (default: 10)
  * @param premiumOnly - If true, only fetch premium signals (95%+ confidence)
@@ -136,7 +136,7 @@ export async function fetchLatestSignals(
       premium_only: premiumOnly.toString(),
     })
 
-    const url = `${ARGO_API_BASE_URL}/api/signals/latest?${params.toString()}`
+    const url = `${EXTERNAL_SIGNAL_API_BASE_URL}/api/signals/latest?${params.toString()}`
 
     const response = await fetchWithRetry(url, {
       method: 'GET',
@@ -167,7 +167,7 @@ export async function fetchLatestSignals(
 }
 
 /**
- * Fetch a single signal by ID from Argo API
+ * Fetch a single signal by ID from external signal provider API
  * 
  * @param id - Signal ID to fetch
  * @returns Promise resolving to Signal object
@@ -182,7 +182,7 @@ export async function fetchSignalById(id: string): Promise<Signal> {
   try {
     // Note: This endpoint may not exist yet in the backend
     // If it doesn't exist, you may need to fetch all signals and filter
-    const url = `${ARGO_API_BASE_URL}/api/signals/${id}`
+    const url = `${EXTERNAL_SIGNAL_API_BASE_URL}/api/signals/${id}`
 
     const response = await fetchWithRetry(url, {
       method: 'GET',
@@ -215,13 +215,13 @@ export async function fetchSignalById(id: string): Promise<Signal> {
 }
 
 /**
- * Health check for Argo API
+ * Health check for external signal provider API
  * 
  * @returns Promise resolving to health status
  */
 export async function checkApiHealth(): Promise<{ status: string; version?: string }> {
   try {
-    const url = `${ARGO_API_BASE_URL}/health`
+    const url = `${EXTERNAL_SIGNAL_API_BASE_URL}/health`
     const response = await fetchWithRetry(url, {
       method: 'GET',
     }, { maxAttempts: 1 }) // Don't retry health checks

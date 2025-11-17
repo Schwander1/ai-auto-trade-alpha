@@ -1,0 +1,401 @@
+# Technical Overview
+## Alpine Analytics - System Architecture & Technology
+
+**Version:** 1.0  
+**Last Updated:** November 2024
+
+---
+
+## System Architecture
+
+### High-Level Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Market Data Sources                       │
+│  (Real-time feeds, historical data, alternative data)       │
+└────────────────────┬────────────────────────────────────────┘
+                     │
+                     ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    Argo Trading Engine                       │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │  Weighted Consensus v6.0 Algorithm                   │  │
+│  │  - Regime Detection Engine                           │  │
+│  │  - Multi-Strategy Consensus                          │  │
+│  │  - Real-time Signal Generation                       │  │
+│  │  - SHA-256 Verification                              │  │
+│  └──────────────────────────────────────────────────────┘  │
+│  Server: 178.156.194.174:8000                              │
+└────────────────────┬────────────────────────────────────────┘
+                     │
+                     │ API (REST + WebSocket)
+                     ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    Alpine Backend API                        │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │  User Management | Subscriptions | Authentication    │  │
+│  │  Signal Delivery | Notifications | Analytics         │  │
+│  └──────────────────────────────────────────────────────┘  │
+│  Server: 91.98.153.49:8001                                  │
+│  Database: PostgreSQL (Docker)                              │
+│  Cache: Redis (rate limiting, sessions)                     │
+└────────────────────┬────────────────────────────────────────┘
+                     │
+                     │ API (REST)
+                     ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    Alpine Frontend                           │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │  Next.js 14 | React 18 | TypeScript                  │  │
+│  │  Real-time Dashboard | Signal History | Backtesting  │  │
+│  │  Stripe Integration | User Management                │  │
+│  └──────────────────────────────────────────────────────┘  │
+│  Server: 91.98.153.49:3000                                  │
+└────────────────────┬────────────────────────────────────────┘
+                     │
+                     ▼
+              End Users (Web + API)
+```
+
+### Component Breakdown
+
+#### 1. Argo Trading Engine
+
+**Technology Stack:**
+- **Language**: Python 3.11+
+- **Framework**: FastAPI
+- **Data Processing**: Pandas, NumPy
+- **Machine Learning**: scikit-learn, custom algorithms
+- **Real-time**: WebSocket support
+- **Deployment**: Docker, uvicorn
+
+**Key Features:**
+- Real-time signal generation (<50ms latency)
+- Multi-strategy consensus algorithm
+- Market regime detection (4 regimes: bull, bear, chop, crisis)
+- SHA-256 cryptographic verification
+- Historical backtesting engine
+- Performance metrics tracking
+
+**API Endpoints:**
+- `/api/signals/latest` - Get latest signals
+- `/api/signals/{id}` - Get specific signal
+- `/api/signals/stats` - Signal statistics
+- `/api/backtest` - Run backtests
+- `/api/performance` - Performance metrics
+- `/api/symbols` - Available symbols
+- `/health` - Health checks
+
+#### 2. Alpine Backend API
+
+**Technology Stack:**
+- **Language**: Python 3.11+
+- **Framework**: FastAPI
+- **Database**: PostgreSQL 15+ (SQLAlchemy ORM)
+- **Cache**: Redis 7+
+- **Authentication**: JWT + Argon2 hashing
+- **Payments**: Stripe API
+- **Deployment**: Docker Compose
+
+**Key Features:**
+- User authentication & authorization
+- Subscription management (Stripe integration)
+- Signal delivery & filtering
+- Notification system
+- Admin analytics dashboard
+- Rate limiting (100 req/min per user)
+
+**API Endpoints:**
+- `/api/auth/*` - Authentication
+- `/api/users/*` - User management
+- `/api/subscriptions/*` - Subscription management
+- `/api/signals/*` - User signals
+- `/api/notifications/*` - Notifications
+- `/api/admin/*` - Admin functions
+
+#### 3. Alpine Frontend
+
+**Technology Stack:**
+- **Framework**: Next.js 14 (App Router)
+- **Language**: TypeScript 5.9+
+- **UI**: React 18, Tailwind CSS
+- **Charts**: Lightweight Charts
+- **State**: React Hooks, Context
+- **Real-time**: WebSocket client
+- **Payments**: Stripe.js
+
+**Key Features:**
+- Real-time signal dashboard
+- Signal history with filters
+- Backtesting interface
+- User account management
+- Subscription management
+- Admin analytics dashboard
+- Responsive design (mobile, tablet, desktop)
+- Dark mode support
+
+---
+
+## Algorithm: Weighted Consensus v6.0
+
+### Overview
+
+Weighted Consensus v6.0 is our proprietary adaptive trading algorithm that combines multiple strategies with dynamic weighting based on market regime detection.
+
+### Core Components
+
+#### 1. Market Regime Detection
+
+The algorithm continuously monitors market conditions and classifies them into four regimes:
+
+- **Bull Market**: Trending upward, high volatility, strong momentum
+- **Bear Market**: Trending downward, high volatility, negative momentum
+- **Chop/Range**: Sideways movement, low volatility, no clear trend
+- **Crisis**: Extreme volatility, panic selling, market stress
+
+**Detection Method:**
+- Technical indicators (RSI, MACD, Bollinger Bands)
+- Volatility measures (VIX, realized volatility)
+- Volume analysis
+- Price action patterns
+- Machine learning classification
+
+#### 2. Multi-Strategy Consensus
+
+The algorithm runs 4-6 independent trading strategies simultaneously:
+
+1. **Momentum Strategy**: Captures trending moves
+2. **Mean Reversion Strategy**: Profits from overextensions
+3. **Breakout Strategy**: Identifies key level breaks
+4. **Volatility Strategy**: Adapts to volatility regimes
+5. **Machine Learning Strategy**: Pattern recognition
+6. **Sentiment Strategy**: Alternative data integration
+
+**Consensus Mechanism:**
+- Each strategy votes (BUY/SELL/HOLD)
+- Votes are weighted by:
+  - Strategy performance in current regime
+  - Recent accuracy (rolling 30-day)
+  - Confidence score (0-100%)
+- Final signal requires 75%+ consensus
+- Confidence score = weighted average of strategy confidences
+
+#### 3. Signal Generation
+
+**Process:**
+1. Market data ingestion (real-time)
+2. Regime detection (every 1 minute)
+3. Strategy execution (all strategies run)
+4. Consensus calculation (weighted voting)
+5. Signal validation (risk checks, position sizing)
+6. SHA-256 hash generation (for verification)
+7. Signal delivery (API + WebSocket)
+
+**Signal Properties:**
+- Symbol (e.g., AAPL, SPY)
+- Action (BUY/SELL)
+- Entry price
+- Stop loss
+- Take profit
+- Confidence score (0-100%)
+- Regime context
+- Timestamp
+- SHA-256 hash
+
+#### 4. Risk Management
+
+- **Position Sizing**: Based on volatility and account size
+- **Stop Loss**: Automatic risk limits (2-5% per trade)
+- **Take Profit**: Target levels (3-10% gains)
+- **Maximum Drawdown**: Circuit breaker at 10%
+- **Correlation Limits**: Max 3 positions in correlated assets
+
+---
+
+## Data Flow
+
+### Real-Time Signal Flow
+
+```
+1. Market Data → Argo Engine (every second)
+2. Regime Detection → Update strategy weights (every minute)
+3. Strategy Execution → Generate votes (every 5 seconds)
+4. Consensus Calculation → Create signal (when threshold met)
+5. SHA-256 Hash → Cryptographic verification
+6. Signal Storage → PostgreSQL database
+7. Signal Delivery → Alpine Backend API
+8. User Notification → WebSocket push + email
+9. Frontend Update → Real-time dashboard refresh
+```
+
+### Historical Data Flow
+
+```
+1. Historical Data → Argo Backtesting Engine
+2. Strategy Testing → Run strategies on historical data
+3. Performance Metrics → Calculate win rate, Sharpe ratio, etc.
+4. Optimization → Adjust strategy weights
+5. Validation → Out-of-sample testing
+6. Deployment → Update live algorithm
+```
+
+---
+
+## Deployment Architecture
+
+### Production Infrastructure
+
+#### Argo Server (178.156.194.174)
+- **OS**: Linux (Ubuntu 22.04)
+- **CPU**: 8 cores
+- **RAM**: 16GB
+- **Storage**: 500GB SSD
+- **Network**: 1Gbps
+- **Services**:
+  - Argo Trading Engine (Docker)
+  - PostgreSQL (historical data)
+  - Redis (caching)
+  - Monitoring (Prometheus + Grafana)
+
+#### Alpine Server (91.98.153.49)
+- **OS**: AlmaLinux 9
+- **CPU**: 8 cores
+- **RAM**: 16GB
+- **Storage**: 500GB SSD
+- **Network**: 1Gbps
+- **Services**:
+  - Alpine Backend API (Docker Compose)
+  - Alpine Frontend (Next.js)
+  - PostgreSQL (user data, signals)
+  - Redis (sessions, rate limiting)
+  - Nginx (reverse proxy)
+
+### Scalability
+
+**Current Capacity:**
+- 1,000 concurrent users
+- 10,000 signals/day
+- 1M API requests/day
+
+**Scaling Plan:**
+- **Horizontal**: Add servers (load balancer)
+- **Vertical**: Upgrade CPU/RAM
+- **Database**: Read replicas, sharding
+- **Cache**: Redis cluster
+- **CDN**: Static asset delivery
+
+**Target Capacity (12 months):**
+- 10,000 concurrent users
+- 100,000 signals/day
+- 10M API requests/day
+
+### Security
+
+- **Authentication**: JWT tokens, Argon2 password hashing
+- **API Security**: Rate limiting, HMAC signatures
+- **Data Encryption**: TLS 1.3 for all connections
+- **Database**: Encrypted at rest
+- **Secrets**: Environment variables, no hardcoded keys
+- **Compliance**: GDPR-ready, SOC 2 preparation
+
+### Monitoring & Observability
+
+- **Health Checks**: Automated monitoring every 30 seconds
+- **Metrics**: Prometheus (CPU, memory, latency, errors)
+- **Logging**: Structured logs, centralized collection
+- **Alerts**: PagerDuty integration for critical issues
+- **Dashboards**: Grafana for real-time visualization
+
+---
+
+## Technology Stack Summary
+
+### Backend
+- **Argo**: Python, FastAPI, Pandas, NumPy, scikit-learn
+- **Alpine Backend**: Python, FastAPI, PostgreSQL, Redis
+- **Database**: PostgreSQL 15+
+- **Cache**: Redis 7+
+
+### Frontend
+- **Framework**: Next.js 14, React 18, TypeScript
+- **Styling**: Tailwind CSS
+- **Charts**: Lightweight Charts
+- **State**: React Hooks, Context API
+
+### Infrastructure
+- **Containerization**: Docker, Docker Compose
+- **Web Server**: Nginx
+- **Monitoring**: Prometheus, Grafana
+- **CI/CD**: GitHub Actions
+
+### Third-Party Services
+- **Payments**: Stripe
+- **Email**: Resend
+- **Hosting**: Self-hosted (VPS)
+
+---
+
+## Performance Metrics
+
+### System Performance
+- **API Latency**: <50ms (p95)
+- **Signal Generation**: <100ms end-to-end
+- **Database Queries**: <10ms average
+- **Page Load Time**: <2s (First Contentful Paint)
+- **Uptime**: 99.9% (target: 99.99%)
+
+### Algorithm Performance
+- **Win Rate**: 96.2%
+- **Average Return**: 2.3% per signal
+- **Sharpe Ratio**: 2.8
+- **Maximum Drawdown**: 4.2%
+- **Profit Factor**: 3.2
+
+---
+
+## Development Practices
+
+### Code Quality
+- **Type Safety**: TypeScript (frontend), type hints (Python)
+- **Testing**: 95%+ coverage target, Jest + Playwright
+- **Linting**: ESLint, Pylint
+- **Code Review**: All changes reviewed before merge
+
+### Deployment
+- **Zero-Downtime**: Blue/green deployment
+- **Rollback**: <30 seconds
+- **Health Checks**: Automated before traffic switch
+- **Monitoring**: Real-time alerts
+
+### Security
+- **Dependency Scanning**: Automated vulnerability checks
+- **Secret Management**: Environment variables, no hardcoded secrets
+- **Authentication**: Multi-factor ready
+- **Audit Logging**: All API calls logged
+
+---
+
+## Future Technology Roadmap
+
+### Q1 2025
+- **Machine Learning**: Enhanced regime detection with deep learning
+- **API Marketplace**: Third-party strategy integration
+- **Mobile Apps**: iOS and Android native apps
+
+### Q2 2025
+- **Multi-Asset**: Expand beyond stocks (crypto, forex, commodities)
+- **Advanced Analytics**: Predictive analytics, portfolio optimization
+- **Enterprise Features**: White-label, custom branding
+
+### Q3 2025
+- **Global Expansion**: Multi-region deployment
+- **Real-time Collaboration**: Social trading features
+- **AI Assistant**: Chatbot for signal explanations
+
+---
+
+**Technical Contact:**  
+CTO: tech@alpineanalytics.com  
+**Documentation**: https://docs.alpineanalytics.com
+

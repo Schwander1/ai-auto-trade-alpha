@@ -15,6 +15,7 @@ from backend.core.database import get_db
 from backend.core.cache import cache_response
 from backend.core.input_sanitizer import sanitize_string, sanitize_email
 from backend.core.response_formatter import format_error_response, add_rate_limit_headers
+from backend.core.error_responses import create_rate_limit_error
 from backend.core.security_logging import log_security_event, SecurityEvent
 from backend.models.user import User
 from backend.core.rate_limit import check_rate_limit, get_rate_limit_status
@@ -73,7 +74,7 @@ class DeleteAccountRequest(BaseModel):
 async def get_profile(
     request: Request,
     response: Response,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),  # SECURITY: User can only access their own profile
     authorization: Optional[str] = Header(None)
 ):
     """
@@ -102,7 +103,7 @@ async def get_profile(
     # Rate limiting
     client_id = current_user.email
     if not check_rate_limit(client_id):
-        raise HTTPException(status_code=429, detail="Rate limit exceeded")
+        raise create_rate_limit_error(request=request)
     
     # Add rate limit headers
     rate_limit_status = get_rate_limit_status(client_id)
@@ -129,7 +130,7 @@ async def update_profile(
     profile_data: UpdateProfileRequest,
     request: Request,
     response: Response,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),  # SECURITY: User can only update their own profile
     db: Session = Depends(get_db),
     authorization: Optional[str] = Header(None)
 ):
@@ -164,7 +165,7 @@ async def update_profile(
     # Rate limiting
     client_id = current_user.email
     if not check_rate_limit(client_id):
-        raise HTTPException(status_code=429, detail="Rate limit exceeded")
+        raise create_rate_limit_error(request=request)
     
     # Add rate limit headers
     rate_limit_status = get_rate_limit_status(client_id)
@@ -215,9 +216,21 @@ async def update_profile(
         updated = True
     
     if updated:
-        current_user.updated_at = datetime.utcnow()
-        db.commit()
-        db.refresh(current_user)
+        try:
+            current_user.updated_at = datetime.utcnow()
+            db.commit()
+            db.refresh(current_user)
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Error updating user profile: {e}", exc_info=True)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update profile"
+            )
+        
+        # OPTIMIZATION #1: Invalidate user cache on profile update
+        from backend.core.cache import invalidate_cache
+        invalidate_cache(f"user:email:{current_user.email}")
     
     return UserProfileResponse(
         id=current_user.id,
@@ -236,7 +249,7 @@ async def delete_account(
     delete_data: DeleteAccountRequest,
     request: Request,
     response: Response,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),  # SECURITY: User can only delete their own account
     db: Session = Depends(get_db),
     authorization: Optional[str] = Header(None)
 ):
@@ -263,7 +276,7 @@ async def delete_account(
     # Rate limiting
     client_id = current_user.email
     if not check_rate_limit(client_id):
-        raise HTTPException(status_code=429, detail="Rate limit exceeded")
+        raise create_rate_limit_error(request=request)
     
     # Add rate limit headers
     rate_limit_status = get_rate_limit_status(client_id)
@@ -298,9 +311,17 @@ async def delete_account(
     )
     
     # Delete user (soft delete by setting is_active=False)
-    current_user.is_active = False
-    current_user.updated_at = datetime.utcnow()
-    db.commit()
+    try:
+        current_user.is_active = False
+        current_user.updated_at = datetime.utcnow()
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error deleting user account: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete account"
+        )
     
     # In production, you might want to:
     # - Cancel Stripe subscription

@@ -32,16 +32,41 @@ def redact_pii(text: str) -> str:
 
 
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
-    """Log requests and responses with PII redaction"""
+    """Log requests and responses with PII redaction and sampling"""
+    
+    # Log sampling configuration
+    SAMPLING_RATES = {
+        "/health": 0.01,  # Sample 1% of health checks
+        "/metrics": 0.10,  # Sample 10% of metrics requests
+        "/api/v1/health": 0.01,
+        "/api/v1/health/metrics": 0.10,
+    }
+    
+    def _should_log(self, path: str, status_code: int) -> bool:
+        """Determine if request should be logged based on sampling"""
+        import random
+        
+        # Always log errors
+        if status_code >= 400:
+            return True
+        
+        # Check if path has sampling rate
+        for pattern, rate in self.SAMPLING_RATES.items():
+            if path.startswith(pattern):
+                return random.random() < rate
+        
+        # Default: log all requests
+        return True
     
     async def dispatch(self, request: Request, call_next: ASGIApp):
         request_id = get_request_id(request)
+        path = request.url.path
         
-        # Log request
+        # Log request (before processing to capture request details)
         request_info = {
             "request_id": request_id,
             "method": request.method,
-            "path": request.url.path,
+            "path": path,
             "query_params": dict(request.query_params),
             "client_host": request.client.host if request.client else None,
             "user_agent": request.headers.get("user-agent"),
@@ -55,6 +80,11 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         
         # Process request
         response = await call_next(request)
+        status_code = response.status_code
+        
+        # Check if we should log this response (sampling)
+        if not self._should_log(path, status_code):
+            return response
         
         # Log response
         response_info = {
@@ -64,28 +94,37 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         }
         
         # Only log response body for errors (and redact PII)
+        # SECURITY FIX: Use proper streaming approach to avoid consuming body iterator
         if response.status_code >= 400:
             try:
-                # Try to get response body (may not always be available)
-                body = b""
-                async for chunk in response.body_iterator:
-                    body += chunk
+                # Read body in chunks with size limit to prevent memory issues
+                body_chunks = []
+                body_size = 0
+                max_body_size = 5000  # Limit to 5KB for logging
                 
-                if body:
+                async for chunk in response.body_iterator:
+                    body_chunks.append(chunk)
+                    body_size += len(chunk)
+                    if body_size > max_body_size:
+                        body_chunks.append(b"... [truncated]")
+                        break
+                
+                if body_chunks:
+                    body = b"".join(body_chunks)
                     body_str = body.decode('utf-8', errors='ignore')
                     body_str = redact_pii(body_str)
-                    response_info["body"] = body_str[:500]  # Limit length
+                    response_info["body"] = body_str[:500]  # Limit logged length
                 
-                # Recreate response with body
+                # Recreate response with body (required after consuming iterator)
                 from starlette.responses import Response as StarletteResponse
                 response = StarletteResponse(
-                    content=body,
+                    content=body if body_chunks else b"",
                     status_code=response.status_code,
                     headers=dict(response.headers),
                     media_type=response.media_type
                 )
             except Exception as e:
-                logger.warning(f"Could not log response body: {e}")
+                logger.warning(f"Could not log response body: {e}", exc_info=True)
         
         response_info_str = json.dumps(response_info, default=str)
         logger.info(f"Response: {response_info_str}")

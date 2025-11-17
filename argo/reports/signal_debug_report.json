@@ -1,0 +1,171 @@
+{
+  "generated": "2025-11-15T05:10:07.881093",
+  "stats": {
+    "total_traces": 3,
+    "stage_counts": {
+      "indicator_calculation": 1,
+      "signal_generation_start": 1,
+      "signal_generation": 1
+    },
+    "recent_traces": [
+      {
+        "timestamp": "2025-11-15T05:10:07.880649",
+        "stage": "indicator_calculation",
+        "symbol": "AAPL",
+        "data": {
+          "data_length": 501,
+          "indicators_found": [
+            "sma_20",
+            "sma_50",
+            "rsi",
+            "macd",
+            "macd_signal",
+            "volume_ratio",
+            "volatility",
+            "current_price"
+          ],
+          "sma_20": 5.392989468574524,
+          "sma_50": 4.849755554199219,
+          "rsi": 22.458369081078857,
+          "macd": 0.07880195072226392,
+          "has_macd_signal": true
+        },
+        "success": true,
+        "error": null
+      },
+      {
+        "timestamp": "2025-11-15T05:10:07.880953",
+        "stage": "signal_generation_start",
+        "symbol": "AAPL",
+        "data": {
+          "indicators_available": [
+            "sma_20",
+            "sma_50",
+            "rsi",
+            "macd",
+            "macd_signal",
+            "volume_ratio",
+            "volatility",
+            "current_price"
+          ],
+          "current_price": 4.611423015594482
+        },
+        "success": true,
+        "error": null
+      },
+      {
+        "timestamp": "2025-11-15T05:10:07.881031",
+        "stage": "signal_generation",
+        "symbol": "AAPL",
+        "data": {
+          "indicators_available": [
+            "sma_20",
+            "sma_50",
+            "rsi",
+            "macd",
+            "macd_signal",
+            "volume_ratio",
+            "volatility",
+            "current_price"
+          ],
+          "signals_generated": [
+            "BUY",
+            "BUY",
+            "SELL"
+          ],
+          "confidences": [
+            85.0,
+            71.52497855135269,
+            56.0
+          ],
+          "final_action": "BUY",
+          "final_confidence": 81.26248927567634,
+          "min_confidence_threshold": 55.0,
+          "above_threshold": "True"
+        },
+        "success": true,
+        "error": null
+      }
+    ]
+  },
+  "traces": [
+    {
+      "timestamp": "2025-11-15T05:10:07.880649",
+      "stage": "indicator_calculation",
+      "symbol": "AAPL",
+      "data": {
+        "data_length": 501,
+        "indicators_found": [
+          "sma_20",
+          "sma_50",
+          "rsi",
+          "macd",
+          "macd_signal",
+          "volume_ratio",
+          "volatility",
+          "current_price"
+        ],
+        "sma_20": 5.392989468574524,
+        "sma_50": 4.849755554199219,
+        "rsi": 22.458369081078857,
+        "macd": 0.07880195072226392,
+        "has_macd_signal": true
+      },
+      "success": true,
+      "error": null
+    },
+    {
+      "timestamp": "2025-11-15T05:10:07.880953",
+      "stage": "signal_generation_start",
+      "symbol": "AAPL",
+      "data": {
+        "indicators_available": [
+          "sma_20",
+          "sma_50",
+          "rsi",
+          "macd",
+          "macd_signal",
+          "volume_ratio",
+          "volatility",
+          "current_price"
+        ],
+        "current_price": 4.611423015594482
+      },
+      "success": true,
+      "error": null
+    },
+    {
+      "timestamp": "2025-11-15T05:10:07.881031",
+      "stage": "signal_generation",
+      "symbol": "AAPL",
+      "data": {
+        "indicators_available": [
+          "sma_20",
+          "sma_50",
+          "rsi",
+          "macd",
+          "macd_signal",
+          "volume_ratio",
+          "volatility",
+          "current_price"
+        ],
+        "signals_generated": [
+          "BUY",
+          "BUY",
+          "SELL"
+        ],
+        "confidences": [
+          85.0,
+          71.52497855135269,
+          56.0
+        ],
+        "final_action": "BUY",
+        "final_confidence": 81.26248927567634,
+        "min_confidence_threshold": 55.0,
+        "above_threshold": "True"
+      },
+      "success": true,
+      "error": null
+    }
+  ]
+}

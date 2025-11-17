@@ -1,0 +1,912 @@
+{
+  "baseline": [
+    {
+      "symbol": "AAPL",
+      "config": "baseline",
+      "method": "standard",
+      "win_rate": 49.32432432432432,
+      "total_return": 16.51377307416886,
+      "sharpe_ratio": 1.0826832462147962,
+      "max_drawdown": -24.409048260146623,
+      "total_trades": 740,
+      "monte_carlo": {
+        "win_rate_mean": 49.32432432432434,
+        "win_rate_std": 1.4210854715202004e-14,
+        "probability_positive": 1.0
+      }
+    },
+    {
+      "symbol": "NVDA",
+      "config": "baseline",
+      "method": "standard",
+      "win_rate": 46.965699208443276,
+      "total_return": 22.81464788137097,
+      "sharpe_ratio": 1.0998662722090111,
+      "max_drawdown": -27.51888371850255,
+      "total_trades": 758,
+      "monte_carlo": {
+        "win_rate_mean": 46.96569920844328,
+        "win_rate_std": 7.105427357601002e-15,
+        "probability_positive": 0.0
+      }
+    },
+    {
+      "symbol": "TSLA",
+      "config": "baseline",
+      "method": "standard",
+      "win_rate": 48.11165845648605,
+      "total_return": 27.0350128724368,
+      "sharpe_ratio": 1.1333912044532872,
+      "max_drawdown": -26.31197869847364,
+      "total_trades": 609,
+      "monte_carlo": {
+        "win_rate_mean": 48.11165845648604,
+        "win_rate_std": 7.105427357601002e-15,
+        "probability_positive": 0.0
+      }
+    },
+    {
+      "symbol": "MSFT",
+      "config": "baseline",
+      "method": "standard",
+      "win_rate": 44.83695652173913,
+      "total_return": 28.365323986289148,
+      "sharpe_ratio": 1.0890145608433266,
+      "max_drawdown": -23.587899612960285,
+      "total_trades": 736,
+      "monte_carlo": {
+        "win_rate_mean": 44.836956521739125,
+        "win_rate_std": 7.105427357601002e-15,
+        "probability_positive": 0.0
+      }
+    },
+    {
+      "symbol": "GOOGL",
+      "config": "baseline",
+      "method": "standard",
+      "win_rate": 48.28060522696011,
+      "total_return": 22.54908942293959,
+      "sharpe_ratio": 1.0872585020682302,
+      "max_drawdown": -24.89192970113889,
+      "total_trades": 727,
+      "monte_carlo": {
+        "win_rate_mean": 48.28060522696011,
+        "win_rate_std": 0.0,
+        "probability_positive": 1.0
+      }
+    },
+    {
+      "symbol": "META",
+      "config": "baseline",
+      "method": "standard",
+      "win_rate": 45.63492063492063,
+      "total_return": -8.933823241376944,
+      "sharpe_ratio": 1.0911238365579188,
+      "max_drawdown": -26.75167169581037,
+      "total_trades": 504,
+      "monte_carlo": {
+        "win_rate_mean": 45.63492063492062,
+        "win_rate_std": 1.4210854715202004e-14,
+        "probability_positive": 0.0
+      }
+    },
+    {
+      "symbol": "AMD",
+      "config": "baseline",
+      "method": "standard",
+      "win_rate": 49.93909866017052,
+      "total_return": 33.21960087483557,
+      "sharpe_ratio": 1.1646911582288484,
+      "max_drawdown": -29.855815540349916,
+      "total_trades": 821,
+      "monte_carlo": {
+        "win_rate_mean": 49.93909866017054,
+        "win_rate_std": 1.4210854715202004e-14,
+        "probability_positive": 1.0
+      }
+    },
+    {
+      "symbol": "AMZN",
+      "config": "baseline",
+      "method": "standard",
+      "win_rate": 43.96200814111262,
+      "total_return": 33.45739490947707,
+      "sharpe_ratio": 1.0949069926272013,
+      "max_drawdown": -23.72448086282042,
+      "total_trades": 737,
+      "monte_carlo": {
+        "win_rate_mean": 43.96200814111261,
+        "win_rate_std": 7.105427357601002e-15,
+        "probability_positive": 0.0
+      }
+    },
+    {
+      "symbol": "SPY",
+      "config": "baseline",
+      "method": "standard",
+      "win_rate": 50.21834061135371,
+      "total_return": 19.19473365016769,
+      "sharpe_ratio": 1.0876972096615154,
+      "max_drawdown": -22.893967016284925,
+      "total_trades": 687,
+      "monte_carlo": {
+        "win_rate_mean": 50.21834061135371,
+        "win_rate_std": 0.0,
+        "probability_positive": 1.0
+      }
+    },
+    {
+      "symbol": "QQQ",
+      "config": "baseline",
+      "method": "standard",
+      "win_rate": 49.33135215453195,
+      "total_return": 27.262911419991315,
+      "sharpe_ratio": 1.0382610165745163,
+      "max_drawdown": -24.58789283015634,
+      "total_trades": 673,
+      "monte_carlo": {
+        "win_rate_mean": 49.331352154531956,
+        "win_rate_std": 7.105427357601002e-15,
+        "probability_positive": 1.0
+      }
+    },
+    {
+      "symbol": "BTC-USD",
+      "config": "baseline",
+      "method": "standard",
+      "win_rate": 45.56574923547401,
+      "total_return": 22.689372311603073,
+      "sharpe_ratio": 0.6888637300257839,
+      "max_drawdown": -23.74421946230589,
+      "total_trades": 327,
+      "monte_carlo": {
+        "win_rate_mean": 45.565749235473994,
+        "win_rate_std": 1.4210854715202004e-14,
+        "probability_positive": 0.0
+      }
+    },
+    {
+      "symbol": "ETH-USD",
+      "config": "baseline",
+      "method": "standard",
+      "win_rate": 50.54704595185996,
+      "total_return": 7.993200890415276,
+      "sharpe_ratio": 1.0504360371033001,
+      "max_drawdown": -28.336754567215543,
+      "total_trades": 457,
+      "monte_carlo": {
+        "win_rate_mean": 50.547045951859936,
+        "win_rate_std": 2.1316282072803006e-14,
+        "probability_positive": 1.0
+      }
+    }
+  ],
+  "weight_optimization": [
+    {
+      "symbol": "AAPL",
+      "config": "weight_optimization",
+      "method": "standard",
+      "win_rate": 49.32432432432432,
+      "total_return": 16.51377307416886,
+      "sharpe_ratio": 1.0826832462147962,
+      "max_drawdown": -24.409048260146623,
+      "total_trades": 740,
+      "monte_carlo": {
+        "win_rate_mean": 49.32432432432434,
+        "win_rate_std": 1.4210854715202004e-14,
+        "probability_positive": 1.0
+      }
+    },
+    {
+      "symbol": "NVDA",
+      "config": "weight_optimization",
+      "method": "standard",
+      "win_rate": 46.965699208443276,
+      "total_return": 22.81464788137097,
+      "sharpe_ratio": 1.0998662722090111,
+      "max_drawdown": -27.51888371850255,
+      "total_trades": 758,
+      "monte_carlo": {
+        "win_rate_mean": 46.96569920844328,
+        "win_rate_std": 7.105427357601002e-15,
+        "probability_positive": 0.0
+      }
+    },
+    {
+      "symbol": "TSLA",
+      "config": "weight_optimization",
+      "method": "standard",
+      "win_rate": 48.11165845648605,
+      "total_return": 27.0350128724368,
+      "sharpe_ratio": 1.1333912044532872,
+      "max_drawdown": -26.31197869847364,
+      "total_trades": 609,
+      "monte_carlo": {
+        "win_rate_mean": 48.11165845648604,
+        "win_rate_std": 7.105427357601002e-15,
+        "probability_positive": 0.0
+      }
+    },
+    {
+      "symbol": "MSFT",
+      "config": "weight_optimization",
+      "method": "standard",
+      "win_rate": 44.83695652173913,
+      "total_return": 28.365323986289148,
+      "sharpe_ratio": 1.0890145608433266,
+      "max_drawdown": -23.587899612960285,
+      "total_trades": 736,
+      "monte_carlo": {
+        "win_rate_mean": 44.836956521739125,
+        "win_rate_std": 7.105427357601002e-15,
+        "probability_positive": 0.0
+      }
+    },
+    {
+      "symbol": "GOOGL",
+      "config": "weight_optimization",
+      "method": "standard",
+      "win_rate": 48.28060522696011,
+      "total_return": 22.54908942293959,
+      "sharpe_ratio": 1.0872585020682302,
+      "max_drawdown": -24.89192970113889,
+      "total_trades": 727,
+      "monte_carlo": {
+        "win_rate_mean": 48.28060522696011,
+        "win_rate_std": 0.0,
+        "probability_positive": 1.0
+      }
+    },
+    {
+      "symbol": "META",
+      "config": "weight_optimization",
+      "method": "standard",
+      "win_rate": 45.63492063492063,
+      "total_return": -8.933823241376944,
+      "sharpe_ratio": 1.0911238365579188,
+      "max_drawdown": -26.75167169581037,
+      "total_trades": 504,
+      "monte_carlo": {
+        "win_rate_mean": 45.63492063492062,
+        "win_rate_std": 1.4210854715202004e-14,
+        "probability_positive": 0.0
+      }
+    },
+    {
+      "symbol": "AMD",
+      "config": "weight_optimization",
+      "method": "standard",
+      "win_rate": 49.93909866017052,
+      "total_return": 33.21960087483557,
+      "sharpe_ratio": 1.1646911582288484,
+      "max_drawdown": -29.855815540349916,
+      "total_trades": 821,
+      "monte_carlo": {
+        "win_rate_mean": 49.93909866017054,
+        "win_rate_std": 1.4210854715202004e-14,
+        "probability_positive": 1.0
+      }
+    },
+    {
+      "symbol": "AMZN",
+      "config": "weight_optimization",
+      "method": "standard",
+      "win_rate": 43.96200814111262,
+      "total_return": 33.45739490947707,
+      "sharpe_ratio": 1.0949069926272013,
+      "max_drawdown": -23.72448086282042,
+      "total_trades": 737,
+      "monte_carlo": {
+        "win_rate_mean": 43.96200814111261,
+        "win_rate_std": 7.105427357601002e-15,
+        "probability_positive": 0.0
+      }
+    },
+    {
+      "symbol": "SPY",
+      "config": "weight_optimization",
+      "method": "standard",
+      "win_rate": 50.21834061135371,
+      "total_return": 19.19473365016769,
+      "sharpe_ratio": 1.0876972096615154,
+      "max_drawdown": -22.893967016284925,
+      "total_trades": 687,
+      "monte_carlo": {
+        "win_rate_mean": 50.21834061135371,
+        "win_rate_std": 0.0,
+        "probability_positive": 1.0
+      }
+    },
+    {
+      "symbol": "QQQ",
+      "config": "weight_optimization",
+      "method": "standard",
+      "win_rate": 49.33135215453195,
+      "total_return": 27.262911419991315,
+      "sharpe_ratio": 1.0382610165745163,
+      "max_drawdown": -24.58789283015634,
+      "total_trades": 673,
+      "monte_carlo": {
+        "win_rate_mean": 49.331352154531956,
+        "win_rate_std": 7.105427357601002e-15,
+        "probability_positive": 1.0
+      }
+    },
+    {
+      "symbol": "BTC-USD",
+      "config": "weight_optimization",
+      "method": "standard",
+      "win_rate": 45.56574923547401,
+      "total_return": 22.689372311603073,
+      "sharpe_ratio": 0.6888637300257839,
+      "max_drawdown": -23.74421946230589,
+      "total_trades": 327,
+      "monte_carlo": {
+        "win_rate_mean": 45.565749235473994,
+        "win_rate_std": 1.4210854715202004e-14,
+        "probability_positive": 0.0
+      }
+    },
+    {
+      "symbol": "ETH-USD",
+      "config": "weight_optimization",
+      "method": "standard",
+      "win_rate": 50.54704595185996,
+      "total_return": 7.993200890415276,
+      "sharpe_ratio": 1.0504360371033001,
+      "max_drawdown": -28.336754567215543,
+      "total_trades": 457,
+      "monte_carlo": {
+        "win_rate_mean": 50.547045951859936,
+        "win_rate_std": 2.1316282072803006e-14,
+        "probability_positive": 1.0
+      }
+    }
+  ],
+  "regime_weights": [
+    {
+      "symbol": "AAPL",
+      "config": "regime_weights",
+      "method": "standard",
+      "win_rate": 49.32432432432432,
+      "total_return": 16.51377307416886,
+      "sharpe_ratio": 1.0826832462147962,
+      "max_drawdown": -24.409048260146623,
+      "total_trades": 740,
+      "monte_carlo": {
+        "win_rate_mean": 49.32432432432434,
+        "win_rate_std": 1.4210854715202004e-14,
+        "probability_positive": 1.0
+      }
+    },
+    {
+      "symbol": "NVDA",
+      "config": "regime_weights",
+      "method": "standard",
+      "win_rate": 46.965699208443276,
+      "total_return": 22.81464788137097,
+      "sharpe_ratio": 1.0998662722090111,
+      "max_drawdown": -27.51888371850255,
+      "total_trades": 758,
+      "monte_carlo": {
+        "win_rate_mean": 46.96569920844328,
+        "win_rate_std": 7.105427357601002e-15,
+        "probability_positive": 0.0
+      }
+    },
+    {
+      "symbol": "TSLA",
+      "config": "regime_weights",
+      "method": "standard",
+      "win_rate": 48.11165845648605,
+      "total_return": 27.0350128724368,
+      "sharpe_ratio": 1.1333912044532872,
+      "max_drawdown": -26.31197869847364,
+      "total_trades": 609,
+      "monte_carlo": {
+        "win_rate_mean": 48.11165845648604,
+        "win_rate_std": 7.105427357601002e-15,
+        "probability_positive": 0.0
+      }
+    },
+    {
+      "symbol": "MSFT",
+      "config": "regime_weights",
+      "method": "standard",
+      "win_rate": 44.83695652173913,
+      "total_return": 28.365323986289148,
+      "sharpe_ratio": 1.0890145608433266,
+      "max_drawdown": -23.587899612960285,
+      "total_trades": 736,
+      "monte_carlo": {
+        "win_rate_mean": 44.836956521739125,
+        "win_rate_std": 7.105427357601002e-15,
+        "probability_positive": 0.0
+      }
+    },
+    {
+      "symbol": "GOOGL",
+      "config": "regime_weights",
+      "method": "standard",
+      "win_rate": 48.28060522696011,
+      "total_return": 22.54908942293959,
+      "sharpe_ratio": 1.0872585020682302,
+      "max_drawdown": -24.89192970113889,
+      "total_trades": 727,
+      "monte_carlo": {
+        "win_rate_mean": 48.28060522696011,
+        "win_rate_std": 0.0,
+        "probability_positive": 1.0
+      }
+    },
+    {
+      "symbol": "META",
+      "config": "regime_weights",
+      "method": "standard",
+      "win_rate": 45.63492063492063,
+      "total_return": -8.933823241376944,
+      "sharpe_ratio": 1.0911238365579188,
+      "max_drawdown": -26.75167169581037,
+      "total_trades": 504,
+      "monte_carlo": {
+        "win_rate_mean": 45.63492063492062,
+        "win_rate_std": 1.4210854715202004e-14,
+        "probability_positive": 0.0
+      }
+    },
+    {
+      "symbol": "AMD",
+      "config": "regime_weights",
+      "method": "standard",
+      "win_rate": 49.93909866017052,
+      "total_return": 33.21960087483557,
+      "sharpe_ratio": 1.1646911582288484,
+      "max_drawdown": -29.855815540349916,
+      "total_trades": 821,
+      "monte_carlo": {
+        "win_rate_mean": 49.93909866017054,
+        "win_rate_std": 1.4210854715202004e-14,
+        "probability_positive": 1.0
+      }
+    },
+    {
+      "symbol": "AMZN",
+      "config": "regime_weights",
+      "method": "standard",
+      "win_rate": 43.96200814111262,
+      "total_return": 33.45739490947707,
+      "sharpe_ratio": 1.0949069926272013,
+      "max_drawdown": -23.72448086282042,
+      "total_trades": 737,
+      "monte_carlo": {
+        "win_rate_mean": 43.96200814111261,
+        "win_rate_std": 7.105427357601002e-15,
+        "probability_positive": 0.0
+      }
+    },
+    {
+      "symbol": "SPY",
+      "config": "regime_weights",
+      "method": "standard",
+      "win_rate": 50.21834061135371,
+      "total_return": 19.19473365016769,
+      "sharpe_ratio": 1.0876972096615154,
+      "max_drawdown": -22.893967016284925,
+      "total_trades": 687,
+      "monte_carlo": {
+        "win_rate_mean": 50.21834061135371,
+        "win_rate_std": 0.0,
+        "probability_positive": 1.0
+      }
+    },
+    {
+      "symbol": "QQQ",
+      "config": "regime_weights",
+      "method": "standard",
+      "win_rate": 49.33135215453195,
+      "total_return": 27.262911419991315,
+      "sharpe_ratio": 1.0382610165745163,
+      "max_drawdown": -24.58789283015634,
+      "total_trades": 673,
+      "monte_carlo": {
+        "win_rate_mean": 49.331352154531956,
+        "win_rate_std": 7.105427357601002e-15,
+        "probability_positive": 1.0
+      }
+    },
+    {
+      "symbol": "BTC-USD",
+      "config": "regime_weights",
+      "method": "standard",
+      "win_rate": 45.56574923547401,
+      "total_return": 22.689372311603073,
+      "sharpe_ratio": 0.6888637300257839,
+      "max_drawdown": -23.74421946230589,
+      "total_trades": 327,
+      "monte_carlo": {
+        "win_rate_mean": 45.565749235473994,
+        "win_rate_std": 1.4210854715202004e-14,
+        "probability_positive": 0.0
+      }
+    },
+    {
+      "symbol": "ETH-USD",
+      "config": "regime_weights",
+      "method": "standard",
+      "win_rate": 50.54704595185996,
+      "total_return": 7.993200890415276,
+      "sharpe_ratio": 1.0504360371033001,
+      "max_drawdown": -28.336754567215543,
+      "total_trades": 457,
+      "monte_carlo": {
+        "win_rate_mean": 50.547045951859936,
+        "win_rate_std": 2.1316282072803006e-14,
+        "probability_positive": 1.0
+      }
+    }
+  ],
+  "confidence_88": [
+    {
+      "symbol": "AAPL",
+      "config": "confidence_88",
+      "method": "standard",
+      "win_rate": 49.32432432432432,
+      "total_return": 16.51377307416886,
+      "sharpe_ratio": 1.0826832462147962,
+      "max_drawdown": -24.409048260146623,
+      "total_trades": 740,
+      "monte_carlo": {
+        "win_rate_mean": 49.32432432432434,
+        "win_rate_std": 1.4210854715202004e-14,
+        "probability_positive": 1.0
+      }
+    },
+    {
+      "symbol": "NVDA",
+      "config": "confidence_88",
+      "method": "standard",
+      "win_rate": 46.965699208443276,
+      "total_return": 22.81464788137097,
+      "sharpe_ratio": 1.0998662722090111,
+      "max_drawdown": -27.51888371850255,
+      "total_trades": 758,
+      "monte_carlo": {
+        "win_rate_mean": 46.96569920844328,
+        "win_rate_std": 7.105427357601002e-15,
+        "probability_positive": 0.0
+      }
+    },
+    {
+      "symbol": "TSLA",
+      "config": "confidence_88",
+      "method": "standard",
+      "win_rate": 48.11165845648605,
+      "total_return": 27.0350128724368,
+      "sharpe_ratio": 1.1333912044532872,
+      "max_drawdown": -26.31197869847364,
+      "total_trades": 609,
+      "monte_carlo": {
+        "win_rate_mean": 48.11165845648604,
+        "win_rate_std": 7.105427357601002e-15,
+        "probability_positive": 0.0
+      }
+    },
+    {
+      "symbol": "MSFT",
+      "config": "confidence_88",
+      "method": "standard",
+      "win_rate": 44.83695652173913,
+      "total_return": 28.365323986289148,
+      "sharpe_ratio": 1.0890145608433266,
+      "max_drawdown": -23.587899612960285,
+      "total_trades": 736,
+      "monte_carlo": {
+        "win_rate_mean": 44.836956521739125,
+        "win_rate_std": 7.105427357601002e-15,
+        "probability_positive": 0.0
+      }
+    },
+    {
+      "symbol": "GOOGL",
+      "config": "confidence_88",
+      "method": "standard",
+      "win_rate": 48.28060522696011,
+      "total_return": 22.54908942293959,
+      "sharpe_ratio": 1.0872585020682302,
+      "max_drawdown": -24.89192970113889,
+      "total_trades": 727,
+      "monte_carlo": {
+        "win_rate_mean": 48.28060522696011,
+        "win_rate_std": 0.0,
+        "probability_positive": 1.0
+      }
+    },
+    {
+      "symbol": "META",
+      "config": "confidence_88",
+      "method": "standard",
+      "win_rate": 45.63492063492063,
+      "total_return": -8.933823241376944,
+      "sharpe_ratio": 1.0911238365579188,
+      "max_drawdown": -26.75167169581037,
+      "total_trades": 504,
+      "monte_carlo": {
+        "win_rate_mean": 45.63492063492062,
+        "win_rate_std": 1.4210854715202004e-14,
+        "probability_positive": 0.0
+      }
+    },
+    {
+      "symbol": "AMD",
+      "config": "confidence_88",
+      "method": "standard",
+      "win_rate": 49.93909866017052,
+      "total_return": 33.21960087483557,
+      "sharpe_ratio": 1.1646911582288484,
+      "max_drawdown": -29.855815540349916,
+      "total_trades": 821,
+      "monte_carlo": {
+        "win_rate_mean": 49.93909866017054,
+        "win_rate_std": 1.4210854715202004e-14,
+        "probability_positive": 1.0
+      }
+    },
+    {
+      "symbol": "AMZN",
+      "config": "confidence_88",
+      "method": "standard",
+      "win_rate": 43.96200814111262,
+      "total_return": 33.45739490947707,
+      "sharpe_ratio": 1.0949069926272013,
+      "max_drawdown": -23.72448086282042,
+      "total_trades": 737,
+      "monte_carlo": {
+        "win_rate_mean": 43.96200814111261,
+        "win_rate_std": 7.105427357601002e-15,
+        "probability_positive": 0.0
+      }
+    },
+    {
+      "symbol": "SPY",
+      "config": "confidence_88",
+      "method": "standard",
+      "win_rate": 50.21834061135371,
+      "total_return": 19.19473365016769,
+      "sharpe_ratio": 1.0876972096615154,
+      "max_drawdown": -22.893967016284925,
+      "total_trades": 687,
+      "monte_carlo": {
+        "win_rate_mean": 50.21834061135371,
+        "win_rate_std": 0.0,
+        "probability_positive": 1.0
+      }
+    },
+    {
+      "symbol": "QQQ",
+      "config": "confidence_88",
+      "method": "standard",
+      "win_rate": 49.33135215453195,
+      "total_return": 27.262911419991315,
+      "sharpe_ratio": 1.0382610165745163,
+      "max_drawdown": -24.58789283015634,
+      "total_trades": 673,
+      "monte_carlo": {
+        "win_rate_mean": 49.331352154531956,
+        "win_rate_std": 7.105427357601002e-15,
+        "probability_positive": 1.0
+      }
+    },
+    {
+      "symbol": "BTC-USD",
+      "config": "confidence_88",
+      "method": "standard",
+      "win_rate": 45.56574923547401,
+      "total_return": 22.689372311603073,
+      "sharpe_ratio": 0.6888637300257839,
+      "max_drawdown": -23.74421946230589,
+      "total_trades": 327,
+      "monte_carlo": {
+        "win_rate_mean": 45.565749235473994,
+        "win_rate_std": 1.4210854715202004e-14,
+        "probability_positive": 0.0
+      }
+    },
+    {
+      "symbol": "ETH-USD",
+      "config": "confidence_88",
+      "method": "standard",
+      "win_rate": 50.54704595185996,
+      "total_return": 7.993200890415276,
+      "sharpe_ratio": 1.0504360371033001,
+      "max_drawdown": -28.336754567215543,
+      "total_trades": 457,
+      "monte_carlo": {
+        "win_rate_mean": 50.547045951859936,
+        "win_rate_std": 2.1316282072803006e-14,
+        "probability_positive": 1.0
+      }
+    }
+  ],
+  "all_optimizations": [
+    {
+      "symbol": "AAPL",
+      "config": "all_optimizations",
+      "method": "standard",
+      "win_rate": 49.32432432432432,
+      "total_return": 16.51377307416886,
+      "sharpe_ratio": 1.0826832462147962,
+      "max_drawdown": -24.409048260146623,
+      "total_trades": 740,
+      "monte_carlo": {
+        "win_rate_mean": 49.32432432432434,
+        "win_rate_std": 1.4210854715202004e-14,
+        "probability_positive": 1.0
+      }
+    },
+    {
+      "symbol": "NVDA",
+      "config": "all_optimizations",
+      "method": "standard",
+      "win_rate": 46.965699208443276,
+      "total_return": 22.81464788137097,
+      "sharpe_ratio": 1.0998662722090111,
+      "max_drawdown": -27.51888371850255,
+      "total_trades": 758,
+      "monte_carlo": {
+        "win_rate_mean": 46.96569920844328,
+        "win_rate_std": 7.105427357601002e-15,
+        "probability_positive": 0.0
+      }
+    },
+    {
+      "symbol": "TSLA",
+      "config": "all_optimizations",
+      "method": "standard",
+      "win_rate": 48.11165845648605,
+      "total_return": 27.0350128724368,
+      "sharpe_ratio": 1.1333912044532872,
+      "max_drawdown": -26.31197869847364,
+      "total_trades": 609,
+      "monte_carlo": {
+        "win_rate_mean": 48.11165845648604,
+        "win_rate_std": 7.105427357601002e-15,
+        "probability_positive": 0.0
+      }
+    },
+    {
+      "symbol": "MSFT",
+      "config": "all_optimizations",
+      "method": "standard",
+      "win_rate": 44.83695652173913,
+      "total_return": 28.365323986289148,
+      "sharpe_ratio": 1.0890145608433266,
+      "max_drawdown": -23.587899612960285,
+      "total_trades": 736,
+      "monte_carlo": {
+        "win_rate_mean": 44.836956521739125,
+        "win_rate_std": 7.105427357601002e-15,
+        "probability_positive": 0.0
+      }
+    },
+    {
+      "symbol": "GOOGL",
+      "config": "all_optimizations",
+      "method": "standard",
+      "win_rate": 48.28060522696011,
+      "total_return": 22.54908942293959,
+      "sharpe_ratio": 1.0872585020682302,
+      "max_drawdown": -24.89192970113889,
+      "total_trades": 727,
+      "monte_carlo": {
+        "win_rate_mean": 48.28060522696011,
+        "win_rate_std": 0.0,
+        "probability_positive": 1.0
+      }
+    },
+    {
+      "symbol": "META",
+      "config": "all_optimizations",
+      "method": "standard",
+      "win_rate": 45.63492063492063,
+      "total_return": -8.933823241376944,
+      "sharpe_ratio": 1.0911238365579188,
+      "max_drawdown": -26.75167169581037,
+      "total_trades": 504,
+      "monte_carlo": {
+        "win_rate_mean": 45.63492063492062,
+        "win_rate_std": 1.4210854715202004e-14,
+        "probability_positive": 0.0
+      }
+    },
+    {
+      "symbol": "AMD",
+      "config": "all_optimizations",
+      "method": "standard",
+      "win_rate": 49.93909866017052,
+      "total_return": 33.21960087483557,
+      "sharpe_ratio": 1.1646911582288484,
+      "max_drawdown": -29.855815540349916,
+      "total_trades": 821,
+      "monte_carlo": {
+        "win_rate_mean": 49.93909866017054,
+        "win_rate_std": 1.4210854715202004e-14,
+        "probability_positive": 1.0
+      }
+    },
+    {
+      "symbol": "AMZN",
+      "config": "all_optimizations",
+      "method": "standard",
+      "win_rate": 43.96200814111262,
+      "total_return": 33.45739490947707,
+      "sharpe_ratio": 1.0949069926272013,
+      "max_drawdown": -23.72448086282042,
+      "total_trades": 737,
+      "monte_carlo": {
+        "win_rate_mean": 43.96200814111261,
+        "win_rate_std": 7.105427357601002e-15,
+        "probability_positive": 0.0
+      }
+    },
+    {
+      "symbol": "SPY",
+      "config": "all_optimizations",
+      "method": "standard",
+      "win_rate": 50.21834061135371,
+      "total_return": 19.19473365016769,
+      "sharpe_ratio": 1.0876972096615154,
+      "max_drawdown": -22.893967016284925,
+      "total_trades": 687,
+      "monte_carlo": {
+        "win_rate_mean": 50.21834061135371,
+        "win_rate_std": 0.0,
+        "probability_positive": 1.0
+      }
+    },
+    {
+      "symbol": "QQQ",
+      "config": "all_optimizations",
+      "method": "standard",
+      "win_rate": 49.33135215453195,
+      "total_return": 27.262911419991315,
+      "sharpe_ratio": 1.0382610165745163,
+      "max_drawdown": -24.58789283015634,
+      "total_trades": 673,
+      "monte_carlo": {
+        "win_rate_mean": 49.331352154531956,
+        "win_rate_std": 7.105427357601002e-15,
+        "probability_positive": 1.0
+      }
+    },
+    {
+      "symbol": "BTC-USD",
+      "config": "all_optimizations",
+      "method": "standard",
+      "win_rate": 45.56574923547401,
+      "total_return": 22.689372311603073,
+      "sharpe_ratio": 0.6888637300257839,
+      "max_drawdown": -23.74421946230589,
+      "total_trades": 327,
+      "monte_carlo": {
+        "win_rate_mean": 45.565749235473994,
+        "win_rate_std": 1.4210854715202004e-14,
+        "probability_positive": 0.0
+      }
+    },
+    {
+      "symbol": "ETH-USD",
+      "config": "all_optimizations",
+      "method": "standard",
+      "win_rate": 50.54704595185996,
+      "total_return": 7.993200890415276,
+      "sharpe_ratio": 1.0504360371033001,
+      "max_drawdown": -28.336754567215543,
+      "total_trades": 457,
+      "monte_carlo": {
+        "win_rate_mean": 50.547045951859936,
+        "win_rate_std": 2.1316282072803006e-14,
+        "probability_positive": 1.0
+      }
+    }
+  ]
+}

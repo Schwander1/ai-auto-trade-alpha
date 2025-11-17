@@ -1,5 +1,5 @@
 /**
- * Type definitions for trading signals from Argo backend.
+ * Type definitions for trading signals from external signal provider.
  */
 
 export type SignalAction = 'BUY' | 'SELL'

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Alpine Analytics - Argo Metrics Exporter
+Alpine Analytics - External Signal Provider Metrics Exporter
 Exports Argo trading metrics to Prometheus format
 """
 
@@ -12,7 +12,7 @@ import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
 
 # Argo API Configuration
-ARGO_API_URL = "http://178.156.194.174:8000"
+EXTERNAL_SIGNAL_API_URL = "http://178.156.194.174:8000"
 SCRAPE_INTERVAL = 30  # seconds
 EXPORTER_PORT = 9200
 
@@ -35,16 +35,16 @@ def fetch_argo_metrics():
     """Fetch metrics from Argo API"""
     try:
         # Health endpoint
-        health_response = requests.get(f"{ARGO_API_URL}/health", timeout=5)
+        health_response = requests.get(f"{EXTERNAL_SIGNAL_API_URL}/health", timeout=5)
         health_data = health_response.json()
         
         # Stats endpoint
-        stats_response = requests.get(f"{ARGO_API_URL}/api/v1/stats", timeout=5)
+        stats_response = requests.get(f"{EXTERNAL_SIGNAL_API_URL}/api/v1/stats", timeout=5)
         stats_data = stats_response.json()
         
         # Signals endpoint (if available)
         try:
-            signals_response = requests.get(f"{ARGO_API_URL}/api/v1/signals/summary", timeout=5)
+            signals_response = requests.get(f"{EXTERNAL_SIGNAL_API_URL}/api/v1/signals/summary", timeout=5)
             signals_data = signals_response.json()
         except:
             signals_data = {}
@@ -107,7 +107,7 @@ def update_metrics():
 def main():
     """Main exporter loop"""
     logging.info(f"Starting Argo Metrics Exporter on port {EXPORTER_PORT}")
-    logging.info(f"Polling {ARGO_API_URL} every {SCRAPE_INTERVAL}s")
+    logging.info(f"Polling {EXTERNAL_SIGNAL_API_URL} every {SCRAPE_INTERVAL}s")
     
     # Start Prometheus HTTP server
     start_http_server(EXPORTER_PORT)

@@ -3,6 +3,7 @@
 import sys
 import json
 import logging
+import os
 from datetime import datetime
 from pathlib import Path
 
@@ -10,6 +11,26 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("SignalGenerator")
+
+def _get_config_path():
+    """Get config path for dev or production"""
+    # Check environment variable first
+    config_path = os.getenv('ARGO_CONFIG_PATH')
+    if config_path and os.path.exists(config_path):
+        return config_path
+    
+    # Check production path
+    prod_path = Path('/root/argo-production/config.json')
+    if prod_path.exists():
+        return str(prod_path)
+    
+    # Check dev path (argo/config.json)
+    dev_path = Path(__file__).parent.parent.parent / 'config.json'
+    if dev_path.exists():
+        return str(dev_path)
+    
+    # Fallback to production path (will fail gracefully if not exists)
+    return '/root/argo-production/config.json'
 
 def generate_signal(symbol):
     """
@@ -22,8 +43,9 @@ def generate_signal(symbol):
         dict: Signal with action, confidence, entry/target/stop prices
     """
     try:
-        # Load config
-        with open('/root/argo-production/config.json') as f:
+        # Load config using environment-aware path resolution
+        config_path = _get_config_path()
+        with open(config_path) as f:
             config = json.load(f)
         
         min_confidence = config['trading']['min_confidence']

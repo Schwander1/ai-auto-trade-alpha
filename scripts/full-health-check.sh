@@ -44,7 +44,10 @@ check_endpoint() {
 
 echo "🔍 ARGO SERVICE CHECKS"
 echo "----------------------"
-check_endpoint "Argo Health" "$ARGO_URL/health"
+check_endpoint "Argo Health (Comprehensive)" "$ARGO_URL/api/v1/health" 200
+check_endpoint "Argo Readiness" "$ARGO_URL/api/v1/health/readiness" 200
+check_endpoint "Argo Liveness" "$ARGO_URL/api/v1/health/liveness" 200
+check_endpoint "Argo Health (Legacy)" "$ARGO_URL/health" 200
 check_endpoint "Argo Metrics" "$ARGO_URL/metrics" 200
 check_endpoint "Argo Signals Latest" "$ARGO_URL/api/signals/latest"
 check_endpoint "Argo Signals Stats" "$ARGO_URL/api/signals/stats"
@@ -54,7 +57,9 @@ check_endpoint "Argo Symbols Available" "$ARGO_URL/api/symbols/available"
 echo ""
 echo "🔍 ALPINE SERVICE CHECKS"
 echo "----------------------"
-check_endpoint "Alpine Health" "$ALPINE_URL/health"
+check_endpoint "Alpine Health (Comprehensive)" "$ALPINE_URL/health" 200
+check_endpoint "Alpine Readiness" "$ALPINE_URL/health/readiness" 200
+check_endpoint "Alpine Liveness" "$ALPINE_URL/health/liveness" 200
 check_endpoint "Alpine Metrics" "$ALPINE_URL/metrics" 200
 check_endpoint "Alpine API Docs" "$ALPINE_URL/docs" 200
 

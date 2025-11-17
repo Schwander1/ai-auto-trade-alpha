@@ -1,0 +1,90 @@
+{
+  "iteration_id": "iterative_v8_20251115_170816",
+  "iteration_name": "iterative_v8",
+  "timestamp": "2025-11-15T17:08:16.110756",
+  "strategy_config": {
+    "min_confidence": 55.0,
+    "initial_capital": 100000,
+    "symbol_specific_optimizations": true,
+    "adaptive_stops": true,
+    "trailing_stops": true,
+    "position_sizing": true
+  },
+  "symbols_tested": [
+    "AAPL",
+    "NVDA",
+    "TSLA",
+    "MSFT",
+    "GOOGL",
+    "META",
+    "AMD",
+    "AMZN",
+    "SPY",
+    "QQQ",
+    "BTC-USD",
+    "ETH-USD"
+  ],
+  "results": [
+    {
+      "symbol": "AAPL",
+      "timestamp": "2025-11-15T17:08:16.110756",
+      "error": "name 'df' is not defined"
+    },
+    {
+      "symbol": "NVDA",
+      "timestamp": "2025-11-15T17:08:16.110756",
+      "error": "name 'df' is not defined"
+    },
+    {
+      "symbol": "TSLA",
+      "timestamp": "2025-11-15T17:08:16.110756",
+      "error": "name 'df' is not defined"
+    },
+    {
+      "symbol": "MSFT",
+      "timestamp": "2025-11-15T17:08:16.110756",
+      "error": "name 'df' is not defined"
+    },
+    {
+      "symbol": "GOOGL",
+      "timestamp": "2025-11-15T17:08:16.110756",
+      "error": "name 'df' is not defined"
+    },
+    {
+      "symbol": "META",
+      "timestamp": "2025-11-15T17:08:16.110756",
+      "error": "name 'df' is not defined"
+    },
+    {
+      "symbol": "AMD",
+      "timestamp": "2025-11-15T17:08:16.110756",
+      "error": "name 'df' is not defined"
+    },
+    {
+      "symbol": "AMZN",
+      "timestamp": "2025-11-15T17:08:16.110756",
+      "error": "name 'df' is not defined"
+    },
+    {
+      "symbol": "SPY",
+      "timestamp": "2025-11-15T17:08:16.110756",
+      "error": "name 'df' is not defined"
+    },
+    {
+      "symbol": "QQQ",
+      "timestamp": "2025-11-15T17:08:16.110756",
+      "error": "name 'df' is not defined"
+    },
+    {
+      "symbol": "BTC-USD",
+      "timestamp": "2025-11-15T17:08:16.110756",
+      "error": "name 'df' is not defined"
+    },
+    {
+      "symbol": "ETH-USD",
+      "timestamp": "2025-11-15T17:08:16.110756",
+      "error": "name 'df' is not defined"
+    }
+  ],
+  "summary": {}
+}

@@ -11,7 +11,7 @@ const TabsList = React.forwardRef<
   <TabsPrimitive.List
     ref={ref}
     className={cn(
-      'inline-flex h-10 items-center justify-center rounded-lg bg-alpine-card p-1 text-alpine-text-dim border border-alpine-border',
+      'inline-flex h-10 items-center justify-center rounded-lg bg-alpine-black-secondary p-1 text-alpine-text-secondary border border-alpine-black-border,
       className
     )}
     {...props}
@@ -26,7 +26,7 @@ const TabsTrigger = React.forwardRef<
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
-      'inline-flex items-center justify-center whitespace-nowrap rounded-md px-4 py-2 text-sm font-semibold ring-offset-alpine-bg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-alpine-accent focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-alpine-accent/20 data-[state=active]:text-alpine-accent data-[state=active]:border data-[state=active]:border-alpine-accent/30',
+      'inline-flex items-center justify-center whitespace-nowrap rounded-md px-4 py-2 text-sm font-semibold ring-offset-alpine-black-primarytransition-allfocusvisibl-e:outline-none focus-visible:ring-2 focus-visible:ring-alpine-neon-cyanfocusvisibl-e:ring-offset-2 disabled:pointer-events-none disabled:opacity-50data-[state=active]:bg-alpine-neoncya-n/2alpine-blackprimar-ydata-[state=active]:text-alpine-neoncyandat-a-[state=active]:border data-[state=active]:border-alpine-neon-cyan/3alpine-blackprimar-y',
       className
     )}
     {...props}
@@ -41,7 +41,7 @@ const TabsContent = React.forwardRef<
   <TabsPrimitive.Content
     ref={ref}
     className={cn(
-      'mt-4 ring-offset-alpine-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-alpine-accent focus-visible:ring-offset-2',
+      'mt-4 ring-offset-alpine-black-primaryfocusvisibl-e:outline-none focus-visible:ring-2 focus-visible:ring-alpine-neon-cyanfocusvisibl-e:ring-offset-2',
       className
     )}
     {...props}

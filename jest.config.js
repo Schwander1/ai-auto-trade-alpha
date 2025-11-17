@@ -28,7 +28,6 @@ module.exports = {
   // Module name mapping
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
-    '^@argo-alpine/shared$': '<rootDir>/packages/shared',
   },
   
   // Coverage configuration
