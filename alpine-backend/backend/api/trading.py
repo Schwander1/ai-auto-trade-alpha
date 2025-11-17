@@ -1,22 +1,27 @@
 """
 Trading status API endpoints for Alpine Backend
 Proxies trading environment and account status from Argo API
+
+Optimizations:
+- Reuses shared HTTP client from signals.py for connection pooling
+- Efficient caching strategy
+- Better error handling and timeout management
 """
 from fastapi import APIRouter, HTTPException, Depends, Header, Response, Request
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional
-import httpx
 import logging
 import time
 
 from backend.core.database import get_db
 from backend.core.config import settings
 from backend.core.cache import cache_response
-from backend.core.response_formatter import add_rate_limit_headers
+from backend.core.response_formatter import add_rate_limit_headers, add_cache_headers
 from backend.core.error_responses import create_rate_limit_error
 from backend.core.rate_limit import check_rate_limit, get_rate_limit_status
 from backend.api.auth import get_current_user
+from backend.api.signals import get_http_client  # Reuse shared HTTP client
 from backend.models.user import User
 
 logger = logging.getLogger(__name__)
@@ -100,6 +105,15 @@ async def get_trading_status(
         reset_at=int(time.time()) + rate_limit_status["reset_in"]
     )
     
+    # OPTIMIZATION: Use shared HTTP client for connection pooling
+    try:
+        import httpx
+    except ImportError:
+        raise HTTPException(
+            status_code=503,
+            detail="HTTP client not available"
+    )
+    
     # Query Argo API for trading status
     try:
         argo_url = f"{EXTERNAL_SIGNAL_API_URL}/api/v1/trading/status"
@@ -109,46 +123,58 @@ async def get_trading_status(
         if EXTERNAL_SIGNAL_API_KEY:
             headers["X-API-Key"] = EXTERNAL_SIGNAL_API_KEY
         
-        async with httpx.AsyncClient(timeout=5.0) as client:
-            argo_response = await client.get(argo_url, headers=headers)
-            argo_response.raise_for_status()
-            trading_data = argo_response.json()
-            
-            # Return the trading status
-            return TradingStatusResponse(
-                environment=trading_data.get("environment", "unknown"),
-                trading_mode=trading_data.get("trading_mode", "simulation"),
-                account_name=trading_data.get("account_name"),
-                account_number=trading_data.get("account_number"),
-                portfolio_value=trading_data.get("portfolio_value"),
-                buying_power=trading_data.get("buying_power"),
-                prop_firm_enabled=trading_data.get("prop_firm_enabled", False),
-                alpaca_connected=trading_data.get("alpaca_connected", False),
-                account_status=trading_data.get("account_status")
+        # OPTIMIZATION: Reuse shared HTTP client instead of creating new one
+        client = await get_http_client()
+        if not client:
+            raise HTTPException(
+                status_code=503,
+                detail="HTTP client not available"
             )
+        
+        argo_response = await client.get(argo_url, headers=headers, timeout=10.0)
+        argo_response.raise_for_status()
+        trading_data = argo_response.json()
+        
+        # Add cache headers for client-side caching
+        add_cache_headers(response, max_age=30, public=False)  # Cache for 30 seconds
+        
+        # Return the trading status
+        return TradingStatusResponse(
+            environment=trading_data.get("environment", "unknown"),
+            trading_mode=trading_data.get("trading_mode", "simulation"),
+            account_name=trading_data.get("account_name"),
+            account_number=trading_data.get("account_number"),
+            portfolio_value=trading_data.get("portfolio_value"),
+            buying_power=trading_data.get("buying_power"),
+            prop_firm_enabled=trading_data.get("prop_firm_enabled", False),
+            alpaca_connected=trading_data.get("alpaca_connected", False),
+            account_status=trading_data.get("account_status")
+        )
             
     except httpx.TimeoutException:
-        logger.error(f"Timeout querying Argo API for trading status")
+        logger.error("Timeout querying Argo API for trading status")
         raise HTTPException(
-            status_code=503,
-            detail="Trading status service unavailable (timeout)"
+            status_code=504,
+            detail="Trading status service unavailable (timeout). Please try again later."
         )
     except httpx.HTTPStatusError as e:
         logger.error(f"Argo API returned error: {e.response.status_code} - {e.response.text}")
         raise HTTPException(
-            status_code=503,
-            detail=f"Trading status service unavailable: {e.response.status_code}"
+            status_code=502,
+            detail=f"Trading status service returned error: {e.response.status_code}"
         )
     except httpx.RequestError as e:
         logger.error(f"Failed to connect to Argo API: {e}")
         raise HTTPException(
             status_code=503,
-            detail="Trading status service unavailable (connection error)"
+            detail="Trading status service unavailable (connection error). Please try again later."
         )
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Unexpected error getting trading status: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to get trading status: {str(e)}"
+            detail="An unexpected error occurred while getting trading status."
         )
 
