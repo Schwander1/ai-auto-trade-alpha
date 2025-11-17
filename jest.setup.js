@@ -65,6 +65,30 @@ try {
   // Module doesn't exist, skip mock
 }
 
+// Mock fetch globally (can be overridden in individual tests)
+global.fetch = jest.fn()
+
+// Mock window.location (delete first if it exists)
+try {
+  delete window.location
+} catch (e) {
+  // Location is read-only in some environments
+}
+window.location = {
+  href: '',
+  assign: jest.fn(),
+  replace: jest.fn(),
+  reload: jest.fn(),
+  origin: 'http://localhost',
+  protocol: 'http:',
+  host: 'localhost',
+  hostname: 'localhost',
+  port: '',
+  pathname: '/',
+  search: '',
+  hash: '',
+}
+
 // Suppress console warnings in tests (optional)
 // global.console = {
 //   ...console,

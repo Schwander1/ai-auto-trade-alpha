@@ -1,11 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import CheckoutButton from '@/components/stripe/CheckoutButton'
 
-global.fetch = jest.fn()
-
-// Mock window.location
-delete (window as any).location
-window.location = { href: '' } as any
+// fetch is already mocked in jest.setup.js
 
 jest.mock('next-auth/react', () => ({
   useSession: jest.fn(() => ({
