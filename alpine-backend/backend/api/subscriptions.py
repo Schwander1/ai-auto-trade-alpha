@@ -19,6 +19,7 @@ from backend.core.config import settings
 from backend.core.input_sanitizer import sanitize_tier
 from backend.core.response_formatter import add_rate_limit_headers, add_cache_headers, format_datetime_iso
 from backend.core.cache import cache_response
+from backend.core.cache_constants import CACHE_TTL_SUBSCRIPTION
 from backend.core.security_logging import log_security_event, SecurityEvent
 from backend.models.user import User, UserTier
 from backend.core.rate_limit import check_rate_limit, get_rate_limit_status

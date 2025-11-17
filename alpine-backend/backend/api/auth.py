@@ -81,10 +81,10 @@ async def get_current_user(
 ) -> User:
     """Get current authenticated user with caching optimization"""
     from backend.core.error_responses import create_error_response, ErrorCodes
-    
+
     # Validate token
     _validate_token(token)
-    
+
     # Extract email from token
     payload = verify_token(token)
     if not payload:
@@ -94,24 +94,24 @@ async def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             request=None
         )
-    
+
     email = payload.get("sub")
-    
+
     # Try to get user from cache first
     user = _get_user_from_cache(email, db)
     if user:
         return user
-    
+
     # Cache miss - query database and cache result
     user = _get_user_from_database(email, db)
     _cache_user_data(user)
-    
+
     return user
 
 def _validate_token(token: str):
     """Validate token is not blacklisted"""
     from backend.core.error_responses import create_error_response, ErrorCodes
-    
+
     if is_token_blacklisted(token):
         raise create_error_response(
             ErrorCodes.AUTH_002,
@@ -124,10 +124,10 @@ def _get_user_from_cache(email: str, db: Session) -> Optional[User]:
     """Get user from cache if available and valid"""
     from backend.core.cache import get_cache
     from backend.core.cache_constants import CACHE_TTL_USER_PROFILE
-    
+
     cache_key = f"user:email:{email}"
     cached_user_data = get_cache(cache_key)
-    
+
     if cached_user_data:
         # Cache hit - query database to get SQLAlchemy object (needed for relationships)
         user = db.query(User).filter(User.email == email).first()
@@ -137,13 +137,13 @@ def _get_user_from_cache(email: str, db: Session) -> Optional[User]:
                 user.is_active == cached_user_data.get("is_active", False)):
                 # Cache is valid - return user
                 return user
-    
+
     return None
 
 def _get_user_from_database(email: str, db: Session) -> User:
     """Get user from database and validate"""
     from backend.core.error_responses import create_error_response, ErrorCodes
-    
+
     user = db.query(User).filter(User.email == email).first()
     if not user:
         raise create_error_response(
@@ -152,7 +152,7 @@ def _get_user_from_database(email: str, db: Session) -> User:
             status_code=status.HTTP_404_NOT_FOUND,
             request=None
         )
-    
+
     if not user.is_active:
         raise create_error_response(
             ErrorCodes.AUTH_005,
@@ -160,7 +160,7 @@ def _get_user_from_database(email: str, db: Session) -> User:
             status_code=status.HTTP_403_FORBIDDEN,
             request=None
         )
-    
+
     return user
 
 def _cache_user_data(user: User):
@@ -176,21 +176,6 @@ def _cache_user_data(user: User):
         "tier": user.tier.value if hasattr(user.tier, 'value') else str(user.tier)
     }
     set_cache(cache_key, user_data, ttl=CACHE_TTL_USER_PROFILE)
-
-    # Cache user data (exclude sensitive fields, but keep hashed_password for verification)
-    user_data = {
-        "id": user.id,
-        "email": user.email,
-        "full_name": user.full_name,
-        "tier": user.tier.value,
-        "is_active": user.is_active,
-        "is_verified": user.is_verified,
-        "hashed_password": user.hashed_password  # Needed for password verification in some endpoints
-    }
-
-    set_cache(cache_key, user_data, ttl=CACHE_TTL_USER_PROFILE)  # 5 minutes
-
-    return user
 
 
 @router.post("/signup", response_model=LoginResponse, status_code=201)

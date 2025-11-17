@@ -12,7 +12,7 @@ from dataclasses import dataclass
 import logging
 from argo.backtest.constants import BacktestConstants
 from argo.backtest.exceptions import (
-    BacktestError, PositionError, InsufficientCapitalError, 
+    BacktestError, PositionError, InsufficientCapitalError,
     InvalidPositionSizeError, MetricsError
 )
 
@@ -60,11 +60,11 @@ class BacktestMetrics:
 
 class BaseBacktester(ABC):
     """Base class for all backtesters"""
-    
+
     def __init__(self, initial_capital: float = None, min_holding_bars: int = 5):
         """
         Initialize backtester
-        
+
         Args:
             initial_capital: Starting capital (default: BacktestConstants.DEFAULT_INITIAL_CAPITAL)
             min_holding_bars: Minimum bars before exit (default: 5)
@@ -79,21 +79,21 @@ class BaseBacktester(ABC):
         self.dates: List[datetime] = []
         self.position_entry_bars: Dict[str, int] = {}  # Track entry bar for minimum holding period
         self.min_holding_bars = min_holding_bars
-        
+
     @abstractmethod
     async def run_backtest(self, symbol: str, **kwargs) -> Optional[BacktestMetrics]:
         """
         Run backtest - must be implemented by subclasses
-        
+
         Args:
             symbol: Trading symbol to backtest
             **kwargs: Additional parameters (start_date, end_date, min_confidence, etc.)
-        
+
         Returns:
             BacktestMetrics or None if backtest failed
         """
         pass
-    
+
     @staticmethod
     def create_empty_metrics() -> BacktestMetrics:
         """Create empty BacktestMetrics for error cases"""
@@ -118,19 +118,19 @@ class BaseBacktester(ABC):
             omega_ratio=0.0,
             ulcer_index=0.0
         )
-    
+
     def calculate_metrics(self) -> BacktestMetrics:
         """Calculate comprehensive performance metrics"""
         if not self.trades:
             return BacktestMetrics.create_empty_metrics()
-        
+
         # Calculate returns
         equity = np.array(self.equity_curve)
         returns = np.diff(equity) / equity[:-1]
-        
+
         # Total return
         total_return = (equity[-1] - self.initial_capital) / self.initial_capital
-        
+
         # Annualized return
         if len(self.dates) > 1:
             days = (self.dates[-1] - self.dates[0]).days
@@ -141,45 +141,45 @@ class BaseBacktester(ABC):
                 annualized_return = 0.0
         else:
             annualized_return = 0.0
-        
+
         # Sharpe ratio
         if len(returns) > 0 and np.std(returns) > 0:
             sharpe_ratio = (np.mean(returns) / np.std(returns)) * np.sqrt(252)
         else:
             sharpe_ratio = 0.0
-        
+
         # Sortino ratio (downside deviation)
         downside_returns = returns[returns < 0]
         if len(downside_returns) > 0 and np.std(downside_returns) > 0:
             sortino_ratio = (np.mean(returns) / np.std(downside_returns)) * np.sqrt(252)
         else:
             sortino_ratio = 0.0
-        
+
         # Max drawdown
         cumulative = np.maximum.accumulate(equity)
         drawdown = (equity - cumulative) / cumulative
         max_drawdown = np.min(drawdown) if len(drawdown) > 0 else 0.0
-        
+
         # Trade statistics
         completed_trades = [t for t in self.trades if t.exit_price is not None and t.pnl is not None]
         winning_trades = [t for t in completed_trades if t.pnl > 0]
         losing_trades = [t for t in completed_trades if t.pnl <= 0]
-        
+
         win_rate = len(winning_trades) / len(completed_trades) if completed_trades else 0.0
-        
+
         # Profit factor
         gross_profit = sum(t.pnl for t in winning_trades) if winning_trades else 0.0
         gross_loss = abs(sum(t.pnl for t in losing_trades)) if losing_trades else 0.0
         profit_factor = gross_profit / gross_loss if gross_loss > 0 else 0.0
-        
+
         # Average win/loss
         avg_win = np.mean([t.pnl_pct for t in winning_trades]) if winning_trades else 0.0
         avg_loss = np.mean([t.pnl_pct for t in losing_trades]) if losing_trades else 0.0
-        
+
         # Largest win/loss
         largest_win = max([t.pnl_pct for t in winning_trades]) if winning_trades else 0.0
         largest_loss = min([t.pnl_pct for t in losing_trades]) if losing_trades else 0.0
-        
+
         # ENHANCED: Calculate additional risk metrics
         # Value at Risk (VaR) - 95% confidence
         var_95_pct = 0.0
@@ -190,12 +190,12 @@ class BaseBacktester(ABC):
             # Conditional VaR (expected loss beyond VaR)
             cvar_95 = returns[returns <= var_95].mean() if len(returns[returns <= var_95]) > 0 else var_95
             cvar_95_pct = cvar_95 * 100
-        
+
         # Calmar Ratio (annualized return / max drawdown)
         calmar_ratio = 0.0
         if abs(max_drawdown) > 0.0001:  # Avoid division by zero
             calmar_ratio = annualized_return / abs(max_drawdown)
-        
+
         # Omega Ratio (probability-weighted ratio of gains vs losses)
         omega_ratio = 0.0
         if len(returns) > 0:
@@ -204,7 +204,7 @@ class BaseBacktester(ABC):
             losses = threshold - returns[returns < threshold]
             if len(losses) > 0 and losses.sum() > 0:
                 omega_ratio = gains.sum() / losses.sum() if losses.sum() > 0 else 0.0
-        
+
         # Ulcer Index (measure of drawdown depth and duration)
         ulcer_index = 0.0
         if len(equity) > 1:
@@ -213,7 +213,7 @@ class BaseBacktester(ABC):
             drawdowns = (equity - peak) / peak
             # Square of drawdowns, then average, then square root
             ulcer_index = np.sqrt(np.mean(drawdowns ** 2)) * 100
-        
+
         return BacktestMetrics(
             total_return_pct=total_return * 100,
             annualized_return_pct=annualized_return * 100,
@@ -235,7 +235,7 @@ class BaseBacktester(ABC):
             omega_ratio=omega_ratio,
             ulcer_index=ulcer_index
         )
-    
+
     def update_equity(self, current_price: float, date: datetime):
         """Update equity curve"""
         position_value = sum(
@@ -245,7 +245,7 @@ class BaseBacktester(ABC):
         total_equity = self.capital + position_value
         self.equity_curve.append(total_equity)
         self.dates.append(date)
-    
+
     def reset(self):
         """Reset backtester state"""
         self.capital = self.initial_capital
@@ -254,27 +254,27 @@ class BaseBacktester(ABC):
         self.equity_curve = [self.initial_capital]
         self.dates.clear()
         self.position_entry_bars.clear()
-    
+
     def validate_state(self) -> List[str]:
         """
         Validate backtester state, return list of issues
         ENHANCED: More comprehensive validation checks
-        
+
         Returns:
             List of validation issue messages (empty if no issues)
         """
         issues = []
-        
+
         # Check capital
         if self.capital < 0:
             issues.append(f"Capital is negative: ${self.capital:.2f}")
         elif self.capital > self.initial_capital * 10:
             issues.append(f"Capital seems unreasonably high: ${self.capital:.2f} (initial: ${self.initial_capital:.2f})")
-        
+
         # Check position count
         if len(self.positions) > BacktestConstants.MAX_OPEN_POSITIONS:
             issues.append(f"Too many open positions: {len(self.positions)} (max: {BacktestConstants.MAX_OPEN_POSITIONS})")
-        
+
         # Check positions for invalid values
         for symbol, position in self.positions.items():
             if position.entry_price <= 0:
@@ -283,7 +283,7 @@ class BaseBacktester(ABC):
                 issues.append(f"Position {symbol} has invalid quantity: {position.quantity}")
             if position.entry_date is None:
                 issues.append(f"Position {symbol} has missing entry date")
-        
+
         # Check trades for unrealistic values
         for i, trade in enumerate(self.trades):
             if trade.pnl_pct is not None:
@@ -291,7 +291,7 @@ class BaseBacktester(ABC):
                     issues.append(f"Trade {i} has unrealistic P&L: {trade.pnl_pct:.2f}%")
                 elif trade.pnl_pct < BacktestConstants.MIN_REASONABLE_PNL_PCT:
                     issues.append(f"Trade {i} has unrealistic loss: {trade.pnl_pct:.2f}%")
-            
+
             # Check for missing required fields
             if trade.entry_price <= 0:
                 issues.append(f"Trade {i} has invalid entry price: {trade.entry_price}")
@@ -299,20 +299,20 @@ class BaseBacktester(ABC):
                 issues.append(f"Trade {i} has invalid exit price: {trade.exit_price}")
             if trade.quantity <= 0:
                 issues.append(f"Trade {i} has invalid quantity: {trade.quantity}")
-            
+
             # Check date consistency
             if trade.exit_date is not None and trade.entry_date is not None:
                 if trade.exit_date < trade.entry_date:
                     issues.append(f"Trade {i} has exit date before entry date")
-        
+
         # Check equity curve consistency
         if len(self.equity_curve) != len(self.dates):
             issues.append(f"Equity curve length ({len(self.equity_curve)}) doesn't match dates length ({len(self.dates)})")
-        
+
         # Check for negative equity
         if self.equity_curve and min(self.equity_curve) < 0:
             issues.append(f"Equity curve has negative values (min: ${min(self.equity_curve):.2f})")
-        
+
         # Check for decreasing equity curve (should generally increase or decrease smoothly)
         if len(self.equity_curve) > 1:
             # Check for NaN or Inf values
@@ -321,21 +321,21 @@ class BaseBacktester(ABC):
                 issues.append("Equity curve contains NaN values")
             if np.any(np.isinf(equity_array)):
                 issues.append("Equity curve contains Inf values")
-            
+
             # Check for unrealistic jumps (more than 50% in one period)
             if len(equity_array) > 1:
                 returns = np.diff(equity_array) / equity_array[:-1]
                 extreme_returns = returns[np.abs(returns) > 0.5]
                 if len(extreme_returns) > 0:
                     issues.append(f"Equity curve has extreme returns: {len(extreme_returns)} periods with >50% change")
-        
+
         # Check dates are in order
         if len(self.dates) > 1:
             for i in range(1, len(self.dates)):
                 if self.dates[i] < self.dates[i-1]:
                     issues.append(f"Dates are not in order: {self.dates[i-1]} > {self.dates[i]}")
                     break
-        
+
         # Check for look-ahead bias indicators (positions opened before data available)
         # This is a heuristic check - if we have very early positions, might indicate bias
         if self.trades and self.dates:
@@ -346,6 +346,5 @@ class BaseBacktester(ABC):
                 warmup_days = 20
                 if (first_trade_date - first_data_date).days < warmup_days:
                     issues.append(f"First trade ({first_trade_date}) very close to data start ({first_data_date}), possible look-ahead bias")
-        
-        return issues
 
+        return issues

@@ -28,11 +28,11 @@ WEBHOOK_IDEMPOTENCY_TTL = 86400  # 24 hours - remember processed events
 def verify_stripe_webhook(payload: bytes, signature: str) -> bool:
     """
     Verify Stripe webhook signature
-    
+
     Args:
         payload: Raw request body
         signature: Stripe signature from header
-    
+
     Returns:
         True if signature is valid, False otherwise
     """
@@ -55,10 +55,10 @@ def verify_stripe_webhook(payload: bytes, signature: str) -> bool:
 def check_webhook_idempotency(event_id: str) -> bool:
     """
     Check if webhook event has already been processed (idempotency)
-    
+
     Args:
         event_id: Stripe event ID
-    
+
     Returns:
         True if event already processed, False otherwise
     """
@@ -67,7 +67,7 @@ def check_webhook_idempotency(event_id: str) -> bool:
         if not hasattr(check_webhook_idempotency, '_processed_events'):
             check_webhook_idempotency._processed_events = set()
         return event_id in check_webhook_idempotency._processed_events
-    
+
     try:
         key = f"webhook:processed:{event_id}"
         return redis_client.exists(key) > 0
@@ -79,7 +79,7 @@ def check_webhook_idempotency(event_id: str) -> bool:
 def mark_webhook_processed(event_id: str):
     """
     Mark webhook event as processed (idempotency)
-    
+
     Args:
         event_id: Stripe event ID
     """
@@ -89,7 +89,7 @@ def mark_webhook_processed(event_id: str):
             mark_webhook_processed._processed_events = set()
         check_webhook_idempotency._processed_events.add(event_id)
         return
-    
+
     try:
         key = f"webhook:processed:{event_id}"
         redis_client.setex(key, WEBHOOK_IDEMPOTENCY_TTL, "1")
@@ -100,21 +100,21 @@ def mark_webhook_processed(event_id: str):
 def validate_webhook_timestamp(event_created: int) -> bool:
     """
     Validate webhook event timestamp to prevent replay attacks
-    
+
     Args:
         event_created: Unix timestamp when event was created
-    
+
     Returns:
         True if event is recent enough, False if too old
     """
     event_time = datetime.fromtimestamp(event_created)
     now = datetime.utcnow()
     age = (now - event_time).total_seconds()
-    
+
     if age > WEBHOOK_EVENT_TTL:
         logger.warning(f"Rejected old webhook event: {age:.0f} seconds old (max: {WEBHOOK_EVENT_TTL}s)")
         return False
-    
+
     return True
 
 
@@ -126,7 +126,7 @@ async def stripe_webhook(
 ):
     """
     Handle Stripe webhooks with signature verification
-    
+
     **Security:**
     - Verifies webhook signature to prevent spoofing
     - Validates event timestamps to prevent replay attacks
@@ -138,10 +138,10 @@ async def stripe_webhook(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Missing Stripe signature"
         )
-    
+
     # Get raw body
     body = await request.body()
-    
+
     # Verify signature
     try:
         event = stripe.Webhook.construct_event(
@@ -166,13 +166,13 @@ async def stripe_webhook(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid signature"
         )
-    
+
     # SECURITY: Check idempotency (prevent duplicate processing)
     event_id = event.get("id")
     if event_id and check_webhook_idempotency(event_id):
         logger.info(f"Webhook event {event_id} already processed, skipping (idempotency)")
         return {"status": "success", "event_type": event.get("type"), "idempotent": True}
-    
+
     # SECURITY: Validate event timestamp (prevent replay attacks)
     event_created = event.get("created")
     if event_created and not validate_webhook_timestamp(event_created):
@@ -185,20 +185,20 @@ async def stripe_webhook(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Webhook event is too old (replay attack prevention)"
         )
-    
+
     # Handle different event types
     event_type = event.get("type")
     event_data = event.get("data", {}).get("object", {})
-    
+
     logger.info(f"Processing Stripe webhook: {event_type} (ID: {event_id})")
-    
+
     try:
         if event_type == "checkout.session.completed":
             # Handle successful checkout
             session = event_data
             user_id = session.get("metadata", {}).get("user_id")
             tier = session.get("metadata", {}).get("tier")
-            
+
             if user_id and tier:
                 try:
                     user = db.query(User).filter(User.id == int(user_id)).first()
@@ -211,12 +211,12 @@ async def stripe_webhook(
                     db.rollback()
                     logger.error(f"Error updating user {user_id} for checkout: {e}", exc_info=True)
                     raise
-        
+
         elif event_type == "customer.subscription.updated":
             # Handle subscription update
             subscription = event_data
             customer_id = subscription.get("customer")
-            
+
             if customer_id:
                 try:
                     user = db.query(User).filter(User.stripe_customer_id == customer_id).first()
@@ -230,12 +230,12 @@ async def stripe_webhook(
                     db.rollback()
                     logger.error(f"Error updating subscription for customer {customer_id}: {e}", exc_info=True)
                     raise
-        
+
         elif event_type == "customer.subscription.deleted":
             # Handle subscription cancellation
             subscription = event_data
             customer_id = subscription.get("customer")
-            
+
             if customer_id:
                 try:
                     user = db.query(User).filter(User.stripe_customer_id == customer_id).first()
@@ -248,22 +248,22 @@ async def stripe_webhook(
                     db.rollback()
                     logger.error(f"Error cancelling subscription for customer {customer_id}: {e}", exc_info=True)
                     raise
-        
+
         elif event_type == "invoice.payment_succeeded":
             # Handle successful payment
             invoice = event_data
             customer_id = invoice.get("customer")
             logger.info(f"Invoice payment succeeded for customer {customer_id}")
-        
+
         elif event_type == "invoice.payment_failed":
             # Handle failed payment
             invoice = event_data
             customer_id = invoice.get("customer")
             logger.warning(f"Invoice payment failed for customer {customer_id}")
-        
+
         else:
             logger.info(f"Unhandled event type: {event_type}")
-        
+
         # SECURITY: Mark event as processed (idempotency) - only after successful processing
         # If marking fails, log but don't fail the webhook (idempotency is best-effort)
         if event_id:
@@ -272,9 +272,9 @@ async def stripe_webhook(
             except Exception as e:
                 logger.warning(f"Failed to mark webhook {event_id} as processed: {e}", exc_info=True)
                 # Don't fail the webhook if idempotency marking fails
-        
+
         return {"status": "success", "event_type": event_type, "event_id": event_id}
-    
+
     except HTTPException:
         # Re-raise HTTP exceptions with rollback
         db.rollback()

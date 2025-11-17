@@ -62,22 +62,22 @@ async def get_trading_status(
 ):
     """
     Get trading environment and account status from Argo API
-    
+
     This endpoint proxies the trading status from the Argo Trading Engine,
     providing information about:
     - Current environment (development/production)
     - Trading mode (dev/production/prop_firm/simulation)
     - Account details (if connected)
     - Prop firm mode status
-    
+
     **Authentication Required:** Yes
-    
+
     **Example Request:**
     ```bash
     curl -X GET "http://localhost:8001/api/v1/trading/status" \
          -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
     ```
-    
+
     **Example Response:**
     ```json
     {
@@ -97,7 +97,7 @@ async def get_trading_status(
     client_id = current_user.email
     if not check_rate_limit(client_id, window=RATE_LIMIT_WINDOW, max_requests=RATE_LIMIT_MAX):
         raise create_rate_limit_error(request=request)
-    
+
     # Add rate limit headers
     rate_limit_status = get_rate_limit_status(client_id, window=RATE_LIMIT_WINDOW, max_requests=RATE_LIMIT_MAX)
     add_rate_limit_headers(
@@ -105,7 +105,7 @@ async def get_trading_status(
         remaining=rate_limit_status["remaining"],
         reset_at=int(time.time()) + rate_limit_status["reset_in"]
     )
-    
+
     # OPTIMIZATION: Use shared HTTP client for connection pooling
     try:
         import httpx
@@ -114,16 +114,16 @@ async def get_trading_status(
             status_code=503,
             detail="HTTP client not available"
     )
-    
+
     # Query Argo API for trading status
     try:
         argo_url = f"{EXTERNAL_SIGNAL_API_URL}/api/v1/trading/status"
         headers = {}
-        
+
         # Add API key if configured
         if EXTERNAL_SIGNAL_API_KEY:
             headers["X-API-Key"] = EXTERNAL_SIGNAL_API_KEY
-        
+
         # OPTIMIZATION: Reuse shared HTTP client instead of creating new one
         client = await get_http_client()
         if not client:
@@ -131,14 +131,14 @@ async def get_trading_status(
                 status_code=503,
                 detail="HTTP client not available"
             )
-        
+
         argo_response = await client.get(argo_url, headers=headers, timeout=10.0)
         argo_response.raise_for_status()
         trading_data = argo_response.json()
-        
+
         # Add cache headers for client-side caching
         add_cache_headers(response, max_age=30, public=False)  # Cache for 30 seconds
-        
+
         # Return the trading status
         return TradingStatusResponse(
             environment=trading_data.get("environment", "unknown"),
@@ -151,7 +151,7 @@ async def get_trading_status(
             alpaca_connected=trading_data.get("alpaca_connected", False),
             account_status=trading_data.get("account_status")
         )
-            
+
     except httpx.TimeoutException:
         logger.error("Timeout querying Argo API for trading status")
         raise HTTPException(
@@ -178,4 +178,3 @@ async def get_trading_status(
             status_code=500,
             detail="An unexpected error occurred while getting trading status."
         )
-

@@ -32,6 +32,11 @@ except ImportError:
 from backend.core.config import settings
 from backend.core.database import get_db
 from backend.core.cache import cache_response, get_cache, set_cache
+from backend.core.cache_constants import (
+    CACHE_TTL_SIGNALS,
+    CACHE_TTL_SIGNAL_HISTORY,
+    CACHE_TTL_SIGNAL_EXPORT
+)
 from backend.core.response_formatter import add_rate_limit_headers, add_cache_headers, format_datetime_iso
 from backend.core.error_responses import create_rate_limit_error
 from backend.models.user import User, UserTier
@@ -261,19 +266,19 @@ async def get_subscribed_signals(
     """
     # Rate limiting and headers
     _apply_rate_limiting(request, response, current_user.email)
-    
+
     # Check and adjust tier limits
     limit = _adjust_limit_for_tier(limit, current_user.tier)
-    
+
     # Fetch and cache signals
     cached_signals = await _fetch_and_cache_signals(premium_only, current_user.tier)
-    
+
     # Paginate and serialize
     items, total = _paginate_and_serialize_signals(cached_signals, offset, limit)
-    
+
     # Add cache headers
     add_cache_headers(response, max_age=30, public=False)
-    
+
     return PaginatedSignalsResponse(
         items=items,
         total=total,
@@ -287,7 +292,7 @@ def _apply_rate_limiting(request: Request, response: Response, client_id: str):
     """Apply rate limiting and add headers"""
     if not check_rate_limit(client_id):
         raise create_rate_limit_error(request=request)
-    
+
     rate_limit_status = get_rate_limit_status(client_id)
     add_rate_limit_headers(
         response,
@@ -304,7 +309,7 @@ async def _fetch_and_cache_signals(premium_only: bool, tier: UserTier) -> List[D
     """Fetch signals from external provider and cache them"""
     cache_key = f"signals:all:{premium_only}:{tier.value}"
     cached_signals = get_cache(cache_key)
-    
+
     if cached_signals is None:
         try:
             cached_signals = await fetch_signals_from_external_provider(
@@ -321,12 +326,12 @@ async def _fetch_and_cache_signals(premium_only: bool, tier: UserTier) -> List[D
                 status_code=503,
                 detail="Failed to fetch signals. Please try again later."
             )
-    
+
     return cached_signals
 
 def _paginate_and_serialize_signals(
-    cached_signals: List[Dict[str, Any]], 
-    offset: int, 
+    cached_signals: List[Dict[str, Any]],
+    offset: int,
     limit: int
 ) -> tuple[List[SignalResponse], int]:
     """Paginate signals and serialize to response models"""
@@ -334,7 +339,7 @@ def _paginate_and_serialize_signals(
     start_idx = min(offset, total)
     end_idx = min(offset + limit, total)
     paginated = cached_signals[start_idx:end_idx]
-    
+
     # Serialize with error handling
     items = []
     for signal in paginated:
@@ -342,7 +347,7 @@ def _paginate_and_serialize_signals(
             items.append(SignalResponse(**signal))
         except Exception as e:
             logger.warning(f"Skipping invalid signal: {signal.get('id', 'unknown')}: {e}")
-    
+
     return items, total
 
 
@@ -526,7 +531,7 @@ async def export_signals(
 
             cached_export = output.getvalue()
             # Cache CSV for 30 seconds
-            set_cache(cache_key, cached_export, ttl=30)
+            set_cache(cache_key, cached_export, ttl=CACHE_TTL_SIGNAL_EXPORT)
     else:
             # OPTIMIZATION: Use orjson if available for faster JSON serialization
             try:
@@ -535,7 +540,7 @@ async def export_signals(
             except ImportError:
                 cached_export = json.dumps(signals, indent=2, default=str)
             # Cache JSON for 30 seconds
-            set_cache(cache_key, cached_export, ttl=30)
+            set_cache(cache_key, cached_export, ttl=CACHE_TTL_SIGNAL_EXPORT)
 
     # Create response with appropriate content type
     filename = f"signals_{datetime.utcnow().strftime('%Y%m%d')}.{export_format}"

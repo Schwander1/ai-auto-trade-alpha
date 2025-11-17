@@ -53,12 +53,12 @@ _background_task = None
 async def lifespan(app: FastAPI):
     """Startup and shutdown events"""
     global _signal_service, _background_task
-    
+
     # Startup: Start background signal generation
     try:
         from argo.core.signal_generation_service import get_signal_service
         _signal_service = get_signal_service()
-        
+
         # Start background task (generates signals at configured interval)
         try:
             from argo.core.config import settings
@@ -69,7 +69,7 @@ async def lifespan(app: FastAPI):
             _signal_service.start_background_generation(interval_seconds=interval)
         )
         logger.info(f"🚀 Background signal generation started (every {interval} seconds)")
-        
+
         # Log task status after a brief delay to catch immediate errors
         async def check_task_status():
             await asyncio.sleep(2)
@@ -80,13 +80,13 @@ async def lifespan(app: FastAPI):
                     logger.error(f"❌ Background task failed: {e}", exc_info=True)
             else:
                 logger.info("✅ Background task is running")
-        
+
         asyncio.create_task(check_task_status())
     except Exception as e:
         logger.error(f"❌ Failed to start signal generation service: {e}", exc_info=True)
-    
+
     yield
-    
+
     # Shutdown: Stop background task
     if _signal_service:
         _signal_service.stop()
@@ -164,7 +164,7 @@ async def health() -> Dict[str, Any]:
             signal_status = "running" if _signal_service.running else "stopped"
             if hasattr(_signal_service, "_paused") and _signal_service._paused:
                 signal_status = "paused"
-        
+
         return {
             "status": "healthy",
             "version": "6.0",
@@ -194,7 +194,7 @@ async def metrics() -> Response:
         win_rate_gauge.set(0.962)
         active_trades.set(8)
         api_latency.set(245)
-        
+
         # Update system metrics if available
         try:
             import psutil
@@ -204,9 +204,9 @@ async def metrics() -> Response:
         except (ImportError, AttributeError, OSError) as e:
             # psutil not available or system metrics unavailable - this is acceptable
             logger.debug(f"System metrics unavailable: {e}")
-        
+
         return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
-    
+
     except Exception as e:
         logger.error(f"Error generating metrics: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to generate metrics")
@@ -280,26 +280,26 @@ async def stocks() -> Dict[str, Any]:
 async def tier(tier: str) -> Dict[str, Any]:
     """
     Get signals filtered by tier with input validation
-    
+
     Args:
         tier: Tier name (starter, standard, premium)
-    
+
     Returns:
         Filtered signals for the tier
     """
     try:
         # Input validation
         tier = sanitize_tier(tier)
-        
+
         cfg = {
             "starter": {"min": 65, "max": 75, "cnt": 3},
             "standard": {"min": 75, "max": 85, "cnt": 6},
             "premium": {"min": 85, "max": 95, "cnt": 12}
         }
-        
+
         if tier not in cfg:
             raise HTTPException(status_code=400, detail=f"Invalid tier: {tier}")
-        
+
         c = cfg[tier]
         all_s = [
             {"symbol": "AAPL", "conf": 97.2}, {"symbol": "BTC-USD", "conf": 96.5}, {"symbol": "NVDA", "conf": 95.8},
@@ -308,13 +308,13 @@ async def tier(tier: str) -> Dict[str, Any]:
             {"symbol": "AVAX-USD", "conf": 88.5}, {"symbol": "AMZN", "conf": 82.1}, {"symbol": "META", "conf": 75.5},
             {"symbol": "MATIC-USD", "conf": 72.1}, {"symbol": "AMD", "conf": 68.9}
         ]
-        
+
         f = [s for s in all_s if c["min"] <= s["conf"] <= c["max"]][:c["cnt"]]
         for s in f:
             s["timestamp"] = datetime.utcnow().isoformat()
-        
+
         return {"success": True, "tier": tier, "range": f"{c['min']}-{c['max']}%", "count": len(f), "signals": f}
-    
+
     except HTTPException:
         raise
     except Exception as e:
@@ -325,27 +325,27 @@ async def tier(tier: str) -> Dict[str, Any]:
 async def live(symbol: str) -> Dict[str, Any]:
     """
     Generate LIVE signal with simulated real-time data
-    
+
     Args:
         symbol: Trading symbol (validated)
-    
+
     Returns:
         Live signal data
     """
     try:
         # Input validation
         symbol = sanitize_symbol(symbol)
-        
+
         if symbol not in LIVE_PRICES:
             raise HTTPException(
                 status_code=404,
                 detail=f"Symbol {symbol} not supported. Available: {list(LIVE_PRICES.keys())}"
             )
-        
+
         base_price = LIVE_PRICES[symbol]
         live_price = base_price * (1 + random.uniform(-0.02, 0.02))
         momentum = (live_price - base_price) / base_price
-        
+
         if momentum > 0.01:
             action = "BUY"
             conf = min(0.85 + (momentum * 30), 0.98)
@@ -360,7 +360,7 @@ async def live(symbol: str) -> Dict[str, Any]:
                 "price": round(live_price, 2),
                 "symbol": symbol
             }
-        
+
         signal = {
             "symbol": symbol,
             "action": action,
@@ -375,14 +375,14 @@ async def live(symbol: str) -> Dict[str, Any]:
             "timestamp": datetime.utcnow().isoformat()
         }
         signal["sha256"] = hashlib.sha256(json.dumps(signal, sort_keys=True).encode()).hexdigest()[:16]
-        
+
         return {
             "success": True,
             "signal": signal,
             "live_price": round(live_price, 2),
             "data_source": "real_time_engine"
         }
-    
+
     except HTTPException:
         raise
     except Exception as e:
@@ -423,11 +423,11 @@ async def backtest_symbol(
     """
     Run backtest on symbol with input validation
     FIXED: Uses StrategyBacktester with proper cost modeling instead of QuickBacktester
-    
+
     Args:
         symbol: Trading symbol (validated)
         years: Number of years to backtest (1-10, validated)
-    
+
     Returns:
         Backtest results
     """
@@ -435,23 +435,23 @@ async def backtest_symbol(
         # Input validation
         symbol = sanitize_symbol(symbol)
         years = sanitize_integer(years, min_value=1, max_value=10)
-        
+
         # FIX: Use StrategyBacktester with proper cost modeling
         from argo.backtest.strategy_backtester import StrategyBacktester
         from argo.backtest.constants import BacktestConstants
         from datetime import datetime, timedelta
-        
+
         # Initialize backtester with cost modeling enabled
         bt = StrategyBacktester(
             initial_capital=BacktestConstants.DEFAULT_INITIAL_CAPITAL,
             use_cost_modeling=True,
             use_enhanced_cost_model=True
         )
-        
+
         # Calculate date range
         end_date = datetime.now()
         start_date = end_date - timedelta(days=years*365)
-        
+
         # Run actual backtest
         result = await bt.run_backtest(
             symbol,
@@ -459,7 +459,7 @@ async def backtest_symbol(
             end_date=end_date,
             min_confidence=BacktestConstants.DEFAULT_MIN_CONFIDENCE
         )
-        
+
         if result:
             return {
                 "success": True,
@@ -482,7 +482,7 @@ async def backtest_symbol(
                 }
             }
         return {"success": False, "error": "No data or backtest failed"}
-    
+
     except HTTPException:
         raise
     except Exception as e:
@@ -500,11 +500,11 @@ async def get_signals() -> Dict[str, Any]:
     try:
         signals = []
         symbols = ["AAPL", "NVDA", "TSLA", "MSFT", "BTC-USD", "ETH-USD"]
-        
+
         for symbol in symbols:
             confidence = random.uniform(75, 99)
             action = random.choice(["BUY", "SELL"])
-            
+
             # Set realistic prices based on symbol
             if "BTC" in symbol:
                 price = random.uniform(30000, 50000)
@@ -512,7 +512,7 @@ async def get_signals() -> Dict[str, Any]:
                 price = random.uniform(2000, 3000)
             else:
                 price = random.uniform(100, 500)
-            
+
             signals.append({
                 "symbol": symbol,
                 "action": action,
@@ -524,10 +524,10 @@ async def get_signals() -> Dict[str, Any]:
                 "weighted_score": round(confidence * 0.85, 2),
                 "plan_tier": "professional" if confidence >= 85 else "starter"
             })
-        
+
         signals_generated.inc(len(signals))
         return {"signals": signals, "count": len(signals)}
-    
+
     except Exception as e:
         logger.error(f"Error in get_signals endpoint: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to generate signals")
@@ -545,10 +545,10 @@ _db_connection = None
 def get_db_connection() -> sqlite3.Connection:
     """
     Get or create persistent database connection with proper error handling
-    
+
     Returns:
         SQLite connection object
-    
+
     Raises:
         HTTPException: If database connection fails
     """
@@ -561,20 +561,20 @@ def get_db_connection() -> sqlite3.Connection:
                         db_path = Path("/root/argo-production") / "data" / "signals.db"
                     else:
                         db_path = Path(__file__).parent.parent / "data" / "signals.db"
-                    
+
                     # Ensure data directory exists
                     db_path.parent.mkdir(parents=True, exist_ok=True)
-                    
+
                     _db_connection = sqlite3.connect(
                         str(db_path),
                         check_same_thread=False,  # Allow multi-threaded access
                         timeout=10.0
                     )
                     _db_connection.row_factory = sqlite3.Row
-                    
+
                     # Test connection
                     _db_connection.execute("SELECT 1")
-                    
+
                     logger.info(f"✅ Database connection established: {db_path}")
                 except Exception as e:
                     logger.error(f"❌ Failed to connect to database: {e}", exc_info=True)
@@ -583,7 +583,7 @@ def get_db_connection() -> sqlite3.Connection:
                         status_code=503,
                         detail="Database connection failed"
                     )
-    
+
     # Verify connection is still alive
     try:
         _db_connection.execute("SELECT 1")
@@ -592,7 +592,7 @@ def get_db_connection() -> sqlite3.Connection:
         logger.warning("Database connection lost, reconnecting...")
         _db_connection = None
         return get_db_connection()
-    
+
     return _db_connection
 
 @app.get("/api/signals/latest")
@@ -602,41 +602,41 @@ async def get_latest_signals(
 ) -> List[Dict[str, Any]]:
     """
     Get latest trading signals from database - returns array directly for frontend compatibility
-    
+
     Args:
         limit: Number of signals to return (1-100, validated)
         premium_only: Filter premium signals only
-    
+
     Returns:
         List of signal dictionaries
     """
     try:
         # Input validation
         limit = sanitize_integer(limit, min_value=1, max_value=100)
-        
+
         # OPTIMIZATION #3: Use persistent connection instead of opening/closing every time
         conn = get_db_connection()
         cursor = conn.cursor()
-        
+
         # OPTIMIZATION #3: Move filtering to SQL instead of Python
         if premium_only:
             query = """
-                SELECT * FROM signals 
+                SELECT * FROM signals
                 WHERE confidence >= 95
-                ORDER BY timestamp DESC 
+                ORDER BY timestamp DESC
                 LIMIT ?
             """
             cursor.execute(query, (limit,))
         else:
             query = """
-                SELECT * FROM signals 
-                ORDER BY timestamp DESC 
+                SELECT * FROM signals
+                ORDER BY timestamp DESC
                 LIMIT ?
             """
             cursor.execute(query, (limit,))
-        
+
         rows = cursor.fetchall()
-        
+
         # Convert to dict format
         signals = []
         for row in rows:
@@ -653,22 +653,22 @@ async def get_latest_signals(
                 "strategy": row.get("strategy", "weighted_consensus"),
                 "sha256": row.get("sha256", "")
             })
-        
+
         if signals:
             logger.info(f"📊 Returning {len(signals)} signals from database")
             return signals
-        
+
         # Fallback: Generate on-demand if no database signals
         logger.warning("⚠️  No signals in database, generating on-demand")
         all_signals = (await get_signals())["signals"]
-        
+
         if premium_only:
             filtered = [s for s in all_signals if s.get("confidence", 0) >= 95]
         else:
             filtered = all_signals
-        
+
         return filtered[:limit]
-    
+
     except HTTPException:
         raise
     except Exception as e:
@@ -690,19 +690,19 @@ async def get_latest_signals(
 async def get_signals_by_plan(plan: str) -> Dict[str, Any]:
     """
     Get signals filtered by plan tier (starter/professional/institutional)
-    
+
     Args:
         plan: Plan tier name (validated)
-    
+
     Returns:
         Filtered signals for the plan
     """
     try:
         # Input validation
         plan = sanitize_tier(plan)
-        
+
         all_signals = (await get_signals())["signals"]
-        
+
         if plan == "starter":
             filtered = [s for s in all_signals if s["confidence"] < 85]
         elif plan == "professional":
@@ -711,9 +711,9 @@ async def get_signals_by_plan(plan: str) -> Dict[str, Any]:
             filtered = [s for s in all_signals if s["confidence"] >= 95]
         else:
             filtered = all_signals
-        
+
         return {"signals": filtered, "count": len(filtered), "plan": plan}
-    
+
     except HTTPException:
         raise
     except Exception as e:
@@ -730,7 +730,7 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
         request_id = get_request_id(request)
     except Exception:
         request_id = None
-    
+
     return JSONResponse(
         status_code=exc.status_code,
         content={
@@ -750,17 +750,17 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
         request_id = get_request_id(request)
     except Exception:
         request_id = None
-    
+
     logger.error(f"Unhandled exception: {exc}", exc_info=True, extra={
         "path": request.url.path,
         "method": request.method,
         "request_id": request_id,
     })
-    
+
     # Don't expose internal error details in production
     from argo.core.config import settings
     error_message = str(exc) if settings.DEBUG else "An error occurred"
-    
+
     return JSONResponse(
         status_code=500,
         content={

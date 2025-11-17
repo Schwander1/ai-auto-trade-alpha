@@ -20,6 +20,7 @@ import time
 from backend.core.database import get_db
 from backend.core.rate_limit import check_rate_limit, get_rate_limit_status
 from backend.core.cache import cache_response
+from backend.core.cache_constants import CACHE_TTL_ANALYTICS, CACHE_TTL_USER_LIST
 from backend.core.response_formatter import add_rate_limit_headers, add_cache_headers
 from backend.core.error_responses import create_rate_limit_error
 from backend.core.security_logging import log_security_event, SecurityEvent
