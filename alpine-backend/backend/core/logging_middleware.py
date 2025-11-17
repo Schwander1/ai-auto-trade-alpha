@@ -16,18 +16,18 @@ logger = logging.getLogger(__name__)
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
     """
     Middleware for logging HTTP requests and responses.
-    
+
     Logs:
     - Request method, path, query parameters
     - Response status code
     - Request duration
     - Error details (if any)
     """
-    
+
     def __init__(self, app: ASGIApp, log_request_body: bool = False, log_response_body: bool = False):
         """
         Initialize logging middleware.
-        
+
         Args:
             app: ASGI application
             log_request_body: Whether to log request body (default: False for security)
@@ -36,25 +36,25 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         self.log_request_body = log_request_body
         self.log_response_body = log_response_body
-    
+
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """Process request and log details"""
         start_time = time.time()
-        
+
         # Extract request details
         method = request.method
         path = str(request.url.path)
         query_params = dict(request.query_params)
         client_ip = request.client.host if request.client else "unknown"
         user_agent = request.headers.get("user-agent", "unknown")
-        
+
         # Log request
         logger.info(
             f"Request: {method} {path} | "
             f"IP: {client_ip} | "
             f"Query: {query_params if query_params else 'none'}"
         )
-        
+
         # Log request body if enabled (be careful with sensitive data)
         if self.log_request_body and request.method in ["POST", "PUT", "PATCH"]:
             try:
@@ -64,12 +64,12 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
                     logger.debug(f"Request body: {body_str}")
             except Exception as e:
                 logger.warning(f"Could not log request body: {e}")
-        
+
         # Process request
         try:
             response = await call_next(request)
             duration = time.time() - start_time
-            
+
             # Log response
             status_code = response.status_code
             logger.info(
@@ -78,19 +78,19 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
                 f"Duration: {duration:.3f}s | "
                 f"IP: {client_ip}"
             )
-            
+
             # Log slow requests
             if duration > 1.0:
                 logger.warning(
                     f"Slow request: {method} {path} took {duration:.3f}s | "
                     f"Status: {status_code}"
                 )
-            
+
             # Add performance header
             response.headers["X-Response-Time"] = f"{duration:.3f}"
-            
+
             return response
-            
+
         except Exception as e:
             duration = time.time() - start_time
             logger.error(
@@ -107,12 +107,12 @@ class ErrorLoggingMiddleware(BaseHTTPMiddleware):
     """
     Middleware for logging errors with detailed context.
     """
-    
+
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """Process request and log errors"""
         try:
             response = await call_next(request)
-            
+
             # Log error responses
             if response.status_code >= 400:
                 logger.warning(
@@ -120,9 +120,9 @@ class ErrorLoggingMiddleware(BaseHTTPMiddleware):
                     f"Status: {response.status_code} | "
                     f"IP: {request.client.host if request.client else 'unknown'}"
                 )
-            
+
             return response
-            
+
         except Exception as e:
             logger.error(
                 f"Unhandled exception: {request.method} {request.url.path} | "
@@ -136,11 +136,11 @@ class ErrorLoggingMiddleware(BaseHTTPMiddleware):
 def setup_logging_middleware(app: ASGIApp, log_request_body: bool = False) -> ASGIApp:
     """
     Setup logging middleware for FastAPI application.
-    
+
     Args:
         app: FastAPI application
         log_request_body: Whether to log request bodies
-    
+
     Returns:
         Application with middleware added
     """
@@ -150,7 +150,7 @@ def setup_logging_middleware(app: ASGIApp, log_request_body: bool = False) -> AS
         log_response_body=False  # Don't log response bodies for performance
     )
     app.add_middleware(ErrorLoggingMiddleware)
-    
+
     return app
 
 
@@ -164,7 +164,7 @@ def log_api_call(
 ):
     """
     Log API call with structured information.
-    
+
     Args:
         endpoint: API endpoint path
         method: HTTP method
@@ -181,11 +181,10 @@ def log_api_call(
         "status_code": status_code,
         "error": error
     }
-    
+
     if error:
         logger.error(f"API call failed: {json.dumps(log_data)}")
     elif status_code and status_code >= 400:
         logger.warning(f"API call error: {json.dumps(log_data)}")
     else:
         logger.info(f"API call: {json.dumps(log_data)}")
-

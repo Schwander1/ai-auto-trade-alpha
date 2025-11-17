@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class PerformanceMonitor:
     """Monitor and track performance metrics"""
-    
+
     def __init__(self):
         self.metrics: Dict[str, list] = {}
         self.thresholds: Dict[str, float] = {
@@ -22,11 +22,11 @@ class PerformanceMonitor:
             "api_call": 2.0,  # 2 seconds
             "cache_operation": 0.1,  # 100ms
         }
-    
+
     def record_metric(self, operation: str, duration: float, metadata: Optional[Dict[str, Any]] = None):
         """
         Record a performance metric.
-        
+
         Args:
             operation: Operation name (e.g., "query", "api_call")
             duration: Duration in seconds
@@ -34,15 +34,15 @@ class PerformanceMonitor:
         """
         if operation not in self.metrics:
             self.metrics[operation] = []
-        
+
         metric = {
             "duration": duration,
             "timestamp": datetime.utcnow().isoformat(),
             "metadata": metadata or {}
         }
-        
+
         self.metrics[operation].append(metric)
-        
+
         # Check threshold
         threshold = self.thresholds.get(operation)
         if threshold and duration > threshold:
@@ -50,14 +50,14 @@ class PerformanceMonitor:
                 f"Slow {operation}: {duration:.3f}s (threshold: {threshold}s) | "
                 f"Metadata: {metadata}"
             )
-    
+
     def get_stats(self, operation: Optional[str] = None) -> Dict[str, Any]:
         """
         Get performance statistics.
-        
+
         Args:
             operation: Operation name (None for all operations)
-        
+
         Returns:
             Statistics dictionary
         """
@@ -65,12 +65,12 @@ class PerformanceMonitor:
             metrics = self.metrics.get(operation, [])
         else:
             metrics = [m for metrics_list in self.metrics.values() for m in metrics_list]
-        
+
         if not metrics:
             return {}
-        
+
         durations = [m["duration"] for m in metrics]
-        
+
         return {
             "count": len(durations),
             "min": min(durations),
@@ -80,7 +80,7 @@ class PerformanceMonitor:
             "p95": sorted(durations)[int(len(durations) * 0.95)],
             "p99": sorted(durations)[int(len(durations) * 0.99)]
         }
-    
+
     def reset(self, operation: Optional[str] = None):
         """Reset metrics for operation or all operations"""
         if operation:
@@ -102,11 +102,11 @@ def get_performance_monitor() -> PerformanceMonitor:
 def measure_performance(operation: str, metadata: Optional[Dict[str, Any]] = None):
     """
     Context manager for measuring performance.
-    
+
     Args:
         operation: Operation name
         metadata: Optional metadata
-    
+
     Example:
         ```python
         with measure_performance("database_query", {"table": "signals"}):
@@ -124,11 +124,11 @@ def measure_performance(operation: str, metadata: Optional[Dict[str, Any]] = Non
 def monitor_performance(operation: str, metadata: Optional[Dict[str, Any]] = None):
     """
     Decorator for measuring function performance.
-    
+
     Args:
         operation: Operation name
         metadata: Optional metadata
-    
+
     Example:
         ```python
         @monitor_performance("get_signals", {"endpoint": "/api/signals"})
@@ -142,18 +142,18 @@ def monitor_performance(operation: str, metadata: Optional[Dict[str, Any]] = Non
             with measure_performance(operation, metadata):
                 return func(*args, **kwargs)
         return wrapper
-    
+
     return decorator
 
 
 async def monitor_performance_async(operation: str, metadata: Optional[Dict[str, Any]] = None):
     """
     Decorator for measuring async function performance.
-    
+
     Args:
         operation: Operation name
         metadata: Optional metadata
-    
+
     Example:
         ```python
         @monitor_performance_async("fetch_signals")
@@ -167,6 +167,5 @@ async def monitor_performance_async(operation: str, metadata: Optional[Dict[str,
             with measure_performance(operation, metadata):
                 return await func(*args, **kwargs)
         return wrapper
-    
-    return decorator
 
+    return decorator

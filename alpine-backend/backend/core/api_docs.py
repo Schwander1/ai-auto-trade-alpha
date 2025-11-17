@@ -10,23 +10,23 @@ from fastapi.openapi.utils import get_openapi
 def enhance_openapi_schema(app: FastAPI) -> Dict[str, Any]:
     """
     Enhance OpenAPI schema with additional information.
-    
+
     Args:
         app: FastAPI application
-    
+
     Returns:
         Enhanced OpenAPI schema
     """
     if app.openapi_schema:
         return app.openapi_schema
-    
+
     openapi_schema = get_openapi(
         title=app.title,
         version=app.version,
         description=app.description,
         routes=app.routes,
     )
-    
+
     # Add security schemes
     openapi_schema["components"]["securitySchemes"] = {
         "BearerAuth": {
@@ -48,7 +48,7 @@ def enhance_openapi_schema(app: FastAPI) -> Dict[str, Any]:
             }
         }
     }
-    
+
     # Add common responses
     openapi_schema["components"]["responses"] = {
         "ValidationError": {
@@ -135,7 +135,7 @@ def enhance_openapi_schema(app: FastAPI) -> Dict[str, Any]:
             }
         }
     }
-    
+
     # Add tags with descriptions
     openapi_schema["tags"] = [
         {
@@ -159,7 +159,7 @@ def enhance_openapi_schema(app: FastAPI) -> Dict[str, Any]:
             "description": "Health check and system status endpoints"
         }
     ]
-    
+
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 
@@ -167,14 +167,13 @@ def enhance_openapi_schema(app: FastAPI) -> Dict[str, Any]:
 def add_example_responses(openapi_schema: Dict[str, Any]) -> Dict[str, Any]:
     """
     Add example responses to OpenAPI schema.
-    
+
     Args:
         openapi_schema: OpenAPI schema dictionary
-    
+
     Returns:
         Enhanced schema with examples
     """
     # This would add example responses to paths
     # Implementation depends on specific needs
     return openapi_schema
-

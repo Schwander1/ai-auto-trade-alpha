@@ -94,12 +94,12 @@ def create_error_response(
 ) -> JSONResponse:
     """
     Create standardized error response.
-    
+
     Args:
         error: Exception that occurred
         include_traceback: Whether to include traceback (development only)
         request_id: Optional request ID for tracking
-    
+
     Returns:
         JSONResponse with error details
     """
@@ -118,7 +118,7 @@ def create_error_response(
         error_code = "INTERNAL_ERROR"
         message = "An internal error occurred"
         details = {}
-    
+
     response_data = {
         "error": {
             "code": error_code,
@@ -127,14 +127,14 @@ def create_error_response(
             "request_id": request_id
         }
     }
-    
+
     if details:
         response_data["error"]["details"] = details
-    
+
     # Include traceback in development
     if include_traceback and status_code >= 500:
         response_data["error"]["traceback"] = traceback.format_exc()
-    
+
     return JSONResponse(
         status_code=status_code,
         content=response_data
@@ -144,17 +144,17 @@ def create_error_response(
 def handle_exception(error: Exception, include_traceback: bool = False) -> JSONResponse:
     """
     Handle exception and return appropriate error response.
-    
+
     Args:
         error: Exception to handle
         include_traceback: Whether to include traceback
-    
+
     Returns:
         JSONResponse with error details
     """
     # Log error
     logger.error(f"Exception occurred: {type(error).__name__}: {str(error)}", exc_info=True)
-    
+
     # Create error response
     return create_error_response(error, include_traceback=include_traceback)
 
@@ -162,13 +162,13 @@ def handle_exception(error: Exception, include_traceback: bool = False) -> JSONR
 def safe_execute(func: Callable, *args, default: Any = None, **kwargs) -> Any:
     """
     Safely execute a function and return default value on error.
-    
+
     Args:
         func: Function to execute
         *args: Positional arguments
         default: Default value to return on error
         **kwargs: Keyword arguments
-    
+
     Returns:
         Function result or default value
     """
@@ -182,13 +182,13 @@ def safe_execute(func: Callable, *args, default: Any = None, **kwargs) -> Any:
 async def safe_execute_async(func: Callable, *args, default: Any = None, **kwargs) -> Any:
     """
     Safely execute an async function and return default value on error.
-    
+
     Args:
         func: Async function to execute
         *args: Positional arguments
         default: Default value to return on error
         **kwargs: Keyword arguments
-    
+
     Returns:
         Function result or default value
     """
@@ -197,4 +197,3 @@ async def safe_execute_async(func: Callable, *args, default: Any = None, **kwarg
     except Exception as e:
         logger.warning(f"Error in safe_execute_async: {e}")
         return default
-
