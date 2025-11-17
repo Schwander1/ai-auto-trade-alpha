@@ -298,6 +298,15 @@ class SignalGenerationService:
             from argo.tracking.outcome_tracker import OutcomeTracker
             self._outcome_tracker = OutcomeTracker()
             self._last_outcome_check = None
+        
+        # Initialize signal quality scorer
+        try:
+            from argo.core.signal_quality_scorer import SignalQualityScorer
+            self._quality_scorer = SignalQualityScorer()
+            logger.info("✅ Signal quality scorer initialized")
+        except Exception as e:
+            logger.debug(f"Signal quality scorer not available: {e}")
+            self._quality_scorer = None
             self._outcome_check_interval = 300  # Check every 5 minutes
             logger.info("✅ Outcome tracker initialized")
         except Exception as e:
@@ -1482,7 +1491,7 @@ class SignalGenerationService:
         else:
             calibrated_confidence = raw_confidence
 
-        return {
+        signal = {
             'symbol': symbol,
             'action': action,
             'entry_price': round(entry_price, 2),
@@ -1498,6 +1507,18 @@ class SignalGenerationService:
             'consensus_agreement': consensus.get('agreement', 0),
             'sources_count': consensus.get('sources', 0)
         }
+        
+        # Calculate quality score if scorer is available
+        if hasattr(self, '_quality_scorer') and self._quality_scorer:
+            try:
+                quality_result = self._quality_scorer.calculate_quality_score(signal)
+                signal['quality_score'] = quality_result['quality_score']
+                signal['quality_tier'] = quality_result['quality_tier']
+                signal['quality_components'] = quality_result['components']
+            except Exception as e:
+                logger.debug(f"Could not calculate quality score: {e}")
+        
+        return signal
 
     def _get_entry_price(self, source_signals: Dict, symbol: str) -> float:
         """Get entry price from primary source or fallback"""

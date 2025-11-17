@@ -30,26 +30,26 @@ except ImportError as e:
 def get_argo_signals(hours: int = 24) -> List[Dict]:
     """Get signals from Argo database"""
     db_path = Path(__file__).parent.parent / "data" / "signals.db"
-    
+
     if not db_path.exists():
         print(f"❌ Argo signal database not found: {db_path}")
         return []
-    
+
     conn = sqlite3.connect(str(db_path))
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
-    
+
     cutoff_time = (datetime.now() - timedelta(hours=hours)).isoformat()
-    
+
     cursor.execute("""
-        SELECT signal_id, symbol, action, entry_price, confidence, 
+        SELECT signal_id, symbol, action, entry_price, confidence,
                sha256, timestamp, created_at
         FROM signals
         WHERE created_at >= ?
         ORDER BY created_at DESC
         LIMIT 100
     """, (cutoff_time,))
-    
+
     signals = []
     for row in cursor.fetchall():
         signals.append({
@@ -62,7 +62,7 @@ def get_argo_signals(hours: int = 24) -> List[Dict]:
             'timestamp': row['timestamp'],
             'created_at': row['created_at']
         })
-    
+
     conn.close()
     return signals
 
@@ -92,11 +92,11 @@ async def verify_sync_status(hours: int = 24, verbose: bool = False) -> Dict:
     print("=" * 70)
     print(f"⏰ Checking signals from last {hours} hours")
     print()
-    
+
     # Get Argo signals
     print("📊 Fetching signals from Argo database...")
     argo_signals = get_argo_signals(hours)
-    
+
     if not argo_signals:
         print("❌ No signals found in Argo database")
         return {
@@ -105,16 +105,16 @@ async def verify_sync_status(hours: int = 24, verbose: bool = False) -> Dict:
             'missing': 0,
             'sync_rate': 0.0
         }
-    
+
     print(f"✅ Found {len(argo_signals)} signals in Argo")
     print()
-    
+
     # Get Alpine configuration
     try:
         config, _ = ConfigLoader.load_config()
         alpine_url = os.getenv('ALPINE_API_URL') or config.get('alpine', {}).get('api_url', 'http://91.98.153.49:8001')
         api_key = os.getenv('ARGO_API_KEY') or config.get('alpine', {}).get('api_key', '')
-        
+
         if not api_key:
             # Try secrets manager
             try:
@@ -126,7 +126,7 @@ async def verify_sync_status(hours: int = 24, verbose: bool = False) -> Dict:
         print(f"⚠️  Error loading config: {e}")
         alpine_url = 'http://91.98.153.49:8001'
         api_key = os.getenv('ARGO_API_KEY', '')
-    
+
     if not api_key:
         print("❌ API key not found. Set ARGO_API_KEY environment variable or configure in config.json")
         return {
@@ -135,11 +135,11 @@ async def verify_sync_status(hours: int = 24, verbose: bool = False) -> Dict:
             'missing': len(argo_signals),
             'sync_rate': 0.0
         }
-    
+
     print(f"🌐 Alpine URL: {alpine_url}")
     print(f"🔑 API Key: {'*' * (len(api_key) - 4) + api_key[-4:] if len(api_key) > 4 else '***'}")
     print()
-    
+
     # Check health first
     print("🏥 Checking Alpine backend health...")
     try:
@@ -159,29 +159,29 @@ async def verify_sync_status(hours: int = 24, verbose: bool = False) -> Dict:
             'sync_rate': 0.0,
             'error': 'Alpine backend unreachable'
         }
-    
+
     print()
     print("🔄 Verifying signal sync status...")
-    
+
     # Check each signal (sample first 20 for speed)
     check_count = min(20, len(argo_signals))
     synced_count = 0
     missing_signals = []
-    
+
     import asyncio
     for i, signal in enumerate(argo_signals[:check_count]):
         if verbose:
             print(f"   Checking {i+1}/{check_count}: {signal['symbol']} {signal['action']} (hash: {signal['sha256'][:8]}...)")
-        
+
         result = await check_alpine_signal(alpine_url, api_key, signal['sha256'])
         if result:
             synced_count += 1
         else:
             missing_signals.append(signal)
-    
+
     # Calculate sync rate
     sync_rate = (synced_count / check_count * 100) if check_count > 0 else 0.0
-    
+
     print()
     print("=" * 70)
     print("📊 VERIFICATION RESULTS")
@@ -191,7 +191,7 @@ async def verify_sync_status(hours: int = 24, verbose: bool = False) -> Dict:
     print(f"❌ Missing: {len(missing_signals)}")
     print(f"📈 Sync rate: {sync_rate:.1f}%")
     print()
-    
+
     if missing_signals and verbose:
         print("Missing signals:")
         for signal in missing_signals[:5]:
@@ -199,7 +199,7 @@ async def verify_sync_status(hours: int = 24, verbose: bool = False) -> Dict:
         if len(missing_signals) > 5:
             print(f"  ... and {len(missing_signals) - 5} more")
         print()
-    
+
     # Recommendations
     if sync_rate < 90:
         print("⚠️  WARNING: Sync rate is below 90%")
@@ -212,7 +212,7 @@ async def verify_sync_status(hours: int = 24, verbose: bool = False) -> Dict:
         print("✅ Perfect sync rate! All signals are being synced successfully.")
     else:
         print("✅ Good sync rate. Minor issues may exist.")
-    
+
     return {
         'total_signals': check_count,
         'synced': synced_count,
@@ -226,10 +226,10 @@ def main():
     parser.add_argument('--hours', type=int, default=24, help='Hours to look back (default: 24)')
     parser.add_argument('--verbose', '-v', action='store_true', help='Verbose output')
     args = parser.parse_args()
-    
+
     import asyncio
     result = asyncio.run(verify_sync_status(args.hours, args.verbose))
-    
+
     # Exit with error code if sync rate is too low
     if result.get('sync_rate', 0) < 90:
         sys.exit(1)
@@ -238,4 +238,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
