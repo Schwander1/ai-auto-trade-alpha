@@ -182,12 +182,12 @@
       "pytestArgs": ["-v"]
     }
   },
-  
+
   "isort": {
     "args": ["--profile", "black", "--line-length=100"],
     "check": true
   },
-  
+
   "pythonIndent": {
     "useTabOnHangingIndent": false,
     "indentAfterParens": true
@@ -328,14 +328,137 @@
   "editor.bracketPairColorization.enabled": true,
   "editor.guides.bracketPairs": true,
   "editor.inlineSuggest.enabled": true,
+  "editor.suggestSelection": "first",
+  "editor.tabCompletion": "on",
+  "editor.acceptSuggestionOnCommitCharacter": true,
+  "editor.quickSuggestions": {
+    "other": true,
+    "comments": false,
+    "strings": true
+  },
+
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 1000,
+
+  "eslint": {
+    "enable": true,
+    "validate": [
+      "javascript",
+      "javascriptreact",
+      "typescript",
+      "typescriptreact"
+    ],
+    "format": {
+      "enable": true
+    },
+    "lintTask": {
+      "enable": true
+    },
+    "codeActionsOnSave": {
+      "mode": "all"
+    },
+    "run": "onType",
+    "workingDirectories": [
+      { "pattern": "./alpine-frontend" },
+      { "pattern": "./packages/shared" }
+    ]
+  },
+
+  "prettier": {
+    "enable": true,
+    "requireConfig": true,
+    "useEditorConfig": true
+  },
+
+  "tailwindCSS": {
+    "experimental": {
+      "classRegex": [
+        ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
+        ["cn\\(([^)]*)\\)", "(?:'|\"|`)([^\"'`]*)(?:'|\"|`)"]
+      ]
+    },
+    "includeLanguages": {
+      "typescript": "javascript",
+      "typescriptreact": "javascript"
+    }
+  },
+
+  "errorLens": {
+    "enabled": true,
+    "enabledDiagnosticLevels": ["error", "warning"],
+    "followCursor": "activeLine",
+    "gutterIconsEnabled": true,
+    "statusBarColorsEnabled": true
+  },
+
+  "gitlens": {
+    "codeLens": {
+      "enabled": true
+    },
+    "currentLine": {
+      "enabled": true
+    },
+    "hovers": {
+      "enabled": true
+    },
+    "statusBar": {
+      "enabled": true
+    },
+    "views": {
+      "repositories": {
+        "files": {
+          "layout": "tree"
+        }
+      }
+    }
+  },
+
+  "jest": {
+    "autoRun": "off",
+    "showCoverageOnLoad": false,
+    "runMode": "on-demand"
+  },
+
+  "yaml": {
+    "schemas": {
+      "https://json.schemastore.org/github-workflow.json": "/.github/workflows/*.yml"
+    },
+    "format": {
+      "enable": true
+    },
+    "validate": true
+  },
+
+  "cSpell": {
+    "enabled": true,
+    "enableFiletypes": ["markdown", "python", "typescript", "javascript"],
+    "ignoreWords": [
+      "fastapi",
+      "pydantic",
+      "sqlalchemy",
+      "alpine",
+      "argo",
+      "pylance",
+      "prettier",
+      "eslint",
+      "tailwindcss",
+      "nextjs"
+    ]
+  },
 
   "workbench.editor.enablePreview": false,
+  "workbench.editor.closeOnFileDelete": true,
+  "workbench.editor.highlightModifiedTabs": true,
   "workbench.startupEditor": "none",
 
   "git.enableSmartCommit": true,
   "git.confirmSync": false,
   "git.autofetch": true,
+  "git.autofetchPeriod": 180,
+  "git.ignoreLimitWarning": true,
 
   "terminal.integrated.defaultProfile.osx": "zsh",
-  "terminal.integrated.fontSize": 12
+  "terminal.integrated.fontSize": 12,
+  "terminal.integrated.cursorBlinking": true,
+  "terminal.integrated.cursorStyle": "line"
 }

@@ -25,7 +25,7 @@ class PerformanceMetric:
 
 class PerformanceMonitor:
     """Monitor and track performance metrics"""
-    
+
     def __init__(self, max_history: int = 1000):
         self.max_history = max_history
         self.metrics: Dict[str, deque] = defaultdict(lambda: deque(maxlen=max_history))
@@ -33,7 +33,7 @@ class PerformanceMonitor:
         self.timers: Dict[str, float] = {}
         self.log_file = Path(__file__).parent.parent.parent / "logs" / "performance.json"
         self.log_file.parent.mkdir(parents=True, exist_ok=True)
-    
+
     def record_metric(self, name: str, value: float, unit: str = "ms", metadata: Optional[Dict] = None):
         """Record a performance metric"""
         metric = PerformanceMetric(
@@ -44,45 +44,45 @@ class PerformanceMonitor:
             metadata=metadata
         )
         self.metrics[name].append(metric)
-    
+
     def start_timer(self, name: str):
         """Start a performance timer"""
         self.timers[name] = time.time()
-    
+
     def end_timer(self, name: str, record: bool = True) -> float:
         """End a performance timer and optionally record the metric"""
         if name not in self.timers:
             logger.warning(f"Timer '{name}' was not started")
             return 0.0
-        
+
         elapsed = (time.time() - self.timers[name]) * 1000  # Convert to ms
         del self.timers[name]
-        
+
         if record:
             self.record_metric(name, elapsed, unit="ms")
-        
+
         return elapsed
-    
+
     def increment_counter(self, name: str, value: int = 1):
         """Increment a counter"""
         self.counters[name] += value
-    
+
     def get_metric_stats(self, name: str, hours: int = 24) -> Optional[Dict]:
         """Get statistics for a metric"""
         if name not in self.metrics:
             return None
-        
+
         cutoff_time = datetime.now() - timedelta(hours=hours)
         recent_metrics = [
             m for m in self.metrics[name]
             if m.timestamp >= cutoff_time
         ]
-        
+
         if not recent_metrics:
             return None
-        
+
         values = [m.value for m in recent_metrics]
-        
+
         return {
             'name': name,
             'count': len(values),
@@ -94,7 +94,7 @@ class PerformanceMonitor:
             'p99': sorted(values)[int(len(values) * 0.99)] if len(values) > 100 else max(values),
             'unit': recent_metrics[0].unit
         }
-    
+
     def get_all_stats(self, hours: int = 24) -> Dict:
         """Get statistics for all metrics"""
         stats = {}
@@ -102,18 +102,18 @@ class PerformanceMonitor:
             stat = self.get_metric_stats(metric_name, hours)
             if stat:
                 stats[metric_name] = stat
-        
+
         return {
             'timestamp': datetime.now().isoformat(),
             'period_hours': hours,
             'metrics': stats,
             'counters': dict(self.counters)
         }
-    
+
     def export_metrics(self, hours: int = 24) -> Dict:
         """Export metrics for analysis"""
         cutoff_time = datetime.now() - timedelta(hours=hours)
-        
+
         exported = {}
         for name, metrics_deque in self.metrics.items():
             recent = [
@@ -122,14 +122,14 @@ class PerformanceMonitor:
             ]
             if recent:
                 exported[name] = recent
-        
+
         return {
             'timestamp': datetime.now().isoformat(),
             'period_hours': hours,
             'metrics': exported,
             'counters': dict(self.counters)
         }
-    
+
     def save_to_file(self, hours: int = 24):
         """Save metrics to file"""
         try:
@@ -149,4 +149,3 @@ def get_performance_monitor() -> PerformanceMonitor:
     if _performance_monitor is None:
         _performance_monitor = PerformanceMonitor()
     return _performance_monitor
-

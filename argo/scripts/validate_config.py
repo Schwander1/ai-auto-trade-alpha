@@ -21,7 +21,7 @@ def main():
     parser.add_argument('config_path', nargs='?', default=None, help='Path to config.json file')
     parser.add_argument('--json', action='store_true', help='Output as JSON')
     args = parser.parse_args()
-    
+
     # Find config file
     if args.config_path:
         config_path = Path(args.config_path)
@@ -32,30 +32,30 @@ def main():
             Path("/root/argo-production/config.json"),
             Path("/root/argo-production-prop-firm/config.json"),
         ]
-        
+
         config_path = None
         for path in possible_paths:
             if path.exists():
                 config_path = path
                 break
-        
+
         if not config_path:
             print("❌ Configuration file not found")
             print("   Please specify config_path or ensure config.json exists in standard locations")
             sys.exit(1)
-    
+
     if not config_path.exists():
         print(f"❌ Configuration file not found: {config_path}")
         sys.exit(1)
-    
+
     # Validate
     try:
         with open(config_path) as f:
             config = json.load(f)
-        
+
         validator = ConfigValidator()
         is_valid = validator.validate_config(config, config_path)
-        
+
         if args.json:
             report = validator.get_validation_report()
             print(json.dumps(report, indent=2))
@@ -68,7 +68,7 @@ def main():
                 print(f"❌ Configuration validation failed: {config_path}")
                 print(f"   {len(validator.errors)} error(s) found")
                 sys.exit(1)
-        
+
     except json.JSONDecodeError as e:
         print(f"❌ Invalid JSON in {config_path}: {e}")
         sys.exit(1)
@@ -78,4 +78,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

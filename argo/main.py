@@ -463,7 +463,7 @@ async def backtest_symbol(
         )
 
         if result:
-            return {
+            response_data = {
                 "success": True,
                 "result": {
                     "symbol": symbol,
@@ -483,6 +483,52 @@ async def backtest_symbol(
                     "largest_loss_pct": result.largest_loss_pct
                 }
             }
+
+            # Validate results if requested
+            if validate:
+                try:
+                    from argo.backtest.result_validator import ResultValidator
+                    issues = ResultValidator.validate_metrics(result, symbol=symbol)
+                    if issues:
+                        response_data["validation"] = {
+                            "issues": [
+                                {
+                                    "severity": issue.severity,
+                                    "category": issue.category,
+                                    "message": issue.message
+                                }
+                                for issue in issues
+                            ],
+                            "is_valid": all(issue.severity != 'error' for issue in issues)
+                        }
+                except Exception as e:
+                    logger.debug(f"Validation failed: {e}")
+
+            # Export if requested
+            if export:
+                try:
+                    from argo.backtest.result_exporter import ResultExporter
+                    from pathlib import Path
+                    output_dir = Path("argo/data/exports")
+                    output_dir.mkdir(parents=True, exist_ok=True)
+                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+
+                    if export.lower() == 'json':
+                        export_file = output_dir / f"{symbol}_{timestamp}.json"
+                        ResultExporter.export_to_json(response_data, str(export_file))
+                        response_data["export_file"] = str(export_file)
+                    elif export.lower() == 'csv':
+                        export_file = output_dir / f"{symbol}_{timestamp}.csv"
+                        ResultExporter.export_to_csv(response_data, str(export_file))
+                        response_data["export_file"] = str(export_file)
+                    elif export.lower() == 'excel':
+                        export_file = output_dir / f"{symbol}_{timestamp}.xlsx"
+                        ResultExporter.export_to_excel(response_data, str(export_file))
+                        response_data["export_file"] = str(export_file)
+                except Exception as e:
+                    logger.debug(f"Export failed: {e}")
+
+            return response_data
         return {"success": False, "error": "No data or backtest failed"}
 
     except HTTPException:
@@ -490,6 +536,100 @@ async def backtest_symbol(
     except Exception as e:
         logger.error(f"Error in backtest endpoint: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Backtest failed: {str(e)}")
+
+
+@app.post("/api/v1/backtest/batch")
+async def backtest_batch(
+    symbols: List[str] = Query(..., description="List of symbols to backtest"),
+    years: int = Query(5, ge=1, le=10, description="Number of years to backtest"),
+    max_workers: Optional[int] = Query(None, description="Maximum parallel workers"),
+    export: Optional[str] = Query(None, description="Export format: json, csv, excel"),
+    validate: bool = Query(True, description="Validate results")
+) -> Dict[str, Any]:
+    """
+    Run batch backtest on multiple symbols
+
+    Args:
+        symbols: List of trading symbols
+        years: Number of years to backtest
+        max_workers: Maximum parallel workers
+        export: Export format
+        validate: Validate results
+
+    Returns:
+        Batch backtest results
+    """
+    try:
+        # Input validation
+        symbols = [sanitize_symbol(s) for s in symbols[:50]]  # Limit to 50 symbols
+        years = sanitize_integer(years, min_value=1, max_value=10)
+
+        from argo.backtest.batch_backtester import BatchBacktester
+        from argo.backtest.constants import BacktestConstants
+        from datetime import datetime, timedelta
+
+        # Initialize batch backtester
+        batch_bt = BatchBacktester(max_workers=max_workers)
+
+        # Calculate date range
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=years*365)
+
+        # Run batch backtest
+        results = await batch_bt.run_batch(
+            symbols=symbols,
+            start_date=start_date,
+            end_date=end_date,
+            min_confidence=BacktestConstants.DEFAULT_MIN_CONFIDENCE,
+            save_results=False  # Don't save to DB for API calls
+        )
+
+        # Validate if requested
+        if validate:
+            try:
+                from argo.backtest.result_validator import ResultValidator
+                validation_issues = ResultValidator.validate_batch_results(results)
+                validation_summary = ResultValidator.get_validation_summary(validation_issues)
+                results["validation"] = {
+                    "summary": validation_summary,
+                    "issues": {
+                        symbol: [
+                            {
+                                "severity": issue.severity,
+                                "category": issue.category,
+                                "message": issue.message
+                            }
+                            for issue in issue_list
+                        ]
+                        for symbol, issue_list in validation_issues.items()
+                    }
+                }
+            except Exception as e:
+                logger.debug(f"Validation failed: {e}")
+
+        # Export if requested
+        if export:
+            try:
+                from argo.backtest.result_exporter import ResultExporter
+                from pathlib import Path
+                output_dir = Path("argo/data/exports")
+                output_dir.mkdir(parents=True, exist_ok=True)
+
+                export_formats = [f.strip() for f in export.split(',')]
+                export_results = ResultExporter.export_batch_results(
+                    results, str(output_dir), formats=export_formats
+                )
+                results["export_files"] = export_results
+            except Exception as e:
+                logger.debug(f"Export failed: {e}")
+
+        return results
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in batch backtest endpoint: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Batch backtest failed: {str(e)}")
 
 
 # ═══════════════════════════════════════════════
