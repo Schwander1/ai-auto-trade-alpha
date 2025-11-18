@@ -1108,17 +1108,28 @@ class SignalGenerationService:
             return None, regime
 
         # Apply adaptive threshold check
-        # IMPROVEMENT: Use adaptive threshold based on number of sources
+        # IMPROVEMENT: Use adaptive threshold based on number of sources and signal types
         num_sources = len(source_signals)
         base_threshold = self.regime_thresholds.get(regime, self.confidence_threshold)
         
-        # Adjust threshold based on number of sources
+        # Check if we have mixed signal types (NEUTRAL + directional)
+        has_neutral = any(s.get("direction") == "NEUTRAL" for s in source_signals.values())
+        has_directional = any(s.get("direction") in ["LONG", "SHORT"] for s in source_signals.values())
+        mixed_signals = has_neutral and has_directional
+        
+        # Adjust threshold based on number of sources and signal types
         if num_sources == 1:
             # Single source: require higher confidence (70% for NEUTRAL, 65% for directional)
             threshold = max(base_threshold, 70.0 if consensus.get("direction") == "NEUTRAL" else 65.0)
         elif num_sources == 2:
-            # Two sources: slightly lower threshold
-            threshold = max(base_threshold - 5.0, 60.0)
+            # Two sources: adjust based on signal type mix
+            if mixed_signals:
+                # Mixed signals (NEUTRAL + directional): lower threshold to 52% to allow consensus
+                # NEUTRAL signals split votes, so consensus confidence is naturally lower
+                threshold = max(base_threshold - 13.0, 52.0)
+            else:
+                # Both same type: slightly lower threshold
+                threshold = max(base_threshold - 5.0, 60.0)
         else:
             # Three or more sources: use base threshold
             threshold = base_threshold
