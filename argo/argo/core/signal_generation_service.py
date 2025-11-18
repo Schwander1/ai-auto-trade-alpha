@@ -1286,8 +1286,12 @@ class SignalGenerationService:
                         f"Market data source {task_metadata.get(id(task), 'unknown')} error for {symbol}: {e}"
                     )
 
+            # Return market_data_df if we got at least one signal
+            if market_data_df is not None or source_signals:
+                return market_data_df
+
             # If no successful result from completed tasks, wait for remaining tasks
-            if not market_data_df and pending:
+            if pending:
                 logger.debug(
                     f"⏳ No valid data from completed tasks, waiting for remaining {len(pending)} task(s) for {symbol}"
                 )
