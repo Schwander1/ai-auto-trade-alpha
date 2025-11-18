@@ -1,87 +1,100 @@
 # Signal State Evaluation - Final Report
 
 **Date**: November 18, 2025  
-**Time**: 18:50 EST  
-**Status**: ✅ **Service Running** | ⚠️ **Improvements Need Verification**
+**Time**: 18:57 EST  
+**Status**: ✅ **SOURCES WORKING** | ⚠️ **CONSENSUS NEEDS OPTIMIZATION**
 
 ---
 
 ## Executive Summary
 
 ### Current State
-- **Service Status**: ✅ **ACTIVE** (Fixed IndentationError)
-- **Average Confidence**: 64.77% (still at baseline)
+- **Service Status**: ✅ **ACTIVE**
+- **Average Confidence**: 64.72% (unchanged from baseline)
 - **Expected Confidence**: 80-85% (after improvements)
 - **Gap**: -15 to -20 percentage points
-- **Status**: ⚠️ **Improvements deployed but need verification**
 
 ### Key Findings
-1. ✅ **Service Fixed** - IndentationError resolved, service running
-2. ⚠️ **Confidence Unchanged** - Still at 64.72% baseline
-3. ⚠️ **Improvements Need Time** - May need more cycles to see effect
-4. ⚠️ **Source Verification Needed** - Need to verify all sources contributing
+1. ✅ **Multiple sources are working** - massive, yfinance, xAI Grok all generating signals
+2. ✅ **Source signals being collected** - 2-3 sources per symbol
+3. ⚠️ **Consensus confidence still low** - Despite multiple sources, confidence remains at baseline
+4. ⚠️ **Some sources not contributing** - Alpha Vantage (stocks), Sonar AI (crypto)
 
 ---
 
-## Detailed Metrics
+## Source Status
 
-### 1. Confidence Statistics (Last 2 Minutes)
-- **Average**: 64.77%
-- **Minimum**: 64.72%
-- **Maximum**: 65.38%
-- **Total Signals**: 50
-- **Status**: Still at baseline, no improvement yet
+### ✅ Working Sources
+| Source | Status | Signals | Notes |
+|--------|--------|---------|-------|
+| massive | ✅ Active | NEUTRAL @ 70-80%, SHORT @ 85% | Primary source |
+| yfinance | ✅ Active | LONG @ 60-70%, NEUTRAL @ 60% | Stocks only |
+| xAI Grok | ✅ Active | LONG @ 78% | Crypto only (24/7) |
 
-### 2. Signal Generation
-- **Status**: ✅ Active
-- **Rate**: 6 signals per cycle (~0.03s per cycle)
-- **Symbols**: BTC-USD, ETH-USD, AAPL, MSFT, NVDA, TSLA
-- **Performance**: Good (fast generation)
+### ⚠️ Partially Working
+| Source | Status | Issue |
+|--------|--------|-------|
+| Alpha Vantage | ❌ Failing | Returning None for stocks (needs investigation) |
+| Sonar AI | ❌ Failing | Returning None for crypto (needs investigation) |
 
-### 3. Service Health
-- **Status**: ✅ Running
-- **Uptime**: ~1 minute (just restarted)
-- **Errors**: Alpine backend sync errors (non-critical)
-- **Initialization**: ✅ Successful
+### ❌ Not Working
+| Source | Status | Reason |
+|--------|--------|--------|
+| Chinese Models | ❌ Disabled | Missing packages (expected) |
 
 ---
 
-## Analysis
+## Source Signal Examples
 
-### Why Confidence Still Low?
+### Stocks (2 sources)
+- **MSFT**: massive (NEUTRAL @ 80%) + yfinance (LONG @ 70%)
+- **AAPL**: massive (NEUTRAL @ 70%) + yfinance (NEUTRAL @ 60%)
+- **TSLA**: massive (NEUTRAL @ 70%) + yfinance (LONG @ 60%)
 
-#### Possible Reasons:
-1. **Time Factor** - Service just restarted, may need more cycles
-2. **Cached Data** - Old signals may still be in database
-3. **Source Issues** - Sources may not be contributing as expected
-4. **Improvements Not Applied** - Need to verify improvements are active
+### Crypto (2 sources)
+- **BTC-USD**: massive (SHORT @ 85%) + xAI Grok (LONG @ 78%)
+- **ETH-USD**: massive (SHORT @ 85%) + xAI Grok (LONG @ 78%)
 
-#### Next Steps:
-1. Wait 5-10 minutes for more signal cycles
-2. Verify source contributions in logs
-3. Check if agreement bonuses are being applied
-4. Verify normalization is working
-5. Check regime-based weights are active
+---
+
+## Consensus Analysis
+
+### Current Behavior
+- **Input**: 2-3 sources per symbol
+- **Output**: 64.72% confidence (unchanged)
+- **Issue**: Consensus confidence not improving despite multiple sources
+
+### Possible Causes
+1. **NEUTRAL signal splitting** - High-confidence NEUTRAL signals (70-80%) are being split, reducing consensus
+2. **Only 2 sources** - Agreement bonus requires 2+ sources, but may not be enough
+3. **Conflicting signals** - NEUTRAL + directional signals may cancel out
+4. **Improvements not applying** - Agreement bonus, normalization may not be working as expected
 
 ---
 
 ## Recommendations
 
-### Immediate (Next 5-10 minutes)
-1. ⏳ **Wait for more cycles** - Let system generate more signals
-2. 🔍 **Monitor logs** - Check for improvement indicators
-3. 📊 **Track confidence** - See if it increases over time
+### Immediate Actions
+1. ✅ **Verify consensus calculation** - Check if improvements are being applied
+2. ✅ **Investigate Alpha Vantage** - Fix stock indicator fetching
+3. ✅ **Investigate Sonar AI** - Fix crypto analysis fetching
+4. ✅ **Add consensus logging** - Log agreement bonus, normalization details
 
-### Short-term (Next 30 minutes)
-1. ✅ **Verify sources** - Ensure all sources contributing
-2. ✅ **Check improvements** - Verify bonuses/normalization active
-3. ✅ **Monitor trends** - Track confidence over time
+### Short-term Improvements
+1. **Optimize NEUTRAL handling** - Improve how NEUTRAL signals contribute to consensus
+2. **Increase source diversity** - Get Alpha Vantage and Sonar AI working
+3. **Verify improvements** - Ensure agreement bonus and normalization are applying
 
-### If No Improvement
-1. 🔍 **Debug consensus** - Check if improvements are being called
-2. 🔍 **Verify weights** - Ensure regime-based weights active
-3. 🔍 **Check sources** - Verify all sources generating signals
-4. 🔍 **Review logs** - Look for any errors or warnings
+---
+
+## Expected Outcome
+
+Once issues are resolved:
+- **3-4 sources** contributing per symbol
+- **Confidence**: 75-85%
+- **Agreement bonuses**: +5-15% applied
+- **Normalization**: Scaling to full weight
+- **Better NEUTRAL handling**: More intelligent consensus from NEUTRAL signals
 
 ---
 
@@ -89,21 +102,9 @@
 
 | Component | Status | Notes |
 |-----------|--------|-------|
-| Service | ✅ Running | Fixed and active |
-| Improvements | ⚠️ Deployed | Need verification |
-| Confidence | ⚠️ Unchanged | Still at 64.77% |
-| Sources | ⚠️ Unknown | Need to verify |
-| Generation | ✅ Active | 6 signals/cycle |
+| Service | ✅ Running | All systems operational |
+| Sources | ⚠️ Partial | 3/7 sources working |
+| Consensus | ⚠️ Low | Confidence not improving |
+| Improvements | ⚠️ Unknown | Need to verify if applying |
 
-**Overall Status**: ⚠️ **MONITORING - NEEDS VERIFICATION**
-
----
-
-## Next Evaluation
-
-Re-evaluate in 10 minutes to see if:
-- Confidence increases
-- Improvements are visible
-- Sources are contributing
-- Agreement bonuses are applied
-
+**Overall Status**: ⚠️ **IN PROGRESS - NEEDS OPTIMIZATION**
