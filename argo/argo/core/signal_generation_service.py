@@ -126,7 +126,6 @@ class SignalGenerationService:
         self._symbol_volatility: Dict[str, float] = {}  # Track volatility for prioritization
 
         # OPTIMIZATION: Adaptive confidence thresholds (Strategy C)
-        # Note: This will be updated in _init_enhancements() if prop firm mode is enabled
         try:
             from argo.core.feature_flags import get_feature_flags
 
@@ -137,9 +136,7 @@ class SignalGenerationService:
                 self.confidence_threshold = 88.0
                 logger.info("✅ Using 88% confidence threshold (feature flag enabled)")
             else:
-                # Use config value, default to 75.0% for regular trading
                 self.confidence_threshold = self.trading_config.get("min_confidence", 75.0)
-                logger.info(f"✅ Initial confidence threshold set to {self.confidence_threshold}% from config")
 
             # Adaptive threshold by regime
             self.regime_thresholds = {
@@ -1807,11 +1804,9 @@ class SignalGenerationService:
 
         return None
 
-    def _cache_reasoning(self, signal: Dict, consensus: Dict, reasoning: str, current_time: Optional[datetime] = None, cache_key: Optional[str] = None):
+    def _cache_reasoning(self, signal: Dict, consensus: Dict, reasoning: str, current_time: Optional[datetime] = None):
         """Cache AI reasoning (OPTIMIZATION 12)"""
-        # OPTIMIZATION: Reuse cache key if provided to avoid duplicate creation
-        if cache_key is None:
-            cache_key = self._create_reasoning_cache_key(signal, consensus)
+        cache_key = self._create_reasoning_cache_key(signal, consensus)
         ttl = 3600  # 1 hour cache (reasoning is expensive)
         
         # OPTIMIZATION: Use provided time or get current time
@@ -1859,8 +1854,8 @@ class SignalGenerationService:
                 }
             )
 
-            # OPTIMIZATION 12: Cache the result (reuse cached current_time and cache_key)
-            self._cache_reasoning(signal, consensus, reasoning, current_time, cache_key)
+            # OPTIMIZATION 12: Cache the result (reuse cached current_time)
+            self._cache_reasoning(signal, consensus, reasoning, current_time)
             self._cleanup_reasoning_cache()
 
             return reasoning
@@ -2080,12 +2075,8 @@ class SignalGenerationService:
             return False, "Account is blocked"
 
         # PROP FIRM: Check risk monitor if enabled
-        if (
-            hasattr(self, "risk_monitor")
-            and self.risk_monitor
-            and hasattr(self, "prop_firm_mode")
-            and self.prop_firm_mode
-        ):
+        # OPTIMIZATION: risk_monitor and prop_firm_mode are initialized in __init__, no need for hasattr
+        if self.risk_monitor and self.prop_firm_mode:
             can_trade, reason = self.risk_monitor.can_trade()
             if not can_trade:
                 return False, f"Prop firm risk check failed: {reason}"
@@ -2151,7 +2142,8 @@ class SignalGenerationService:
             return False, "Invalid entry price"
 
         # PROP FIRM: Use prop firm position size limit if enabled
-        if hasattr(self, "prop_firm_mode") and self.prop_firm_mode:
+        # OPTIMIZATION: prop_firm_mode is initialized in __init__, no need for hasattr
+        if self.prop_firm_mode:
             position_size_pct = self.prop_firm_config.get("risk_limits", {}).get(
                 "max_position_size_pct", 3.0
             )
@@ -2418,7 +2410,8 @@ class SignalGenerationService:
         existing_positions = self._get_cached_positions()
 
         # PROP FIRM: Update risk monitor with current equity
-        if hasattr(self, "risk_monitor") and self.risk_monitor and account:
+        # OPTIMIZATION: risk_monitor is initialized in __init__, no need for hasattr
+        if self.risk_monitor and account:
             equity = account.get("equity", 0)
             if equity > 0:
                 self.risk_monitor.update_equity(equity)
@@ -2741,9 +2734,8 @@ class SignalGenerationService:
 
                 # PROP FIRM: Remove position from risk monitor when closed
                 if (
-                    hasattr(self, "risk_monitor")
-                    and self.risk_monitor
-                    and hasattr(self, "prop_firm_mode")
+                    # OPTIMIZATION: risk_monitor and prop_firm_mode are initialized in __init__
+                    self.risk_monitor
                     and self.prop_firm_mode
                 ):
                     try:
@@ -2838,7 +2830,8 @@ class SignalGenerationService:
         logger.info(f"🚀 Starting background signal generation (every {interval_seconds} seconds)")
 
         # Start risk monitoring if enabled
-        if hasattr(self, "risk_monitor") and self.risk_monitor:
+        # OPTIMIZATION: risk_monitor is initialized in __init__, no need for hasattr
+        if self.risk_monitor:
             await self.risk_monitor.start_monitoring()
             logger.info("🚨 Risk monitoring started")
 
