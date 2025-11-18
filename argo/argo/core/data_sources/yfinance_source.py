@@ -123,7 +123,9 @@ class YFinanceDataSource:
             # Determine signal direction and confidence
             direction, confidence = self._determine_signal(indicators)
             
-            if confidence < 60:
+            # Allow signals even with lower confidence - consensus will filter them
+            # Only filter out completely invalid signals (confidence < 50)
+            if confidence < 50:
                 return None
             
             return self._build_signal_dict(direction, confidence, indicators)

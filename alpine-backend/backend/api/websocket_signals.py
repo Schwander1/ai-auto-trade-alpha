@@ -24,7 +24,7 @@ import asyncio
 import logging
 from contextlib import asynccontextmanager
 
-from backend.core.database import get_db
+from backend.core.database import get_db, get_session_local
 from backend.models.user import User, UserTier
 from backend.models.signal import Signal
 from backend.core.config import settings
@@ -100,7 +100,7 @@ class ConnectionManager:
             for connection_id in disconnected:
                 self.disconnect(connection_id)
                 
-    async def broadcast_new_signal(self, signal: Signal, db: Session):
+    async def broadcast_new_signal(self, signal: Signal, db: Optional[Session] = None):
         """Broadcast new signal to all users who can access it"""
         # Check if signal is premium (confidence >= 85% or 0.85)
         confidence_pct = signal.confidence * 100 if signal.confidence <= 1 else signal.confidence
@@ -133,13 +133,18 @@ class ConnectionManager:
             if user_id not in self.user_tiers
         ]
         
-        if missing_user_ids:
+        if missing_user_ids and db is not None:
             try:
-                users = db.query(User).filter(User.id.in_(missing_user_ids)).all()
+                # OPTIMIZATION: Use batch query for large user lists to avoid large IN clauses
+                from backend.core.query_optimizer import batch_query_by_ids
+                users = batch_query_by_ids(db, User, missing_user_ids, batch_size=100)
                 for user in users:
                     self.user_tiers[user.id] = user.tier
             except Exception as e:
                 logger.warning(f"Error refreshing user tiers: {e}")
+        elif missing_user_ids:
+            # If no db session provided, default missing users to STARTER tier
+            logger.debug(f"Missing user tiers for {len(missing_user_ids)} users, defaulting to STARTER (no db session)")
         
         # Broadcast to all users who can access this signal
         for user_id, connection_ids in list(self.user_connections.items()):
@@ -172,15 +177,19 @@ async def get_user_from_token(token: str, db: Session) -> Optional[User]:
     """Get user from JWT token"""
     try:
         from backend.core.config import settings
-        from jose import jwt
+        from jose import jwt, JWTError
         
         payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
-        user_id: int = payload.get("sub")
-        if user_id is None:
+        # JWT token uses email as "sub" field (consistent with auth.py)
+        email = payload.get("sub")
+        if email is None:
             return None
             
-        user = db.query(User).filter(User.id == user_id).first()
+        user = db.query(User).filter(User.email == email).first()
         return user
+    except JWTError as e:
+        logger.error(f"JWT error authenticating WebSocket user: {e}")
+        return None
     except Exception as e:
         logger.error(f"Error authenticating WebSocket user: {e}")
         return None
@@ -207,24 +216,25 @@ async def websocket_signals_endpoint(
     user = None
     db = None
     
+    # Get database session (WebSocket endpoints can't use Depends, so create session directly)
+    SessionLocal = get_session_local()
+    db = SessionLocal()
+    
     try:
-        # Get database session
-        db = next(get_db())
-        
         # Authenticate user
         if not token:
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Authentication required")
-            if db:
-                db.close()
             return
             
         user = await get_user_from_token(token, db)
         if not user:
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Invalid authentication")
-            if db:
-                db.close()
             return
-            
+        
+        # Close database session after authentication (we don't need it for the WebSocket connection)
+        db.close()
+        db = None
+        
         # Connect
         await manager.connect(websocket, user, connection_id)
         
@@ -271,15 +281,20 @@ async def websocket_signals_endpoint(
     except WebSocketDisconnect:
         logger.info(f"WebSocket disconnected: {connection_id}")
     except Exception as e:
-        logger.error(f"WebSocket error for {connection_id}: {e}")
+        logger.error(f"Error in WebSocket authentication/setup: {e}")
+        if db:
+            try:
+                db.rollback()
+            except Exception:
+                pass
     finally:
-        manager.disconnect(connection_id)
-        # Close database session
+        # Close database session if still open
         if db:
             try:
                 db.close()
             except Exception as e:
                 logger.error(f"Error closing database session: {e}")
+        manager.disconnect(connection_id)
 
 
 # Function to broadcast new signal (called from signal sync endpoint)

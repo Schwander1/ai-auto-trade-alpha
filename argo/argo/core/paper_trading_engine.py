@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
 """Alpine Analytics Paper Trading Engine"""
 import json
+import logging
 import os
 import sys
-import logging
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Dict, Any, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("AlpinePaperTrading")
 
 try:
     from alpaca.trading.client import TradingClient
+    from alpaca.trading.enums import OrderClass, OrderSide, TimeInForce
     from alpaca.trading.requests import (
-        MarketOrderRequest,
         LimitOrderRequest,
+        MarketOrderRequest,
         StopLossRequest,
         TakeProfitRequest,
     )
-    from alpaca.trading.enums import OrderSide, TimeInForce, OrderClass
 
     ALPACA_AVAILABLE = True
 except Exception as e:
@@ -376,13 +376,13 @@ class PaperTradingEngine:
                 return cached_volatility
 
         try:
-            from alpaca.data.historical import StockHistoricalDataClient
-            from alpaca.data.requests import StockBarsRequest
-            from alpaca.data.timeframe import TimeFrame
             from datetime import datetime, timedelta
 
             # Use yfinance as fallback for volatility calculation
             import yfinance as yf
+            from alpaca.data.historical import StockHistoricalDataClient
+            from alpaca.data.requests import StockBarsRequest
+            from alpaca.data.timeframe import TimeFrame
 
             ticker = yf.Ticker(symbol)
             hist = ticker.history(period=f"{days}d")
@@ -429,7 +429,7 @@ class PaperTradingEngine:
             except Exception as e:
                 error_msg = str(e).lower()
                 is_rate_limit = "rate limit" in error_msg or "429" in error_msg
-                
+
                 if retry_count < self._retry_attempts:
                     # OPTIMIZATION: Exponential backoff with longer delay for rate limits
                     if is_rate_limit:
@@ -444,7 +444,7 @@ class PaperTradingEngine:
                         logger.warning(
                             f"Retry {retry_count + 1}/{self._retry_attempts} for {signal.get('symbol')}: {e}"
                         )
-                    
+
                     logger.debug(f"Waiting {delay}s before retry...")
                     time.sleep(delay)
                     return self.execute_signal(signal, retry_count + 1, existing_positions)
@@ -476,12 +476,12 @@ class PaperTradingEngine:
         """Invalidate account cache (call after trades)"""
         self._account_cache = None
         self._account_cache_time = None
-    
+
     def _invalidate_positions_cache(self):
         """Invalidate positions cache (call after trades)"""
         self._positions_cache = None
         self._positions_cache_time = None
-    
+
     def _check_connection_health(self) -> bool:
         """Check if Alpaca connection is healthy"""
         if not self.alpaca_enabled:
@@ -497,10 +497,23 @@ class PaperTradingEngine:
             self._invalidate_positions_cache()
             return False
 
+    def _convert_symbol_for_alpaca(self, symbol: str) -> str:
+        """Convert symbol format for Alpaca API
+        Alpaca uses different formats:
+        - Crypto: BTC-USD -> BTCUSD, ETH-USD -> ETHUSD
+        - Stocks: No conversion needed
+        """
+        if '-USD' in symbol:
+            # Convert crypto format: BTC-USD -> BTCUSD
+            return symbol.replace('-USD', 'USD')
+        return symbol
+
     def _execute_live(self, signal, existing_positions: Optional[List[Dict]] = None):
         """Execute live trade through Alpaca"""
         try:
             symbol, action = signal["symbol"], signal["action"]
+            # FIX: Convert symbol format for Alpaca API (crypto symbols need conversion)
+            alpaca_symbol = self._convert_symbol_for_alpaca(symbol)
 
             # FIX: Check connection health before proceeding
             if not self._check_connection_health():
@@ -515,17 +528,32 @@ class PaperTradingEngine:
             if not account:
                 logger.error(f"❌ Failed to get account data for {symbol}")
                 return None
-            
+
             order_details = self._prepare_order_details(signal, account, action, existing_positions)
             if not order_details:
                 return None
 
-            # FIX: Validate minimum order size (Alpaca minimum is typically 1 share)
-            if order_details["qty"] < 1:
-                logger.warning(
-                    f"⚠️  Order quantity {order_details['qty']} is below minimum (1 share) for {symbol}"
-                )
-                return None
+            # FIX: Update symbol in order_details to use Alpaca format
+            order_details["symbol"] = alpaca_symbol
+            if symbol != alpaca_symbol:
+                logger.debug(f"🔄 Converted symbol {symbol} -> {alpaca_symbol} for Alpaca API")
+
+            # FIX: Validate minimum order size (crypto allows fractional, stocks need whole shares)
+            is_crypto = '-USD' in symbol
+            if is_crypto:
+                min_qty = 0.000001  # Crypto minimum
+                if order_details["qty"] < min_qty:
+                    logger.warning(
+                        f"⚠️  Order quantity {order_details['qty']} is below minimum ({min_qty}) for {symbol}"
+                    )
+                    return None
+            else:
+                # Stocks require whole shares
+                if order_details["qty"] < 1:
+                    logger.warning(
+                        f"⚠️  Order quantity {order_details['qty']} is below minimum (1 share) for {symbol}"
+                    )
+                    return None
 
             order = self._submit_main_order(order_details)
             if not order:
@@ -783,16 +811,44 @@ class PaperTradingEngine:
         
         # FIX: Validate buying power is positive
         if buying_power <= 0:
-            logger.warning(f"⚠️  Invalid buying power: ${buying_power:,.2f}")
+            logger.warning(f"⚠️  Invalid buying power: ${buying_power:,.2f} for {signal['symbol']}")
             return 0, OrderSide.BUY
         
+        # OPTIMIZATION: Log position sizing details for debugging
+        logger.debug(f"🔍 Position sizing for {signal['symbol']}: buying_power=${buying_power:,.2f}, entry_price=${entry_price:.2f}, position_size_pct={position_size_pct:.3f}%")
+
         # FIX: Validate entry price is positive
         if entry_price <= 0:
             logger.warning(f"⚠️  Invalid entry price: ${entry_price:.2f}")
             return 0, OrderSide.BUY
+
+        # FIX: For crypto (especially expensive ones like BTC), use smaller position size
+        is_crypto = '-USD' in signal['symbol']
+        if is_crypto and entry_price > 10000:
+            # For expensive crypto (BTC, etc.), ensure we can afford at least minimum quantity
+            # Calculate minimum position value needed for minimum qty
+            min_qty_value = 0.000001 * entry_price  # Minimum crypto qty * price
+            min_position_pct_needed = (min_qty_value / buying_power) * 100
+            
+            # Use the larger of: calculated position size or minimum needed
+            if position_size_pct < min_position_pct_needed:
+                position_size_pct = min(min_position_pct_needed, 1.0)  # Cap at 1% for safety
+                logger.debug(f"🔧 Adjusted position size to {position_size_pct:.3f}% for expensive crypto {signal['symbol']} (min needed: {min_position_pct_needed:.3f}%)")
         
         position_value = buying_power * (position_size_pct / 100)
         
+        # OPTIMIZATION: For very expensive assets, ensure minimum position value
+        if is_crypto and entry_price > 10000:
+            min_qty_value = 0.000001 * entry_price
+            if position_value < min_qty_value:
+                # Ensure we can afford minimum qty
+                if min_qty_value <= buying_power * 0.95:
+                    position_value = min_qty_value
+                    logger.debug(f"🔧 Adjusted position value to ${position_value:.2f} to meet minimum qty requirement for {signal['symbol']}")
+                else:
+                    # Cannot afford minimum - will return 0 later
+                    logger.debug(f"⚠️  Cannot afford minimum position value ${min_qty_value:.2f} for {signal['symbol']} with buying power ${buying_power:.2f}")
+
         # FIX: Ensure position value doesn't exceed available buying power (with 5% buffer)
         max_position_value = buying_power * 0.95  # Leave 5% buffer for fees/margin
         if position_value > max_position_value:
@@ -802,39 +858,116 @@ class PaperTradingEngine:
             )
             position_value = max_position_value
         
-        qty = int(position_value / entry_price)
-
-        # FIX: Ensure minimum order size of 1 share
-        if qty < 1:
-            if position_value > 0:
-                logger.warning(
-                    f"⚠️  Calculated qty {qty} < 1 for {signal['symbol']}, adjusting to 1 share"
-                )
-                qty = 1
+        # FIX: Ensure position_value is never zero if we have buying power (for crypto, use minimum qty value)
+        if position_value <= 0 and buying_power > 0:
+            if is_crypto:
+                min_qty_value = 0.000001 * entry_price
+                if min_qty_value <= buying_power * 0.95:
+                    position_value = min_qty_value
+                    logger.debug(f"🔧 Position value was 0, using minimum qty value ${position_value:.2f} for {signal['symbol']}")
+                else:
+                    logger.warning(f"⚠️  Position value is 0 and cannot afford minimum for {signal['symbol']}")
+                    return 0, OrderSide.BUY
             else:
-                logger.warning(
-                    f"⚠️  Insufficient funds for {signal['symbol']}: "
-                    f"need ${entry_price:.2f} for 1 share, have ${buying_power:,.2f} buying power"
-                )
+                # For stocks, if position_value is 0, we can't afford even 1 share
+                logger.warning(f"⚠️  Position value is 0 for {signal['symbol']} - insufficient buying power")
                 return 0, OrderSide.BUY
-        
+
+        # FIX: For crypto, calculate quantity with decimal precision (crypto allows fractional shares)
+        if is_crypto:
+            # Crypto allows fractional quantities, so use float division
+            qty = position_value / entry_price
+            # Round to 6 decimal places (standard for crypto)
+            qty = round(qty, 6)
+        else:
+            # Stocks require whole shares
+            qty = int(position_value / entry_price)
+
+        # FIX: Ensure minimum order size
+        if is_crypto:
+            # Crypto minimum is typically 0.000001 (1 satoshi for BTC, 0.000001 ETH)
+            min_qty = 0.000001
+            if qty < min_qty:
+                if position_value > 0:
+                    logger.warning(
+                        f"⚠️  Calculated qty {qty} < minimum {min_qty} for {signal['symbol']}, "
+                        f"adjusting to minimum"
+                    )
+                    qty = min_qty
+                else:
+                    logger.warning(
+                        f"⚠️  Insufficient funds for {signal['symbol']}: "
+                        f"need ${entry_price:.2f} for minimum qty, have ${buying_power:,.2f} buying power"
+                    )
+                    return 0, OrderSide.BUY
+        else:
+            # Stocks: minimum 1 share
+            if qty < 1:
+                if position_value > 0:
+                    logger.warning(
+                        f"⚠️  Calculated qty {qty} < 1 for {signal['symbol']}, adjusting to 1 share"
+                    )
+                    qty = 1
+                else:
+                    logger.warning(
+                        f"⚠️  Insufficient funds for {signal['symbol']}: "
+                        f"need ${entry_price:.2f} for 1 share, have ${buying_power:,.2f} buying power"
+                    )
+                    return 0, OrderSide.BUY
+
         # FIX: Final validation - ensure we can actually afford this quantity
         required_capital = qty * entry_price
         if required_capital > buying_power:
             # Adjust qty to fit within buying power
-            qty = int(buying_power * 0.95 / entry_price)  # Use 95% to leave buffer
-            if qty < 1:
+            if is_crypto:
+                # For crypto, use 95% of buying power and ensure minimum qty
+                max_affordable_qty = round((buying_power * 0.95) / entry_price, 6)
+                min_qty = 0.000001
+                
+                # If we can afford at least minimum qty, use it
+                if max_affordable_qty >= min_qty:
+                    qty = max_affordable_qty
+                    logger.debug(
+                        f"🔧 Adjusted qty to {qty} to fit within buying power for {signal['symbol']} "
+                        f"(max affordable: {max_affordable_qty})"
+                    )
+                else:
+                    # Even minimum qty is too expensive - check if we can afford it at all
+                    min_capital_needed = min_qty * entry_price
+                    if min_capital_needed <= buying_power * 0.95:
+                        # We can afford minimum, use it
+                        qty = min_qty
+                        logger.debug(
+                            f"🔧 Using minimum qty {qty} for {signal['symbol']} "
+                            f"(cost: ${min_capital_needed:.2f}, available: ${buying_power * 0.95:.2f})"
+                        )
+                    else:
+                        logger.warning(
+                            f"⚠️  Cannot afford minimum qty ({min_qty}) of {signal['symbol']}: "
+                            f"need ${min_capital_needed:.2f}, have ${buying_power * 0.95:.2f} buying power"
+                        )
+                        return 0, OrderSide.BUY
+            else:
+                qty = int(buying_power * 0.95 / entry_price)  # Use 95% to leave buffer
+                min_qty = 1
+                
+                if qty < min_qty:
+                    logger.warning(
+                        f"⚠️  Cannot afford minimum qty ({min_qty}) of {signal['symbol']} "
+                        f"with available buying power ${buying_power:,.2f}"
+                    )
+                    return 0, OrderSide.BUY
                 logger.warning(
-                    f"⚠️  Cannot afford even 1 share of {signal['symbol']} "
-                    f"with available buying power ${buying_power:,.2f}"
+                    f"⚠️  Adjusted qty to {qty} to fit within buying power for {signal['symbol']}"
                 )
-                return 0, OrderSide.BUY
-            logger.warning(
-                f"⚠️  Adjusted qty from {int(required_capital / entry_price)} to {qty} "
-                f"to fit within buying power"
-            )
 
         side = OrderSide.BUY if signal["action"] == "BUY" else OrderSide.SELL
+
+        # OPTIMIZATION: Log final calculated quantity for debugging
+        if qty > 0:
+            logger.debug(f"✅ Position size calculated for {signal['symbol']}: qty={qty}, side={side.value}, cost=${qty * entry_price:.2f}")
+        else:
+            logger.warning(f"⚠️  Position size calculation returned 0 for {signal['symbol']}: buying_power=${buying_power:,.2f}, entry_price=${entry_price:.2f}, position_size_pct={position_size_pct:.3f}%")
 
         return qty, side
 
@@ -852,8 +985,8 @@ class PaperTradingEngine:
         try:
             if use_limit_orders and not order_details.get("is_closing"):
                 limit_price = self._calculate_limit_price(
-                    order_details["entry_price"], 
-                    order_details["side"], 
+                    order_details["entry_price"],
+                    order_details["side"],
                     limit_offset_pct,
                     order_details.get("symbol")  # Pass symbol for validation
                 )
@@ -865,19 +998,26 @@ class PaperTradingEngine:
                     time_in_force=TimeInForce.DAY,
                 )
             else:
+                # FIX: For crypto, qty can be float; for stocks, must be int
+                qty = order_details["qty"]
+                is_crypto = '-USD' in order_details["symbol"] or 'USD' in order_details["symbol"]
+                if not is_crypto:
+                    # Ensure stocks use integer quantity
+                    qty = int(qty)
+
                 order_request = MarketOrderRequest(
                     symbol=order_details["symbol"],
-                    qty=order_details["qty"],
+                    qty=qty,
                     side=order_details["side"],
                     time_in_force=TimeInForce.DAY,
                 )
 
             order = self.alpaca.submit_order(order_request)
             return order
-            
+
         except Exception as e:
             error_msg = str(e).lower()
-            
+
             # Handle specific Alpaca API errors
             if "insufficient" in error_msg or "buying power" in error_msg:
                 logger.error(
@@ -885,6 +1025,13 @@ class PaperTradingEngine:
                 )
                 # Invalidate account cache to get fresh data
                 self._invalidate_account_cache()
+            elif "not found" in error_msg or "422" in error_msg or "asset" in error_msg:
+                # FIX: Handle asset not found errors (e.g., wrong symbol format)
+                logger.error(
+                    f"❌ Asset not found for {order_details['symbol']}: {e}. "
+                    f"Check if symbol format is correct for Alpaca API."
+                )
+                # Don't retry - this is a configuration issue
             elif "rate limit" in error_msg or "429" in error_msg:
                 logger.warning(f"⚠️  Rate limit hit for {order_details['symbol']}, will retry: {e}")
                 # OPTIMIZATION: Rate limit backoff handled by retry logic in execute_signal
@@ -896,20 +1043,20 @@ class PaperTradingEngine:
                 self._invalidate_positions_cache()
             else:
                 logger.error(f"❌ Error submitting order for {order_details['symbol']}: {e}")
-            
+
             raise  # Re-raise to be handled by retry logic
 
     def _calculate_limit_price(
         self, entry_price: float, side: OrderSide, offset_pct: float, symbol: str = None
     ) -> float:
         """Calculate limit price with offset and validation
-        
+
         Args:
             entry_price: Entry price from signal
             side: Order side (BUY/SELL)
             offset_pct: Offset percentage (e.g., 0.001 = 0.1%)
             symbol: Optional symbol for market price validation
-        
+
         Returns:
             Calculated limit price
         """
@@ -917,7 +1064,7 @@ class PaperTradingEngine:
             limit_price = entry_price * (1 + offset_pct)
         else:
             limit_price = entry_price * (1 - offset_pct)
-        
+
         # OPTIMIZATION: Validate limit price against current market price if available
         if symbol:
             try:
@@ -943,14 +1090,14 @@ class PaperTradingEngine:
                             limit_price = min_limit
             except Exception as e:
                 logger.debug(f"Could not validate limit price against market for {symbol}: {e}")
-        
+
         return limit_price
 
     def _validate_bracket_prices(
         self, symbol: str, entry_price: float, stop_price: float, target_price: float, side: OrderSide
     ) -> Tuple[bool, Optional[str]]:
         """Validate stop loss and take profit prices
-        
+
         Returns:
             Tuple of (is_valid, error_message)
         """
@@ -961,7 +1108,7 @@ class PaperTradingEngine:
                 return False, f"Stop loss ${stop_price:.2f} must be below entry ${entry_price:.2f} for LONG"
             if target_price <= entry_price:
                 return False, f"Take profit ${target_price:.2f} must be above entry ${entry_price:.2f} for LONG"
-            
+
             # Check stop loss isn't too far (more than 20% below entry)
             stop_loss_pct = ((entry_price - stop_price) / entry_price) * 100
             if stop_loss_pct > 20:
@@ -972,21 +1119,21 @@ class PaperTradingEngine:
                 return False, f"Stop loss ${stop_price:.2f} must be above entry ${entry_price:.2f} for SHORT"
             if target_price >= entry_price:
                 return False, f"Take profit ${target_price:.2f} must be below entry ${entry_price:.2f} for SHORT"
-            
+
             # Check stop loss isn't too far (more than 20% above entry)
             stop_loss_pct = ((stop_price - entry_price) / entry_price) * 100
             if stop_loss_pct > 20:
                 return False, f"Stop loss ${stop_price:.2f} is {stop_loss_pct:.1f}% above entry, exceeds 20% limit"
-        
+
         # Validate target price is reasonable (not more than 50% away)
         if side == OrderSide.BUY:
             target_pct = ((target_price - entry_price) / entry_price) * 100
         else:
             target_pct = ((entry_price - target_price) / entry_price) * 100
-        
+
         if target_pct > 50:
             return False, f"Take profit ${target_price:.2f} is {target_pct:.1f}% away, exceeds 50% limit"
-        
+
         return True, None
 
     def _place_bracket_orders(self, symbol: str, order_details: Dict, main_order_id: str) -> bool:
@@ -1004,7 +1151,7 @@ class PaperTradingEngine:
         if not (stop_price and target_price):
             logger.debug(f"No stop/target prices provided for {symbol}, skipping bracket orders")
             return True  # Not an error if bracket orders aren't needed
-        
+
         # FIX: Validate bracket prices before placing orders
         if entry_price:
             is_valid, error_msg = self._validate_bracket_prices(
@@ -1023,7 +1170,7 @@ class PaperTradingEngine:
             # OPTIMIZATION: Place stop loss order with retry logic
             max_retries = 2
             retry_delay = 0.5
-            
+
             for attempt in range(max_retries):
                 try:
                     stop_side = OrderSide.SELL if side == OrderSide.BUY else OrderSide.BUY
@@ -1105,7 +1252,7 @@ class PaperTradingEngine:
         # OPTIMIZATION: Cache current time to avoid multiple datetime calls
         current_time = datetime.utcnow()
         current_timestamp = current_time.timestamp()
-        
+
         self._order_tracker[order.id] = {
             "symbol": order_details["symbol"],
             "side": order_details["side"].value,
@@ -1115,19 +1262,19 @@ class PaperTradingEngine:
             "timestamp": current_time.isoformat(),
             "order_timestamp": current_timestamp,  # For cleanup
         }
-        
+
         # OPTIMIZATION: Cleanup old orders if tracker gets too large
         self._cleanup_order_tracker()
-    
+
     def _cleanup_order_tracker(self):
         """Clean up old orders from tracker to prevent memory leaks (OPTIMIZED)"""
         current_time = time.time()
         tracker_size = len(self._order_tracker)
-        
+
         # OPTIMIZATION: Only cleanup if tracker is large enough to warrant it
         if tracker_size == 0:
             return
-        
+
         # Clean up if tracker is too large
         if tracker_size > self._order_tracker_max_size:
             # OPTIMIZATION: Use list of (timestamp, order_id) tuples for efficient sorting
@@ -1136,14 +1283,14 @@ class PaperTradingEngine:
                 for order_id, order_data in self._order_tracker.items()
             ]
             orders_by_age.sort()  # Sort by timestamp (oldest first)
-            
+
             # Remove oldest 20% of orders
             to_remove_count = len(orders_by_age) // 5
             for _, order_id in orders_by_age[:to_remove_count]:
                 del self._order_tracker[order_id]
-            
+
             logger.debug(f"Cleaned up {to_remove_count} old orders from tracker")
-        
+
         # Also clean up orders older than cleanup age (more efficient iteration)
         to_remove = [
             order_id
@@ -1151,10 +1298,10 @@ class PaperTradingEngine:
             if order_data.get("order_timestamp", 0) > 0
             and (current_time - order_data.get("order_timestamp", 0)) > self._order_tracker_cleanup_age
         ]
-        
+
         for order_id in to_remove:
             del self._order_tracker[order_id]
-        
+
         if to_remove:
             logger.debug(f"Cleaned up {len(to_remove)} expired orders from tracker")
 
@@ -1281,13 +1428,13 @@ class PaperTradingEngine:
 
     def get_positions(self, use_cache: bool = True):
         """Get all positions with optional caching
-        
+
         Args:
             use_cache: If True, use cached positions if available and fresh
         """
         if not self.alpaca_enabled:
             return []
-        
+
         # OPTIMIZATION: Check cache first
         if use_cache:
             current_time = time.time()
@@ -1298,7 +1445,7 @@ class PaperTradingEngine:
             ):
                 logger.debug("Using cached positions")
                 return self._positions_cache
-        
+
         try:
             positions = self.alpaca.get_all_positions()
             result = []
@@ -1306,7 +1453,7 @@ class PaperTradingEngine:
                 # FIX: Improved position side detection
                 # Alpaca can return side as enum, string, or use negative qty for SHORT
                 qty_float = float(p.qty) if isinstance(p.qty, (int, float)) else float(str(p.qty))
-                
+
                 # Determine side: check side attribute first, then qty sign
                 if hasattr(p, "side") and p.side is not None:
                     # Alpaca PositionSide enum or string
@@ -1321,7 +1468,7 @@ class PaperTradingEngine:
                 else:
                     # No side attribute - use qty sign (negative = SHORT)
                     side_str = "SHORT" if qty_float < 0 else "LONG"
-                
+
                 # Normalize qty to positive value for consistency
                 qty_abs = abs(qty_float)
 
@@ -1359,12 +1506,12 @@ class PaperTradingEngine:
                         "target_price": target_price,
                     }
                 )
-            
+
             # Cache the result
             if use_cache:
                 self._positions_cache = result
                 self._positions_cache_time = time.time()
-            
+
             return result
         except Exception as e:
             logger.error(f"Error getting positions: {e}")

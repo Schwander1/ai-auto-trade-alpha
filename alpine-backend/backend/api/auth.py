@@ -506,7 +506,8 @@ async def get_token(
     ```
     """
     # Create a new token for the user
-    access_token = create_access_token(data={"sub": current_user.id})
+    # Use email as "sub" field for consistency with other token creation
+    access_token = create_access_token(data={"sub": current_user.email})
     expires_in = settings.JWT_EXPIRATION_HOURS * 3600
     
     return {

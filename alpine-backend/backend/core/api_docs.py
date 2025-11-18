@@ -6,6 +6,9 @@ from typing import Dict, Any, Optional
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
 
+# Constants
+APPLICATION_JSON = "application/json"
+
 
 def enhance_openapi_schema(app: FastAPI) -> Dict[str, Any]:
     """
@@ -54,7 +57,7 @@ def enhance_openapi_schema(app: FastAPI) -> Dict[str, Any]:
         "ValidationError": {
             "description": "Validation error",
             "content": {
-                "application/json": {
+                APPLICATION_JSON: {
                     "schema": {
                         "type": "object",
                         "properties": {
@@ -74,7 +77,7 @@ def enhance_openapi_schema(app: FastAPI) -> Dict[str, Any]:
         "UnauthorizedError": {
             "description": "Unauthorized access",
             "content": {
-                "application/json": {
+                APPLICATION_JSON: {
                     "schema": {
                         "type": "object",
                         "properties": {
@@ -93,7 +96,7 @@ def enhance_openapi_schema(app: FastAPI) -> Dict[str, Any]:
         "NotFoundError": {
             "description": "Resource not found",
             "content": {
-                "application/json": {
+                APPLICATION_JSON: {
                     "schema": {
                         "type": "object",
                         "properties": {
@@ -112,7 +115,7 @@ def enhance_openapi_schema(app: FastAPI) -> Dict[str, Any]:
         "RateLimitError": {
             "description": "Rate limit exceeded",
             "content": {
-                "application/json": {
+                APPLICATION_JSON: {
                     "schema": {
                         "type": "object",
                         "properties": {

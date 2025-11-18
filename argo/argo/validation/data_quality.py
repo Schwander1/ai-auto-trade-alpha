@@ -123,7 +123,8 @@ class DataQualityMonitor:
         
     def _check_price_consistency(self, signal: Dict, market_data: Dict) -> bool:
         """Check if signal price is consistent with market data"""
-        signal_price = signal.get('price')
+        # Check for price in multiple possible field names
+        signal_price = signal.get('price') or signal.get('entry_price') or signal.get('current_price')
         market_price = market_data.get('price')
         
         if signal_price is None or market_price is None:
@@ -134,11 +135,27 @@ class DataQualityMonitor:
         
     def _check_completeness(self, signal: Dict) -> bool:
         """Check if signal has all required fields"""
-        required_fields = ["direction", "confidence", "timestamp", "symbol"]
-        return all(
-            field in signal and signal[field] is not None 
-            for field in required_fields
+        # Check for direction OR action (both are valid)
+        has_direction_or_action = (
+            (signal.get("direction") is not None) or 
+            (signal.get("action") is not None)
         )
+        
+        # Check other required fields
+        has_confidence = signal.get("confidence") is not None
+        has_timestamp = signal.get("timestamp") is not None
+        has_symbol = signal.get("symbol") is not None
+        
+        if not has_direction_or_action:
+            logger.debug(f"Signal missing direction/action: {signal.get('source', 'unknown')}")
+        if not has_confidence:
+            logger.debug(f"Signal missing confidence: {signal.get('source', 'unknown')}")
+        if not has_timestamp:
+            logger.debug(f"Signal missing timestamp: {signal.get('source', 'unknown')}")
+        if not has_symbol:
+            logger.debug(f"Signal missing symbol: {signal.get('source', 'unknown')}")
+        
+        return has_direction_or_action and has_confidence and has_timestamp and has_symbol
         
     def get_source_health_status(self) -> Dict:
         """

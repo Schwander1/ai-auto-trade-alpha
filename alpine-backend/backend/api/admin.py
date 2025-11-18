@@ -364,6 +364,10 @@ async def get_users(
         if is_active is not None:
             query = query.filter(User.is_active == is_active)
 
+        # OPTIMIZATION: Eager load roles relationship to prevent N+1 queries
+        from backend.core.query_optimizer import optimize_query_with_relationships
+        query = optimize_query_with_relationships(query, User, relationships=['roles'], use_selectin=True)
+
         # OPTIMIZATION: Reuse query object for count to ensure same filters
         # This is more efficient and ensures count matches filtered results exactly
         total = query.count()
@@ -409,7 +413,8 @@ async def get_revenue(
     request: Request,
     response: Response,
     current_user: User = Depends(require_admin),
-    authorization: Optional[str] = Header(None)
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_db)
 ):
     """
     Get revenue statistics (admin only)

@@ -1,5 +1,15 @@
 """Configuration management for Argo"""
-from pydantic_settings import BaseSettings
+try:
+    from pydantic_settings import BaseSettings
+except ImportError:
+    # Fallback for older pydantic versions or missing dependency
+    try:
+        from pydantic import BaseSettings
+    except ImportError:
+        # Ultimate fallback - use a simple class
+        class BaseSettings:
+            pass
+
 from typing import Optional
 import os
 import sys

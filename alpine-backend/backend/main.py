@@ -86,9 +86,6 @@ app.add_middleware(RequestLoggingMiddleware)  # Request/response logging with PI
 app.add_middleware(MetricsMiddleware)  # Prometheus metrics
 app.add_middleware(GZipMiddleware, minimum_size=1000)  # Compression
 
-# CORS middleware - Production-ready configuration
-from backend.core.config import settings
-
 # CORS configuration - whitelist only trusted origins
 ALLOWED_ORIGINS = [
     settings.FRONTEND_URL,

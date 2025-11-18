@@ -29,7 +29,12 @@ from collections import deque
 
 # Use relative path that works in both dev and production
 import os
-if os.path.exists("/root/argo-production"):
+# Check for prop firm service first, then regular production, then dev
+if os.path.exists("/root/argo-production-prop-firm"):
+    BASE_DIR = Path("/root/argo-production-prop-firm")
+elif os.path.exists("/root/argo-production-green"):
+    BASE_DIR = Path("/root/argo-production-green")
+elif os.path.exists("/root/argo-production"):
     BASE_DIR = Path("/root/argo-production")
 else:
     # Development/local path

@@ -223,7 +223,7 @@ async def get_unread_notifications(
         unread_count=total,
         limit=limit,
         offset=offset,
-        has_more=end_idx < total
+        has_more=(offset + limit) < total
     )
 
 

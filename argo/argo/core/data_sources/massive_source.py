@@ -214,7 +214,25 @@ class MassiveDataSource:
                 error_msg = response.text[:200] if response.text else "No error message"
                 error_type = f"http_{response.status_code}"
                 health_monitor.record_error('massive', error_type, duration)
-                logger.warning(f"⚠️  Massive API error {response.status_code} for {symbol}: {error_msg}")
+                
+                # FIX: Improved error handling for API key errors
+                if response.status_code == 401:
+                    try:
+                        error_json = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
+                        error_detail = error_json.get('error', error_msg) if error_json else error_msg
+                        if 'api key' in error_detail.lower() or 'unknown api key' in error_detail.lower():
+                            logger.error(f"❌ Massive API error 401: Invalid API key detected")
+                            logger.error(f"   Error: {error_detail[:200]}")
+                            logger.error("   ACTION REQUIRED: Update Massive API key in config.json or environment variable")
+                            logger.error("   Get new key from: https://massive.com")
+                            # Disable this source to prevent repeated failed calls
+                            self.enabled = False
+                    except Exception:
+                        logger.error(f"❌ Massive API error 401 (Unauthorized): {error_msg}")
+                        logger.error("   ACTION REQUIRED: Verify API key is correct and active")
+                        self.enabled = False
+                else:
+                    logger.warning(f"⚠️  Massive API error {response.status_code} for {symbol}: {error_msg}")
                 return None
         except Exception as e:
             duration = time.time() - start_time
@@ -271,7 +289,9 @@ class MassiveDataSource:
             # Determine signal direction and confidence
             direction, confidence = self._determine_signal(indicators, df)
             
-            if confidence < 65:
+            # Allow signals even with lower confidence - consensus will filter them
+            # Only filter out completely invalid signals (confidence < 50)
+            if confidence < 50:
                 return None
             
             return self._build_signal_dict(direction, confidence, indicators)

@@ -1,10 +1,9 @@
 """Argo Trading API v6.0 - Production"""
 import os
 
-# Force production mode and 24/7 mode for continuous signal generation
-# Set environment before any imports that might check it
-if os.getenv('ARGO_ENVIRONMENT') is None:
-    os.environ['ARGO_ENVIRONMENT'] = 'production'
+# Force 24/7 mode for continuous signal generation (but keep environment detection)
+# Don't force production mode here - let environment detection work naturally
+# This allows the service to run in development with 24/7 mode enabled
 
 # Enable 24/7 mode for continuous signal generation (unless explicitly disabled)
 if os.getenv('ARGO_24_7_MODE', '').lower() not in ['false', '0', 'no']:
@@ -64,7 +63,7 @@ _background_task = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Startup and shutdown events"""
+    """Startup and shutdown events with automatic task recovery"""
     global _signal_service, _background_task
 
     # Startup: Start background signal generation
@@ -78,37 +77,107 @@ async def lifespan(app: FastAPI):
         except ImportError:
             from core.config import settings
         interval = settings.SIGNAL_GENERATION_INTERVAL
-        _background_task = asyncio.create_task(
-            _signal_service.start_background_generation(interval_seconds=interval)
-        )
-        logger.info(f"🚀 Background signal generation started (every {interval} seconds)")
-
-        # Log task status after a brief delay to catch immediate errors
-        async def check_task_status():
-            await asyncio.sleep(2)
-            if _background_task.done():
+        
+        async def start_background_task():
+            """Start background task with automatic restart on failure"""
+            global _background_task
+            max_restart_attempts = 10
+            restart_delay = 5  # seconds
+            
+            for attempt in range(max_restart_attempts):
                 try:
-                    await _background_task
+                    if _signal_service:
+                        _background_task = asyncio.create_task(
+                            _signal_service.start_background_generation(interval_seconds=interval)
+                        )
+                        logger.info(f"🚀 Background signal generation started (every {interval} seconds) [attempt {attempt + 1}]")
+                        
+                        # Wait a bit to see if task starts successfully
+                        await asyncio.sleep(3)
+                        
+                        # Check if task is still running
+                        if _background_task.done():
+                            try:
+                                await _background_task
+                            except Exception as e:
+                                logger.error(f"❌ Background task failed immediately: {e}", exc_info=True)
+                                if attempt < max_restart_attempts - 1:
+                                    logger.info(f"🔄 Restarting background task in {restart_delay} seconds...")
+                                    await asyncio.sleep(restart_delay)
+                                    continue
+                                else:
+                                    logger.error(f"❌ Max restart attempts reached. Background task will not restart automatically.")
+                                    break
+                        else:
+                            logger.info("✅ Background task is running successfully")
+                            # Task is running, start monitoring
+                            asyncio.create_task(monitor_background_task(interval))
+                            break
                 except Exception as e:
-                    logger.error(f"❌ Background task failed: {e}", exc_info=True)
-            else:
-                logger.info("✅ Background task is running")
-
-        asyncio.create_task(check_task_status())
+                    logger.error(f"❌ Failed to start background task (attempt {attempt + 1}): {e}", exc_info=True)
+                    if attempt < max_restart_attempts - 1:
+                        logger.info(f"🔄 Retrying in {restart_delay} seconds...")
+                        await asyncio.sleep(restart_delay)
+                    else:
+                        logger.error(f"❌ Max restart attempts reached. Background task failed to start.")
+                        break
+        
+        async def monitor_background_task(check_interval: int):
+            """Monitor background task and restart if it stops"""
+            check_count = 0
+            while True:
+                try:
+                    await asyncio.sleep(check_interval * 2)  # Check every 2 cycles
+                    check_count += 1
+                    
+                    if _background_task is None:
+                        logger.warning("⚠️ Background task is None, attempting to restart...")
+                        await start_background_task()
+                        continue
+                    
+                    if _background_task.done():
+                        try:
+                            await _background_task
+                        except Exception as e:
+                            logger.error(f"❌ Background task crashed: {e}", exc_info=True)
+                        logger.warning("⚠️ Background task stopped, attempting to restart...")
+                        await start_background_task()
+                    else:
+                        # Task is running, log status periodically
+                        if check_count % 10 == 0:  # Every 10 checks (~100 seconds)
+                            logger.info(f"✅ Background task health check passed (check #{check_count})")
+                except Exception as e:
+                    logger.error(f"❌ Error in background task monitor: {e}", exc_info=True)
+                    await asyncio.sleep(check_interval)
+        
+        # Start the background task
+        asyncio.create_task(start_background_task())
+        
     except Exception as e:
         logger.error(f"❌ Failed to start signal generation service: {e}", exc_info=True)
 
     yield
 
-    # Shutdown: Stop background task
-    if _signal_service:
-        _signal_service.stop()
+    # Shutdown: Stop background task and flush pending signals
+    logger.info("🛑 Shutting down signal generation service...")
     if _background_task:
         _background_task.cancel()
         try:
             await _background_task
         except asyncio.CancelledError:
             pass
+        except Exception as e:
+            logger.warning(f"Error cancelling background task: {e}")
+    if _signal_service:
+        # Use async stop to properly flush pending signals
+        try:
+            await _signal_service.stop_async()
+        except Exception as e:
+            logger.warning(f"Error during async stop: {e}, trying sync stop")
+            try:
+                _signal_service.stop()
+            except Exception as e2:
+                logger.warning(f"Error during sync stop: {e2}")
     logger.info("🛑 Background signal generation stopped")
 
 signals_generated = Counter('argo_signals_total', 'Total signals generated')
@@ -173,10 +242,25 @@ async def health() -> Dict[str, Any]:
     """
     try:
         signal_status = "unknown"
+        background_task_status = "unknown"
+        background_task_error = None
+        
         if _signal_service:
             signal_status = "running" if _signal_service.running else "stopped"
             if hasattr(_signal_service, "_paused") and _signal_service._paused:
                 signal_status = "paused"
+        
+        if _background_task is None:
+            background_task_status = "not_started"
+        elif _background_task.done():
+            background_task_status = "stopped"
+            try:
+                await _background_task
+            except Exception as e:
+                background_task_error = str(e)
+                background_task_status = "crashed"
+        else:
+            background_task_status = "running"
 
         return {
             "status": "healthy",
@@ -189,8 +273,11 @@ async def health() -> Dict[str, Any]:
             "data_sources": 6,
             "signal_generation": {
                 "status": signal_status,
-                "background_task_running": _background_task is not None and not _background_task.done() if _background_task else False,
-                "service_initialized": _signal_service is not None
+                "background_task_status": background_task_status,
+                "background_task_running": background_task_status == "running",
+                "background_task_error": background_task_error,
+                "service_initialized": _signal_service is not None,
+                "service_running": _signal_service.running if _signal_service else False
             },
             "deprecated": True,
             "recommended_endpoint": "/api/v1/health"
@@ -795,7 +882,12 @@ def get_db_connection() -> sqlite3.Connection:
         with _db_lock:
             if _db_connection is None:  # Double-check locking
                 try:
-                    if os.path.exists("/root/argo-production"):
+                    # Check for prop firm service first, then regular production, then dev
+                    if os.path.exists("/root/argo-production-prop-firm"):
+                        db_path = Path("/root/argo-production-prop-firm") / "data" / "signals.db"
+                    elif os.path.exists("/root/argo-production-green"):
+                        db_path = Path("/root/argo-production-green") / "data" / "signals.db"
+                    elif os.path.exists("/root/argo-production"):
                         db_path = Path("/root/argo-production") / "data" / "signals.db"
                     else:
                         db_path = Path(__file__).parent.parent / "data" / "signals.db"
@@ -896,32 +988,93 @@ async def get_latest_signals(
             logger.info(f"📊 Returning {len(signals)} signals from database")
             return signals
 
-        # Fallback: Generate on-demand if no database signals
-        logger.warning("⚠️  No signals in database, generating on-demand")
-        all_signals = (await get_signals())["signals"]
-
-        if premium_only:
-            filtered = [s for s in all_signals if s.get("confidence", 0) >= 95]
-        else:
-            filtered = all_signals
-
-        return filtered[:limit]
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"❌ Error fetching signals from database: {e}", exc_info=True)
-        # Fallback to on-demand generation
+        # Fallback: Generate on-demand using real signal service if no database signals
+        logger.warning("⚠️  No signals in database, generating on-demand using signal service")
         try:
+            from argo.core.signal_generation_service import get_signal_service
+            signal_service = get_signal_service()
+            generated_signals = await signal_service.generate_signals_cycle()
+            
+            # Convert to API format
+            api_signals = []
+            for sig in generated_signals:
+                api_signals.append({
+                    "symbol": sig.get("symbol"),
+                    "action": sig.get("action"),
+                    "confidence": sig.get("confidence"),
+                    "price": sig.get("entry_price"),
+                    "entry_price": sig.get("entry_price"),
+                    "stop_loss": sig.get("stop_price"),
+                    "take_profit": sig.get("target_price"),
+                    "target_price": sig.get("target_price"),
+                    "timestamp": sig.get("timestamp"),
+                    "strategy": sig.get("strategy", "weighted_consensus"),
+                    "sha256": sig.get("sha256", "")
+                })
+            
+            if premium_only:
+                filtered = [s for s in api_signals if s.get("confidence", 0) >= 95]
+            else:
+                filtered = api_signals
+            
+            logger.info(f"📊 Generated {len(filtered)} signals on-demand")
+            return filtered[:limit]
+        except Exception as e:
+            logger.error(f"❌ Failed to generate signals on-demand: {e}", exc_info=True)
+            # Final fallback to mock data
             all_signals = (await get_signals())["signals"]
             if premium_only:
                 filtered = [s for s in all_signals if s.get("confidence", 0) >= 95]
             else:
                 filtered = all_signals
             return filtered[:limit]
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error fetching signals from database: {e}", exc_info=True)
+        # Fallback to on-demand generation using real signal service
+        try:
+            from argo.core.signal_generation_service import get_signal_service
+            signal_service = get_signal_service()
+            generated_signals = await signal_service.generate_signals_cycle()
+            
+            # Convert to API format
+            api_signals = []
+            for sig in generated_signals:
+                api_signals.append({
+                    "symbol": sig.get("symbol"),
+                    "action": sig.get("action"),
+                    "confidence": sig.get("confidence"),
+                    "price": sig.get("entry_price"),
+                    "entry_price": sig.get("entry_price"),
+                    "stop_loss": sig.get("stop_price"),
+                    "take_profit": sig.get("target_price"),
+                    "target_price": sig.get("target_price"),
+                    "timestamp": sig.get("timestamp"),
+                    "strategy": sig.get("strategy", "weighted_consensus"),
+                    "sha256": sig.get("sha256", "")
+                })
+            
+            if premium_only:
+                filtered = [s for s in api_signals if s.get("confidence", 0) >= 95]
+            else:
+                filtered = api_signals
+            
+            return filtered[:limit]
         except Exception as fallback_error:
             logger.error(f"❌ Fallback signal generation also failed: {fallback_error}", exc_info=True)
-            raise HTTPException(status_code=500, detail="Failed to fetch signals")
+            # Final fallback to mock data
+            try:
+                all_signals = (await get_signals())["signals"]
+                if premium_only:
+                    filtered = [s for s in all_signals if s.get("confidence", 0) >= 95]
+                else:
+                    filtered = all_signals
+                return filtered[:limit]
+            except Exception as final_error:
+                logger.error(f"❌ All signal generation methods failed: {final_error}", exc_info=True)
+                raise HTTPException(status_code=500, detail="Failed to fetch signals")
 
 
 @app.get("/api/signals/{plan}")

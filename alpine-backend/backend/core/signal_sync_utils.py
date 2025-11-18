@@ -1,6 +1,6 @@
 """
 Shared utilities for signal synchronization endpoints
-Used by both argo_sync.py and external_signal_sync.py
+Used by external_signal_sync.py
 """
 from fastapi import HTTPException, Header
 from sqlalchemy.orm import Session
@@ -22,7 +22,7 @@ def verify_external_api_key(x_api_key: Optional[str] = Header(None, alias="X-API
     Verify external signal provider API key for secure signal sync
     Uses HMAC or API key authentication
 
-    Shared utility function for both argo_sync and external_signal_sync endpoints
+    Shared utility function for external_signal_sync endpoint
     """
     # Get API key from settings (AWS Secrets Manager or env)
     expected_key = getattr(settings, 'EXTERNAL_SIGNAL_API_KEY', None)

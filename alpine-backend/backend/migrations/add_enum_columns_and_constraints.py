@@ -16,7 +16,7 @@ def upgrade():
     """Add enum types and constraints, migrate existing data"""
     try:
         engine = get_engine()
-    except:
+    except Exception:
         engine = create_engine(settings.DATABASE_URL)
     
     with engine.begin() as conn:
@@ -336,7 +336,7 @@ def downgrade():
     """Reverse migration (converts enums back to strings)"""
     try:
         engine = get_engine()
-    except:
+    except Exception:
         engine = create_engine(settings.DATABASE_URL)
     
     with engine.begin() as conn:

@@ -217,7 +217,9 @@ class AlphaVantageDataSource:
             confidence = min(confidence, 95.0)
             
             # Only return if confidence >= 60
-            if confidence < 60:
+            # Allow signals even with lower confidence - consensus will filter them
+            # Only filter out completely invalid signals (confidence < 50)
+            if confidence < 50:
                 return None
             
             return {

@@ -669,7 +669,7 @@ class SignalGenerationService:
                 if not feature_flags.is_enabled("chinese_models_enabled"):
                     logger.info("ℹ️  Chinese models disabled by feature flag")
                     return
-            except:
+            except Exception:
                 pass
 
             config = {}
@@ -1221,6 +1221,11 @@ class SignalGenerationService:
                                 market_data_df, symbol
                             )
                             if signal:
+                                # Ensure signal has required fields for validation
+                                signal['symbol'] = symbol
+                                if 'timestamp' not in signal:
+                                    from datetime import datetime, timezone
+                                    signal['timestamp'] = datetime.now(timezone.utc).isoformat()
                                 source_signals[source_name] = signal
                                 is_crypto = self._is_crypto_symbol(symbol)
                                 if is_crypto:
@@ -1269,6 +1274,11 @@ class SignalGenerationService:
                                         market_data_df, symbol
                                     )
                                     if signal:
+                                        # Ensure signal has required fields for validation
+                                        signal['symbol'] = symbol
+                                        if 'timestamp' not in signal:
+                                            from datetime import datetime, timezone
+                                            signal['timestamp'] = datetime.now(timezone.utc).isoformat()
                                         source_signals[source_name] = signal
                                         logger.info(
                                             f"✅ {source_name} signal for {symbol}: {signal.get('direction')} @ {signal.get('confidence')}%"
@@ -1415,6 +1425,11 @@ class SignalGenerationService:
                 if result:
                     signal = self.data_sources["yfinance"].generate_signal(result, symbol)
                     if signal:
+                        # Ensure signal has required fields for validation
+                        signal['symbol'] = symbol
+                        if 'timestamp' not in signal:
+                            from datetime import datetime, timezone
+                            signal['timestamp'] = datetime.now(timezone.utc).isoformat()
                         source_signals["yfinance"] = signal
                         logger.info(
                             f"✅ yfinance signal for {symbol}: {signal.get('direction')} @ {signal.get('confidence')}%"
@@ -1437,16 +1452,31 @@ class SignalGenerationService:
             elif source_name == "x_sentiment" and result:
                 signal = self.data_sources["x_sentiment"].generate_signal(result, symbol)
                 if signal:
+                    # Ensure signal has required fields for validation
+                    signal['symbol'] = symbol
+                    if 'timestamp' not in signal:
+                        from datetime import datetime, timezone
+                        signal['timestamp'] = datetime.now(timezone.utc).isoformat()
                     source_signals["x_sentiment"] = signal
 
             elif source_name == "sonar" and result:
                 signal = self.data_sources["sonar"].generate_signal(result, symbol)
                 if signal:
+                    # Ensure signal has required fields for validation
+                    signal['symbol'] = symbol
+                    if 'timestamp' not in signal:
+                        from datetime import datetime, timezone
+                        signal['timestamp'] = datetime.now(timezone.utc).isoformat()
                     source_signals["sonar"] = signal
 
             elif source_name == "chinese_models" and result:
                 # Chinese models already return signal format
                 if result:
+                    # Ensure signal has required fields for validation
+                    result['symbol'] = symbol
+                    if 'timestamp' not in result:
+                        from datetime import datetime, timezone
+                        result['timestamp'] = datetime.now(timezone.utc).isoformat()
                     source_signals["chinese_models"] = result
                     logger.info(
                         f"✅ Chinese Models signal for {symbol}: {result.get('direction')} @ {result.get('confidence')}%"
@@ -1462,11 +1492,21 @@ class SignalGenerationService:
     ):
         """Handle Alpha Vantage signal with yfinance fallback logic"""
         if not yfinance_attempted:
+            # Ensure signal has required fields for validation
+            signal['symbol'] = symbol
+            if 'timestamp' not in signal:
+                from datetime import datetime, timezone
+                signal['timestamp'] = datetime.now(timezone.utc).isoformat()
             source_signals["alpha_vantage"] = signal
             logger.info(
                 f"✅ Alpha Vantage signal for {symbol}: {signal.get('direction')} @ {signal.get('confidence')}%"
             )
         elif yfinance_exception:
+            # Ensure signal has required fields for validation
+            signal['symbol'] = symbol
+            if 'timestamp' not in signal:
+                from datetime import datetime, timezone
+                signal['timestamp'] = datetime.now(timezone.utc).isoformat()
             source_signals["alpha_vantage"] = signal
             logger.info(
                 f"✅ Alpha Vantage signal (yfinance exception fallback) for {symbol}: {signal.get('direction')} @ {signal.get('confidence')}%"
@@ -1475,6 +1515,11 @@ class SignalGenerationService:
             yf_signal = source_signals["yfinance"]
             if signal.get("confidence", 0) > yf_signal.get("confidence", 0):
                 source_signals.pop("yfinance", None)
+                # Ensure signal has required fields for validation
+                signal['symbol'] = symbol
+                if 'timestamp' not in signal:
+                    from datetime import datetime, timezone
+                    signal['timestamp'] = datetime.now(timezone.utc).isoformat()
                 source_signals["alpha_vantage"] = signal
                 logger.info(
                     f"✅ Alpha Vantage signal (higher confidence) for {symbol}: {signal.get('direction')} @ {signal.get('confidence')}%"
@@ -2264,8 +2309,12 @@ class SignalGenerationService:
         # Calculate required capital using max position size (conservative check)
         required_capital = buying_power * (position_size_pct / 100)
 
-        # Also check if we can afford at least 1 share
-        min_required = entry_price * 1  # Minimum 1 share
+        # Check if we can afford minimum position (crypto allows fractional, stocks need whole shares)
+        is_crypto = '-USD' in signal.get('symbol', '')
+        if is_crypto:
+            min_required = entry_price * 0.000001  # Minimum crypto qty (0.000001)
+        else:
+            min_required = entry_price * 1  # Minimum 1 share for stocks
 
         if required_capital > buying_power * 0.95:  # Leave 5% buffer
             return (
@@ -2273,10 +2322,10 @@ class SignalGenerationService:
                 f"Insufficient buying power: need ${required_capital:,.2f}, have ${buying_power:,.2f}",
             )
 
-        if min_required > buying_power:
+        if min_required > buying_power * 0.95:  # Check against 95% to leave buffer
             return (
                 False,
-                f"Cannot afford minimum position: need ${min_required:,.2f} for 1 share, have ${buying_power:,.2f}",
+                f"Cannot afford minimum position: need ${min_required:,.2f} for minimum qty, have ${buying_power * 0.95:,.2f} available",
             )
 
         return True, "OK"
@@ -2407,16 +2456,29 @@ class SignalGenerationService:
             return
 
         try:
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
+            # Try to get the current event loop
+            try:
+                loop = asyncio.get_running_loop()
+                # Event loop is running, schedule the sync task
                 asyncio.create_task(self.alpine_sync.sync_signal(signal))
-            else:
-                logger.debug("No event loop for Alpine sync")
-        except RuntimeError:
-            # No event loop available - this is fine, sync will be skipped
-            logger.debug("No event loop available for Alpine sync")
+            except RuntimeError:
+                # No running event loop - try to get or create one
+                try:
+                    loop = asyncio.get_event_loop()
+                    if loop.is_closed():
+                        # Create a new event loop if the current one is closed
+                        loop = asyncio.new_event_loop()
+                        asyncio.set_event_loop(loop)
+                    # Schedule the sync task
+                    asyncio.create_task(self.alpine_sync.sync_signal(signal))
+                except RuntimeError:
+                    # No event loop available - create a new one and run the sync
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    loop.run_until_complete(self.alpine_sync.sync_signal(signal))
+                    loop.close()
         except Exception as e:
-            logger.warning(f"⚠️  Failed to queue Alpine sync: {e}")
+            logger.warning(f"⚠️  Failed to queue Alpine sync: {e}", exc_info=True)
 
     def _track_signal_generated(self, signal: Dict, signal_id: str, symbol: str):
         """Track signal generation in lifecycle tracker"""
@@ -2976,7 +3038,7 @@ class SignalGenerationService:
                             # Try to get current regime from signal generation
                             # This would require access to market data, simplified for now
                             pass
-                        except:
+                        except Exception:
                             pass
 
                         trade = self._performance_tracker.record_signal_exit(
@@ -3040,15 +3102,23 @@ class SignalGenerationService:
         logger.info(f"🚀 Starting background signal generation (every {interval_seconds} seconds)")
 
         # Start risk monitoring if enabled
-        # OPTIMIZATION: risk_monitor is initialized in __init__, no need for hasattr
-        if self.risk_monitor:
-            await self.risk_monitor.start_monitoring()
-            logger.info("🚨 Risk monitoring started")
+        # Check if risk_monitor exists and is initialized
+        if hasattr(self, 'risk_monitor') and self.risk_monitor:
+            try:
+                await self.risk_monitor.start_monitoring()
+                logger.info("🚨 Risk monitoring started")
+            except Exception as e:
+                logger.warning(f"⚠️  Failed to start risk monitoring: {e}")
+        else:
+            logger.debug("Risk monitoring not enabled or not initialized")
 
         self._start_position_monitoring()
 
         pause_checker = PauseStateChecker(self, interval_seconds=30)
 
+        consecutive_errors = 0
+        max_consecutive_errors = 10
+        
         while self.running:
             try:
                 # Check and update pause state (only in development mode)
@@ -3067,9 +3137,27 @@ class SignalGenerationService:
 
                 # Generate signals
                 await self._run_signal_generation_cycle(interval_seconds)
+                
+                # Reset error counter on successful cycle
+                if consecutive_errors > 0:
+                    logger.info(f"✅ Signal generation cycle recovered after {consecutive_errors} errors")
+                    consecutive_errors = 0
 
+            except KeyboardInterrupt:
+                # Allow graceful shutdown on keyboard interrupt
+                logger.info("🛑 Received keyboard interrupt, stopping signal generation...")
+                self.running = False
+                break
             except Exception as e:
-                logger.error(f"❌ Error in background generation cycle: {e}", exc_info=True)
+                consecutive_errors += 1
+                logger.error(f"❌ Error in background generation cycle (error #{consecutive_errors}): {e}", exc_info=True)
+                
+                # If too many consecutive errors, log warning but continue
+                if consecutive_errors >= max_consecutive_errors:
+                    logger.error(f"⚠️ {max_consecutive_errors} consecutive errors - signal generation may be unstable")
+                    consecutive_errors = 0  # Reset to prevent log spam
+                
+                # Always continue running - never stop the loop
                 await asyncio.sleep(interval_seconds)
 
     def _start_position_monitoring(self):
@@ -3081,7 +3169,7 @@ class SignalGenerationService:
             logger.info("🔄 Position monitoring started")
 
     async def _run_signal_generation_cycle(self, interval_seconds: int):
-        """Run one signal generation cycle"""
+        """Run one signal generation cycle with robust error handling"""
         start_time = datetime.now(timezone.utc)
         try:
             signals = await self.generate_signals_cycle()
@@ -3091,18 +3179,30 @@ class SignalGenerationService:
                 logger.info(f"📊 Generated {len(signals)} signals in {elapsed:.2f}s")
                 # Log signal details for monitoring
                 for signal in signals[:3]:  # Log first 3 signals
-                    logger.debug(f"  → {signal.get('symbol')} {signal.get('action')} @ {signal.get('confidence', 0):.1f}%")
+                    logger.info(f"  → {signal.get('symbol')} {signal.get('action')} @ {signal.get('confidence', 0):.1f}%")
             else:
                 logger.debug(f"📊 Signal generation cycle completed in {elapsed:.2f}s (0 signals generated)")
 
             # OPTIMIZATION: Record performance metrics
             if self.performance_metrics:
-                self.performance_metrics.record_signal_generation_time(elapsed)
+                try:
+                    self.performance_metrics.record_signal_generation_time(elapsed)
+                except Exception as e:
+                    logger.debug(f"Could not record performance metrics: {e}")
+        except KeyboardInterrupt:
+            # Re-raise keyboard interrupt to allow graceful shutdown
+            raise
         except Exception as e:
             elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
             logger.error(f"❌ Error in signal generation cycle after {elapsed:.2f}s: {e}", exc_info=True)
+            # Don't re-raise - let the outer loop handle it and continue
 
-        await asyncio.sleep(interval_seconds)
+        # Sleep before next cycle (only if not interrupted)
+        try:
+            await asyncio.sleep(interval_seconds)
+        except asyncio.CancelledError:
+            # Task was cancelled, allow cancellation to propagate
+            raise
 
     def _is_cursor_running(self) -> bool:
         """Check if Cursor application is currently running (dev only)"""

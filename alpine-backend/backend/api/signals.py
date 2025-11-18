@@ -412,7 +412,7 @@ async def get_signal_history(
 
 def _query_signal_history(db: Session, start_date: datetime, limit: int) -> List[Signal]:
     """Query signal history from database with optimized query"""
-    from backend.core.query_optimizer import optimize_pagination_query
+    from backend.core.query_optimizer import optimize_pagination_query, optimize_query_with_relationships
 
     history_limit = min(limit, 500)  # Reasonable limit
 
@@ -420,6 +420,9 @@ def _query_signal_history(db: Session, start_date: datetime, limit: int) -> List
     query = db.query(Signal).filter(
         Signal.created_at >= start_date
     )
+
+    # OPTIMIZATION: Eager load user relationship to prevent N+1 queries if user data is accessed
+    query = optimize_query_with_relationships(query, Signal, relationships=['user'], use_selectin=True)
 
     # Use query optimizer for better performance
     query = optimize_pagination_query(

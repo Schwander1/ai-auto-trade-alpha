@@ -235,14 +235,34 @@ class XAIGrokDataSource:
         return analysis
     
     def _handle_api_error(self, response) -> Optional:
-        """Handle API error responses"""
-        if response.status_code == 403:
+        """Handle API error responses with improved error detection"""
+        try:
             error_detail = response.text
-            logger.error(f"xAI API error 403 (Forbidden): {error_detail[:200]}")
-            logger.error("   Check: API key permissions, team access, or if key is blocked")
-        else:
-            error_detail = response.text
-            logger.error(f"xAI API error {response.status_code}: {error_detail[:200]}")
+            error_json = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
+            
+            # Check for API key errors
+            if response.status_code == 400:
+                error_msg = error_json.get('error', {}).get('message', error_detail) if error_json else error_detail
+                if 'api key' in error_msg.lower() or 'incorrect api key' in error_msg.lower() or 'invalid' in error_msg.lower():
+                    logger.error(f"❌ xAI API error 400: Invalid API key detected")
+                    logger.error(f"   Error: {error_msg[:200]}")
+                    logger.error("   ACTION REQUIRED: Update xAI API key in config.json or environment variable")
+                    logger.error("   Get new key from: https://console.x.ai")
+                    # Disable this source to prevent repeated failed calls
+                    self.enabled = False
+                    return None
+            
+            if response.status_code == 403:
+                logger.error(f"❌ xAI API error 403 (Forbidden): {error_detail[:200]}")
+                logger.error("   Check: API key permissions, team access, or if key is blocked")
+            elif response.status_code == 401:
+                logger.error(f"❌ xAI API error 401 (Unauthorized): {error_detail[:200]}")
+                logger.error("   ACTION REQUIRED: Verify API key is correct and active")
+                self.enabled = False
+            else:
+                logger.error(f"❌ xAI API error {response.status_code}: {error_detail[:200]}")
+        except Exception as e:
+            logger.error(f"❌ Error parsing xAI API error response: {e}")
         return None
     
     def generate_signal(self, sentiment_data, symbol):
