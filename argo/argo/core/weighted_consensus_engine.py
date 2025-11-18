@@ -30,17 +30,20 @@ logger = logging.getLogger("AlpineConsensus")
 
 def _get_config_path():
     """Get config path for dev or production"""
-    # Check environment variable first
+    # Check environment variable first (highest priority)
     config_path = os.getenv('ARGO_CONFIG_PATH')
     if config_path and os.path.exists(config_path):
         return config_path
     
-    # Check current working directory first (for prop firm service)
-    cwd_config = Path.cwd() / 'config.json'
+    # Check current working directory (for services running from their deployment directory)
+    # This ensures prop firm service loads its own config
+    cwd = Path.cwd()
+    cwd_config = cwd / 'config.json'
     if cwd_config.exists():
         return str(cwd_config)
     
     # Check production paths (in order of preference)
+    # Only check these if we're not in a deployment directory
     prod_paths = [
         '/root/argo-production-prop-firm/config.json',  # Prop firm service
         '/root/argo-production-green/config.json',      # Regular trading (green)

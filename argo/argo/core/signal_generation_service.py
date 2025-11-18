@@ -126,6 +126,7 @@ class SignalGenerationService:
         self._symbol_volatility: Dict[str, float] = {}  # Track volatility for prioritization
 
         # OPTIMIZATION: Adaptive confidence thresholds (Strategy C)
+        # Note: This will be updated in _init_enhancements() if prop firm mode is enabled
         try:
             from argo.core.feature_flags import get_feature_flags
 
@@ -136,7 +137,9 @@ class SignalGenerationService:
                 self.confidence_threshold = 88.0
                 logger.info("✅ Using 88% confidence threshold (feature flag enabled)")
             else:
+                # Use config value, default to 75.0% for regular trading
                 self.confidence_threshold = self.trading_config.get("min_confidence", 75.0)
+                logger.info(f"✅ Initial confidence threshold set to {self.confidence_threshold}% from config")
 
             # Adaptive threshold by regime
             self.regime_thresholds = {
