@@ -1507,26 +1507,46 @@ class SignalGenerationService:
                         self._handle_alpha_vantage_signal(
                             symbol, signal, source_signals, yfinance_attempted, yfinance_exception
                         )
+                    else:
+                        logger.info(f"⏭️  alpha_vantage returned no signal for {symbol} (confidence < 50% or invalid)")
+                else:
+                    logger.info(f"⏭️  alpha_vantage returned no indicators for {symbol}")
 
-            elif source_name == "x_sentiment" and result:
-                signal = self.data_sources["x_sentiment"].generate_signal(result, symbol)
-                if signal:
-                    # Ensure signal has required fields for validation
-                    signal['symbol'] = symbol
-                    if 'timestamp' not in signal:
-                        from datetime import datetime, timezone
-                        signal['timestamp'] = datetime.now(timezone.utc).isoformat()
-                    source_signals["x_sentiment"] = signal
+            elif source_name == "x_sentiment":
+                if result:
+                    signal = self.data_sources["x_sentiment"].generate_signal(result, symbol)
+                    if signal:
+                        # Ensure signal has required fields for validation
+                        signal['symbol'] = symbol
+                        if 'timestamp' not in signal:
+                            from datetime import datetime, timezone
+                            signal['timestamp'] = datetime.now(timezone.utc).isoformat()
+                        source_signals["x_sentiment"] = signal
+                        logger.info(
+                            f"✅ xAI Grok signal for {symbol}: {signal.get('direction')} @ {signal.get('confidence')}%"
+                        )
+                    else:
+                        logger.info(f"⏭️  xAI Grok returned no signal for {symbol}")
+                else:
+                    logger.info(f"⏭️  xAI Grok returned no sentiment for {symbol}")
 
-            elif source_name == "sonar" and result:
-                signal = self.data_sources["sonar"].generate_signal(result, symbol)
-                if signal:
-                    # Ensure signal has required fields for validation
-                    signal['symbol'] = symbol
-                    if 'timestamp' not in signal:
-                        from datetime import datetime, timezone
-                        signal['timestamp'] = datetime.now(timezone.utc).isoformat()
-                    source_signals["sonar"] = signal
+            elif source_name == "sonar":
+                if result:
+                    signal = self.data_sources["sonar"].generate_signal(result, symbol)
+                    if signal:
+                        # Ensure signal has required fields for validation
+                        signal['symbol'] = symbol
+                        if 'timestamp' not in signal:
+                            from datetime import datetime, timezone
+                            signal['timestamp'] = datetime.now(timezone.utc).isoformat()
+                        source_signals["sonar"] = signal
+                        logger.info(
+                            f"✅ Sonar AI signal for {symbol}: {signal.get('direction')} @ {signal.get('confidence')}%"
+                        )
+                    else:
+                        logger.info(f"⏭️  Sonar AI returned no signal for {symbol}")
+                else:
+                    logger.info(f"⏭️  Sonar AI returned no analysis for {symbol}")
 
             elif source_name == "chinese_models":
                 # OPTIMIZATION: Handle Chinese models failures gracefully
