@@ -1922,12 +1922,24 @@ class SignalGenerationService:
             return df
 
         try:
+            # OPTIMIZATION: Check if optimization is needed before copying
+            needs_optimization = False
+            for col in ["Open", "High", "Low", "Close"]:
+                if col in df.columns and df[col].dtype != "float32":
+                    needs_optimization = True
+                    break
+            if "Volume" in df.columns and df["Volume"].dtype not in ["int32", "int64", "int16", "int8"]:
+                needs_optimization = True
+            
+            if not needs_optimization:
+                return df  # Already optimized, no copy needed
+
             # OPTIMIZATION 9: Use appropriate dtypes to reduce memory
-            df = df.copy()  # Explicit copy for safety
+            df = df.copy()  # Only copy if we need to modify
 
             # Convert to float32 where precision allows (50% memory reduction)
             for col in ["Open", "High", "Low", "Close"]:
-                if col in df.columns:
+                if col in df.columns and df[col].dtype != "float32":
                     df[col] = df[col].astype("float32")
 
             # Convert Volume to int32 (if values allow)
