@@ -1,4 +1,12 @@
 """Argo Trading API v6.0 - Production"""
+import os
+
+# Enable 24/7 mode for continuous signal generation (unless explicitly disabled)
+if os.getenv('ARGO_24_7_MODE', '').lower() not in ['false', '0', 'no']:
+    # Default to 24/7 mode in production, allow override via env var
+    if os.getenv('ARGO_24_7_MODE') is None:
+        os.environ['ARGO_24_7_MODE'] = 'true'
+
 from fastapi import FastAPI, HTTPException, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware

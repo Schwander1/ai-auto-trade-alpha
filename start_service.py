@@ -16,6 +16,9 @@ sys.path.insert(0, str(argo_path))
 # Set PYTHONPATH
 os.environ['PYTHONPATH'] = str(argo_path)
 
+# Enable 24/7 mode for continuous signal generation
+os.environ['ARGO_24_7_MODE'] = 'true'
+
 from argo.core.signal_generation_service import SignalGenerationService
 
 async def main():

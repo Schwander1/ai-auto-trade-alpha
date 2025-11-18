@@ -12,6 +12,9 @@ echo "==========================================="
 # Set PYTHONPATH
 export PYTHONPATH="$(pwd)/argo"
 
+# Enable 24/7 mode for continuous signal generation
+export ARGO_24_7_MODE=true
+
 # Create log directory
 mkdir -p argo/logs
 
