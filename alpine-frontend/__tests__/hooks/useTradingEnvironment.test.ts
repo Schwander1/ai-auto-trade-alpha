@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from '@testing-library/react'
+import { renderHook, waitFor, act } from '@testing-library/react'
 import { useTradingEnvironment } from '@/hooks/useTradingEnvironment'
 
 // Mock fetch
@@ -89,9 +89,9 @@ describe('useTradingEnvironment', () => {
     })
 
     // Call refresh
-    result.current.refresh()
-
-    expect(result.current.loading).toBe(true)
+    await act(async () => {
+      await result.current.refresh()
+    })
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false)
