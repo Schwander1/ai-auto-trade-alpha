@@ -349,13 +349,47 @@ class WeightedConsensusEngine:
             # This maintains the original behavior for truly neutral markets
             return None
 
+        # IMPROVEMENT: Add agreement bonus for multiple sources agreeing
+        # More sources agreeing = higher confidence boost
+        num_sources = len(valid)
+        agreement_bonus = 0.0
+        if num_sources >= 4:
+            agreement_bonus = 15.0  # 4+ sources: +15%
+        elif num_sources >= 3:
+            agreement_bonus = 10.0  # 3 sources: +10%
+        elif num_sources >= 2:
+            agreement_bonus = 5.0   # 2 sources: +5%
+        
+        # Calculate agreement percentage
+        agreement_pct = max(total_long, total_short) / active_weights_sum * 100
+        
+        # IMPROVEMENT: Normalize confidence to full weight (1.0) for better scaling
+        # This prevents penalizing signals when some sources fail
+        # Only normalize if we have at least 2 sources (to avoid inflating single-source signals)
+        if num_sources >= 2 and active_weights_sum < 1.0:
+            # Normalize: multiply by (1.0 / active_weights_sum) to scale to full weight
+            normalization_factor = 1.0 / active_weights_sum
+            consensus_confidence = consensus_confidence * normalization_factor
+            # Cap at 98% to prevent over-inflation
+            consensus_confidence = min(consensus_confidence, 98.0)
+        
+        # Apply agreement bonus (only if agreement is high enough)
+        if agreement_pct >= 50.0:  # Only boost if sources agree at least 50%
+            consensus_confidence = min(consensus_confidence + agreement_bonus, 98.0)
+        
+        # IMPROVEMENT: Add minimum confidence floor for high-agreement signals
+        # If sources strongly agree (>= 70% agreement), ensure minimum 60% confidence
+        if agreement_pct >= 70.0 and consensus_confidence < 60.0:
+            consensus_confidence = 60.0
+        
         consensus = {
             "direction": consensus_direction,
             "confidence": round(consensus_confidence, 2),
             "total_long_vote": round(total_long, 4),
             "total_short_vote": round(total_short, 4),
-            "sources": len(valid),
-            "agreement": round(max(total_long, total_short) / active_weights_sum * 100, 2),
+            "sources": num_sources,
+            "agreement": round(agreement_pct, 2),
+            "agreement_bonus": round(agreement_bonus, 2),
         }
 
         # OPTIMIZATION 6: Cache result
