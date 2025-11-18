@@ -1431,7 +1431,7 @@ class SignalGenerationService:
         """Calculate weighted consensus from source signals (OPTIMIZED: with caching and regime-based weights)"""
         # OPTIMIZATION: Cache current time to avoid multiple datetime.now() calls
         current_time = datetime.now(timezone.utc)
-        
+
         # OPTIMIZATION: Create cache key from source signals
         cache_key = self._create_consensus_cache_key(source_signals, symbol)
 
@@ -1514,7 +1514,9 @@ class SignalGenerationService:
             # OPTIMIZATION: Use list of (timestamp, key) tuples and sort only what we need
             # This is more efficient than sorting all entries when we only need the oldest 20%
             entries_to_remove = len(self._consensus_cache) // 5
-            timestamp_key_pairs = [(cache_time, key) for key, (_, cache_time) in self._consensus_cache.items()]
+            timestamp_key_pairs = [
+                (cache_time, key) for key, (_, cache_time) in self._consensus_cache.items()
+            ]
             # Sort only to get the oldest entries
             timestamp_key_pairs.sort()
             for _, key in timestamp_key_pairs[:entries_to_remove]:
@@ -1943,7 +1945,9 @@ class SignalGenerationService:
         if len(self._reasoning_cache) > 500:  # Max 500 entries
             # OPTIMIZATION: Use list of (timestamp, key) tuples and sort only what we need
             entries_to_remove = len(self._reasoning_cache) // 5
-            timestamp_key_pairs = [(cache_time, key) for key, (_, cache_time) in self._reasoning_cache.items()]
+            timestamp_key_pairs = [
+                (cache_time, key) for key, (_, cache_time) in self._reasoning_cache.items()
+            ]
             # Sort only to get the oldest entries
             timestamp_key_pairs.sort()
             for _, key in timestamp_key_pairs[:entries_to_remove]:
@@ -2331,9 +2335,8 @@ class SignalGenerationService:
             return
 
         try:
-            from datetime import datetime
-
-            now = datetime.utcnow()
+            # OPTIMIZATION: Use timezone-aware datetime for consistency
+            now = datetime.now(timezone.utc)
 
             # Check if it's time to update outcomes (every 5 minutes)
             if (
