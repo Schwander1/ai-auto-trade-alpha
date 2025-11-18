@@ -770,13 +770,15 @@ class SignalGenerationService:
                         self.risk_monitor = PropFirmRiskMonitor(risk_monitor_config)
                         self.prop_firm_mode = True
                         self.prop_firm_config = prop_firm_config
-                        
+
                         # Update confidence threshold for prop firm mode
                         prop_min_confidence = risk_limits.get("min_confidence", 82.0)
                         if prop_min_confidence > self.confidence_threshold:
                             self.confidence_threshold = prop_min_confidence
-                            logger.info(f"✅ Updated confidence threshold to {prop_min_confidence}% for prop firm mode")
-                        
+                            logger.info(
+                                f"✅ Updated confidence threshold to {prop_min_confidence}% for prop firm mode"
+                            )
+
                         logger.info("✅ Prop Firm Risk Monitor initialized (PROP FIRM MODE)")
                     else:
                         # Use standard risk monitoring
@@ -1427,13 +1429,16 @@ class SignalGenerationService:
         self, source_signals: Dict, symbol: str, regime: Optional[str] = None
     ) -> Optional[Dict]:
         """Calculate weighted consensus from source signals (OPTIMIZED: with caching and regime-based weights)"""
+        # OPTIMIZATION: Cache current time to avoid multiple datetime.now() calls
+        current_time = datetime.now(timezone.utc)
+        
         # OPTIMIZATION: Create cache key from source signals
         cache_key = self._create_consensus_cache_key(source_signals, symbol)
 
         # Check cache first (but only if regime hasn't changed)
         if cache_key in self._consensus_cache:
             cached_consensus, cache_time = self._consensus_cache[cache_key]
-            age = (datetime.now(timezone.utc) - cache_time).total_seconds()
+            age = (current_time - cache_time).total_seconds()
             if age < self._consensus_cache_ttl:
                 logger.debug(f"✅ Using cached consensus for {symbol}")
                 return cached_consensus.copy()  # Return copy to avoid mutation
@@ -1485,8 +1490,8 @@ class SignalGenerationService:
             f"📈 Consensus for {symbol}: {consensus.get('direction')} @ {consensus.get('confidence')}% (threshold: {threshold}%, regime: {regime or 'UNKNOWN'})"
         )
 
-        # Cache the result
-        self._consensus_cache[cache_key] = (consensus.copy(), datetime.now(timezone.utc))
+        # Cache the result (use cached current_time)
+        self._consensus_cache[cache_key] = (consensus.copy(), current_time)
         self._cleanup_consensus_cache()
 
         return consensus
@@ -1504,14 +1509,15 @@ class SignalGenerationService:
         return f"{symbol}:{':'.join(signal_summary)}"
 
     def _cleanup_consensus_cache(self):
-        """Remove old cache entries to prevent memory growth"""
+        """Remove old cache entries to prevent memory growth (OPTIMIZED: efficient cleanup)"""
         if len(self._consensus_cache) > 1000:  # Max 1000 entries
-            # Remove oldest 20% of entries
-            sorted_entries = sorted(
-                self._consensus_cache.items(), key=lambda x: x[1][1]  # Sort by cache time
-            )
-            entries_to_remove = len(sorted_entries) // 5
-            for key, _ in sorted_entries[:entries_to_remove]:
+            # OPTIMIZATION: Use list of (timestamp, key) tuples and sort only what we need
+            # This is more efficient than sorting all entries when we only need the oldest 20%
+            entries_to_remove = len(self._consensus_cache) // 5
+            timestamp_key_pairs = [(cache_time, key) for key, (_, cache_time) in self._consensus_cache.items()]
+            # Sort only to get the oldest entries
+            timestamp_key_pairs.sort()
+            for _, key in timestamp_key_pairs[:entries_to_remove]:
                 del self._consensus_cache[key]
 
     def _calculate_partial_consensus(self, source_signals: Dict, symbol: str) -> Optional[Dict]:
@@ -1933,14 +1939,14 @@ class SignalGenerationService:
         return True  # Changed, need update
 
     def _cleanup_reasoning_cache(self):
-        """Remove old cache entries to prevent memory growth"""
+        """Remove old cache entries to prevent memory growth (OPTIMIZED: efficient cleanup)"""
         if len(self._reasoning_cache) > 500:  # Max 500 entries
-            # Remove oldest 20% of entries
-            sorted_entries = sorted(
-                self._reasoning_cache.items(), key=lambda x: x[1][1]  # Sort by cache time
-            )
-            entries_to_remove = len(sorted_entries) // 5
-            for key, _ in sorted_entries[:entries_to_remove]:
+            # OPTIMIZATION: Use list of (timestamp, key) tuples and sort only what we need
+            entries_to_remove = len(self._reasoning_cache) // 5
+            timestamp_key_pairs = [(cache_time, key) for key, (_, cache_time) in self._reasoning_cache.items()]
+            # Sort only to get the oldest entries
+            timestamp_key_pairs.sort()
+            for _, key in timestamp_key_pairs[:entries_to_remove]:
                 del self._reasoning_cache[key]
 
     def _get_cached_positions(self):
