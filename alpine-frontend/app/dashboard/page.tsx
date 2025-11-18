@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useSignals } from '@/hooks/useSignals'
 import SignalCard from '@/components/dashboard/SignalCard'
+import WebSocketStatus from '@/components/dashboard/WebSocketStatus'
 import dynamic from 'next/dynamic'
 import Navigation from '@/components/dashboard/Navigation'
 
@@ -58,12 +59,13 @@ export default function DashboardPage() {
   const [isLoadingStats, setIsLoadingStats] = useState(false)
   const [statsError, setStatsError] = useState<Error | null>(null)
 
-  const { signals, isLoading, error, refresh, isPolling } = useSignals({
+  const { signals, isLoading, error, refresh, isPolling, isWebSocketConnected, isWebSocketConnecting } = useSignals({
     limit: 10,
     premiumOnly: false,
     pollInterval: 30000,
     autoPoll: true,
     cache: true,
+    useWebSocket: true,
   })
 
   useEffect(() => {
@@ -215,11 +217,15 @@ export default function DashboardPage() {
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-alpine-text-primary ">Latest Signals</h2>
-            <div className="flex items-center gap-2">
-              {isPolling && (
+            <div className="flex items-center gap-3">
+              <WebSocketStatus 
+                isConnected={isWebSocketConnected} 
+                isConnecting={isWebSocketConnecting}
+              />
+              {isPolling && !isWebSocketConnected && (
                 <div className="flex items-center gap-2 text-sm text-alpine-text-secondary">
                   <div className="w-2 h-2 bg-alpine-neon-cyan rounded-full animate-pulse" />
-                  Live
+                  Polling
                 </div>
               )}
               <button

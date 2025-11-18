@@ -20,6 +20,10 @@ interface UseSignalsReturn {
   refresh: () => Promise<void>
   /** Whether polling is active */
   isPolling: boolean
+  /** Whether WebSocket is connected */
+  isWebSocketConnected: boolean
+  /** Whether WebSocket is connecting */
+  isWebSocketConnecting: boolean
 }
 
 /**
@@ -106,24 +110,26 @@ export function useSignals(options: UseSignalsOptions = {}): UseSignalsReturn {
     const wsProtocol = apiUrl.startsWith('https') ? 'wss' : 'ws'
     const wsHost = apiUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')
     
-    // Get JWT token from Next.js API route (which proxies to backend)
+    // Try to get JWT token from Next.js API route (which proxies to backend)
     try {
       const response = await fetch('/api/auth/token', {
         credentials: 'include',
       })
+      
       if (response.ok) {
         const data = await response.json()
         const token = data.token || data.accessToken
         if (token) {
           return `${wsProtocol}://${wsHost}/ws/signals?token=${encodeURIComponent(token)}`
         }
-      } else {
-        // If token endpoint not available, try direct backend call
-        // This requires the user to be logged in via the backend API
-        console.warn('Token endpoint not available, WebSocket will use fallback auth')
+      } else if (response.status === 503) {
+        // Backend not available or token exchange not configured
+        // WebSocket will be disabled, fallback to polling only
+        console.warn('WebSocket authentication not available, using polling only')
+        return null
       }
     } catch (err) {
-      console.warn('Failed to get auth token for WebSocket:', err)
+      console.warn('Failed to get auth token for WebSocket, using polling only:', err)
     }
     
     return null
@@ -144,6 +150,7 @@ export function useSignals(options: UseSignalsOptions = {}): UseSignalsReturn {
   const { isConnected: wsConnected, lastMessage: wsMessage } = useWebSocket({
     url: wsUrl || '',
     enabled: enableWebSocket && !!session && !!wsUrl,
+    reconnect: true,
     onMessage: useCallback((data: any) => {
       if (data.type === 'new_signal') {
         const newSignal = data.data as Signal
@@ -155,20 +162,37 @@ export function useSignals(options: UseSignalsOptions = {}): UseSignalsReturn {
         
         // Add new signal to the beginning of the list
         setSignals(prev => {
-          // Check if signal already exists
+          // Check if signal already exists (prevent duplicates)
           if (prev.some(s => s.id === newSignal.id)) {
             return prev
           }
           
           // Add new signal and limit to specified limit
           const updated = [newSignal, ...prev].slice(0, limit)
+          
+          // Update cache if enabled
+          if (cache) {
+            cachedSignalsRef.current = updated
+          }
+          
           return updated
         })
+        
+        // Update last fetch time
+        lastFetchTimeRef.current = Date.now()
+      } else if (data.type === 'connected') {
+        console.log('WebSocket connected successfully')
+      } else if (data.type === 'pong') {
+        // Keep-alive response, no action needed
       }
-    }, [premiumOnly, limit]),
+    }, [premiumOnly, limit, cache]),
     onError: useCallback((err: Event) => {
       console.error('WebSocket error:', err)
       // Don't set error state for WebSocket errors, just log them
+      // Polling will continue as fallback
+    }, []),
+    onClose: useCallback(() => {
+      console.log('WebSocket connection closed, falling back to polling')
     }, []),
   })
 
@@ -233,19 +257,29 @@ export function useSignals(options: UseSignalsOptions = {}): UseSignalsReturn {
 
   /**
    * Setup polling interval
+   * Only poll if WebSocket is not connected (fallback mode)
    */
   useEffect(() => {
-    if (!isPolling || pollInterval <= 0) {
+    // If WebSocket is connected, reduce polling frequency significantly
+    // or disable it entirely
+    const shouldPoll = isPolling && (!enableWebSocket || !wsConnected)
+    
+    if (!shouldPoll || pollInterval <= 0) {
       return
     }
 
     // Initial fetch
     fetchSignals()
 
-    // Setup interval
+    // Setup interval with longer delay if WebSocket is enabled but not connected
+    // This provides a fallback while WebSocket is reconnecting
+    const effectiveInterval = enableWebSocket && !wsConnected 
+      ? Math.min(pollInterval * 2, 60000) // Max 60s when WebSocket is down
+      : pollInterval
+
     intervalRef.current = setInterval(() => {
       fetchSignals()
-    }, pollInterval)
+    }, effectiveInterval)
 
     // Cleanup
     return () => {
@@ -258,7 +292,7 @@ export function useSignals(options: UseSignalsOptions = {}): UseSignalsReturn {
         abortControllerRef.current = null
       }
     }
-  }, [isPolling, pollInterval, fetchSignals])
+  }, [isPolling, pollInterval, fetchSignals, enableWebSocket, wsConnected])
 
   /**
    * Cleanup on unmount
@@ -280,6 +314,8 @@ export function useSignals(options: UseSignalsOptions = {}): UseSignalsReturn {
     error,
     refresh,
     isPolling,
+    isWebSocketConnected: wsConnected,
+    isWebSocketConnecting: enableWebSocket && !!session && !!wsUrl && !wsConnected,
   }
 }
 

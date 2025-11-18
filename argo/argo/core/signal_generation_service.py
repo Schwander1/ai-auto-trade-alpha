@@ -2970,7 +2970,7 @@ class SignalGenerationService:
                 loop = asyncio.get_event_loop()
                 if loop.is_running():
                     # Schedule async cleanup if loop is running
-                asyncio.create_task(self.risk_monitor.stop_monitoring())
+                    asyncio.create_task(self.risk_monitor.stop_monitoring())
                 else:
                     # Run synchronously if no loop is running
                     loop.run_until_complete(self.risk_monitor.stop_monitoring())

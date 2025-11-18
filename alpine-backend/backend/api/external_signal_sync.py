@@ -119,12 +119,22 @@ async def receive_external_signal(
 
         logger.info(f"✅ Signal synced from external provider: {signal_data.symbol} {signal_data.action} ({signal.id})")
 
-        # Broadcast to WebSocket clients
+        # Broadcast to WebSocket clients (non-blocking)
         try:
             from backend.api.websocket_signals import broadcast_signal_to_websockets
-            await broadcast_signal_to_websockets(signal, db)
+            # Use asyncio.create_task to avoid blocking the response
+            import asyncio
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    asyncio.create_task(broadcast_signal_to_websockets(signal, db))
+                else:
+                    loop.run_until_complete(broadcast_signal_to_websockets(signal, db))
+            except RuntimeError:
+                # No event loop, create new one
+                asyncio.run(broadcast_signal_to_websockets(signal, db))
         except Exception as e:
-            logger.warning(f"Failed to broadcast signal to WebSocket clients: {e}")
+            logger.warning(f"Failed to broadcast signal to WebSocket clients: {e}", exc_info=True)
             # Don't fail the request if WebSocket broadcast fails
 
         return {
