@@ -186,6 +186,7 @@ class AlpacaProDataSource:
         sma_50 = indicators['sma_50']
         volume_ratio = indicators['volume_ratio']
         
+        # IMPROVEMENT: Start with base confidence of 60% (matching other sources)
         confidence = 60.0
         direction = 'NEUTRAL'
         

@@ -175,6 +175,7 @@ def map_legacy_regime_to_enhanced(legacy_regime: str) -> str:
 def adjust_confidence(base_confidence, regime):
     """
     Adjust signal confidence based on market regime
+    IMPROVEMENT: Only apply negative adjustments, not positive boosts
     
     Args:
         base_confidence (float): Original confidence score
@@ -184,11 +185,15 @@ def adjust_confidence(base_confidence, regime):
         float: Adjusted confidence
     """
     adjustments = {
-        'BULL': 1.05,    # Boost in clear uptrend
+        'BULL': 1.00,    # No boost - keep as-is (prevent artificial inflation)
         'BEAR': 0.95,    # Slight reduction in downtrend
         'CHOP': 0.90,    # Reduce in sideways market
         'CRISIS': 0.85,  # Reduce most during high volatility
-        'UNKNOWN': 1.00
+        'UNKNOWN': 1.00,
+        # Enhanced regimes
+        'TRENDING': 1.00,      # No boost for trending
+        'CONSOLIDATION': 0.90, # Reduce in consolidation
+        'VOLATILE': 0.90       # Reduce in volatile markets
     }
     
     return min(base_confidence * adjustments.get(regime, 1.0), 98.0)
