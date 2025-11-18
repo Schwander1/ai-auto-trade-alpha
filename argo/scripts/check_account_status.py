@@ -45,33 +45,41 @@ def main():
             sys.exit(1)
 
         if engine.alpaca_enabled:
-    account = engine.get_account_details()
-    print(f'\n✅ Connected to Alpaca')
-    print(f'   Account Name: {engine.account_name}')
-    print(f'   Environment: {engine.environment}')
-    print(f'   Portfolio Value: ${account["portfolio_value"]:,.2f}')
-    print(f'   Buying Power: ${account["buying_power"]:,.2f}')
-    print(f'   Account Number: {account["account_number"]}')
-    
-    # Verify this is the correct account for environment
-    if engine.environment == "production":
-        print(f'\n✅ Using PRODUCTION paper account')
-    else:
-        print(f'\n✅ Using DEV paper account')
-    
-    # Show positions
-    positions = engine.get_positions()
-    print(f'\n📊 Open Positions: {len(positions)}')
-    if positions:
-        print(f'\n{"Symbol":<10} {"Side":<6} {"Qty":<8} {"Entry":<10} {"Current":<10} {"P&L %":<10}')
-        print("-" * 60)
-        for pos in positions:
-            pnl_sign = "+" if pos['pnl_pct'] >= 0 else ""
-            print(f"{pos['symbol']:<10} {pos['side']:<6} {pos['qty']:<8} "
-                  f"${pos['entry_price']:<9.2f} ${pos['current_price']:<9.2f} "
-                  f"{pnl_sign}{pos['pnl_pct']:<9.2f}%")
-else:
-    print(f'\n❌ Alpaca not connected')
+            try:
+                account = engine.get_account_details()
+                print(f'\n✅ Connected to Alpaca')
+                print(f'   Account Name: {engine.account_name}')
+                print(f'   Environment: {engine.environment}')
+                print(f'   Portfolio Value: ${account["portfolio_value"]:,.2f}')
+                print(f'   Buying Power: ${account["buying_power"]:,.2f}')
+                print(f'   Account Number: {account["account_number"]}')
+                
+                # Verify this is the correct account for environment
+                if engine.environment == "production":
+                    print(f'\n✅ Using PRODUCTION paper account')
+                else:
+                    print(f'\n✅ Using DEV paper account')
+                
+                # Show positions
+                try:
+                    positions = engine.get_positions()
+                    print(f'\n📊 Open Positions: {len(positions)}')
+                    if positions:
+                        print(f'\n{"Symbol":<10} {"Side":<6} {"Qty":<8} {"Entry":<10} {"Current":<10} {"P&L %":<10}')
+                        print("-" * 60)
+                        for pos in positions:
+                            pnl_sign = "+" if pos['pnl_pct'] >= 0 else ""
+                            print(f"{pos['symbol']:<10} {pos['side']:<6} {pos['qty']:<8} "
+                                  f"${pos['entry_price']:<9.2f} ${pos['current_price']:<9.2f} "
+                                  f"{pnl_sign}{pos['pnl_pct']:<9.2f}%")
+                except Exception as e:
+                    logger.error(f"Error getting positions: {e}")
+                    print(f'\n⚠️  Could not get positions: {e}')
+            except Exception as e:
+                logger.error(f"Error getting account details: {e}")
+                print(f'\n❌ Error getting account details: {e}')
+        else:
+            print(f'\n❌ Alpaca not connected')
 
-print('\n' + '='*70 + '\n')
+        print('\n' + '='*70 + '\n')
 
