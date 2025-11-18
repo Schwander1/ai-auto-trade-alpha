@@ -556,6 +556,7 @@ def main():
     parser.add_argument('--json', action='store_true', help='Output as JSON')
     parser.add_argument('--component', choices=['all', 'signal', 'production', 'prop_firm'],
                        default='all', help='Component to evaluate')
+    parser.add_argument('--reports-dir', type=str, default=None, help='Reports directory (default: parent/reports)')
     args = parser.parse_args()
 
     results = {}
@@ -584,8 +585,12 @@ def main():
         if args.json:
             print(json.dumps(results, indent=2))
         else:
-            reports_dir = Path(__file__).parent.parent / "reports"
-            reports_dir.mkdir(exist_ok=True)
+            # Use specified reports directory or default to parent/reports
+            if args.reports_dir:
+                reports_dir = Path(args.reports_dir)
+            else:
+                reports_dir = Path(__file__).parent.parent / "reports"
+            reports_dir.mkdir(parents=True, exist_ok=True)
 
             report_file = reports_dir / f"performance_evaluation_enhanced_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
             with open(report_file, 'w') as f:

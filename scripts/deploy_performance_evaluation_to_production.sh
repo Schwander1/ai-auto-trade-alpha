@@ -158,19 +158,23 @@ cd ${REGULAR_DIR}
 # Remove old performance evaluation cron jobs
 (crontab -l 2>/dev/null | grep -v "performance_evaluation" | grep -v "performance_trend" | grep -v "performance_optimizer" | grep -v "performance_alert") | crontab - || true
 
-# Add new cron jobs
-(crontab -l 2>/dev/null; cat << 'CRON_JOBS'
+# Add new cron jobs with absolute paths to ensure reports go to specific folders
+(crontab -l 2>/dev/null; cat << CRON_JOBS
 # Performance Evaluation - Daily at 9 AM
-0 9 * * * cd /root/argo-production && python3 scripts/evaluate_performance_enhanced.py --days 1 --json > reports/daily_evaluation_$(date +\%Y\%m\%d).json 2>&1
+# Reports saved to: /root/argo-production/reports/
+0 9 * * * cd ${REGULAR_DIR} && python3 scripts/evaluate_performance_enhanced.py --days 1 --json --reports-dir ${REGULAR_DIR}/reports > ${REGULAR_DIR}/reports/daily_evaluation_\$(date +\%Y\%m\%d).json 2>&1
 
 # Performance Trend Analysis - Weekly on Sundays at 10 AM
-0 10 * * 0 cd /root/argo-production && python3 scripts/performance_trend_analyzer.py --days 7 --output reports/weekly_trends_$(date +\%Y\%m\%d).txt 2>&1
+# Reports saved to: /root/argo-production/reports/
+0 10 * * 0 cd ${REGULAR_DIR} && python3 scripts/performance_trend_analyzer.py --days 7 --output ${REGULAR_DIR}/reports/weekly_trends_\$(date +\%Y\%m\%d).txt 2>&1
 
 # Performance Optimization Check - Daily at 11 AM
-0 11 * * * cd /root/argo-production && python3 scripts/performance_optimizer.py reports/daily_evaluation_$(date +\%Y\%m\%d).json --output reports/daily_optimizations_$(date +\%Y\%m\%d).txt 2>&1
+# Reports saved to: /root/argo-production/reports/
+0 11 * * * cd ${REGULAR_DIR} && python3 scripts/performance_optimizer.py ${REGULAR_DIR}/reports/daily_evaluation_\$(date +\%Y\%m\%d).json --output ${REGULAR_DIR}/reports/daily_optimizations_\$(date +\%Y\%m\%d).txt 2>&1
 
 # Performance Alert Check - Every 6 hours
-0 */6 * * * cd /root/argo-production && python3 scripts/performance_alert.py --check 2>&1 | tee -a logs/monitoring/alerts.log
+# Logs saved to: /root/argo-production/logs/monitoring/
+0 */6 * * * cd ${REGULAR_DIR} && python3 scripts/performance_alert.py --check --reports-dir ${REGULAR_DIR}/reports 2>&1 | tee -a ${REGULAR_DIR}/logs/monitoring/alerts.log
 CRON_JOBS
 ) | crontab -
 
