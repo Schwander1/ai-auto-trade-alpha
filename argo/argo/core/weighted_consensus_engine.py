@@ -35,10 +35,22 @@ def _get_config_path():
     if config_path and os.path.exists(config_path):
         return config_path
     
-    # Check production path
-    prod_path = Path('/root/argo-production/config.json')
-    if prod_path.exists():
-        return str(prod_path)
+    # Check current working directory first (for prop firm service)
+    cwd_config = Path.cwd() / 'config.json'
+    if cwd_config.exists():
+        return str(cwd_config)
+    
+    # Check production paths (in order of preference)
+    prod_paths = [
+        '/root/argo-production-prop-firm/config.json',  # Prop firm service
+        '/root/argo-production-green/config.json',      # Regular trading (green)
+        '/root/argo-production-blue/config.json',       # Regular trading (blue)
+        '/root/argo-production/config.json',            # Legacy
+    ]
+    
+    for prod_path in prod_paths:
+        if os.path.exists(prod_path):
+            return prod_path
     
     # Check dev path (argo/config.json)
     dev_path = Path(__file__).parent.parent.parent / 'config.json'
