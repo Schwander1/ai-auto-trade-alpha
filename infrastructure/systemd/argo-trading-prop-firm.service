@@ -29,6 +29,10 @@ PrivateTmp=true
 # Resource limits
 LimitNOFILE=65536
 MemoryMax=4G
+MemoryHigh=3G
+MemoryLimit=4G
+# CPU limits
+CPUQuota=200%
 # Increased for signal generation with 30s timeouts and parallel data fetching
 
 # Graceful shutdown

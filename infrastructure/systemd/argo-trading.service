@@ -22,7 +22,11 @@ PrivateTmp=true
 
 # Resource limits
 LimitNOFILE=65536
-MemoryMax=2G
+MemoryMax=4G
+MemoryHigh=3G
+MemoryLimit=4G
+# CPU limits
+CPUQuota=200%
 
 # Graceful shutdown
 KillMode=mixed

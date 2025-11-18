@@ -192,8 +192,10 @@ class SignalGenerationService:
         except ImportError:
             self.performance_metrics = None
 
-        # OPTIMIZATION 7: Regime detection caching
+        # OPTIMIZATION 7: Regime detection caching (with size limits)
         self._regime_cache: Dict[str, tuple] = {}  # {data_hash: (regime, timestamp)}
+        self._regime_cache_max_size = 500  # Max 500 entries
+        self._regime_cache_ttl = 300  # 5 minute TTL
 
         # OPTIMIZATION 11: JSON serialization cache
         try:
@@ -1508,6 +1510,33 @@ class SignalGenerationService:
         ]
         return f"{symbol}:{':'.join(signal_summary)}"
 
+    def _cleanup_regime_cache(self):
+        """Remove old regime cache entries to prevent memory growth"""
+        if len(self._regime_cache) < self._regime_cache_max_size:
+            return
+        
+        now = datetime.now(timezone.utc)
+        expired_keys = []
+        for key, (regime, cache_time) in self._regime_cache.items():
+            if (now - cache_time).total_seconds() >= self._regime_cache_ttl:
+                expired_keys.append(key)
+        
+        # Remove expired entries
+        for key in expired_keys:
+            del self._regime_cache[key]
+        
+        # If still too large, remove oldest entries
+        if len(self._regime_cache) >= self._regime_cache_max_size:
+            entries_to_remove = len(self._regime_cache) - int(self._regime_cache_max_size * 0.8)  # Keep 80%
+            sorted_entries = sorted(
+                self._regime_cache.items(),
+                key=lambda x: x[1][1]  # Sort by timestamp
+            )
+            for key, _ in sorted_entries[:int(entries_to_remove)]:
+                del self._regime_cache[key]
+        
+        logger.debug(f"🧹 Cleaned regime cache: {len(expired_keys)} expired, {len(self._regime_cache)} remaining")
+
     def _cleanup_consensus_cache(self):
         """Remove old cache entries to prevent memory growth (OPTIMIZED: efficient cleanup)"""
         if len(self._consensus_cache) > 1000:  # Max 1000 entries
@@ -1611,11 +1640,13 @@ class SignalGenerationService:
             # Check in-memory cache
             if cache_key in self._regime_cache:
                 cached_regime, cache_time = self._regime_cache[cache_key]
-                if (
-                    datetime.now(timezone.utc) - cache_time
-                ).total_seconds() < 300:  # 5 minute cache
+                cache_age = (datetime.now(timezone.utc) - cache_time).total_seconds()
+                if cache_age < self._regime_cache_ttl:
                     logger.debug(f"✅ Using in-memory cached regime: {cached_regime}")
                     return cached_regime
+                else:
+                    # Remove expired entry
+                    del self._regime_cache[cache_key]
 
             # Detect regime
             try:
@@ -1629,13 +1660,17 @@ class SignalGenerationService:
                 regime = map_legacy_regime_to_enhanced(legacy_regime)
 
                 # Cache result
-                ttl = 300  # 5 minute cache
+                ttl = self._regime_cache_ttl  # 5 minute cache
                 if self.redis_cache:
                     if hasattr(self.redis_cache, "aset"):
                         await self.redis_cache.aset(cache_key, regime, ttl=ttl)
                     else:
                         self.redis_cache.set(cache_key, regime, ttl=ttl)
 
+                # Cleanup old entries if cache is too large
+                if len(self._regime_cache) >= self._regime_cache_max_size:
+                    self._cleanup_regime_cache()
+                
                 self._regime_cache[cache_key] = (regime, datetime.now(timezone.utc))
 
                 return regime
@@ -2174,8 +2209,8 @@ class SignalGenerationService:
 
     async def generate_signals_cycle(self, symbols: List[str] = None) -> List[Dict]:
         """
-        Generate signals for all symbols in one cycle with optimized trading execution
-
+        Generate signals for all symbols with error recovery and performance tracking
+        
         Returns:
             List of generated signals
         """
@@ -2190,6 +2225,10 @@ class SignalGenerationService:
 
         # Process in adaptive batches with early exit
         batch_size = min(6, len(sorted_symbols))
+        
+        # Performance tracking
+        import time
+        cycle_start_time = time.time()
 
         for i in range(0, len(sorted_symbols), batch_size):
             batch = sorted_symbols[i : i + batch_size]
@@ -2205,6 +2244,9 @@ class SignalGenerationService:
                     if isinstance(result, Exception):
                         logger.error(f"Error processing {symbol}: {result}")
                         self._track_symbol_success(symbol, False)
+                        # Track error in performance metrics
+                        if self.performance_metrics:
+                            self.performance_metrics.record_error("signal_generation", str(type(result).__name__))
                         continue
 
                     signal = result
@@ -2231,6 +2273,15 @@ class SignalGenerationService:
 
         # Cleanup and finalize
         self._finalize_signal_cycle(symbols)
+        
+        # Track performance metrics
+        if cycle_start_time and self.performance_metrics:
+            import time
+            cycle_duration = time.time() - cycle_start_time
+            self.performance_metrics.record_signal_generation_time(cycle_duration)
+            for _ in symbols:
+                self.performance_metrics.record_symbol_processed()
+            logger.debug(f"📊 Signal cycle completed in {cycle_duration:.2f}s for {len(symbols)} symbols")
 
         return generated_signals
 
@@ -2338,10 +2389,44 @@ class SignalGenerationService:
         # Only run gc.collect() periodically to avoid overhead
         import gc
         import time
+        import psutil
+        import os
 
         current_time = time.time()
         if not hasattr(self, "_last_gc_time"):
             self._last_gc_time = 0.0
+        if not hasattr(self, "_last_memory_check"):
+            self._last_memory_check = 0.0
+
+        # Check memory usage every minute
+        if (current_time - self._last_memory_check) > 60:  # 1 minute
+            try:
+                process = psutil.Process(os.getpid())
+                memory_info = process.memory_info()
+                memory_mb = memory_info.rss / 1024 / 1024
+                memory_percent = process.memory_percent()
+                
+                # Log memory usage
+                if memory_percent > 80:
+                    logger.warning(f"⚠️  High memory usage: {memory_mb:.1f}MB ({memory_percent:.1f}%)")
+                
+                # Force GC if memory usage is high
+                if memory_percent > 85 or memory_mb > 1500:  # > 1.5GB or > 85%
+                    logger.warning(f"🧹 Forcing GC due to high memory: {memory_mb:.1f}MB ({memory_percent:.1f}%)")
+                    gc.collect()
+                    self._last_gc_time = current_time
+                    
+                    # Cleanup caches
+                    self._cleanup_consensus_cache()
+                    self._cleanup_regime_cache()
+                    self._cleanup_reasoning_cache()
+                
+                self._last_memory_check = current_time
+            except ImportError:
+                # psutil not available, skip memory monitoring
+                pass
+            except Exception as e:
+                logger.debug(f"Memory check error: {e}")
 
         # Run GC every 5 minutes or if memory usage is high
         if (current_time - self._last_gc_time) > 300:  # 5 minutes
