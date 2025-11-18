@@ -6,36 +6,79 @@ Checks performance evaluation reports and sends alerts on issues
 import sys
 import json
 import argparse
+import logging
 from pathlib import Path
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
+# Configure logging
+logging.basicConfig(
+    level=logging.WARNING,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 def find_latest_report(reports_dir: str) -> Optional[Path]:
-    """Find latest performance evaluation report"""
-    reports_path = Path(reports_dir)
-    if not reports_path.exists():
+    """Find latest performance evaluation report with improved error handling"""
+    try:
+        reports_path = Path(reports_dir)
+        if not reports_path.exists():
+            logger.warning(f"Reports directory does not exist: {reports_dir}")
+            return None
+        
+        # Try daily evaluation reports first
+        reports = list(reports_path.glob("daily_evaluation_*.json"))
+        if not reports:
+            # Fallback to any evaluation report
+            reports = list(reports_path.glob("performance_evaluation*.json"))
+        
+        if not reports:
+            logger.debug(f"No performance reports found in {reports_dir}")
+            return None
+        
+        # Sort by modification time, most recent first
+        reports.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+        return reports[0]
+    except Exception as e:
+        logger.error(f"Error finding latest report: {e}", exc_info=True)
         return None
-    
-    reports = list(reports_path.glob("daily_evaluation_*.json"))
-    if not reports:
-        # Try any evaluation report
-        reports = list(reports_path.glob("performance_evaluation*.json"))
-    
-    if not reports:
-        return None
-    
-    # Sort by modification time
-    reports.sort(key=lambda p: p.stat().st_mtime, reverse=True)
-    return reports[0]
 
 def check_performance_alerts(report_path: Path) -> List[Dict]:
-    """Check for performance issues and generate alerts"""
+    """Check for performance issues and generate alerts with improved error handling"""
     alerts = []
     
     try:
+        if not report_path.exists():
+            alerts.append({
+                'level': 'error',
+                'component': 'system',
+                'message': f"Report file does not exist: {report_path}",
+                'action': 'Verify report path and run evaluation'
+            })
+            return alerts
+        
         with open(report_path, 'r') as f:
             report = json.load(f)
+    except json.JSONDecodeError as e:
+        logger.error(f"JSON decode error in {report_path}: {e}")
+        alerts.append({
+            'level': 'error',
+            'component': 'system',
+            'message': f"Invalid JSON in report: {e}",
+            'action': 'Check report file format'
+        })
+        return alerts
+    except PermissionError as e:
+        logger.error(f"Permission error reading {report_path}: {e}")
+        alerts.append({
+            'level': 'error',
+            'component': 'system',
+            'message': f"Permission denied reading report: {e}",
+            'action': 'Check file permissions'
+        })
+        return alerts
     except Exception as e:
+        logger.error(f"Error reading report {report_path}: {e}", exc_info=True)
         alerts.append({
             'level': 'error',
             'component': 'system',

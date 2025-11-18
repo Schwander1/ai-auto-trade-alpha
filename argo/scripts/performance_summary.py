@@ -5,32 +5,63 @@ Quick summary of current performance status
 """
 import sys
 import json
+import logging
 from pathlib import Path
 from datetime import datetime, timedelta
+from typing import Optional
 
-def get_latest_report(reports_dir: str = "reports") -> Path:
-    """Get latest evaluation report"""
-    reports_path = Path(reports_dir)
-    if not reports_path.exists():
+# Configure logging
+logging.basicConfig(
+    level=logging.WARNING,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+def get_latest_report(reports_dir: str = "reports") -> Optional[Path]:
+    """Get latest evaluation report with improved error handling"""
+    try:
+        reports_path = Path(reports_dir)
+        if not reports_path.exists():
+            logger.warning(f"Reports directory does not exist: {reports_dir}")
+            return None
+        
+        # Try daily evaluation reports first
+        reports = list(reports_path.glob("daily_evaluation_*.json"))
+        if not reports:
+            # Fallback to any performance evaluation reports
+            reports = list(reports_path.glob("performance_evaluation*.json"))
+        
+        if not reports:
+            logger.warning(f"No performance reports found in {reports_dir}")
+            return None
+        
+        # Sort by modification time, most recent first
+        reports.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+        return reports[0]
+    except Exception as e:
+        logger.error(f"Error getting latest report: {e}", exc_info=True)
         return None
-    
-    reports = list(reports_path.glob("daily_evaluation_*.json"))
-    if not reports:
-        reports = list(reports_path.glob("performance_evaluation*.json"))
-    
-    if not reports:
-        return None
-    
-    reports.sort(key=lambda p: p.stat().st_mtime, reverse=True)
-    return reports[0]
 
 def print_summary(report_path: Path):
-    """Print performance summary"""
+    """Print performance summary with improved error handling"""
     try:
+        if not report_path.exists():
+            print(f"❌ Report file does not exist: {report_path}")
+            return
+        
         with open(report_path, 'r') as f:
             report = json.load(f)
-    except Exception:
-        print("❌ Could not read report")
+    except json.JSONDecodeError as e:
+        print(f"❌ Could not parse report JSON: {e}")
+        logger.error(f"JSON decode error in {report_path}: {e}")
+        return
+    except PermissionError as e:
+        print(f"❌ Permission denied reading report: {e}")
+        logger.error(f"Permission error reading {report_path}: {e}")
+        return
+    except Exception as e:
+        print(f"❌ Could not read report: {e}")
+        logger.error(f"Error reading report {report_path}: {e}", exc_info=True)
         return
     
     print("\n" + "=" * 70)
@@ -66,9 +97,33 @@ def print_summary(report_path: Path):
                 print(f"  ⚠️  Daily Loss Breaches: {compliance.get('daily_loss_breaches')}")
         print()
 
-if __name__ == '__main__':
-    report = get_latest_report()
-    if report:
-        print_summary(report)
+def main():
+    """Main entry point with command line argument support"""
+    import argparse
+    
+    parser = argparse.ArgumentParser(description='Performance Summary')
+    parser.add_argument('--reports-dir', default='reports', help='Reports directory')
+    parser.add_argument('--report', help='Specific report file to summarize')
+    parser.add_argument('--verbose', '-v', action='store_true', help='Verbose output')
+    
+    args = parser.parse_args()
+    
+    if args.verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
+    
+    # Use specific report if provided, otherwise find latest
+    if args.report:
+        report_path = Path(args.report)
+        if not report_path.exists():
+            print(f"❌ Report file not found: {args.report}")
+            sys.exit(1)
     else:
-        print("⚠️  No performance reports found. Run evaluation first.")
+        report_path = get_latest_report(args.reports_dir)
+        if not report_path:
+            print(f"⚠️  No performance reports found in {args.reports_dir}. Run evaluation first.")
+            sys.exit(1)
+    
+    print_summary(report_path)
+
+if __name__ == '__main__':
+    main()

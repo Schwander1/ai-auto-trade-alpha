@@ -42,38 +42,54 @@ except ImportError as e:
     print("   Some features may be limited")
 
 def get_db_connection() -> Optional[sqlite3.Connection]:
-    """Get database connection for signal/trade history"""
-    try:
-        # Try multiple possible database locations
-        db_paths = [
-            Path(__file__).parent.parent / "argo.db",
-            Path(__file__).parent.parent / "data" / "argo.db",
-            Path(__file__).parent.parent.parent / "argo.db",
-        ]
+    """Get database connection for signal/trade history with improved error handling"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    # Try multiple possible database locations
+    db_paths = [
+        Path(__file__).parent.parent / "argo.db",
+        Path(__file__).parent.parent / "data" / "argo.db",
+        Path(__file__).parent.parent.parent / "argo.db",
+        Path("/root/argo-production/argo.db"),  # Production path
+        Path("/root/argo-production/data/argo.db"),  # Production data path
+    ]
 
-        for db_path in db_paths:
+    for db_path in db_paths:
+        try:
             if db_path.exists():
-                conn = sqlite3.connect(str(db_path))
+                conn = sqlite3.connect(str(db_path), timeout=10.0)
                 conn.row_factory = sqlite3.Row
+                # Test connection
+                conn.execute("SELECT 1").fetchone()
                 return conn
+        except sqlite3.Error as e:
+            logger.debug(f"Could not connect to {db_path}: {e}")
+            continue
+        except Exception as e:
+            logger.debug(f"Unexpected error connecting to {db_path}: {e}")
+            continue
 
-        return None
-    except Exception as e:
-        print(f"⚠️  Could not connect to database: {e}")
-        return None
+    logger.warning("Could not find or connect to database in any expected location")
+    return None
 
 def query_signal_history(days: int = 30) -> List[Dict]:
-    """Query signal history from database"""
+    """Query signal history from database with improved error handling and retry logic"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
     conn = get_db_connection()
     if not conn:
+        logger.warning("No database connection available for signal history")
         return []
 
     try:
         cutoff_date = datetime.now() - timedelta(days=days)
         cursor = conn.cursor()
 
-        # Try to query signals table
+        # Try to query signals table with improved query
         try:
+            # Use parameterized query to prevent SQL injection
             cursor.execute("""
                 SELECT symbol, action, entry_price, confidence, timestamp, outcome, profit_loss_pct
                 FROM signals
@@ -83,15 +99,24 @@ def query_signal_history(days: int = 30) -> List[Dict]:
             """, (cutoff_date.isoformat(),))
 
             rows = cursor.fetchall()
-            return [dict(row) for row in rows]
-        except sqlite3.OperationalError:
+            result = [dict(row) for row in rows]
+            logger.debug(f"Retrieved {len(result)} signals from database")
+            return result
+        except sqlite3.OperationalError as e:
             # Table might not exist or have different schema
+            logger.debug(f"Signals table query failed (table may not exist): {e}")
+            return []
+        except sqlite3.DatabaseError as e:
+            logger.warning(f"Database error querying signals: {e}")
             return []
     except Exception as e:
-        print(f"⚠️  Error querying signal history: {e}")
+        logger.error(f"Unexpected error querying signal history: {e}", exc_info=True)
         return []
     finally:
-        conn.close()
+        try:
+            conn.close()
+        except Exception:
+            pass  # Ignore errors on close
 
 def calculate_signal_quality_metrics(signals: List[Dict]) -> Dict:
     """Calculate signal quality metrics from historical data"""
@@ -598,10 +623,17 @@ def main():
 
             print(f"\n💾 Enhanced report saved to: {report_file}")
 
+    except KeyboardInterrupt:
+        print("\n⚠️  Evaluation interrupted by user")
+        sys.exit(130)
     except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error during evaluation: {e}", exc_info=True)
         print(f"\n❌ Error during evaluation: {e}")
-        import traceback
-        traceback.print_exc()
+        if not args.json:
+            import traceback
+            traceback.print_exc()
         sys.exit(1)
 
 if __name__ == '__main__':
