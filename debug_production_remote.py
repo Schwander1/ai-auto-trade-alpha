@@ -65,7 +65,9 @@ class RemoteProductionDebugger:
     def run_ssh_command(self, server: str, user: str, cmd: str, timeout: int = 30) -> Tuple[bool, str]:
         """Run a command on remote server via SSH"""
         try:
-            ssh_cmd = f"ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no {user}@{server} '{cmd}'"
+            # Escape single quotes in the command
+            escaped_cmd = cmd.replace("'", "'\"'\"'")
+            ssh_cmd = f"ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no {user}@{server} '{escaped_cmd}'"
             result = subprocess.run(
                 ssh_cmd,
                 shell=True,
@@ -73,7 +75,8 @@ class RemoteProductionDebugger:
                 text=True,
                 timeout=timeout
             )
-            return result.returncode == 0, result.stdout.strip()
+            output = result.stdout.strip() if result.stdout else ""
+            return result.returncode == 0, output
         except subprocess.TimeoutExpired:
             return False, "SSH command timed out"
         except Exception as e:
@@ -142,14 +145,29 @@ class RemoteProductionDebugger:
         )
         
         container_list = {}
-        if success and containers.strip():
+        if success and containers and containers.strip():
             for line in containers.split('\n'):
-                if line.strip():
+                line = line.strip()
+                if line:
+                    # Handle tab-separated values, but be flexible with whitespace
                     parts = line.split('\t')
                     if len(parts) >= 2:
-                        name = parts[0]
-                        status = parts[1]
-                        container_list[name] = status
+                        name = parts[0].strip()
+                        status = '\t'.join(parts[1:]).strip()  # Join remaining parts
+                        if name:
+                            container_list[name] = status
+                    elif ' ' in line:
+                        # Fallback: split on first space if no tabs
+                        parts = line.split(' ', 1)
+                        if len(parts) >= 2:
+                            name = parts[0].strip()
+                            status = parts[1].strip()
+                            if name:
+                                container_list[name] = status
+        
+        # Debug: Show what containers were found
+        if not container_list:
+            self.warning(f"No containers parsed from output. Raw output length: {len(containers) if containers else 0}")
         
         # Check specific containers with flexible matching
         expected_patterns = {
@@ -165,16 +183,20 @@ class RemoteProductionDebugger:
         found_containers = {}
         for key, patterns in expected_patterns.items():
             for pattern in patterns:
+                # Check exact match first
                 if pattern in container_list:
                     found_containers[key] = {"name": pattern, "status": container_list[pattern]}
                     break
-                # Also check for partial matches
+            # If not found with exact pattern, try matching any container name
+            if key not in found_containers:
                 for container_name, status in container_list.items():
-                    if pattern in container_name or container_name == pattern:
-                        found_containers[key] = {"name": container_name, "status": status}
+                    # Check if container name matches any of the patterns
+                    for pattern in patterns:
+                        if container_name == pattern or pattern in container_name:
+                            found_containers[key] = {"name": container_name, "status": status}
+                            break
+                    if key in found_containers:
                         break
-                if key in found_containers:
-                    break
         
         if found_containers:
             self.success(f"Found {len(found_containers)} Alpine containers:")
@@ -370,15 +392,28 @@ class RemoteProductionDebugger:
                     bg_task = signal_gen.get('background_task_running', False)
                     error = signal_gen.get('background_task_error')
                     
-                    if status == 'active' and bg_task:
-                        self.success("Signal generation: Active")
-                    elif status == 'active':
+                    if status in ['active', 'running'] and bg_task:
+                        self.success("Signal generation: Active and running")
+                    elif status in ['active', 'running']:
                         self.warning("Signal generation: Active but background task not running")
                     else:
                         self.warning(f"Signal generation: {status}")
                     
                     if error:
                         self.error(f"Signal generation error: {error[:100]}")
+        except requests.exceptions.ConnectionError:
+            # Try with explicit port
+            try:
+                response = requests.get(f"http://{ARGO_SERVER}:8000/health", timeout=10)
+                if response.status_code == 200:
+                    data = response.json()
+                    signal_gen = data.get('signal_generation', {})
+                    if signal_gen:
+                        status = signal_gen.get('status', 'unknown')
+                        if status in ['active', 'running']:
+                            self.success(f"Signal generation: {status}")
+            except:
+                self.warning("Could not check signal generation (connection error)")
         except Exception as e:
             self.warning(f"Could not check signal generation: {str(e)[:50]}")
         
