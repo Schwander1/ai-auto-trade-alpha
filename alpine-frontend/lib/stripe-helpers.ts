@@ -2,8 +2,18 @@
  * Stripe subscription helper functions
  */
 
-import type { User } from '@prisma/client'
 import { TIER_PRICING } from './stripe'
+
+// Define User type locally to avoid Prisma client dependency issues
+type User = {
+  id: string
+  email: string
+  tier: string
+  subscriptionStatus?: string | null
+  subscriptionId?: string | null
+  subscriptionTier?: string | null
+  [key: string]: unknown
+}
 
 /**
  * Check if user has an active subscription

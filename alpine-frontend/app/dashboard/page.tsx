@@ -225,7 +225,9 @@ export default function DashboardPage() {
               <button
                 onClick={refresh}
                 disabled={isLoading}
-                className="p-2 rounded-lg bg-alpine-black-secondary border border-alpine-black-border hov-er:border-alpine-neon-cyan/50 transition-colors disabled:opacity-50"
+                className="p-2 rounded-lg bg-alpine-black-secondary border border-alpine-black-border hover:border-alpine-neon-cyan/50 transition-colors disabled:opacity-50"
+                title="Refresh signals"
+                aria-label="Refresh signals"
               >
                 <RefreshCw className={`w-4 h-4 text-alpine-text-primary ${isLoading ? 'animate-spin' : ''}`} />
               </button>
