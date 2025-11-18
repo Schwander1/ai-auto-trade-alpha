@@ -2345,12 +2345,12 @@ class SignalGenerationService:
 
         # Run GC every 5 minutes or if memory usage is high
         if (current_time - self._last_gc_time) > 300:  # 5 minutes
-        gc.collect()
+            gc.collect()
             self._last_gc_time = current_time
 
         # Flush any pending batch inserts
         try:
-        self.tracker.flush_pending()
+            self.tracker.flush_pending()
         except Exception as e:
             logger.debug(f"Error flushing pending signals: {e}")
 
@@ -2466,8 +2466,9 @@ class SignalGenerationService:
                 logger.warning(f"⏭️  Skipping {symbol} - {reason}")
                 return
 
-            # Check existing position
-            if any(p["symbol"] == symbol for p in existing_positions):
+            # OPTIMIZATION: Check existing position using set for O(1) lookup
+            existing_symbols = {p.get("symbol") for p in existing_positions if p.get("symbol")}
+            if symbol in existing_symbols:
                 logger.info(f"⏭️  Skipping {symbol} - position already exists")
                 return
 

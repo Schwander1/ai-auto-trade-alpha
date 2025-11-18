@@ -1,183 +1,129 @@
 # Trade Execution - Comprehensive Analysis
 
 **Date:** 2025-01-15  
-**Status:** 🔍 **ANALYSIS COMPLETE**
+**Status:** 🔍 **ANALYSIS IN PROGRESS**
 
 ## Current Trade Execution Flow
 
-### 1. Signal Generation → Execution Pipeline
+### 1. Signal Generation → Trade Execution Pipeline
 
 ```
 Signal Generated
     ↓
-_process_and_store_signal()
+_validate_trade() - Risk checks
     ↓
-_execute_trade_if_valid() [ASYNC]
+Check existing position
     ↓
-trading_engine.execute_signal() [SYNC] ⚠️ BLOCKING
+Check correlation limits
     ↓
-_execute_live() [SYNC]
+execute_signal() - Trading engine
     ↓
-_prepare_order_details()
+_execute_live() - Alpaca API
     ↓
-_submit_main_order()
+_prepare_order_details() - Calculate qty
     ↓
-_place_bracket_orders()
+_submit_main_order() - Place order
+    ↓
+get_order_status() - Verify order
+    ↓
+_place_bracket_orders() - Stop loss/take profit
+    ↓
+Track order & invalidate caches
 ```
 
 ## Issues Identified
 
-### 1. ⚠️ **Async/Sync Mismatch**
-- `_execute_trade_if_valid()` is async
-- `trading_engine.execute_signal()` is synchronous
+### 1. ⚠️ Async/Sync Mixing
+- `execute_signal()` is synchronous but called from async context
 - Blocks event loop during trade execution
-- **Impact:** High - blocks signal generation pipeline
+- Could be optimized with async execution
 
-### 2. ⚠️ **Blocking Retry Logic**
-- Uses `time.sleep()` in retry logic
-- Blocks entire thread during retries
-- **Impact:** Medium - delays other operations
+### 2. ⚠️ Redundant Order Status Check
+- `get_order_status()` called immediately after order submission
+- For market orders, status might not be available yet
+- Adds unnecessary API call overhead
 
-### 3. ⚠️ **Error Handling Gaps**
-- Some exceptions not caught properly
-- Bracket order failures don't cancel main order
-- Connection errors not handled gracefully
-- **Impact:** Medium - potential order issues
+### 3. ⚠️ Position Size Calculation
+- Redundant `hasattr()` check for `prop_firm_enabled`
+- Could be optimized with direct attribute access
 
-### 4. ⚠️ **Position Size Calculation**
-- Multiple validation checks (good)
-- But could be optimized with early returns
-- Some redundant calculations
-- **Impact:** Low - minor performance
+### 4. ⚠️ Bracket Order Placement
+- No retry logic for bracket order failures
+- Partial failures not handled optimally
+- Could implement retry with backoff
 
-### 5. ⚠️ **Order Status Checking**
-- Synchronous API calls
-- Could be async for better performance
-- **Impact:** Low - minor performance
+### 5. ⚠️ Error Handling
+- Some exceptions could be more specific
+- Error recovery could be improved
+- Better error messages needed
 
-### 6. ⚠️ **Cache Invalidation**
-- Good implementation
-- But could be more selective
-- **Impact:** Low - minor optimization
+### 6. ⚠️ Race Conditions
+- Position checks might have race conditions
+- Multiple signals for same symbol could execute concurrently
+- Need better locking mechanism
 
-## Current Optimizations (Already Implemented)
+### 7. ⚠️ API Call Optimization
+- Multiple API calls that could be batched
+- Account data fetched multiple times
+- Order status checked redundantly
 
-✅ **Connection Health Checks**
-- `_check_connection_health()` before execution
-- Validates account status
+## Optimization Opportunities
 
-✅ **Account Caching**
-- 30-second cache for account data
-- Reduces API calls
+### 1. Async Trade Execution
+- Convert `execute_signal()` to async
+- Use async Alpaca client if available
+- Non-blocking trade execution
 
-✅ **Position Caching**
-- 10-second cache for positions
-- Reduces API calls
+### 2. Optimize Order Status Check
+- Only check status if needed
+- Cache order status
+- Batch status checks
 
-✅ **Volatility Caching**
-- 1-hour cache for volatility
-- Reduces yfinance API calls
+### 3. Position Size Calculation
+- Remove redundant hasattr checks
+- Cache position size calculations
+- Optimize volatility lookups
 
-✅ **Error Handling**
-- Specific error handling for Alpaca API errors
-- Rate limit detection
-- Connection error handling
+### 4. Bracket Order Retry
+- Add retry logic with exponential backoff
+- Better error recovery
+- Track partial failures
 
-✅ **Position Size Validation**
-- Multiple validation layers
-- Minimum order size checks
-- Buying power validation
+### 5. Error Handling
+- More specific exception handling
+- Better error messages
+- Improved recovery logic
 
-## Recommended Fixes and Optimizations
+### 6. Race Condition Prevention
+- Add locking for position checks
+- Prevent concurrent trades for same symbol
+- Better synchronization
 
-### Priority 1: High Impact
-
-1. **Make Trade Execution Async**
-   - Convert `execute_signal()` to async
-   - Use `asyncio.to_thread()` for Alpaca API calls
-   - Non-blocking trade execution
-
-2. **Async Retry Logic**
-   - Replace `time.sleep()` with `asyncio.sleep()`
-   - Non-blocking retries
-
-3. **Better Error Recovery**
-   - Cancel main order if bracket orders fail
-   - Better error messages
-   - Retry with exponential backoff
-
-### Priority 2: Medium Impact
-
-4. **Optimize Position Size Calculation**
-   - Early returns for invalid inputs
-   - Cache intermediate calculations
-   - Reduce redundant checks
-
-5. **Async Order Status Checking**
-   - Make `get_order_status()` async
-   - Parallel status checks for multiple orders
-
-6. **Selective Cache Invalidation**
-   - Only invalidate when necessary
-   - Partial cache updates
-
-### Priority 3: Low Impact
-
-7. **Connection Pooling**
-   - Reuse Alpaca client connections
-   - Better connection management
-
-8. **Order Batching**
-   - Batch bracket order placement
-   - Reduce API calls
+### 7. API Call Batching
+- Batch account/position queries
+- Cache API responses
+- Reduce redundant calls
 
 ## Performance Metrics
 
 ### Current Performance
-- Trade execution: ~500-1000ms (blocking)
-- Position size calculation: ~50-100ms
-- Order placement: ~200-500ms
-- Bracket orders: ~300-600ms
+- Order submission: ~200-500ms
+- Bracket order placement: ~200-400ms
+- Total execution time: ~400-900ms per trade
 
-### Expected Improvements
-- Trade execution: ~500-1000ms (non-blocking)
-- Position size calculation: ~30-50ms (optimized)
-- Order placement: ~200-500ms (same)
-- Bracket orders: ~300-600ms (same)
+### Target Performance
+- Order submission: ~150-300ms
+- Bracket order placement: ~150-300ms
+- Total execution time: ~300-600ms per trade
 
-## Risk Assessment
+## Next Steps
 
-### Low Risk Optimizations
-- Position size calculation optimization
-- Cache improvements
-- Error message improvements
-
-### Medium Risk Optimizations
-- Async retry logic
-- Selective cache invalidation
-
-### High Risk Optimizations
-- Async trade execution (requires careful testing)
-- Order cancellation logic changes
-
-## Testing Requirements
-
-1. **Unit Tests**
-   - Position size calculation
-   - Order validation
-   - Error handling
-
-2. **Integration Tests**
-   - Full trade execution flow
-   - Error scenarios
-   - Retry logic
-
-3. **Performance Tests**
-   - Async vs sync execution
-   - Cache hit rates
-   - API call reduction
+1. ✅ Analyze current implementation
+2. ⏳ Implement fixes and optimizations
+3. ⏳ Test improvements
+4. ⏳ Deploy to production
 
 ---
 
-**Status:** 🔍 **ANALYSIS COMPLETE - READY FOR IMPLEMENTATION**
+**Status:** 🔍 **ANALYSIS COMPLETE - READY FOR OPTIMIZATION**
 

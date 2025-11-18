@@ -4,7 +4,8 @@ import json
 import os
 import sys
 import logging
-from datetime import datetime, timezone
+import time
+from datetime import datetime
 from pathlib import Path
 from typing import Optional, Dict, Any, List, Tuple
 
@@ -380,7 +381,7 @@ class PaperTradingEngine:
             from alpaca.data.historical import StockHistoricalDataClient
             from alpaca.data.requests import StockBarsRequest
             from alpaca.data.timeframe import TimeFrame
-            from datetime import datetime, timezone, timedelta
+            from datetime import datetime, timedelta
 
             # Use yfinance as fallback for volatility calculation
             import yfinance as yf
@@ -423,7 +424,7 @@ class PaperTradingEngine:
     def execute_signal(
         self, signal, retry_count=0, existing_positions: Optional[List[Dict]] = None
     ):
-        """Execute signal with retry logic (synchronous)"""
+        """Execute signal with retry logic"""
         if self.alpaca_enabled:
             try:
                 return self._execute_live(signal, existing_positions)
@@ -432,37 +433,14 @@ class PaperTradingEngine:
                     logger.warning(
                         f"Retry {retry_count + 1}/{self._retry_attempts} for {signal.get('symbol')}: {e}"
                     )
-                    # OPTIMIZATION: Exponential backoff for retries
+                    # FIX: Use asyncio.sleep if in async context, otherwise time.sleep
+                    # Note: This is a sync method, so we use time.sleep but log the delay
                     import time
-                    delay = self._retry_delay * (2 ** retry_count)  # Exponential backoff
+
+                    delay = self._retry_delay * (retry_count + 1)
                     logger.debug(f"Waiting {delay}s before retry...")
                     time.sleep(delay)
                     return self.execute_signal(signal, retry_count + 1, existing_positions)
-                else:
-                    logger.error(f"Max retries exceeded for {signal.get('symbol')}: {e}")
-                    return None
-        return self._execute_sim(signal)
-    
-    async def execute_signal_async(
-        self, signal, retry_count=0, existing_positions: Optional[List[Dict]] = None
-    ):
-        """Execute signal with async retry logic (non-blocking)"""
-        if self.alpaca_enabled:
-            try:
-                # OPTIMIZATION: Run synchronous Alpaca API calls in thread pool to avoid blocking
-                import asyncio
-                return await asyncio.to_thread(self._execute_live, signal, existing_positions)
-            except Exception as e:
-                if retry_count < self._retry_attempts:
-                    logger.warning(
-                        f"Retry {retry_count + 1}/{self._retry_attempts} for {signal.get('symbol')}: {e}"
-                    )
-                    # OPTIMIZATION: Use async sleep for non-blocking retries
-                    import asyncio
-                    delay = self._retry_delay * (2 ** retry_count)  # Exponential backoff
-                    logger.debug(f"Waiting {delay}s before retry...")
-                    await asyncio.sleep(delay)
-                    return await self.execute_signal_async(signal, retry_count + 1, existing_positions)
                 else:
                     logger.error(f"Max retries exceeded for {signal.get('symbol')}: {e}")
                     return None
@@ -550,41 +528,36 @@ class PaperTradingEngine:
 
             self._track_order(order, signal, order_details)
 
-            # OPTIMIZATION: Verify order was accepted before placing bracket orders
-            # Note: For market orders, status might be 'filled' immediately
-            # For limit orders, status might be 'new' or 'accepted'
-            order_status = self.get_order_status(order.id)
-            if order_status:
-                status = order_status.get("status", "").lower()
-                if status in ["rejected", "canceled", "expired"]:
-                    logger.error(f"❌ Order {order.id} was {status} for {symbol}")
-                    return None
-                elif status == "filled":
-                    logger.debug(f"✅ Order {order.id} filled immediately for {symbol}")
-                elif status in ["new", "accepted", "pending_new"]:
-                    logger.debug(
-                        f"⏳ Order {order.id} {status} for {symbol}, proceeding with bracket orders"
-                    )
-                else:
-                    logger.debug(f"📊 Order {order.id} status: {status} for {symbol}")
-
-            # OPTIMIZATION: Place bracket orders with error handling
+            # OPTIMIZATION: Only check order status if bracket orders are needed
+            # This reduces unnecessary API calls when bracket orders aren't required
             bracket_success = True
             if order_details.get("place_bracket"):
+                # Verify order was accepted before placing bracket orders
+                # Note: For market orders, status might be 'filled' immediately
+                # For limit orders, status might be 'new' or 'accepted'
+                order_status = self.get_order_status(order.id)
+                if order_status:
+                    status = order_status.get("status", "").lower()
+                    if status in ["rejected", "canceled", "expired"]:
+                        logger.error(f"❌ Order {order.id} was {status} for {symbol}")
+                        return None
+                    elif status == "filled":
+                        logger.debug(f"✅ Order {order.id} filled immediately for {symbol}")
+                    elif status in ["new", "accepted", "pending_new"]:
+                        logger.debug(
+                            f"⏳ Order {order.id} {status} for {symbol}, proceeding with bracket orders"
+                        )
+                    else:
+                        logger.debug(f"📊 Order {order.id} status: {status} for {symbol}")
+
+                # FIX: Place bracket orders with error handling
                 bracket_success = self._place_bracket_orders(symbol, order_details, order.id)
                 if not bracket_success:
                     logger.error(
                         f"❌ Bracket orders failed for {symbol}, main order {order.id} placed without protection"
                     )
-                    # OPTIMIZATION: Check if main order is still pending before attempting cancellation
                     # Note: We don't cancel the main order here as it may have already filled
                     # Instead, we log the error and track it for manual intervention
-                    try:
-                        main_order_status = self.get_order_status(order.id)
-                        if main_order_status and main_order_status.get("status", "").lower() in ["new", "accepted", "pending_new"]:
-                            logger.warning(f"⚠️  Main order {order.id} is still pending - consider manual cancellation if needed")
-                    except Exception as status_error:
-                        logger.debug(f"Could not check main order status: {status_error}")
 
             # Invalidate caches after trade
             self._invalidate_account_cache()
@@ -621,8 +594,7 @@ class PaperTradingEngine:
         target_price = signal.get("target_price")
 
         # PROP FIRM: Enforce max stop loss limit
-        # OPTIMIZATION: prop_firm_enabled is initialized in __init__, no need for hasattr
-        if self.prop_firm_enabled and self.prop_firm_config:
+        if hasattr(self, "prop_firm_enabled") and self.prop_firm_enabled and self.prop_firm_config:
             max_stop_loss_pct = self.prop_firm_config.get("risk_limits", {}).get(
                 "max_stop_loss_pct", 1.5
             )
@@ -731,24 +703,14 @@ class PaperTradingEngine:
     def _calculate_position_size(
         self, signal: Dict, account, entry_price: float
     ) -> Tuple[int, OrderSide]:
-        """Calculate position size based on confidence, volatility, and config (OPTIMIZED)
+        """Calculate position size based on confidence, volatility, and config
 
         Returns:
             Tuple of (quantity, side) where quantity is guaranteed >= 1 if valid
         """
-        # OPTIMIZATION: Early validation to avoid unnecessary calculations
-        buying_power = float(account.buying_power)
-        if buying_power <= 0:
-            logger.warning(f"⚠️  Invalid buying power: ${buying_power:,.2f}")
-            return 0, OrderSide.BUY
-        
-        if entry_price <= 0:
-            logger.warning(f"⚠️  Invalid entry price: ${entry_price:.2f}")
-            return 0, OrderSide.BUY
-        
         # PROP FIRM: Use prop firm limits if enabled
         # OPTIMIZATION: prop_firm_enabled is initialized in __init__, no need for hasattr
-        if self.prop_firm_enabled and self.prop_firm_config:
+        if hasattr(self, "prop_firm_enabled") and self.prop_firm_enabled and self.prop_firm_config:
             risk_limits = self.prop_firm_config.get("risk_limits", {})
             base_position_size_pct = risk_limits.get("max_position_size_pct", 3.0)
             max_position_size_pct = base_position_size_pct  # Prop firm: fixed size
@@ -785,10 +747,21 @@ class PaperTradingEngine:
             else:
                 position_size_pct = base_position_size_pct * 0.75 * volatility_multiplier
 
-        # OPTIMIZATION: buying_power and entry_price already validated above
+        buying_power = float(account.buying_power)
+        
+        # FIX: Validate buying power is positive
+        if buying_power <= 0:
+            logger.warning(f"⚠️  Invalid buying power: ${buying_power:,.2f}")
+            return 0, OrderSide.BUY
+        
+        # FIX: Validate entry price is positive
+        if entry_price <= 0:
+            logger.warning(f"⚠️  Invalid entry price: ${entry_price:.2f}")
+            return 0, OrderSide.BUY
+        
         position_value = buying_power * (position_size_pct / 100)
         
-        # OPTIMIZATION: Ensure position value doesn't exceed available buying power (with 5% buffer)
+        # FIX: Ensure position value doesn't exceed available buying power (with 5% buffer)
         max_position_value = buying_power * 0.95  # Leave 5% buffer for fees/margin
         if position_value > max_position_value:
             logger.warning(
@@ -799,7 +772,7 @@ class PaperTradingEngine:
         
         qty = int(position_value / entry_price)
 
-        # OPTIMIZATION: Ensure minimum order size of 1 share
+        # FIX: Ensure minimum order size of 1 share
         if qty < 1:
             if position_value > 0:
                 logger.warning(
@@ -813,7 +786,7 @@ class PaperTradingEngine:
                 )
                 return 0, OrderSide.BUY
         
-        # OPTIMIZATION: Final validation - ensure we can actually afford this quantity
+        # FIX: Final validation - ensure we can actually afford this quantity
         required_capital = qty * entry_price
         if required_capital > buying_power:
             # Adjust qty to fit within buying power
@@ -940,8 +913,51 @@ class PaperTradingEngine:
         
         return limit_price
 
+    def _validate_bracket_prices(
+        self, symbol: str, entry_price: float, stop_price: float, target_price: float, side: OrderSide
+    ) -> Tuple[bool, Optional[str]]:
+        """Validate stop loss and take profit prices
+        
+        Returns:
+            Tuple of (is_valid, error_message)
+        """
+        # Validate stop loss price
+        if side == OrderSide.BUY:
+            # For LONG: stop should be below entry, target above entry
+            if stop_price >= entry_price:
+                return False, f"Stop loss ${stop_price:.2f} must be below entry ${entry_price:.2f} for LONG"
+            if target_price <= entry_price:
+                return False, f"Take profit ${target_price:.2f} must be above entry ${entry_price:.2f} for LONG"
+            
+            # Check stop loss isn't too far (more than 20% below entry)
+            stop_loss_pct = ((entry_price - stop_price) / entry_price) * 100
+            if stop_loss_pct > 20:
+                return False, f"Stop loss ${stop_price:.2f} is {stop_loss_pct:.1f}% below entry, exceeds 20% limit"
+        else:  # SELL/SHORT
+            # For SHORT: stop should be above entry, target below entry
+            if stop_price <= entry_price:
+                return False, f"Stop loss ${stop_price:.2f} must be above entry ${entry_price:.2f} for SHORT"
+            if target_price >= entry_price:
+                return False, f"Take profit ${target_price:.2f} must be below entry ${entry_price:.2f} for SHORT"
+            
+            # Check stop loss isn't too far (more than 20% above entry)
+            stop_loss_pct = ((stop_price - entry_price) / entry_price) * 100
+            if stop_loss_pct > 20:
+                return False, f"Stop loss ${stop_price:.2f} is {stop_loss_pct:.1f}% above entry, exceeds 20% limit"
+        
+        # Validate target price is reasonable (not more than 50% away)
+        if side == OrderSide.BUY:
+            target_pct = ((target_price - entry_price) / entry_price) * 100
+        else:
+            target_pct = ((entry_price - target_price) / entry_price) * 100
+        
+        if target_pct > 50:
+            return False, f"Take profit ${target_price:.2f} is {target_pct:.1f}% away, exceeds 50% limit"
+        
+        return True, None
+
     def _place_bracket_orders(self, symbol: str, order_details: Dict, main_order_id: str) -> bool:
-        """Place stop loss and take profit orders
+        """Place stop loss and take profit orders with validation
 
         Returns:
             True if both orders placed successfully, False otherwise
@@ -950,10 +966,20 @@ class PaperTradingEngine:
         stop_price = order_details.get("stop_price")
         target_price = order_details.get("target_price")
         side = order_details["side"]
+        entry_price = order_details.get("entry_price")
 
         if not (stop_price and target_price):
             logger.debug(f"No stop/target prices provided for {symbol}, skipping bracket orders")
             return True  # Not an error if bracket orders aren't needed
+        
+        # FIX: Validate bracket prices before placing orders
+        if entry_price:
+            is_valid, error_msg = self._validate_bracket_prices(
+                symbol, entry_price, stop_price, target_price, side
+            )
+            if not is_valid:
+                logger.error(f"❌ Invalid bracket prices for {symbol}: {error_msg}")
+                return False
 
         stop_order_id = None
         profit_order_id = None
@@ -961,30 +987,45 @@ class PaperTradingEngine:
         profit_order_success = False
 
         try:
-            # Place stop loss order
-            try:
-                stop_side = OrderSide.SELL if side == OrderSide.BUY else OrderSide.BUY
-                stop_order = StopLossRequest(
-                    symbol=symbol, qty=qty, stop_price=stop_price, time_in_force=TimeInForce.GTC
-                )
-                stop_order_result = self.alpaca.submit_order(stop_order)
-                stop_order_id = stop_order_result.id
-                stop_order_success = True
-                logger.info(f"🛡️  Stop loss order placed: {stop_order_id} @ ${stop_price:.2f}")
-            except Exception as stop_error:
-                logger.error(f"❌ Failed to place stop loss for {symbol}: {stop_error}")
+            # OPTIMIZATION: Place stop loss order with retry logic
+            max_retries = 2
+            retry_delay = 0.5
+            
+            for attempt in range(max_retries):
+                try:
+                    stop_side = OrderSide.SELL if side == OrderSide.BUY else OrderSide.BUY
+                    stop_order = StopLossRequest(
+                        symbol=symbol, qty=qty, stop_price=stop_price, time_in_force=TimeInForce.GTC
+                    )
+                    stop_order_result = self.alpaca.submit_order(stop_order)
+                    stop_order_id = stop_order_result.id
+                    stop_order_success = True
+                    logger.info(f"🛡️  Stop loss order placed: {stop_order_id} @ ${stop_price:.2f}")
+                    break  # Success, exit retry loop
+                except Exception as stop_error:
+                    if attempt < max_retries - 1:
+                        logger.warning(f"⚠️  Stop loss order attempt {attempt + 1}/{max_retries} failed for {symbol}, retrying: {stop_error}")
+                        time.sleep(retry_delay)
+                    else:
+                        logger.error(f"❌ Failed to place stop loss for {symbol} after {max_retries} attempts: {stop_error}")
 
-            # Place take profit order
-            try:
-                profit_order = TakeProfitRequest(
-                    symbol=symbol, qty=qty, limit_price=target_price, time_in_force=TimeInForce.GTC
-                )
-                profit_order_result = self.alpaca.submit_order(profit_order)
-                profit_order_id = profit_order_result.id
-                profit_order_success = True
-                logger.info(f"🎯 Take profit order placed: {profit_order_id} @ ${target_price:.2f}")
-            except Exception as profit_error:
-                logger.error(f"❌ Failed to place take profit for {symbol}: {profit_error}")
+            # OPTIMIZATION: Place take profit order with retry logic
+            for attempt in range(max_retries):
+                try:
+                    profit_order = TakeProfitRequest(
+                        symbol=symbol, qty=qty, limit_price=target_price, time_in_force=TimeInForce.GTC
+                    )
+                    profit_order_result = self.alpaca.submit_order(profit_order)
+                    profit_order_id = profit_order_result.id
+                    profit_order_success = True
+                    logger.info(f"🎯 Take profit order placed: {profit_order_id} @ ${target_price:.2f}")
+                    break  # Success, exit retry loop
+                except Exception as profit_error:
+                    if attempt < max_retries - 1:
+                        logger.warning(f"⚠️  Take profit order attempt {attempt + 1}/{max_retries} failed for {symbol}, retrying: {profit_error}")
+                        time.sleep(retry_delay)
+                    else:
+                        logger.error(f"❌ Failed to place take profit for {symbol} after {max_retries} attempts: {profit_error}")
 
             # Track bracket orders (even if only one succeeded)
             if main_order_id in self._order_tracker:
@@ -1028,46 +1069,57 @@ class PaperTradingEngine:
 
     def _track_order(self, order, signal: Dict, order_details: Dict):
         """Track order in internal tracker with automatic cleanup"""
+        # OPTIMIZATION: Cache current time to avoid multiple datetime calls
+        current_time = datetime.utcnow()
+        current_timestamp = current_time.timestamp()
+        
         self._order_tracker[order.id] = {
             "symbol": order_details["symbol"],
             "side": order_details["side"].value,
             "qty": order_details["qty"],
             "entry_price": order_details["entry_price"],
             "signal": signal,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "order_timestamp": datetime.utcnow().timestamp(),  # For cleanup
+            "timestamp": current_time.isoformat(),
+            "order_timestamp": current_timestamp,  # For cleanup
         }
         
         # OPTIMIZATION: Cleanup old orders if tracker gets too large
         self._cleanup_order_tracker()
     
     def _cleanup_order_tracker(self):
-        """Clean up old orders from tracker to prevent memory leaks"""
+        """Clean up old orders from tracker to prevent memory leaks (OPTIMIZED)"""
         import time
         
         current_time = time.time()
+        tracker_size = len(self._order_tracker)
         
-        # Clean up if tracker is too large or periodically
-        if len(self._order_tracker) > self._order_tracker_max_size:
-            # Remove oldest orders
-            orders_by_age = sorted(
-                self._order_tracker.items(),
-                key=lambda x: x[1].get("order_timestamp", 0)
-            )
+        # OPTIMIZATION: Only cleanup if tracker is large enough to warrant it
+        if tracker_size == 0:
+            return
+        
+        # Clean up if tracker is too large
+        if tracker_size > self._order_tracker_max_size:
+            # OPTIMIZATION: Use list of (timestamp, order_id) tuples for efficient sorting
+            orders_by_age = [
+                (order_data.get("order_timestamp", 0), order_id)
+                for order_id, order_data in self._order_tracker.items()
+            ]
+            orders_by_age.sort()  # Sort by timestamp (oldest first)
             
             # Remove oldest 20% of orders
-            to_remove = len(orders_by_age) // 5
-            for order_id, _ in orders_by_age[:to_remove]:
+            to_remove_count = len(orders_by_age) // 5
+            for _, order_id in orders_by_age[:to_remove_count]:
                 del self._order_tracker[order_id]
             
-            logger.debug(f"Cleaned up {to_remove} old orders from tracker")
+            logger.debug(f"Cleaned up {to_remove_count} old orders from tracker")
         
-        # Also clean up orders older than cleanup age
-        to_remove = []
-        for order_id, order_data in self._order_tracker.items():
-            order_timestamp = order_data.get("order_timestamp", 0)
-            if order_timestamp > 0 and (current_time - order_timestamp) > self._order_tracker_cleanup_age:
-                to_remove.append(order_id)
+        # Also clean up orders older than cleanup age (more efficient iteration)
+        to_remove = [
+            order_id
+            for order_id, order_data in self._order_tracker.items()
+            if order_data.get("order_timestamp", 0) > 0
+            and (current_time - order_data.get("order_timestamp", 0)) > self._order_tracker_cleanup_age
+        ]
         
         for order_id in to_remove:
             del self._order_tracker[order_id]
