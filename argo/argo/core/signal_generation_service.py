@@ -1783,7 +1783,7 @@ class SignalGenerationService:
         """Get cached AI reasoning for signal (OPTIMIZATION 12)"""
         # OPTIMIZATION: Reuse cache key if provided to avoid duplicate creation
         if cache_key is None:
-        cache_key = self._create_reasoning_cache_key(signal, consensus)
+            cache_key = self._create_reasoning_cache_key(signal, consensus)
 
         # Check Redis cache first
         if self.redis_cache:
