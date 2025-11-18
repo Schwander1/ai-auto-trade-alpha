@@ -1425,6 +1425,9 @@ class SignalGenerationService:
             )
             independent_tasks.append(task)
             task_metadata[id(task)] = ("alpha_vantage", "indicators")
+            logger.info(f"📊 Added alpha_vantage task for {symbol}")
+        else:
+            logger.warning(f"⚠️  alpha_vantage not in data_sources for {symbol}")
 
         if "x_sentiment" in self.data_sources:
             task = asyncio.create_task(self.data_sources["x_sentiment"].fetch_sentiment(symbol))
@@ -1450,10 +1453,14 @@ class SignalGenerationService:
 
         # Wait for all tasks and process results
         if independent_tasks:
+            logger.info(f"🔄 Waiting for {len(independent_tasks)} independent source tasks for {symbol}")
             results = await asyncio.gather(*independent_tasks, return_exceptions=True)
+            logger.info(f"✅ Received {len(results)} results from independent sources for {symbol}")
             self._process_independent_results(
                 symbol, independent_tasks, results, task_metadata, source_signals
             )
+        else:
+            logger.warning(f"⚠️  No independent tasks created for {symbol}")
 
     def _process_independent_results(
         self, symbol: str, tasks: List, results: List, task_metadata: Dict, source_signals: Dict
@@ -1466,7 +1473,7 @@ class SignalGenerationService:
             source_name, data_type = task_metadata[id(task)]
 
             if isinstance(result, Exception):
-                logger.debug(f"{source_name} error for {symbol}: {result}")
+                logger.warning(f"⚠️  {source_name} error for {symbol}: {result}")
                 if source_name == "yfinance":
                     yfinance_attempted = True
                     yfinance_exception = True
