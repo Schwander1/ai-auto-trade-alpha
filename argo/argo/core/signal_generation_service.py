@@ -1124,9 +1124,10 @@ class SignalGenerationService:
         elif num_sources == 2:
             # Two sources: adjust based on signal type mix
             if mixed_signals:
-                # Mixed signals (NEUTRAL + directional): lower threshold to 52% to allow consensus
+                # Mixed signals (NEUTRAL + directional): lower threshold to 51.5% to allow consensus
                 # NEUTRAL signals split votes, so consensus confidence is naturally lower
-                threshold = max(base_threshold - 13.0, 52.0)
+                # 51.9% consensus is valid (51.875% rounded)
+                threshold = max(base_threshold - 13.5, 51.5)
             else:
                 # Both same type: slightly lower threshold
                 threshold = max(base_threshold - 5.0, 60.0)
