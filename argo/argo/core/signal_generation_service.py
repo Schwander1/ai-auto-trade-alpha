@@ -2988,7 +2988,7 @@ class SignalGenerationService:
 
         # OPTIMIZATION: Flush any pending batch inserts before stopping
         try:
-        self.tracker.flush_pending()
+            self.tracker.flush_pending()
         except Exception as e:
             logger.warning(f"Error flushing pending signals: {e}")
 
