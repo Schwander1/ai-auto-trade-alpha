@@ -143,8 +143,53 @@ def main():
     # Initialize unified database
     print("\n🔧 Initializing unified database...")
     try:
-        from argo.core.unified_signal_tracker import UnifiedSignalTracker
-        tracker = UnifiedSignalTracker(unified_db)
+        # Create database file and initialize schema manually
+        import sqlite3
+        conn = sqlite3.connect(str(unified_db))
+        cursor = conn.cursor()
+        
+        # Enable WAL mode
+        cursor.execute('PRAGMA journal_mode=WAL')
+        
+        # Create table with unified schema
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS signals (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                signal_id TEXT UNIQUE NOT NULL,
+                symbol TEXT NOT NULL,
+                action TEXT NOT NULL,
+                entry_price REAL NOT NULL,
+                target_price REAL NOT NULL,
+                stop_price REAL NOT NULL,
+                confidence REAL NOT NULL,
+                strategy TEXT NOT NULL,
+                asset_type TEXT NOT NULL,
+                data_source TEXT DEFAULT 'weighted_consensus',
+                timestamp TEXT NOT NULL,
+                outcome TEXT DEFAULT NULL,
+                exit_price REAL DEFAULT NULL,
+                profit_loss_pct REAL DEFAULT NULL,
+                sha256 TEXT NOT NULL,
+                order_id TEXT DEFAULT NULL,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                service_type TEXT DEFAULT 'both',
+                executor_id TEXT DEFAULT NULL,
+                generated_by TEXT DEFAULT 'signal_generator',
+                regime TEXT DEFAULT NULL,
+                reasoning TEXT DEFAULT NULL
+            )
+        ''')
+        
+        # Add indexes
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_service_type ON signals(service_type)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_executor_id ON signals(executor_id)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_generated_by ON signals(generated_by)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_symbol_created ON signals(symbol, created_at)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_confidence ON signals(confidence)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_created_at ON signals(created_at)')
+        
+        conn.commit()
+        conn.close()
         print("  ✅ Unified database initialized")
     except Exception as e:
         print(f"  ❌ Error initializing unified database: {e}")
