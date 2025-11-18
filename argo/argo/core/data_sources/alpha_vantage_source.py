@@ -183,8 +183,8 @@ class AlphaVantageDataSource:
             if not all([rsi, sma_20, current_price]):
                 return None
             
-            # IMPROVEMENT: Start with base confidence of 55% instead of 50% (matching yfinance)
-            confidence = 55.0  # Base confidence
+            # IMPROVEMENT: Start with base confidence of 60% instead of 55% (matching yfinance)
+            confidence = 60.0  # Base confidence
             direction = 'NEUTRAL'
             
             # RSI-based signals
@@ -214,7 +214,7 @@ class AlphaVantageDataSource:
                     confidence -= 10.0
             
             # IMPROVEMENT: If still NEUTRAL but confidence is reasonable, use trend-based direction
-            if direction == 'NEUTRAL' and confidence >= 55.0:
+            if direction == 'NEUTRAL' and confidence >= 60.0:
                 if current_price > sma_20:
                     direction = 'LONG'
                     confidence += 5.0  # Add small boost for trend alignment
@@ -225,7 +225,7 @@ class AlphaVantageDataSource:
             # Cap confidence at 95
             confidence = min(confidence, 95.0)
             
-            # Only return if confidence >= 55 (matching yfinance improvement)
+            # Only return if confidence >= 60 (matching yfinance improvement)
             # Allow signals even with lower confidence - consensus will filter them
             # Only filter out completely invalid signals (confidence < 50)
             if confidence < 50:

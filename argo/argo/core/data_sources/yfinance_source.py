@@ -150,9 +150,9 @@ class YFinanceDataSource:
         macd_signal = indicators.get('macd_signal')
         current_price = indicators.get('current_price')
         
-        # IMPROVEMENT: Start with base confidence of 55% instead of 50% to avoid rejection
-        # This ensures signals have at least minimal confidence even in neutral conditions
-        confidence = 55.0
+        # IMPROVEMENT: Start with base confidence of 60% instead of 55% to improve final consensus
+        # This ensures signals have better confidence even in neutral conditions
+        confidence = 60.0
         direction = 'NEUTRAL'
         
         # RSI-based signals
@@ -168,7 +168,7 @@ class YFinanceDataSource:
         confidence = self._apply_sma_trend_confirmation(sma_20, sma_50, direction, confidence)
         
         # IMPROVEMENT: If still NEUTRAL but confidence is reasonable, use trend-based direction
-        if direction == 'NEUTRAL' and confidence >= 55.0 and sma_20 and sma_50:
+        if direction == 'NEUTRAL' and confidence >= 60.0 and sma_20 and sma_50:
             if current_price > sma_20 > sma_50:
                 direction = 'LONG'
                 confidence += 5.0  # Add small boost for trend alignment

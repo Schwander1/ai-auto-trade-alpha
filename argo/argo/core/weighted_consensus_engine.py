@@ -265,6 +265,8 @@ class WeightedConsensusEngine:
                     "agreement": round(confidence * 100, 2),
                 }
 
+        # IMPROVEMENT: Track NEUTRAL signals separately for better handling
+        neutral_signals = []
         for source, signal in valid.items():
             direction = signal.get("direction")
             confidence = signal.get("confidence", 0)
@@ -276,15 +278,53 @@ class WeightedConsensusEngine:
             elif direction == "SHORT":
                 short_votes[source] = vote
             elif direction == "NEUTRAL":
-                # IMPROVEMENT: Handle NEUTRAL signals better - lower threshold for splitting
-                # If confidence is reasonable (>= 55%), treat as weak directional signal
-                if confidence >= 0.55:  # Lowered from 0.6 to 0.55
-                    # Split NEUTRAL vote proportionally (slight bias to LONG for neutral markets)
-                    # This allows consensus to work even when sources return NEUTRAL
-                    neutral_long = vote * 0.55  # Slight bias to LONG
-                    neutral_short = vote * 0.45
-                    long_votes[source] = neutral_long
-                    short_votes[source] = neutral_short
+                # IMPROVEMENT: Store NEUTRAL signals for special handling
+                neutral_signals.append((source, signal, vote, weight))
+        
+        # IMPROVEMENT: Handle NEUTRAL signals intelligently
+        # If we have high-confidence NEUTRAL signals and no clear directional consensus,
+        # use NEUTRAL directly instead of splitting
+        if neutral_signals:
+            # Check if we have high-confidence NEUTRAL signals
+            high_confidence_neutral = [n for n in neutral_signals if n[1].get("confidence", 0) >= 0.70]
+            
+            # If we have high-confidence NEUTRAL and no strong directional signals, use NEUTRAL
+            if high_confidence_neutral and not long_votes and not short_votes:
+                # All sources are NEUTRAL with high confidence - use directly
+                avg_neutral_confidence = sum(n[1].get("confidence", 0) for n in neutral_signals) / len(neutral_signals)
+                total_neutral_weight = sum(n[3] for n in neutral_signals)
+                return {
+                    "direction": "NEUTRAL",
+                    "confidence": round(avg_neutral_confidence * 100, 2),
+                    "total_long_vote": avg_neutral_confidence * total_neutral_weight * 0.55,
+                    "total_short_vote": avg_neutral_confidence * total_neutral_weight * 0.45,
+                    "sources": len(neutral_signals),
+                    "agreement": round(avg_neutral_confidence * 100, 2),
+                }
+            else:
+                # Split NEUTRAL votes only if we have directional signals to balance
+                # Only split high-confidence NEUTRAL (>= 70%) if we have directional signals
+                for source, signal, vote, weight in neutral_signals:
+                    neutral_confidence = signal.get("confidence", 0)
+                    if neutral_confidence >= 0.70 and (long_votes or short_votes):
+                        # High-confidence NEUTRAL with directional signals - split with trend bias
+                        # Determine trend from existing directional signals
+                        if sum(long_votes.values()) > sum(short_votes.values()):
+                            # Bias toward LONG
+                            neutral_long = vote * 0.60
+                            neutral_short = vote * 0.40
+                        else:
+                            # Bias toward SHORT or neutral
+                            neutral_long = vote * 0.50
+                            neutral_short = vote * 0.50
+                        long_votes[source] = neutral_long
+                        short_votes[source] = neutral_short
+                    elif neutral_confidence >= 0.55:
+                        # Lower confidence NEUTRAL - split proportionally
+                        neutral_long = vote * 0.55
+                        neutral_short = vote * 0.45
+                        long_votes[source] = neutral_long
+                        short_votes[source] = neutral_short
 
         total_long = sum(long_votes.values())
         total_short = sum(short_votes.values())
