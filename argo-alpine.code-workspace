@@ -274,10 +274,13 @@
     // Docker settings
     "docker.showStartPage": false,
 
-    // Git settings
+    // Git settings - Auto features
     "git.enableSmartCommit": true,
     "git.confirmSync": false,
+    "git.confirmForceSync": false,
     "git.autofetch": true,
+    "git.autoRepositoryDetection": true,
+    "git.autoStash": true,
 
     // File associations
     "files.associations": {
