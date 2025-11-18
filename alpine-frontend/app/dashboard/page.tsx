@@ -18,8 +18,8 @@ const SymbolTable = dynamic(() => import('@/components/dashboard/SymbolTable'), 
   loading: () => <div className="h-96 animate-pulse bg-gray-800 rounded-lg" />,
   ssr: false
 })
-import { 
-  TrendingUp, TrendingDown, DollarSign, Activity, 
+import {
+  TrendingUp, TrendingDown, DollarSign, Activity,
   RefreshCw, AlertCircle, Loader2, BarChart3,
   ArrowRight, Signal as SignalIcon
 } from 'lucide-react'
@@ -28,6 +28,7 @@ import Link from 'next/link'
 // Type definitions for better type safety
 interface DashboardStats {
   totalReturn?: number
+  totalRoi?: number
   winRate?: number
   totalTrades?: number
   sharpeRatio?: number
@@ -74,10 +75,10 @@ export default function DashboardPage() {
   // Optimized fetch function with proper error handling
   const fetchStats = useCallback(async (abortSignal?: AbortSignal) => {
     if (!session) return
-    
+
     setIsLoadingStats(true)
     setStatsError(null)
-    
+
     try {
       const [statsRes, equityRes, symbolsRes] = await Promise.all([
         fetch('/api/performance/stats', { signal: abortSignal }).catch(() => null),
@@ -155,17 +156,17 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
             title="Win Rate"
-            value={stats?.win_rate ? `${stats.win_rate.toFixed(1)}%` : '-'}
+            value={stats?.winRate ? `${stats.winRate.toFixed(1)}%` : '-'}
             icon={<TrendingUp className="w-5 h-5" />}
-            trend={stats?.win_rate ? 'up' : undefined}
-            color="alpine-neoncya-n"
+            trend={stats?.winRate ? 'up' : undefined}
+            color="alpine-neon-cyan"
           />
           <StatCard
             title="Total ROI"
-            value={stats?.total_roi ? `${stats.total_roi.toFixed(1)}%` : '-'}
+            value={stats?.totalRoi ? `${stats.totalRoi.toFixed(1)}%` : '-'}
             icon={<DollarSign className="w-5 h-5" />}
-            trend={stats?.total_roi > 0 ? 'up' : stats?.total_roi < 0 ? 'down' : undefined}
-            color="alpine-neonpin-k"
+            trend={stats?.totalRoi ? (stats.totalRoi > 0 ? 'up' : stats.totalRoi < 0 ? 'down' : undefined) : undefined}
+            color="alpine-neon-pink"
           />
           <StatCard
             title="Active Signals"
@@ -175,9 +176,9 @@ export default function DashboardPage() {
           />
           <StatCard
             title="Total Trades"
-            value={stats?.total_trades || 0}
+            value={stats?.totalTrades || 0}
             icon={<Activity className="w-5 h-5" />}
-            color="alpine-semanticsucces-s
+            color="alpine-semantic-success"
           />
         </div>
 
@@ -239,7 +240,7 @@ export default function DashboardPage() {
           </div>
 
           {error && (
-            <div className="mb-4 p-4 bg-alpine-semantic-error/10 border border-alpine-semantic-error/30 rounded-lg flex items-center gap-2 text-alpine-semantic-error>
+            <div className="mb-4 p-4 bg-alpine-semantic-error/10 border border-alpine-semantic-error/30 rounded-lg flex items-center gap-2 text-alpine-semantic-error">
               <AlertCircle className="w-5 h-5" />
               <span>{error.message || 'Failed to load signals'}</span>
             </div>
@@ -273,13 +274,13 @@ export default function DashboardPage() {
   )
 }
 
-function StatCard({ 
-  title, 
-  value, 
-  icon, 
-  trend, 
-  color 
-}: { 
+function StatCard({
+  title,
+  value,
+  icon,
+  trend,
+  color
+}: {
   title: string
   value: string | number
   icon: React.ReactNode
@@ -294,7 +295,7 @@ function StatCard({
         </div>
         {trend && (
           <div className={`flex items-center gap-1 text-sm ${
-            trend === 'up' ? 'text-alpine-neon-cyan' : 'text-alpine-semantic-error
+            trend === 'up' ? 'text-alpine-neon-cyan' : 'text-alpine-semantic-error'
           }`}>
             {trend === 'up' ? (
               <TrendingUp className="w-4 h-4" />

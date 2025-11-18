@@ -144,7 +144,7 @@ export default function SymbolTable({ symbols, onSymbolClick, className = '' }: 
                 </td>
                 <td className="px-4 py-3 text-right">
                   <div className={`flex items-center justify-end gap-1 ${
-                    symbol.change24h >= 0 ? 'text-alpine-neon-cyan' : 'text-alpine-semantic-error
+                    symbol.change24h >= 0 ? 'text-alpine-neon-cyan' : 'text-alpine-semantic-error'
                   }`}>
                     {symbol.change24h >= 0 ? (
                       <TrendingUp className="w-4 h-4" />
@@ -167,7 +167,7 @@ export default function SymbolTable({ symbols, onSymbolClick, className = '' }: 
                 <td className="px-4 py-3 text-right">
                   {symbol.avgReturn !== undefined ? (
                     <span className={`font-semibold ${
-                      symbol.avgReturn >= 0 ? 'text-alpine-neon-cyan' : 'text-alpine-semantic-error
+                      symbol.avgReturn >= 0 ? 'text-alpine-neon-cyan' : 'text-alpine-semantic-error'
                     }`}>
                       {formatPercent(symbol.avgReturn)}
                     </span>
@@ -189,4 +189,3 @@ export default function SymbolTable({ symbols, onSymbolClick, className = '' }: 
     </div>
   )
 }
-

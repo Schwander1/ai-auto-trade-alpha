@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import Navigation from '@/components/dashboard/Navigation'
 import PerformanceChart from '@/components/dashboard/PerformanceChart'
-import { 
+import {
   TrendingUp, Users, DollarSign, Activity, Loader2,
   AlertCircle, BarChart3, Calendar, Download
 } from 'lucide-react'
@@ -148,7 +148,7 @@ export default function AdminPage() {
                 title="Signals Delivered"
                 value={analytics.signals_delivered_this_month}
                 icon={<BarChart3 className="w-5 h-5" />}
-                color="alpine-semanticsucces-s
+                color="alpine-semantic-success"
               />
             </div>
 
@@ -198,7 +198,7 @@ export default function AdminPage() {
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-alpine-black-primary border border-alpine-black-border>
+                <thead className="bg-alpine-black-primary border border-alpine-black-border">
                   <tr>
                     <th className="px-4 py-3 text-left text-sm font-semibold text-alpine-text-secondary uppercase">Email</th>
                     <th className="px-4 py-3 text-left text-sm font-semibold text-alpine-text-secondary uppercase">Tier</th>
@@ -206,7 +206,7 @@ export default function AdminPage() {
                     <th className="px-4 py-3 text-left text-sm font-semibold text-alpine-text-secondary uppercase">Joined</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-alpine-blackbord-er>
+                <tbody className="divide-y divide-alpine-black-border">
                   {users.map((user: any) => (
                     <tr key={user.id} className="hover:bg-alpine-black-primary/50 transition-colors">
                       <td className="px-4 py-3 text-alpine-text-primary ">{user.email}</td>
@@ -219,7 +219,7 @@ export default function AdminPage() {
                         <span className={`px-2 py-1 text-sm font-semibold rounded ${
                           user.is_active
                             ? 'bg-alpine-neon-cyan/10 text-alpine-neon-cyan'
-                            : 'bg-alpine-semantic-error/10 text-alpine-semantic-error
+                            : 'bg-alpine-semantic-error/10 text-alpine-semantic-error'
                         }`}>
                           {user.is_active ? 'Active' : 'Inactive'}
                         </span>
@@ -261,7 +261,7 @@ export default function AdminPage() {
                 title="Churn Rate"
                 value={`${revenue.churn_rate?.toFixed(1)}%`}
                 icon={<Activity className="w-5 h-5" />}
-                color="alpine-semantic-error
+                color="alpine-semantic-error"
               />
             </div>
 
@@ -319,4 +319,3 @@ function StatCard({ title, value, icon, color }: any) {
     </div>
   )
 }
-
