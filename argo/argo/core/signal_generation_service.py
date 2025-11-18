@@ -1214,6 +1214,7 @@ class SignalGenerationService:
 
         # OPTIMIZATION: Fetch from all available sources in parallel
         # Crypto symbols work 24/7 with both Alpaca Pro and Massive.com
+        # IMPROVEMENT: Also fetch Alpaca Pro for stocks (not just crypto)
         if "alpaca_pro" in self.data_sources:
             task = asyncio.create_task(
                 self.data_sources["alpaca_pro"].fetch_price_data(symbol, days=200)
@@ -1222,6 +1223,8 @@ class SignalGenerationService:
             task_metadata[id(task)] = "alpaca_pro"
             if is_crypto:
                 logger.debug(f"🪙 Fetching crypto data from Alpaca Pro for {symbol}")
+            else:
+                logger.debug(f"📈 Fetching stock data from Alpaca Pro for {symbol}")
 
         if "massive" in self.data_sources:
             task = asyncio.create_task(
@@ -1237,13 +1240,14 @@ class SignalGenerationService:
                 logger.warning(f"⚠️  No market data sources available for crypto {symbol}")
             return None
 
-        # Race: Use first successful response (with 30 second timeout for 200 days of data)
+        # IMPROVEMENT: Collect signals from ALL sources, not just first
+        # This provides more data for consensus calculation
         try:
             done, pending = await asyncio.wait(
-                tasks, return_when=asyncio.FIRST_COMPLETED, timeout=30.0
+                tasks, return_when=asyncio.ALL_COMPLETED, timeout=30.0
             )
 
-            # Get first successful result from completed tasks
+            # Collect signals from ALL successful sources
             for task in done:
                 try:
                     result = await task
@@ -1252,11 +1256,14 @@ class SignalGenerationService:
                         # Check if it's a DataFrame and has data
                         if hasattr(result, "empty") and not result.empty:
                             source_name = task_metadata[id(task)]
-                            market_data_df = result
+                            
+                            # Use first successful DataFrame for market_data_df
+                            if market_data_df is None:
+                                market_data_df = result
 
-                            # Generate signal from successful source
+                            # Generate signal from this source
                             signal = self.data_sources[source_name].generate_signal(
-                                market_data_df, symbol
+                                result, symbol
                             )
                             if signal:
                                 # Ensure signal has required fields for validation
@@ -1271,16 +1278,6 @@ class SignalGenerationService:
                                 logger.info(
                                     f"✅ {source_name} signal for {symbol}: {signal.get('direction')} @ {signal.get('confidence')}%"
                                 )
-
-                            # Cancel remaining tasks since we got a valid result
-                            for pending_task in pending:
-                                pending_task.cancel()
-                                try:
-                                    await pending_task
-                                except asyncio.CancelledError:
-                                    pass
-
-                            return market_data_df
                 except asyncio.CancelledError:
                     # Task was cancelled, skip it
                     pass

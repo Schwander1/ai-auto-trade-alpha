@@ -276,9 +276,9 @@ class WeightedConsensusEngine:
             elif direction == "SHORT":
                 short_votes[source] = vote
             elif direction == "NEUTRAL":
-                # Handle NEUTRAL signals: split vote based on confidence
-                # If confidence is high enough, treat as weak directional signal
-                if confidence > 0.6:  # 60% confidence threshold for NEUTRAL
+                # IMPROVEMENT: Handle NEUTRAL signals better - lower threshold for splitting
+                # If confidence is reasonable (>= 55%), treat as weak directional signal
+                if confidence >= 0.55:  # Lowered from 0.6 to 0.55
                     # Split NEUTRAL vote proportionally (slight bias to LONG for neutral markets)
                     # This allows consensus to work even when sources return NEUTRAL
                     neutral_long = vote * 0.55  # Slight bias to LONG
