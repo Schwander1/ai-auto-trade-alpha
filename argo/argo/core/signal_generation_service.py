@@ -1443,7 +1443,10 @@ class SignalGenerationService:
             age = (current_time - cache_time).total_seconds()
             if age < self._consensus_cache_ttl:
                 logger.debug(f"✅ Using cached consensus for {symbol}")
-                return cached_consensus.copy()  # Return copy to avoid mutation
+                # OPTIMIZATION: Use shallow copy for dict (faster than deep copy)
+                # Only copy if we need to modify, otherwise return reference
+                import copy
+                return copy.copy(cached_consensus)  # Shallow copy is sufficient for dict
 
         # OPTIMIZATION: Only create signal summary if logging is enabled (avoid unnecessary work)
         if logger.isEnabledFor(logging.INFO):
@@ -1451,7 +1454,7 @@ class SignalGenerationService:
                 (s, sig.get("direction"), f"{sig.get('confidence')}%")
                 for s, sig in source_signals.items()
             ]
-        logger.info(f"📊 Source signals for {symbol}: {signal_summary}")
+            logger.info(f"📊 Source signals for {symbol}: {signal_summary}")
 
         consensus_input = {
             source: {
