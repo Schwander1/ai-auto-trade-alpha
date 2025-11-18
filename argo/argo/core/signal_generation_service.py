@@ -1254,9 +1254,10 @@ class SignalGenerationService:
 
         # IMPROVEMENT: Collect signals from ALL sources, not just first
         # This provides more data for consensus calculation
+        # OPTIMIZATION: Reduced timeout for faster failure detection
         try:
             done, pending = await asyncio.wait(
-                tasks, return_when=asyncio.ALL_COMPLETED, timeout=30.0
+                tasks, return_when=asyncio.ALL_COMPLETED, timeout=20.0  # Reduced from 30.0s
             )
 
             # Collect signals from ALL successful sources
@@ -1308,9 +1309,9 @@ class SignalGenerationService:
                     f"⏳ No valid data from completed tasks, waiting for remaining {len(pending)} task(s) for {symbol}"
                 )
                 try:
-                    # Wait for remaining tasks with shorter timeout
+                    # OPTIMIZATION: Wait for remaining tasks with shorter timeout
                     remaining_done, remaining_pending = await asyncio.wait(
-                        pending, return_when=asyncio.ALL_COMPLETED, timeout=20.0
+                        pending, return_when=asyncio.ALL_COMPLETED, timeout=10.0  # Reduced from 20.0s
                     )
 
                     # Check remaining tasks
@@ -1369,7 +1370,7 @@ class SignalGenerationService:
                         pass
 
         except asyncio.TimeoutError:
-            logger.warning(f"⚠️  Market data fetch timeout for {symbol} (30s timeout exceeded)")
+            logger.warning(f"⚠️  Market data fetch timeout for {symbol} (20s timeout exceeded)")
             # Cancel all tasks
             for task in tasks:
                 task.cancel()

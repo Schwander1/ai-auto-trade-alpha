@@ -75,14 +75,14 @@ class UnifiedSignalTracker:
             self._connection_pool = deque(maxlen=5)
             self._pool_lock = threading.Lock()
             
-            # OPTIMIZATION: Batch insert queue
-            self._pending_signals = []
-            self._batch_lock = threading.Lock()
-            self._batch_size = 50
-            self._batch_timeout = 5.0
-            self._periodic_flush_interval = 10.0
-            self._last_flush = datetime.now(timezone.utc)
-            self._periodic_flush_task = None
+        # OPTIMIZATION: Batch insert queue - optimized for high throughput
+        self._pending_signals = []
+        self._batch_lock = threading.Lock()
+        self._batch_size = 50  # Optimal batch size for SQLite
+        self._batch_timeout = 3.0  # Reduced from 5.0s for faster writes
+        self._periodic_flush_interval = 5.0  # Reduced from 10.0s for more frequent flushes
+        self._last_flush = datetime.now(timezone.utc)
+        self._periodic_flush_task = None
             
             # OPTIMIZATION: Query result caching
             self._query_cache: Dict[str, tuple] = {}
