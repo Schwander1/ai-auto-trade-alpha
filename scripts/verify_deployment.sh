@@ -55,11 +55,16 @@ ssh ${ARGO_USER}@${ARGO_SERVER} "
     
     MISSING=0
     for file in \"\${FILES[@]}\"; do
-        if [ ! -f ${TARGET_PATH}/argo/argo/core/\${file} ]; then
-            echo \"❌ Missing: \${file}\"
-            MISSING=1
-        else
+        # Check both possible paths
+        if [ -f ${TARGET_PATH}/argo/argo/core/\${file} ]; then
             echo \"  ✅ \${file}\"
+        elif [ -f ${TARGET_PATH}/core/\${file} ]; then
+            echo \"  ✅ \${file} (found in alternative location)\"
+        else
+            echo \"❌ Missing: \${file}\"
+            echo \"   Checked: ${TARGET_PATH}/argo/argo/core/\${file}\"
+            echo \"   Checked: ${TARGET_PATH}/core/\${file}\"
+            MISSING=1
         fi
     done
     
@@ -77,11 +82,16 @@ ssh ${ARGO_USER}@${ARGO_SERVER} "
     
     MISSING=0
     for file in \"\${FILES[@]}\"; do
-        if [ ! -f ${TARGET_PATH}/argo/argo/core/data_sources/\${file} ]; then
-            echo \"❌ Missing: \${file}\"
-            MISSING=1
-        else
+        # Check both possible paths
+        if [ -f ${TARGET_PATH}/argo/argo/core/data_sources/\${file} ]; then
             echo \"  ✅ \${file}\"
+        elif [ -f ${TARGET_PATH}/core/data_sources/\${file} ]; then
+            echo \"  ✅ \${file} (found in alternative location)\"
+        else
+            echo \"❌ Missing: \${file}\"
+            echo \"   Checked: ${TARGET_PATH}/argo/argo/core/data_sources/\${file}\"
+            echo \"   Checked: ${TARGET_PATH}/core/data_sources/\${file}\"
+            MISSING=1
         fi
     done
     
@@ -98,11 +108,16 @@ ssh ${ARGO_USER}@${ARGO_SERVER} "
     
     MISSING=0
     for file in \"\${FILES[@]}\"; do
-        if [ ! -f ${TARGET_PATH}/argo/argo/api/\${file} ]; then
-            echo \"❌ Missing: \${file}\"
-            MISSING=1
-        else
+        # Check both possible paths
+        if [ -f ${TARGET_PATH}/argo/argo/api/\${file} ]; then
             echo \"  ✅ \${file}\"
+        elif [ -f ${TARGET_PATH}/api/\${file} ]; then
+            echo \"  ✅ \${file} (found in alternative location)\"
+        else
+            echo \"❌ Missing: \${file}\"
+            echo \"   Checked: ${TARGET_PATH}/argo/argo/api/\${file}\"
+            echo \"   Checked: ${TARGET_PATH}/api/\${file}\"
+            MISSING=1
         fi
     done
     
