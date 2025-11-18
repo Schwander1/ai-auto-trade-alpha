@@ -12,7 +12,7 @@ import json
 import logging
 
 from backend.core.config import settings
-from backend.models.signal import Signal
+from backend.models.signal import Signal, SignalAction
 
 logger = logging.getLogger(__name__)
 
@@ -131,10 +131,16 @@ def create_signal_from_request(signal_data: Any, verification_hash: str) -> Sign
     # Normalize confidence
     confidence = normalize_confidence(signal_data.confidence)
 
+    # Convert action string to enum
+    try:
+        action_enum = SignalAction[signal_data.action.upper()]
+    except (KeyError, AttributeError):
+        raise ValueError(f"Invalid action: {signal_data.action}. Must be BUY or SELL")
+    
     # Create signal in Alpine database
     signal = Signal(
         symbol=signal_data.symbol,
-        action=signal_data.action,
+        action=action_enum,
         price=signal_data.entry_price,
         confidence=confidence,
         target_price=signal_data.target_price or signal_data.take_profit,

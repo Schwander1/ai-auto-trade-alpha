@@ -199,10 +199,11 @@ class SignalQualityScorer:
                 return cached_data
 
         if not self.db_path.exists():
+            logger.debug(f"Database not found: {self.db_path}, returning neutral win rate")
             return 0.5  # Neutral if no database
 
         try:
-            conn = sqlite3.connect(str(self.db_path))
+            conn = sqlite3.connect(str(self.db_path), timeout=10.0)
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
 
@@ -210,13 +211,14 @@ class SignalQualityScorer:
             cutoff_time = (datetime.now() - timedelta(days=30)).isoformat()
             confidence_range = (max(0, confidence - 5), min(100, confidence + 5))
 
+            # Use timestamp column for signal-based queries (created_at is DB insertion time)
             cursor.execute("""
                 SELECT
                     COUNT(*) as total,
                     COUNT(CASE WHEN outcome = 'win' THEN 1 END) as wins
                 FROM signals
                 WHERE symbol = ?
-                  AND created_at >= ?
+                  AND timestamp >= ?
                   AND confidence >= ?
                   AND confidence <= ?
                   AND outcome IS NOT NULL
@@ -229,11 +231,16 @@ class SignalQualityScorer:
                 win_rate = row['wins'] / row['total']
                 # Cache result
                 self._historical_performance_cache[cache_key] = (win_rate, datetime.now())
+                logger.debug(f"Historical win rate for {symbol} at {confidence}%: {win_rate:.2%}")
                 return win_rate
             else:
+                logger.debug(f"No historical data for {symbol} at {confidence}% confidence")
                 return 0.5  # Neutral if no history
+        except sqlite3.Error as e:
+            logger.warning(f"Database error getting historical win rate for {symbol}: {e}")
+            return 0.5
         except Exception as e:
-            logger.debug(f"Error getting historical win rate: {e}")
+            logger.error(f"Unexpected error getting historical win rate for {symbol}: {e}", exc_info=True)
             return 0.5
 
     def get_quality_trend(self, hours: int = 24) -> Dict:
@@ -248,13 +255,14 @@ class SignalQualityScorer:
 
             cutoff_time = (datetime.now() - timedelta(hours=hours)).isoformat()
 
+            # Use timestamp column for signal-based queries
             cursor.execute("""
                 SELECT
-                    strftime('%Y-%m-%d %H:00:00', created_at) as hour,
+                    strftime('%Y-%m-%d %H:00:00', timestamp) as hour,
                     COUNT(*) as count,
                     AVG(confidence) as avg_confidence
                 FROM signals
-                WHERE created_at >= ?
+                WHERE timestamp >= ?
                 GROUP BY hour
                 ORDER BY hour
             """, (cutoff_time,))

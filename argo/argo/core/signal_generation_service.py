@@ -245,6 +245,7 @@ class SignalGenerationService:
 
         if force_24_7:
             self._cursor_aware = False
+            self._paused = False  # Ensure not paused in 24/7 mode
             logger.info("🚀 24/7 mode enabled: Signal generation will run continuously")
         else:
             self._cursor_aware = self.environment == "development"
@@ -880,16 +881,25 @@ class SignalGenerationService:
         """
         # Performance monitoring
         perf_context = self._start_performance_monitoring()
+        
+        # Detect if symbol is crypto for 24/7 logging
+        is_crypto = self._is_crypto_symbol(symbol)
+        if is_crypto:
+            logger.debug(f"🪙 Generating signal for crypto symbol {symbol} (24/7 mode)")
 
         try:
             # Early exit: Check cached signal if symbol hasn't changed
             cached_signal = self._check_cached_signal(symbol)
             if cached_signal:
+                if is_crypto:
+                    logger.debug(f"✅ Using cached signal for {symbol} (crypto)")
                 return cached_signal
 
             # Step 1: Fetch and validate market data
             source_signals, market_data_df = await self._fetch_and_validate_market_data(symbol)
             if not source_signals:
+                if is_crypto:
+                    logger.warning(f"⚠️  No market data signals for crypto {symbol} - check data sources")
                 return None
 
             # Early exit: Check price change threshold
@@ -919,14 +929,24 @@ class SignalGenerationService:
             signal = await self._build_and_finalize_signal(
                 symbol, consensus, source_signals, market_data_df
             )
+            
+            # Log crypto signal generation success
+            if is_crypto and signal:
+                logger.info(f"🪙 Crypto signal generated for {symbol}: {signal.get('action')} @ ${signal.get('entry_price', 0):.2f} ({signal.get('confidence', 0):.1f}% confidence)")
 
             return signal
 
         except Exception as e:
             logger.error(f"❌ Error generating signal for {symbol}: {e}")
+            if is_crypto:
+                logger.error(f"   Crypto symbol {symbol} signal generation failed - check 24/7 data sources")
             return None
         finally:
             self._stop_performance_monitoring(perf_context)
+    
+    def _is_crypto_symbol(self, symbol: str) -> bool:
+        """Check if symbol is a cryptocurrency"""
+        return '-USD' in symbol or symbol.startswith('BTC') or symbol.startswith('ETH') or symbol.startswith('SOL')
 
     def _start_performance_monitoring(self):
         """Start performance monitoring context"""
@@ -954,6 +974,7 @@ class SignalGenerationService:
 
     async def _fetch_and_validate_market_data(self, symbol: str) -> Tuple[Dict, Optional[Any]]:
         """Fetch market data signals and optimize DataFrame memory"""
+        is_crypto = self._is_crypto_symbol(symbol)
         source_signals = {}
         market_data_df = await self._fetch_market_data_signals(symbol, source_signals)
 
@@ -963,10 +984,18 @@ class SignalGenerationService:
 
         # Early exit if no market data
         if not source_signals:
-            logger.warning(
-                f"⚠️  Early exit: No source signals generated for {symbol} (market data fetch may have failed)"
-            )
+            if is_crypto:
+                logger.warning(
+                    f"⚠️  Early exit: No market data signals for crypto {symbol} (24/7 mode - check Massive.com/Alpaca Pro)"
+                )
+            else:
+                logger.warning(
+                    f"⚠️  Early exit: No source signals generated for {symbol} (market data fetch may have failed)"
+                )
             return {}, None
+        
+        if is_crypto:
+            logger.debug(f"✅ Market data fetched for crypto {symbol}: {list(source_signals.keys())}")
 
         return source_signals, market_data_df
 
@@ -1138,18 +1167,23 @@ class SignalGenerationService:
         """
         Fetch market data signals with parallel fetching (race condition pattern)
         OPTIMIZATION: Fetches from multiple sources in parallel, uses first successful response
+        Supports 24/7 crypto trading
         """
+        is_crypto = self._is_crypto_symbol(symbol)
         market_data_df = None
         tasks = []
         task_metadata = {}
 
         # OPTIMIZATION: Fetch from all available sources in parallel
+        # Crypto symbols work 24/7 with both Alpaca Pro and Massive.com
         if "alpaca_pro" in self.data_sources:
             task = asyncio.create_task(
                 self.data_sources["alpaca_pro"].fetch_price_data(symbol, days=200)
             )
             tasks.append(task)
             task_metadata[id(task)] = "alpaca_pro"
+            if is_crypto:
+                logger.debug(f"🪙 Fetching crypto data from Alpaca Pro for {symbol}")
 
         if "massive" in self.data_sources:
             task = asyncio.create_task(
@@ -1157,8 +1191,12 @@ class SignalGenerationService:
             )
             tasks.append(task)
             task_metadata[id(task)] = "massive"
+            if is_crypto:
+                logger.debug(f"🪙 Fetching crypto data from Massive.com for {symbol}")
 
         if not tasks:
+            if is_crypto:
+                logger.warning(f"⚠️  No market data sources available for crypto {symbol}")
             return None
 
         # Race: Use first successful response (with 30 second timeout for 200 days of data)
@@ -1184,6 +1222,9 @@ class SignalGenerationService:
                             )
                             if signal:
                                 source_signals[source_name] = signal
+                                is_crypto = self._is_crypto_symbol(symbol)
+                                if is_crypto:
+                                    logger.debug(f"✅ {source_name} signal generated for crypto {symbol}: {signal.get('direction', 'N/A')} @ {signal.get('confidence', 0):.1f}%")
                                 logger.info(
                                     f"✅ {source_name} signal for {symbol}: {signal.get('direction')} @ {signal.get('confidence')}%"
                                 )
@@ -1282,9 +1323,15 @@ class SignalGenerationService:
     async def _fetch_independent_source_signals(
         self, symbol: str, source_signals: Dict, market_data_df=None
     ):
-        """Fetch independent data sources in parallel"""
+        """Fetch independent data sources in parallel
+        Supports 24/7 crypto trading - xAI Grok and Sonar AI work 24/7 for crypto
+        """
+        is_crypto = self._is_crypto_symbol(symbol)
         independent_tasks = []
         task_metadata = {}
+        
+        if is_crypto:
+            logger.debug(f"🪙 Fetching independent sources for crypto {symbol} (24/7 mode)")
 
         # Prepare market data for Chinese models
         market_data = {}
@@ -1307,6 +1354,8 @@ class SignalGenerationService:
             )
             independent_tasks.append(task)
             task_metadata[id(task)] = ("yfinance", "indicators")
+            if is_crypto:
+                logger.debug(f"🪙 Fetching yfinance indicators for crypto {symbol} (24/7)")
 
         if "alpha_vantage" in self.data_sources:
             task = asyncio.create_task(
@@ -1319,11 +1368,15 @@ class SignalGenerationService:
             task = asyncio.create_task(self.data_sources["x_sentiment"].fetch_sentiment(symbol))
             independent_tasks.append(task)
             task_metadata[id(task)] = ("x_sentiment", "sentiment")
+            if is_crypto:
+                logger.debug(f"🪙 Fetching xAI Grok sentiment for crypto {symbol} (24/7)")
 
         if "sonar" in self.data_sources:
             task = asyncio.create_task(self.data_sources["sonar"].fetch_analysis(symbol))
             independent_tasks.append(task)
             task_metadata[id(task)] = ("sonar", "analysis")
+            if is_crypto:
+                logger.debug(f"🪙 Fetching Sonar AI analysis for crypto {symbol} (24/7)")
 
         # Add Chinese models if available
         if "chinese_models" in self.data_sources:
@@ -2231,12 +2284,18 @@ class SignalGenerationService:
     async def generate_signals_cycle(self, symbols: List[str] = None) -> List[Dict]:
         """
         Generate signals for all symbols with error recovery and performance tracking
+        Supports 24/7 crypto trading - crypto symbols generate signals continuously
         
         Returns:
             List of generated signals
         """
         if symbols is None:
             symbols = DEFAULT_SYMBOLS
+
+        # Log crypto symbols in cycle
+        crypto_symbols = [s for s in symbols if self._is_crypto_symbol(s)]
+        if crypto_symbols:
+            logger.debug(f"🪙 Signal generation cycle includes crypto symbols: {crypto_symbols} (24/7 mode)")
 
         generated_signals = []
         account, existing_positions = self._get_trading_context()
@@ -2302,7 +2361,13 @@ class SignalGenerationService:
             self.performance_metrics.record_signal_generation_time(cycle_duration)
             for _ in symbols:
                 self.performance_metrics.record_symbol_processed()
-            logger.debug(f"📊 Signal cycle completed in {cycle_duration:.2f}s for {len(symbols)} symbols")
+            
+            # Log crypto signal generation summary
+            crypto_signals = [s for s in generated_signals if self._is_crypto_symbol(s.get('symbol', ''))]
+            if crypto_signals:
+                logger.info(f"🪙 Crypto signals generated: {len(crypto_signals)}/{len(crypto_symbols)} crypto symbols in {cycle_duration:.2f}s")
+            
+            logger.debug(f"📊 Signal cycle completed in {cycle_duration:.2f}s for {len(symbols)} symbols ({len(generated_signals)} signals)")
 
         return generated_signals
 
@@ -2572,14 +2637,50 @@ class SignalGenerationService:
                 logger.warning(f"⏭️  Skipping {symbol} - {reason}")
                 return
 
-            # OPTIMIZATION: Check existing position using set for O(1) lookup
-            existing_symbols = {p.get("symbol") for p in existing_positions if p.get("symbol")}
-            if symbol in existing_symbols:
-                logger.info(f"⏭️  Skipping {symbol} - position already exists")
-                return
+            # FIX: Check existing position with side awareness
+            # Allow closing existing positions (LONG->SELL, SHORT->BUY)
+            # Allow opening opposite positions (flip LONG->SHORT or SHORT->LONG)
+            # Only skip if trying to open same position type we already have
+            signal_action = signal.get("action", "").upper()
+            existing_position = next(
+                (p for p in existing_positions if p.get("symbol") == symbol), None
+            )
+            
+            if existing_position:
+                existing_side = existing_position.get("side", "LONG").upper()
+                
+                # Check if this trade would close the existing position
+                would_close = (
+                    (existing_side == "LONG" and signal_action == "SELL") or
+                    (existing_side == "SHORT" and signal_action == "BUY")
+                )
+                
+                # Check if this trade would open the same position type
+                would_duplicate = (
+                    (existing_side == "LONG" and signal_action == "BUY") or
+                    (existing_side == "SHORT" and signal_action == "SELL")
+                )
+                
+                if would_close:
+                    logger.info(
+                        f"🔄 {symbol} - Closing existing {existing_side} position with {signal_action} signal"
+                    )
+                    # Allow the trade to proceed - it will close the position
+                elif would_duplicate:
+                    logger.info(
+                        f"⏭️  Skipping {symbol} - Already have {existing_side} position, "
+                        f"signal is {signal_action} (would duplicate)"
+                    )
+                    return
+                else:
+                    # Opening opposite position (flip) - allow it
+                    logger.info(
+                        f"🔄 {symbol} - Flipping from {existing_side} to "
+                        f"{'LONG' if signal_action == 'BUY' else 'SHORT'} position"
+                    )
 
-            # Check correlation limits
-            if not self._check_correlation_groups(symbol, existing_positions):
+            # Check correlation limits (only for new positions, not closing)
+            if not existing_position and not self._check_correlation_groups(symbol, existing_positions):
                 return
 
             # FIX: Pass existing_positions to avoid race condition
@@ -2803,14 +2904,12 @@ class SignalGenerationService:
     def _close_position(self, symbol: str, reason: str):
         """Close a position"""
         try:
-            # Get position details before closing
+            # OPTIMIZATION: Get positions once and reuse
             positions = self._get_cached_positions()
-            # OPTIMIZATION: Use dict lookup instead of linear search
-            position = None
-            for p in positions:
-                if p.get("symbol") == symbol:
-                    position = p
-                    break
+            
+            # OPTIMIZATION: Use dict lookup instead of linear search for O(1) access
+            position_dict = {p.get("symbol"): p for p in positions if p.get("symbol")}
+            position = position_dict.get(symbol)
 
             if not position:
                 logger.warning(f"Position not found for {symbol}")
@@ -2836,8 +2935,7 @@ class SignalGenerationService:
                 "trade_id": position.get("trade_id"),  # Preserve trade_id for exit tracking
             }
 
-            # FIX: Pass existing positions to avoid race condition
-            positions = self._get_cached_positions()
+            # FIX: Reuse positions list to avoid redundant API call
             order_id = self.trading_engine.execute_signal(signal, existing_positions=positions)
             if order_id:
                 logger.info(
@@ -2953,19 +3051,25 @@ class SignalGenerationService:
 
         while self.running:
             try:
-                # Check and update pause state
+                # Check and update pause state (only in development mode)
                 pause_checker.check_and_update()
 
-                # Skip if paused
+                # Skip if paused (should not happen in 24/7 mode)
                 if self._paused:
-                    await asyncio.sleep(interval_seconds)
-                    continue
+                    if not self._cursor_aware:
+                        # In 24/7 mode, we should never be paused - reset it
+                        logger.warning("⚠️ Service was paused in 24/7 mode - resetting pause state")
+                        self._paused = False
+                    else:
+                        # In development mode, skip this cycle
+                        await asyncio.sleep(interval_seconds)
+                        continue
 
                 # Generate signals
                 await self._run_signal_generation_cycle(interval_seconds)
 
             except Exception as e:
-                logger.error(f"❌ Error in background generation cycle: {e}")
+                logger.error(f"❌ Error in background generation cycle: {e}", exc_info=True)
                 await asyncio.sleep(interval_seconds)
 
     def _start_position_monitoring(self):
@@ -2979,13 +3083,24 @@ class SignalGenerationService:
     async def _run_signal_generation_cycle(self, interval_seconds: int):
         """Run one signal generation cycle"""
         start_time = datetime.now(timezone.utc)
-        signals = await self.generate_signals_cycle()
-        elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
-        logger.info(f"📊 Generated {len(signals)} signals in {elapsed:.2f}s")
+        try:
+            signals = await self.generate_signals_cycle()
+            elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
+            
+            if signals:
+                logger.info(f"📊 Generated {len(signals)} signals in {elapsed:.2f}s")
+                # Log signal details for monitoring
+                for signal in signals[:3]:  # Log first 3 signals
+                    logger.debug(f"  → {signal.get('symbol')} {signal.get('action')} @ {signal.get('confidence', 0):.1f}%")
+            else:
+                logger.debug(f"📊 Signal generation cycle completed in {elapsed:.2f}s (0 signals generated)")
 
-        # OPTIMIZATION: Record performance metrics
-        if self.performance_metrics:
-            self.performance_metrics.record_signal_generation_time(elapsed)
+            # OPTIMIZATION: Record performance metrics
+            if self.performance_metrics:
+                self.performance_metrics.record_signal_generation_time(elapsed)
+        except Exception as e:
+            elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
+            logger.error(f"❌ Error in signal generation cycle after {elapsed:.2f}s: {e}", exc_info=True)
 
         await asyncio.sleep(interval_seconds)
 

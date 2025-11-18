@@ -15,6 +15,28 @@ class WinRateStats:
 
 def calculate_win_rate(signals: List[Dict[str, Any]], outcome_key: str = 'outcome', 
                       exclude_expired: bool = True) -> WinRateStats:
+    """
+    Calculate win rate statistics from signals.
+    
+    Args:
+        signals: List of signal dictionaries
+        outcome_key: Key to use for outcome in signal dict
+        exclude_expired: Whether to exclude expired signals from win rate calculation
+    
+    Returns:
+        WinRateStats with calculated metrics
+    """
+    if not signals:
+        return WinRateStats(
+            total_signals=0,
+            wins=0,
+            losses=0,
+            expired=0,
+            win_rate=0.0,
+            loss_rate=0.0,
+            total_traded=0
+        )
+    
     wins = losses = expired = 0
     
     for signal in signals:
@@ -28,13 +50,14 @@ def calculate_win_rate(signals: List[Dict[str, Any]], outcome_key: str = 'outcom
     
     total_traded = wins + losses
     
+    # Calculate win/loss rates with zero-division protection
     if exclude_expired:
-        win_rate = (wins / total_traded * 100) if total_traded > 0 else 0
-        loss_rate = (losses / total_traded * 100) if total_traded > 0 else 0
+        win_rate = (wins / total_traded * 100) if total_traded > 0 else 0.0
+        loss_rate = (losses / total_traded * 100) if total_traded > 0 else 0.0
     else:
         total_with_expired = total_traded + expired
-        win_rate = (wins / total_with_expired * 100) if total_with_expired > 0 else 0
-        loss_rate = ((losses + expired) / total_with_expired * 100) if total_with_expired > 0 else 0
+        win_rate = (wins / total_with_expired * 100) if total_with_expired > 0 else 0.0
+        loss_rate = ((losses + expired) / total_with_expired * 100) if total_with_expired > 0 else 0.0
     
     return WinRateStats(
         total_signals=len(signals),

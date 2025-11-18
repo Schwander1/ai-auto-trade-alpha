@@ -887,7 +887,8 @@ class PreTradingPreparation:
             critical_deps = {
                 "fastapi": "FastAPI",
                 "uvicorn": "Uvicorn",
-                "alpaca_trade_api": "Alpaca API",
+                "alpaca_trade_api": "Alpaca API (legacy)",
+                "alpaca": "Alpaca API (new)",
                 "pandas": "Pandas",
                 "numpy": "NumPy",
             }
@@ -895,7 +896,24 @@ class PreTradingPreparation:
             installed = []
             missing = []
             
+            # Check Alpaca API (either old or new package)
+            alpaca_found = False
+            try:
+                __import__("alpaca_trade_api")
+                installed.append("Alpaca API (legacy)")
+                alpaca_found = True
+            except ImportError:
+                try:
+                    from alpaca.trade.client import TradeAPI
+                    installed.append("Alpaca API (new)")
+                    alpaca_found = True
+                except ImportError:
+                    missing.append("Alpaca API")
+            
+            # Check other dependencies
             for module_name, display_name in critical_deps.items():
+                if module_name.startswith("alpaca"):
+                    continue  # Already checked
                 try:
                     __import__(module_name)
                     installed.append(display_name)
@@ -1185,9 +1203,14 @@ class PreTradingPreparation:
             checks_passed = []
             
             # Check if config file has proper permissions (not world-readable)
+            # Use absolute paths based on workspace root and argo path
             config_paths = [
-                Path("argo/config.json"),
-                Path("config.json"),
+                workspace_root / "argo" / "config.json",
+                argo_path / "config.json",
+                Path("config.json"),  # Relative to current working directory
+                Path("/root/argo-production/config.json"),  # Production path
+                Path("/root/argo-production-blue/config.json"),  # Blue deployment
+                Path("/root/argo-production-green/config.json"),  # Green deployment
             ]
             
             config_found = False
@@ -1195,22 +1218,27 @@ class PreTradingPreparation:
                 if config_path.exists():
                     config_found = True
                     import stat
-                    file_stat = config_path.stat()
-                    mode = file_stat.st_mode
-                    
-                    # Check if world-readable (security risk)
-                    # Also check if group-readable (less secure than 600)
-                    is_world_readable = mode & stat.S_IROTH
-                    is_group_readable = mode & stat.S_IRGRP
-                    
-                    if is_world_readable:
-                        issues.append("Config file is world-readable (security risk)")
-                    elif is_group_readable:
-                        # Group readable is less secure but not critical
-                        checks_passed.append("Config file permissions acceptable (group-readable)")
-                    else:
-                        checks_passed.append("Config file permissions secure (600 or better)")
-                    break
+                    try:
+                        file_stat = config_path.stat()
+                        mode = file_stat.st_mode
+                        
+                        # Check if world-readable (security risk)
+                        # Also check if group-readable (less secure than 600)
+                        is_world_readable = bool(mode & stat.S_IROTH)
+                        is_group_readable = bool(mode & stat.S_IRGRP)
+                        
+                        if is_world_readable:
+                            issues.append(f"Config file is world-readable (security risk): {config_path}")
+                        elif is_group_readable:
+                            # Group readable is less secure but not critical
+                            checks_passed.append(f"Config file permissions acceptable (group-readable): {config_path}")
+                        else:
+                            checks_passed.append(f"Config file permissions secure (600 or better): {config_path}")
+                        break
+                    except Exception as e:
+                        # If we can't check permissions, skip this check
+                        logger.debug(f"Could not check permissions for {config_path}: {e}")
+                        pass
             
             if not config_found:
                 checks_passed.append("Config file location check skipped")

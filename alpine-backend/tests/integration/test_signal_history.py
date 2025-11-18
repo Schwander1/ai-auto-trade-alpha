@@ -3,9 +3,10 @@ Integration tests for signal history endpoint
 Tests the /api/v1/signals/history endpoint with real database queries
 """
 import pytest
+import hashlib
 from datetime import datetime, timedelta
 from fastapi.testclient import TestClient
-from backend.models.signal import Signal
+from backend.models.signal import Signal, SignalAction
 
 
 class TestSignalHistoryEndpoint:
@@ -31,11 +32,11 @@ class TestSignalHistoryEndpoint:
         signals = [
             Signal(
                 symbol="AAPL",
-                action="BUY",
+                action=SignalAction.BUY,
                 price=175.50,
                 confidence=0.85,
                 rationale="Test signal rationale for AAPL buy signal with sufficient length",
-                verification_hash=f"hash_{i}",
+                verification_hash=hashlib.sha256(f"hash_{i}_{now.timestamp()}".encode()).hexdigest(),
                 is_active=True,
                 created_at=now - timedelta(days=i)
             )
@@ -62,11 +63,11 @@ class TestSignalHistoryEndpoint:
         signals = [
             Signal(
                 symbol="AAPL",
-                action="BUY",
+                action=SignalAction.BUY,
                 price=175.50,
                 confidence=0.85,
                 rationale="Test signal rationale for AAPL buy signal with sufficient length",
-                verification_hash=f"hash_{i}",
+                verification_hash=hashlib.sha256(f"hash_{i}_{now.timestamp()}".encode()).hexdigest(),
                 is_active=True,
                 created_at=now - timedelta(days=i)
             )
@@ -90,11 +91,11 @@ class TestSignalHistoryEndpoint:
         recent_signals = [
             Signal(
                 symbol="AAPL",
-                action="BUY",
+                action=SignalAction.BUY,
                 price=175.50,
                 confidence=0.85,
                 rationale="Test signal rationale for AAPL buy signal with sufficient length",
-                verification_hash=f"recent_hash_{i}",
+                verification_hash=hashlib.sha256(f"recent_hash_{i}_{now.timestamp()}".encode()).hexdigest(),
                 is_active=True,
                 created_at=now - timedelta(days=i)
             )
@@ -104,11 +105,11 @@ class TestSignalHistoryEndpoint:
         old_signals = [
             Signal(
                 symbol="NVDA",
-                action="SELL",
+                action=SignalAction.SELL,
                 price=500.00,
                 confidence=0.90,
                 rationale="Test signal rationale for NVDA sell signal with sufficient length",
-                verification_hash=f"old_hash_{i}",
+                verification_hash=hashlib.sha256(f"old_hash_{i}_{now.timestamp()}".encode()).hexdigest(),
                 is_active=False,
                 created_at=now - timedelta(days=10 + i)
             )
@@ -132,11 +133,11 @@ class TestSignalHistoryEndpoint:
         signals = [
             Signal(
                 symbol="AAPL",
-                action="BUY",
+                action=SignalAction.BUY,
                 price=175.50 + i,
                 confidence=0.85,
                 rationale="Test signal rationale for AAPL buy signal with sufficient length",
-                verification_hash=f"hash_{i}",
+                verification_hash=hashlib.sha256(f"hash_{i}_{now.timestamp()}".encode()).hexdigest(),
                 is_active=True,
                 created_at=now - timedelta(days=5 - i)  # Newest first
             )
@@ -162,22 +163,22 @@ class TestSignalHistoryEndpoint:
 
         active_signal = Signal(
             symbol="AAPL",
-            action="BUY",
+            action=SignalAction.BUY,
             price=175.50,
             confidence=0.85,
             rationale="Test signal rationale for AAPL buy signal with sufficient length",
-            verification_hash="active_hash",
+            verification_hash=hashlib.sha256("active_hash".encode()).hexdigest(),
             is_active=True,
             created_at=now
         )
 
         inactive_signal = Signal(
             symbol="NVDA",
-            action="SELL",
+            action=SignalAction.SELL,
             price=500.00,
             confidence=0.90,
             rationale="Test signal rationale for NVDA sell signal with sufficient length",
-            verification_hash="inactive_hash",
+            verification_hash=hashlib.sha256("inactive_hash".encode()).hexdigest(),
             is_active=False,
             created_at=now - timedelta(days=1)
         )
@@ -310,18 +311,19 @@ class TestSignalHistoryEndpoint:
     def test_signal_history_handles_different_actions(self, client, auth_headers, db):
         """Test that signal history handles different action types"""
         now = datetime.utcnow()
+        actions_list = [SignalAction.BUY, SignalAction.SELL, SignalAction.BUY, SignalAction.SELL]
         signals = [
             Signal(
                 symbol="AAPL",
                 action=action,
                 price=175.50,
                 confidence=0.85,
-                rationale=f"Test signal rationale for {action} signal with sufficient length",
-                verification_hash=f"hash_{action}_{i}",
+                rationale=f"Test signal rationale for {action.value} signal with sufficient length",
+                verification_hash=hashlib.sha256(f"hash_{action.value}_{i}_{now.timestamp()}".encode()).hexdigest(),
                 is_active=True,
                 created_at=now - timedelta(days=i)
             )
-            for i, action in enumerate(["BUY", "SELL", "BUY", "SELL"])
+            for i, action in enumerate(actions_list)
         ]
         for signal in signals:
             db.add(signal)
@@ -343,11 +345,11 @@ class TestSignalHistoryEndpoint:
         signals = [
             Signal(
                 symbol=symbol,
-                action="BUY",
+                action=SignalAction.BUY,
                 price=175.50,
                 confidence=0.85,
                 rationale=f"Test signal rationale for {symbol} buy signal with sufficient length",
-                verification_hash=f"hash_{symbol}",
+                verification_hash=hashlib.sha256(f"hash_{symbol}_{i}_{now.timestamp()}".encode()).hexdigest(),
                 is_active=True,
                 created_at=now - timedelta(days=i)
             )

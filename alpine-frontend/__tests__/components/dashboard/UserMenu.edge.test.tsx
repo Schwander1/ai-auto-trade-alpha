@@ -1,77 +1,77 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import UserMenu from '@/components/dashboard/UserMenu'
+import UserMenu from "@/components/dashboard/UserMenu";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { useSession } from "next-auth/react";
 
-jest.mock('next-auth/react', () => ({
+jest.mock("next-auth/react", () => ({
   useSession: jest.fn(() => ({
     data: {
       user: {
-        id: '1',
-        email: 'test@example.com',
-        tier: 'STARTER',
+        id: "1",
+        email: "test@example.com",
+        tier: "STARTER",
       },
     },
-    status: 'authenticated',
+    status: "authenticated",
   })),
   signOut: jest.fn(),
-}))
+}));
 
-jest.mock('next/navigation', () => ({
+jest.mock("next/navigation", () => ({
   useRouter: () => ({
     push: jest.fn(),
   }),
-}))
+}));
 
-describe('UserMenu Edge Cases', () => {
-  it('handles missing user email', () => {
-    const { useSession } = require('next-auth/react')
-    useSession.mockReturnValueOnce({
+describe("UserMenu Edge Cases", () => {
+  it("handles missing user email", () => {
+    const mockUseSession = useSession as jest.Mock;
+    mockUseSession.mockReturnValueOnce({
       data: {
         user: {
-          id: '1',
+          id: "1",
           email: null,
-          tier: 'starter',
+          tier: "starter",
         },
       },
-      status: 'authenticated',
-    })
+      status: "authenticated",
+    });
 
-    render(<UserMenu />)
-    
-    expect(screen.getByRole('button', { name: /user menu/i })).toBeInTheDocument()
-  })
+    render(<UserMenu />);
 
-  it('closes menu when clicking outside', async () => {
-    render(<UserMenu />)
-    
-    const menuButton = screen.getByRole('button', { name: /user menu/i })
-    fireEvent.click(menuButton)
-    
+    expect(screen.getByRole("button", { name: /user menu/i })).toBeInTheDocument();
+  });
+
+  it("closes menu when clicking outside", async () => {
+    render(<UserMenu />);
+
+    const menuButton = screen.getByRole("button", { name: /user menu/i });
+    fireEvent.click(menuButton);
+
     await waitFor(() => {
-      expect(screen.getByText('Profile')).toBeInTheDocument()
-    })
+      expect(screen.getByText("Profile")).toBeInTheDocument();
+    });
 
     // Click outside
-    fireEvent.click(document.body)
-    
-    await waitFor(() => {
-      expect(screen.queryByText('Profile')).not.toBeInTheDocument()
-    })
-  })
+    fireEvent.click(document.body);
 
-  it('handles dark mode toggle', async () => {
-    render(<UserMenu />)
-    
-    const menuButton = screen.getByRole('button', { name: /user menu/i })
-    fireEvent.click(menuButton)
-    
     await waitFor(() => {
-      const darkModeButton = screen.getByText(/dark mode|light mode/i)
-      fireEvent.click(darkModeButton)
-      
+      expect(screen.queryByText("Profile")).not.toBeInTheDocument();
+    });
+  });
+
+  it("handles dark mode toggle", async () => {
+    render(<UserMenu />);
+
+    const menuButton = screen.getByRole("button", { name: /user menu/i });
+    fireEvent.click(menuButton);
+
+    await waitFor(() => {
+      const darkModeButton = screen.getByText(/dark mode|light mode/i);
+      fireEvent.click(darkModeButton);
+
       // Should toggle dark mode
-      const isDark = document.documentElement.classList.contains('dark')
-      expect(typeof isDark).toBe('boolean')
-    })
-  })
-})
-
+      const isDark = document.documentElement.classList.contains("dark");
+      expect(typeof isDark).toBe("boolean");
+    });
+  });
+});

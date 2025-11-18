@@ -4,6 +4,19 @@ Integrity Monitoring Job
 Continuously verifies signal integrity and detects tampering
 
 COMPLIANCE: Automated integrity checks for audit trail verification
+
+PATENT-PENDING TECHNOLOGY
+Patent Application: [Application Number]
+Filing Date: [Date]
+
+This code implements patent-pending technology.
+Unauthorized use may infringe on pending patent rights.
+
+PATENT CLAIM: Immutable Audit Trail System
+- Immutable audit trail for trading signals
+- Cryptographic verification system
+- Database-level immutability triggers
+See: docs/SystemDocs/PATENT_PENDING_TECHNOLOGY.md for patent details
 """
 import os
 import sys

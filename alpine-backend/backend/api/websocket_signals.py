@@ -1,6 +1,19 @@
 """
 WebSocket endpoint for real-time signal streaming
 Streams new signals to connected clients as they arrive
+
+PATENT-PENDING TECHNOLOGY
+Patent Application: [Application Number]
+Filing Date: [Date]
+
+This code implements patent-pending technology.
+Unauthorized use may infringe on pending patent rights.
+
+PATENT CLAIM: Real-Time Signal Delivery System
+- Sub-500ms signal delivery system
+- Real-time signal verification
+- WebSocket-based signal distribution
+See: docs/SystemDocs/PATENT_PENDING_TECHNOLOGY.md for patent details
 """
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, Query, HTTPException, status
 from sqlalchemy.orm import Session
@@ -89,23 +102,27 @@ class ConnectionManager:
                 
     async def broadcast_new_signal(self, signal: Signal, db: Session):
         """Broadcast new signal to all users who can access it"""
-        # Check if signal is premium
-        is_premium = signal.type and signal.type.upper() in ['PREMIUM', 'ELITE']
+        # Check if signal is premium (confidence >= 85% or 0.85)
+        confidence_pct = signal.confidence * 100 if signal.confidence <= 1 else signal.confidence
+        is_premium = confidence_pct >= 85
+        
+        # Handle enum serialization
+        action_value = signal.action.value if hasattr(signal.action, 'value') else str(signal.action)
         
         signal_data = {
             "type": "new_signal",
             "data": {
                 "id": signal.id,
                 "symbol": signal.symbol,
-                "action": signal.action,
-                "entry_price": float(signal.entry_price) if signal.entry_price else None,
+                "action": action_value,
+                "entry_price": float(signal.price) if signal.price else None,
                 "stop_loss": float(signal.stop_loss) if signal.stop_loss else None,
-                "take_profit": float(signal.take_profit) if signal.take_profit else None,
-                "confidence": float(signal.confidence) if signal.confidence else None,
-                "type": signal.type,
-                "timestamp": signal.timestamp.isoformat() if signal.timestamp else datetime.utcnow().isoformat(),
-                "hash": signal.hash if signal.hash else None,
-                "reasoning": signal.reasoning if signal.reasoning else None,
+                "take_profit": float(signal.target_price) if signal.target_price else None,
+                "confidence": confidence_pct,  # Convert to 0-100 range for API
+                "type": "PREMIUM" if is_premium else "STANDARD",
+                "timestamp": signal.created_at.isoformat() if signal.created_at else datetime.utcnow().isoformat(),
+                "hash": signal.verification_hash if signal.verification_hash else None,
+                "reasoning": signal.rationale if signal.rationale else None,
                 "server_timestamp": datetime.utcnow().timestamp(),
             }
         }

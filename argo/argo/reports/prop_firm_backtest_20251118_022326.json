@@ -1,0 +1,110 @@
+{
+  "symbols": [
+    "SPY",
+    "QQQ",
+    "AAPL",
+    "NVDA"
+  ],
+  "results": {
+    "SPY": null,
+    "QQQ": null,
+    "AAPL": {
+      "symbol": "AAPL",
+      "start_date": "2020-11-19T02:23:15.722801",
+      "end_date": "2025-11-18T02:23:15.722801",
+      "initial_capital": 25000.0,
+      "min_confidence": 75.0,
+      "metrics": {
+        "total_return_pct": -0.12381202178567763,
+        "annualized_return_pct": -0.04329240549503233,
+        "sharpe_ratio": -1.4944639948282288,
+        "sortino_ratio": -0.27891316336355443,
+        "max_drawdown_pct": -0.12381202178567763,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "total_trades": 1,
+        "winning_trades": 0,
+        "losing_trades": 1,
+        "avg_win_pct": 0.0,
+        "avg_loss_pct": -1.5021911682819709
+      },
+      "prop_firm_metrics": {
+        "initial_capital": 25000.0,
+        "final_equity": 24969.04699455358,
+        "total_return_pct": -0.12381202178567763,
+        "peak_equity": 25000.0,
+        "final_drawdown_pct": 0.12381202178567763,
+        "max_drawdown_limit": 2.0,
+        "drawdown_compliant": "True",
+        "drawdown_breaches": 0,
+        "daily_loss_breaches": 0,
+        "trading_halted": false,
+        "halt_reason": null,
+        "total_trading_days": 114,
+        "profitable_days": 0,
+        "losing_days": 2,
+        "avg_daily_return_pct": -0.0010860713614368471,
+        "max_daily_loss_pct": -0.12372046231411601,
+        "daily_loss_limit": -4.5,
+        "daily_loss_compliant": "True",
+        "total_trades": 1,
+        "max_positions": 3,
+        "max_position_size_pct": 5.0,
+        "min_confidence": 75.0
+      },
+      "compliant": true
+    },
+    "NVDA": {
+      "symbol": "NVDA",
+      "start_date": "2020-11-19T02:23:15.722801",
+      "end_date": "2025-11-18T02:23:15.722801",
+      "initial_capital": 25000.0,
+      "min_confidence": 75.0,
+      "metrics": {
+        "total_return_pct": 0.08085278764224495,
+        "annualized_return_pct": 0.028252362098935002,
+        "sharpe_ratio": 0.21112510971357967,
+        "sortino_ratio": 0.0,
+        "max_drawdown_pct": -17.964721240926607,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "total_trades": 1,
+        "winning_trades": 0,
+        "losing_trades": 1,
+        "avg_win_pct": 0.0,
+        "avg_loss_pct": -0.9001288553198953
+      },
+      "prop_firm_metrics": {
+        "initial_capital": 25000.0,
+        "final_equity": 25020.21319691056,
+        "total_return_pct": 0.08085278764224495,
+        "peak_equity": 25020.21319691056,
+        "final_drawdown_pct": 0.0,
+        "max_drawdown_limit": 2.0,
+        "drawdown_compliant": "True",
+        "drawdown_breaches": 0,
+        "daily_loss_breaches": 1,
+        "trading_halted": false,
+        "halt_reason": null,
+        "total_trading_days": 114,
+        "profitable_days": 1,
+        "losing_days": 1,
+        "avg_daily_return_pct": 0.03537379358843508,
+        "max_daily_loss_pct": -17.964721240926607,
+        "daily_loss_limit": -4.5,
+        "daily_loss_compliant": "False",
+        "total_trades": 1,
+        "max_positions": 3,
+        "max_position_size_pct": 5.0,
+        "min_confidence": 75.0
+      },
+      "compliant": "False"
+    }
+  },
+  "summary": {
+    "total_symbols": 4,
+    "successful": 2,
+    "compliant": 1,
+    "non_compliant": 3
+  }
+}

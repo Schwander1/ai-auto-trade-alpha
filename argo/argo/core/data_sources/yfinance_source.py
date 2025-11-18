@@ -20,6 +20,7 @@ class YFinanceDataSource:
     yfinance integration for technical indicators
     Free, high-quality data source
     Supplements Alpha Vantage with additional indicators
+    Supports crypto symbols (BTC-USD, ETH-USD, etc.) - works 24/7
     """
     
     def __init__(self):

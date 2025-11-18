@@ -157,15 +157,17 @@ def admin_headers(admin_user: User) -> Dict[str, str]:
 @pytest.fixture
 def test_signal(db: Session, test_user: User) -> Signal:
     """Create a test signal"""
+    from backend.models.signal import SignalAction
+    
     signal = Signal(
         symbol="AAPL",
-        action="BUY",
+        action=SignalAction.BUY,
         price=175.50,
-        confidence=85.5,
+        confidence=0.855,  # Normalized to 0-1 range
         target_price=185.00,
         stop_loss=170.00,
         rationale="Test signal rationale for testing purposes",
-        verification_hash="test_hash_123",
+        verification_hash="a" * 64,  # Valid SHA-256 hash format (64 hex chars)
         is_active=True
     )
     db.add(signal)
@@ -202,19 +204,36 @@ def create_test_signal(
     symbol: str = "AAPL",
     action: str = "BUY",
     price: float = 175.50,
-    confidence: float = 85.5,
+    confidence: float = 0.855,  # Normalized to 0-1 range (85.5% = 0.855)
     is_active: bool = True
 ) -> Signal:
     """Helper function to create a test signal"""
+    from backend.models.signal import SignalAction
+    import hashlib
+    
+    # Convert action string to enum
+    if isinstance(action, str):
+        action_enum = SignalAction[action.upper()]
+    else:
+        action_enum = action
+    
+    # Normalize confidence if provided as 0-100
+    if confidence > 1:
+        confidence = confidence / 100.0
+    
+    # Generate valid SHA-256 hash
+    hash_input = f"test_hash_{symbol}_{action}_{price}_{datetime.utcnow().timestamp()}"
+    verification_hash = hashlib.sha256(hash_input.encode()).hexdigest()
+    
     signal = Signal(
         symbol=symbol,
-        action=action,
+        action=action_enum,
         price=price,
         confidence=confidence,
         target_price=price * 1.05,
         stop_loss=price * 0.97,
-        rationale=f"Test signal for {symbol}",
-        verification_hash=f"test_hash_{symbol}_{datetime.utcnow().timestamp()}",
+        rationale=f"Test signal for {symbol} with sufficient reasoning to meet validation requirements",
+        verification_hash=verification_hash,
         is_active=is_active
     )
     db.add(signal)

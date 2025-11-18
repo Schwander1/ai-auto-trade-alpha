@@ -438,11 +438,14 @@ def _map_signals_to_history(signals: List[Signal]) -> List[SignalHistoryResponse
         created_at_str = format_datetime_iso(signal.created_at)
         status = "active" if signal.is_active else "closed"
 
+        # Handle enum serialization
+        action_value = signal.action.value if hasattr(signal.action, 'value') else str(signal.action)
+        
         history.append(
             SignalHistoryResponse(
                 signal_id=f"SIG-{signal.id}",
                 symbol=signal.symbol,
-                action=signal.action,
+                action=action_value,
                 entry_price=signal.price,
                 exit_price=None,  # Not available in Signal model yet
                 pnl_pct=None,  # Not available in Signal model yet

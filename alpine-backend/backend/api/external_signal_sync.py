@@ -2,6 +2,19 @@
 External Signal Sync API Endpoint
 Receives signals from external signal provider via API and stores them in Alpine Analytics database
 Maintains separation: External provider sends via API, Alpine stores in its own database
+
+PATENT-PENDING TECHNOLOGY
+Patent Application: [Application Number]
+Filing Date: [Date]
+
+This code implements patent-pending technology.
+Unauthorized use may infringe on pending patent rights.
+
+PATENT CLAIM: Real-Time Signal Delivery System
+- Sub-500ms signal delivery system
+- Real-time signal verification
+- WebSocket-based signal distribution
+See: docs/SystemDocs/PATENT_PENDING_TECHNOLOGY.md for patent details
 """
 from fastapi import APIRouter, HTTPException, Depends, Header, Request
 from sqlalchemy.orm import Session

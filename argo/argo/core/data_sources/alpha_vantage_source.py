@@ -55,7 +55,17 @@ class AlphaVantageDataSource:
             self.circuit_breaker = None
         
     async def fetch_technical_indicators(self, symbol):
-        """Fetch RSI, SMA, EMA for signal generation (async with connection pooling)"""
+        """Fetch RSI, SMA, EMA for signal generation (async with connection pooling)
+        Note: Alpha Vantage has limited crypto support - crypto symbols may return None
+        """
+        # Check if crypto symbol - Alpha Vantage has limited crypto support
+        is_crypto = '-USD' in symbol or symbol.startswith('BTC') or symbol.startswith('ETH')
+        if is_crypto:
+            logger.debug(f"⚠️  Alpha Vantage: Limited crypto support for {symbol} - may return None")
+            # Alpha Vantage doesn't support all crypto symbols well, return None gracefully
+            # Other sources (Massive.com, xAI Grok, Sonar) will handle crypto
+            return None
+        
         try:
             indicators = {}
             

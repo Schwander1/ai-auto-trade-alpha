@@ -76,10 +76,12 @@ class ConfidenceCalibrator:
     def _load_training_data(self, days: int = 90) -> list:
         """Load historical signal data for training"""
         if not self.db_file.exists():
+            logger.debug(f"Database not found: {self.db_file}, returning empty training data")
             return []
         
         try:
-            conn = sqlite3.connect(str(self.db_file))
+            conn = sqlite3.connect(str(self.db_file), timeout=10.0)
+            conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
             
             cutoff_date = (datetime.utcnow() - timedelta(days=days)).isoformat()
@@ -95,13 +97,19 @@ class ConfidenceCalibrator:
             results = cursor.fetchall()
             conn.close()
             
-            return [
-                {'confidence': conf, 'outcome': outcome}
-                for conf, outcome in results
+            training_data = [
+                {'confidence': row['confidence'], 'outcome': row['outcome']}
+                for row in results
             ]
             
+            logger.debug(f"Loaded {len(training_data)} training samples from last {days} days")
+            return training_data
+            
+        except sqlite3.Error as e:
+            logger.error(f"❌ Database error loading training data: {e}")
+            return []
         except Exception as e:
-            logger.error(f"❌ Failed to load training data: {e}")
+            logger.error(f"❌ Failed to load training data: {e}", exc_info=True)
             return []
     
     def calibrate(self, raw_confidence: float, symbol: Optional[str] = None) -> float:
@@ -136,10 +144,12 @@ class ConfidenceCalibrator:
     def _simple_calibrate(self, raw_confidence: float, symbol: Optional[str] = None) -> float:
         """Simple calibration based on historical win rate"""
         if not self.db_file.exists():
+            logger.debug(f"Database not found: {self.db_file}, returning raw confidence")
             return raw_confidence
         
         try:
-            conn = sqlite3.connect(str(self.db_file))
+            conn = sqlite3.connect(str(self.db_file), timeout=10.0)
+            conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
             
             # Get historical accuracy for this confidence range
@@ -165,71 +175,83 @@ class ConfidenceCalibrator:
             result = cursor.fetchone()
             conn.close()
             
-            if result and result[0] > 10:  # Need at least 10 samples
-                total, wins = result
-                actual_win_rate = (wins / total) * 100
+            if result and result['total'] and result['total'] > 10:  # Need at least 10 samples
+                total = result['total']
+                wins = result['wins'] or 0
+                actual_win_rate = (wins / total) * 100 if total > 0 else 0
                 
                 # Adjust confidence based on actual win rate
                 # If actual win rate is lower than confidence, reduce confidence
                 adjustment_factor = actual_win_rate / raw_confidence if raw_confidence > 0 else 1.0
                 calibrated = raw_confidence * adjustment_factor
                 
+                logger.debug(f"Calibrated {raw_confidence}% → {calibrated:.2f}% (actual win rate: {actual_win_rate:.2f}%)")
                 return round(max(0.0, min(100.0, calibrated)), 2)
             
             return raw_confidence
             
+        except sqlite3.Error as e:
+            logger.warning(f"⚠️  Database error in simple calibration: {e}")
+            return raw_confidence
         except Exception as e:
-            logger.warning(f"⚠️  Simple calibration failed: {e}")
+            logger.warning(f"⚠️  Simple calibration failed: {e}", exc_info=True)
             return raw_confidence
     
     def get_calibration_stats(self) -> Dict:
-        """Get calibration statistics"""
+        """Get calibration statistics - optimized with single query"""
         if not self.db_file.exists():
+            logger.debug(f"Database not found: {self.db_file}, returning empty stats")
             return {}
         
         try:
-            conn = sqlite3.connect(str(self.db_file))
+            conn = sqlite3.connect(str(self.db_file), timeout=10.0)
+            conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
             
-            # Get calibration accuracy by confidence ranges
-            ranges = [
-                (0, 75, "Low"),
-                (75, 85, "Medium"),
-                (85, 95, "High"),
-                (95, 100, "Very High")
-            ]
+            # OPTIMIZATION: Single query for all ranges instead of multiple queries
+            cursor.execute("""
+                SELECT 
+                    CASE
+                        WHEN confidence >= 95 THEN 'Very High'
+                        WHEN confidence >= 85 THEN 'High'
+                        WHEN confidence >= 75 THEN 'Medium'
+                        ELSE 'Low'
+                    END as range_label,
+                    COUNT(*) as total,
+                    SUM(CASE WHEN outcome = 'win' THEN 1 ELSE 0 END) as wins,
+                    AVG(confidence) as avg_confidence
+                FROM signals
+                WHERE outcome IS NOT NULL
+                AND confidence IS NOT NULL
+                GROUP BY range_label
+            """)
             
             stats = {}
-            
-            for min_conf, max_conf, label in ranges:
-                cursor.execute("""
-                    SELECT 
-                        COUNT(*) as total,
-                        SUM(CASE WHEN outcome = 'win' THEN 1 ELSE 0 END) as wins,
-                        AVG(confidence) as avg_confidence
-                    FROM signals
-                    WHERE confidence >= ? AND confidence < ?
-                    AND outcome IS NOT NULL
-                """, (min_conf, max_conf))
+            for row in cursor.fetchall():
+                label = row['range_label']
+                total = row['total']
+                wins = row['wins'] or 0
+                avg_conf = row['avg_confidence'] or 0
                 
-                result = cursor.fetchone()
-                if result and result[0] > 0:
-                    total, wins, avg_conf = result
+                if total > 0:
                     win_rate = (wins / total * 100) if total > 0 else 0
                     
                     stats[label] = {
                         'total': total,
                         'wins': wins,
                         'win_rate': round(win_rate, 2),
-                        'avg_confidence': round(avg_conf or 0, 2),
-                        'calibration_error': round(abs(win_rate - (avg_conf or 0)), 2)
+                        'avg_confidence': round(avg_conf, 2),
+                        'calibration_error': round(abs(win_rate - avg_conf), 2)
                     }
             
             conn.close()
             return stats
             
+        except sqlite3.Error as e:
+            logger.error(f"❌ Database error getting calibration stats: {e}")
+            return {}
         except Exception as e:
-            logger.error(f"❌ Failed to get calibration stats: {e}")
+            logger.error(f"❌ Failed to get calibration stats: {e}", exc_info=True)
             return {}
     
     def retrain(self):

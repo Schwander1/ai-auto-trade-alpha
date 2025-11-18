@@ -25,7 +25,7 @@ Trading operations rules for signal generation, risk management, position monito
 - **Generation Frequency:** Signals generated every 5 seconds
 - **Multi-Source Aggregation:** Uses 6 data sources (Alpaca Pro, Massive.com, yfinance, Alpha Vantage, xAI Grok, Sonar AI)
 - **Weighted Consensus:** Uses Weighted Consensus v6.0 algorithm
-- **Minimum Confidence:** 75% confidence threshold required
+- **Minimum Confidence:** 60% confidence threshold required (configurable in config.json)
 - **SHA-256 Verification:** All signals include SHA-256 hash for integrity
 - **AI Reasoning:** All signals include AI-generated reasoning (minimum 20 characters)
 
@@ -73,28 +73,28 @@ Trading operations rules for signal generation, risk management, position monito
 - **Rule:** Verify account has trading permissions
 
 #### Layer 2: Confidence Thresholds
-- **Rule:** Minimum confidence: 75% (configurable)
-- **Rule:** Consensus threshold: 75% (configurable)
+- **Rule:** Minimum confidence: 60% (configurable, current: 60%)
+- **Rule:** Consensus threshold: 60% (configurable)
 - **Action:** Reject signals below threshold
 
 #### Layer 3: Position Size Limits
-- **Rule:** Default position size: 10% of capital (configurable)
-- **Rule:** Maximum position size: 15% of capital (configurable)
+- **Rule:** Default position size: 9% of capital (configurable, current: 9%)
+- **Rule:** Maximum position size: 16% of capital (configurable, current: 16%)
 - **Rule:** Position size adjusted by confidence
 - **Rule:** Position size adjusted by volatility
 
 #### Layer 4: Correlation Limits
-- **Rule:** Maximum correlated positions: 3 (configurable)
+- **Rule:** Maximum correlated positions: 5 (configurable, current: 5)
 - **Rule:** Check correlation groups before trade
 - **Action:** Reject if correlation limit exceeded
 
 #### Layer 5: Daily Loss Limits
-- **Rule:** Daily loss limit: 5% of equity (configurable)
+- **Rule:** Daily loss limit: 5% of equity (configurable, current: 5%)
 - **Rule:** Pause trading if limit exceeded
 - **Action:** Circuit breaker activates
 
 #### Layer 6: Drawdown Protection
-- **Rule:** Maximum drawdown: 10% from peak equity (configurable)
+- **Rule:** Maximum drawdown: 20% from peak equity (configurable, current: 20%)
 - **Rule:** Track peak equity continuously
 - **Action:** Block trades if drawdown exceeded
 
@@ -236,15 +236,15 @@ Trading operations rules for signal generation, risk management, position monito
 ### Trading Configuration (`config.json` → `trading`)
 
 **Required Parameters:**
-- `min_confidence`: 75.0 (minimum signal confidence)
-- `consensus_threshold`: 75.0 (consensus requirement)
+- `min_confidence`: 60.0 (minimum signal confidence, current: 60%)
+- `consensus_threshold`: 60.0 (consensus requirement, current: 60%)
 - `profit_target`: 0.05 (5% profit target)
-- `stop_loss`: 0.03 (3% stop loss)
-- `position_size_pct`: 10 (default position size %)
-- `max_position_size_pct`: 15 (maximum position size %)
-- `max_correlated_positions`: 3 (correlation limit)
-- `max_drawdown_pct`: 10 (maximum drawdown %)
-- `daily_loss_limit_pct`: 5.0 (daily loss limit %)
+- `stop_loss`: 0.025 (2.5% stop loss, current: 2.5%)
+- `position_size_pct`: 9 (default position size %, current: 9%)
+- `max_position_size_pct`: 16 (maximum position size %, current: 16%)
+- `max_correlated_positions`: 5 (correlation limit, current: 5)
+- `max_drawdown_pct`: 20 (maximum drawdown %, current: 20%)
+- `daily_loss_limit_pct`: 5.0 (daily loss limit %, current: 5%)
 - `auto_execute`: true (enable automatic trading)
 
 **See:** [06_CONFIGURATION.md](06_CONFIGURATION.md) for full configuration details

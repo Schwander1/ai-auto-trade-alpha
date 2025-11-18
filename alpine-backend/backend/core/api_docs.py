@@ -159,6 +159,44 @@ def enhance_openapi_schema(app: FastAPI) -> Dict[str, Any]:
             "description": "Health check and system status endpoints"
         }
     ]
+    
+    # Add enum schemas to components
+    if "components" not in openapi_schema:
+        openapi_schema["components"] = {}
+    if "schemas" not in openapi_schema["components"]:
+        openapi_schema["components"]["schemas"] = {}
+    
+    # SignalAction enum
+    openapi_schema["components"]["schemas"]["SignalAction"] = {
+        "type": "string",
+        "enum": ["BUY", "SELL"],
+        "description": "Trading signal action type",
+        "example": "BUY"
+    }
+    
+    # NotificationType enum
+    openapi_schema["components"]["schemas"]["NotificationType"] = {
+        "type": "string",
+        "enum": ["info", "warning", "success", "error", "system"],
+        "description": "Notification type",
+        "example": "info"
+    }
+    
+    # BacktestStatus enum
+    openapi_schema["components"]["schemas"]["BacktestStatus"] = {
+        "type": "string",
+        "enum": ["running", "completed", "failed", "cancelled"],
+        "description": "Backtest execution status",
+        "example": "running"
+    }
+    
+    # UserTier enum
+    openapi_schema["components"]["schemas"]["UserTier"] = {
+        "type": "string",
+        "enum": ["starter", "pro", "elite"],
+        "description": "User subscription tier",
+        "example": "starter"
+    }
 
     app.openapi_schema = openapi_schema
     return app.openapi_schema

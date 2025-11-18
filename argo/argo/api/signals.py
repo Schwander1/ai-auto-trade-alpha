@@ -331,7 +331,13 @@ async def get_signal_by_id(
         raise HTTPException(status_code=404, detail=f"Signal {signal_id} not found")
     
     # Add rate limit headers
-    remaining = max(0, RATE_LIMIT_MAX - len(rate_limit_store.get(client_id, [])))
+    try:
+        from argo.core.rate_limit import get_rate_limit_status
+        rate_status = get_rate_limit_status(client_id)
+        remaining = rate_status.get('remaining', RATE_LIMIT_MAX)
+    except (ImportError, AttributeError):
+        # Fallback if rate limit module doesn't have get_rate_limit_status
+        remaining = RATE_LIMIT_MAX
     response.headers["X-RateLimit-Remaining"] = str(remaining)
     response.headers["X-RateLimit-Limit"] = str(RATE_LIMIT_MAX)
     
@@ -388,7 +394,13 @@ async def get_latest_signals(
     limited = filtered[:limit]
     
     # Add rate limit headers
-    remaining = max(0, RATE_LIMIT_MAX - len(rate_limit_store.get(client_id, [])))
+    try:
+        from argo.core.rate_limit import get_rate_limit_status
+        rate_status = get_rate_limit_status(client_id)
+        remaining = rate_status.get('remaining', RATE_LIMIT_MAX)
+    except (ImportError, AttributeError):
+        # Fallback if rate limit module doesn't have get_rate_limit_status
+        remaining = RATE_LIMIT_MAX
     response.headers["X-RateLimit-Remaining"] = str(remaining)
     response.headers["X-RateLimit-Limit"] = str(RATE_LIMIT_MAX)
     
@@ -402,7 +414,7 @@ async def get_signal_stats(
     authorization: Optional[str] = Header(None)
 ):
     """
-    Get signal statistics
+    Get signal statistics from database
     
     **Example Request:**
     ```bash
@@ -416,8 +428,8 @@ async def get_signal_stats(
       "total_signals": 1247,
       "active_signals": 45,
       "closed_signals": 1202,
-      "win_rate": 96.3,
-      "avg_confidence": 94.7,
+      "win_rate": 45.2,
+      "avg_confidence": 89.5,
       "premium_count": 623,
       "standard_count": 624,
       "total_profit_pct": 1245.8,
@@ -431,16 +443,134 @@ async def get_signal_stats(
     if not check_rate_limit(client_id, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
     
-    # Calculate stats
-    total = len(SIGNALS_DB)
-    active = len([s for s in SIGNALS_DB if s.get("status") == "active"])
-    closed = len([s for s in SIGNALS_DB if s.get("status") == "closed"])
-    premium = len([s for s in SIGNALS_DB if s.get("confidence", 0) >= 95])
-    standard = total - premium
-    
-    # Calculate win rate (mock data)
-    win_rate = 96.3 if total > 0 else 0.0
-    avg_confidence = sum(s.get("confidence", 0) for s in SIGNALS_DB) / total if total > 0 else 0.0
+    # Query real database
+    try:
+        from pathlib import Path
+        import sqlite3
+        
+        # Get database path
+        if os.path.exists("/root/argo-production"):
+            db_path = Path("/root/argo-production") / "data" / "signals.db"
+        else:
+            db_path = Path(__file__).parent.parent.parent / "data" / "signals.db"
+        
+        if not db_path.exists():
+            logger.warning(f"Database not found: {db_path}, returning empty stats")
+            return SignalStatsResponse(
+                total_signals=0,
+                active_signals=0,
+                closed_signals=0,
+                win_rate=0.0,
+                avg_confidence=0.0,
+                premium_count=0,
+                standard_count=0,
+                total_profit_pct=0.0,
+                best_performer=None,
+                worst_performer=None
+            )
+        
+        conn = sqlite3.connect(str(db_path), timeout=10.0)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        # Get total signals
+        cursor.execute("SELECT COUNT(*) as total FROM signals")
+        total = cursor.fetchone()['total']
+        
+        # Get active/closed signals (based on outcome)
+        cursor.execute("""
+            SELECT 
+                COUNT(CASE WHEN outcome IS NULL THEN 1 END) as active,
+                COUNT(CASE WHEN outcome IS NOT NULL THEN 1 END) as closed
+            FROM signals
+        """)
+        status_row = cursor.fetchone()
+        active = status_row['active'] if status_row else 0
+        closed = status_row['closed'] if status_row else 0
+        
+        # Get confidence stats
+        cursor.execute("""
+            SELECT 
+                AVG(confidence) as avg_confidence,
+                COUNT(CASE WHEN confidence >= 95 THEN 1 END) as premium,
+                COUNT(CASE WHEN confidence < 95 THEN 1 END) as standard
+            FROM signals
+        """)
+        conf_row = cursor.fetchone()
+        avg_confidence = conf_row['avg_confidence'] if conf_row and conf_row['avg_confidence'] else 0.0
+        premium = conf_row['premium'] if conf_row else 0
+        standard = conf_row['standard'] if conf_row else 0
+        
+        # Calculate win rate from completed trades
+        cursor.execute("""
+            SELECT 
+                COUNT(*) as total_completed,
+                COUNT(CASE WHEN outcome = 'win' THEN 1 END) as wins
+            FROM signals
+            WHERE outcome IS NOT NULL
+        """)
+        win_row = cursor.fetchone()
+        total_completed = win_row['total_completed'] if win_row else 0
+        wins = win_row['wins'] if win_row else 0
+        win_rate = (wins / total_completed * 100) if total_completed > 0 else 0.0
+        
+        # Get total profit
+        cursor.execute("""
+            SELECT SUM(profit_loss_pct) as total_profit
+            FROM signals
+            WHERE profit_loss_pct IS NOT NULL
+        """)
+        profit_row = cursor.fetchone()
+        total_profit_pct = profit_row['total_profit'] if profit_row and profit_row['total_profit'] else 0.0
+        
+        # Get best and worst performers
+        cursor.execute("""
+            SELECT 
+                symbol,
+                AVG(profit_loss_pct) as avg_pnl,
+                COUNT(*) as trade_count
+            FROM signals
+            WHERE profit_loss_pct IS NOT NULL
+            GROUP BY symbol
+            HAVING trade_count >= 5
+            ORDER BY avg_pnl DESC
+            LIMIT 1
+        """)
+        best_row = cursor.fetchone()
+        best_performer = best_row['symbol'] if best_row else None
+        
+        cursor.execute("""
+            SELECT 
+                symbol,
+                AVG(profit_loss_pct) as avg_pnl,
+                COUNT(*) as trade_count
+            FROM signals
+            WHERE profit_loss_pct IS NOT NULL
+            GROUP BY symbol
+            HAVING trade_count >= 5
+            ORDER BY avg_pnl ASC
+            LIMIT 1
+        """)
+        worst_row = cursor.fetchone()
+        worst_performer = worst_row['symbol'] if worst_row else None
+        
+        conn.close()
+        
+    except Exception as e:
+        logger.error(f"Error querying signal stats from database: {e}", exc_info=True)
+        # Return empty stats on error
+        return SignalStatsResponse(
+            total_signals=0,
+            active_signals=0,
+            closed_signals=0,
+            win_rate=0.0,
+            avg_confidence=0.0,
+            premium_count=0,
+            standard_count=0,
+            total_profit_pct=0.0,
+            best_performer=None,
+            worst_performer=None
+        )
     
     # Add rate limit headers
     remaining = max(0, RATE_LIMIT_MAX - len(rate_limit_store.get(client_id, [])))
@@ -451,12 +581,12 @@ async def get_signal_stats(
         total_signals=total,
         active_signals=active,
         closed_signals=closed,
-        win_rate=win_rate,
+        win_rate=round(win_rate, 2),
         avg_confidence=round(avg_confidence, 2),
         premium_count=premium,
         standard_count=standard,
-        total_profit_pct=1245.8,  # Mock data
-        best_performer="NVDA",
-        worst_performer="TSLA"
+        total_profit_pct=round(total_profit_pct, 2),
+        best_performer=best_performer,
+        worst_performer=worst_performer
     )
 

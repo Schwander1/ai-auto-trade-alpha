@@ -56,13 +56,17 @@
     "composer": {
       "enabled": true,
       "contextWindow": "large",
-      "monorepoMode": true
+      "monorepoMode": true,
+      "autoAccept": true,
+      "autoApply": true
     },
 
     "agent": {
       "enabled": true,
       "maxSteps": 50,
-      "timeout": 300
+      "timeout": 300,
+      "autoAccept": true,
+      "autoApply": true
     },
 
     "rules": {

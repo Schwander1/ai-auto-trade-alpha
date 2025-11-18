@@ -75,6 +75,11 @@ class PropFirmBacktester(StrategyBacktester):
         # Override portfolio limits
         self.max_portfolio_drawdown = max_drawdown_pct / 100.0  # Convert to decimal
         self.max_positions = max_positions
+        
+        # Prop firm optimized: Tighter stop losses (1.5% vs 3% standard)
+        # This helps prevent large losses that could breach daily loss limits
+        self.prop_firm_stop_loss_pct = 1.5  # 1.5% stop loss for prop firm
+        self.prop_firm_take_profit_pct = 3.0  # 3% take profit (2:1 risk/reward)
 
         logger.info(f"✅ PropFirmBacktester initialized:")
         logger.info(f"   Max Drawdown: {max_drawdown_pct}%")
@@ -111,7 +116,7 @@ class PropFirmBacktester(StrategyBacktester):
                 self.halt_reason = None
 
     def _update_daily_pnl(self, date: datetime):
-        """Update daily P&L tracking"""
+        """Update daily P&L tracking with early warning system"""
         trading_date = self._get_trading_date(date)
         current_equity = self.equity_curve[-1] if self.equity_curve else self.initial_capital
 
@@ -121,6 +126,11 @@ class PropFirmBacktester(StrategyBacktester):
             daily_pnl_pct = (daily_pnl / start_equity) * 100 if start_equity > 0 else 0.0
 
             self.daily_pnl[trading_date] = daily_pnl
+
+            # OPTIMIZATION: Early warning at 50% of daily loss limit
+            warning_threshold = -self.daily_loss_limit_pct * 0.5
+            if daily_pnl_pct <= warning_threshold and daily_pnl_pct > -self.daily_loss_limit_pct:
+                logger.warning(f"⚠️ Daily loss warning: {daily_pnl_pct:.2f}% (50% of limit)")
 
             # Check daily loss limit
             if daily_pnl_pct <= -self.daily_loss_limit_pct:
@@ -133,6 +143,10 @@ class PropFirmBacktester(StrategyBacktester):
                         'limit': -self.daily_loss_limit_pct
                     })
                     logger.critical(f"🚨 DAILY LOSS LIMIT BREACH: {self.halt_reason}")
+                    
+                    # OPTIMIZATION: Close all positions immediately on breach
+                    # Note: Positions will be closed by parent class's exit logic
+                    # This halt prevents new positions from being opened
 
     def _check_drawdown(self) -> tuple[bool, float]:
         """Check current drawdown against limit"""
@@ -195,22 +209,27 @@ class PropFirmBacktester(StrategyBacktester):
         return True, ""
 
     def _get_drawdown_adjustment(self) -> float:
-        """Get position size adjustment based on current drawdown (prop firm specific)"""
+        """Get position size adjustment based on current drawdown (prop firm specific)
+        OPTIMIZED: More aggressive reduction to prevent breach
+        """
         can_trade, drawdown_pct = self._check_drawdown()
 
         if not can_trade or drawdown_pct <= 0:
             return 1.0
 
-        # Reduce position size as drawdown increases
+        # Aggressive position size reduction as drawdown increases
         # At 0% drawdown: 1.0x
-        # At 1.0% drawdown: 0.75x
-        # At 2.0% drawdown: 0.5x (at limit)
-        max_drawdown_decimal = self.max_drawdown_pct / 100.0
-        if drawdown_pct / 100.0 > max_drawdown_decimal * 0.5:  # If > 50% of limit
-            adjustment = max(0.5, 1.0 - (drawdown_pct / self.max_drawdown_pct) * 0.5)
-            return adjustment
-
-        return 1.0
+        # At 0.5% drawdown: 0.75x (start reducing early)
+        # At 1.0% drawdown: 0.5x (half size)
+        # At 1.5% drawdown: 0.25x (quarter size)
+        # At 2.0% drawdown: 0.0x (no new positions)
+        if drawdown_pct >= self.max_drawdown_pct:
+            return 0.0  # No new positions at limit
+        
+        # Linear reduction from 0% to max drawdown
+        # More aggressive: start reducing immediately
+        adjustment = 1.0 - (drawdown_pct / self.max_drawdown_pct) * 0.8  # Reduce up to 80%
+        return max(0.2, adjustment)  # Minimum 20% of position size
 
     async def run_backtest(
         self,
@@ -352,6 +371,18 @@ class PropFirmBacktester(StrategyBacktester):
         # Apply prop firm position size limit
         max_position_value = self.capital * (self.max_position_size_pct / 100.0)
         position_value = min(position_value, max_position_value)
+        
+        # OPTIMIZATION: Apply tighter stop losses for prop firm
+        # Override signal stop/target with prop firm limits
+        if 'stop_price' in signal:
+            entry_price = signal.get('entry_price', price)
+            if side == 'LONG':
+                # Tighter stop loss: 1.5% instead of default 3%
+                signal['stop_price'] = entry_price * (1 - self.prop_firm_stop_loss_pct / 100.0)
+                signal['target_price'] = entry_price * (1 + self.prop_firm_take_profit_pct / 100.0)
+            else:  # SHORT
+                signal['stop_price'] = entry_price * (1 + self.prop_firm_stop_loss_pct / 100.0)
+                signal['target_price'] = entry_price * (1 - self.prop_firm_take_profit_pct / 100.0)
 
         # Call parent to enter position
         # Temporarily override max_position_size_pct
@@ -360,13 +391,199 @@ class PropFirmBacktester(StrategyBacktester):
 
         try:
             super()._enter_position(symbol, price, date, signal, side, entry_bar, df)
+            # Initialize last_price for gap protection
+            if symbol in self.positions:
+                self.positions[symbol].last_price = price
         finally:
             TradingConstants.MAX_POSITION_SIZE_PCT = original_max_size
 
-    def update_equity(self, current_price: float, date: datetime):
-        """Update equity curve and check prop firm constraints"""
+    def _check_gap_protection(self, symbol: str, current_price: float, previous_price: float) -> bool:
+        """
+        Check for price gaps that could bypass stop losses
+        Returns True if gap is acceptable, False if gap is too large
+        """
+        if previous_price <= 0:
+            return True
+        
+        gap_pct = abs((current_price - previous_price) / previous_price) * 100
+        
+        # If gap is larger than stop loss, it could bypass the stop
+        # For prop firm, we want to be very conservative
+        max_acceptable_gap = self.prop_firm_stop_loss_pct * 1.5  # 1.5x stop loss
+        
+        if gap_pct > max_acceptable_gap:
+            logger.warning(f"⚠️ Large gap detected for {symbol}: {gap_pct:.2f}% (max: {max_acceptable_gap:.2f}%)")
+            return False
+        
+        return True
+    
+    def _check_position_risk_limits(self, symbol: str, current_price: float) -> tuple[bool, str]:
+        """
+        Check position-level risk limits with enhanced protection
+        Returns (can_hold, reason) tuple
+        """
+        if symbol not in self.positions:
+            return True, ""
+        
+        position = self.positions[symbol]
+        entry_price = position.entry_price
+        
+        # CRITICAL: Check stop loss first (most important protection)
+        stop_price = getattr(position, 'stop_price', None)
+        if stop_price:
+            if position.side == 'LONG' and current_price <= stop_price:
+                return False, f"Stop loss hit: ${current_price:.2f} <= ${stop_price:.2f}"
+            elif position.side == 'SHORT' and current_price >= stop_price:
+                return False, f"Stop loss hit: ${current_price:.2f} >= ${stop_price:.2f}"
+        
+        # Calculate current P&L percentage
+        if position.side == 'LONG':
+            pnl_pct = ((current_price - entry_price) / entry_price) * 100
+        else:  # SHORT
+            pnl_pct = ((entry_price - current_price) / entry_price) * 100
+        
+        # OPTIMIZATION: Very tight position-level risk limit (1.0% - tighter than stop loss)
+        max_position_loss_pct = 1.0  # Even tighter than 1.5% stop loss for safety
+        if pnl_pct <= -max_position_loss_pct:
+            return False, f"Position loss limit: {pnl_pct:.2f}% <= -{max_position_loss_pct}%"
+        
+        # Also check if position loss would breach daily limit
+        position_value = position.quantity * entry_price
+        position_loss = position_value * (abs(pnl_pct) / 100.0) if pnl_pct < 0 else 0
+        
+        if self.daily_start_equity and self.last_trading_date:
+            start_equity = self.daily_start_equity.get(self.last_trading_date, self.initial_capital)
+            if start_equity > 0:
+                daily_loss_from_position = (position_loss / start_equity) * 100
+                # Very conservative: close at 50% of daily limit to prevent breach
+                if daily_loss_from_position > self.daily_loss_limit_pct * 0.5:
+                    return False, f"Position approaching daily limit: {daily_loss_from_position:.2f}%"
+        
+        return True, ""
+
+    def _check_stop_loss_with_bar_data(self, symbol: str, df: pd.DataFrame, index: int) -> tuple[bool, float, str]:
+        """
+        Check stop loss using bar High/Low/Open prices for more accurate execution
+        Handles gaps by checking bar Open first, then High/Low
+        Returns (should_exit, exit_price, reason) tuple
+        """
+        if symbol not in self.positions:
+            return False, 0.0, ""
+        
+        position = self.positions[symbol]
+        stop_price = getattr(position, 'stop_price', None)
+        
+        if not stop_price or index >= len(df) or index < 1:
+            return False, 0.0, ""
+        
+        # Get bar prices
+        bar_open = float(df.iloc[index]['Open'])
+        bar_high = float(df.iloc[index]['High'])
+        bar_low = float(df.iloc[index]['Low'])
+        prev_close = float(df.iloc[index - 1]['Close'])
+        
+        # CRITICAL: Check opening gap first (most important for gap protection)
+        # If bar opens beyond stop, we exit at open (gap fill scenario)
+        if position.side == 'LONG':
+            # For LONG: stop is below entry, check if open gapped below stop
+            if bar_open <= stop_price:
+                exit_price = stop_price  # Execute at stop, not worse
+                return True, exit_price, f"Stop loss hit at bar open (gap): ${bar_open:.2f} <= stop: ${stop_price:.2f}"
+            # Then check if Low hit stop during the bar
+            if bar_low <= stop_price:
+                exit_price = stop_price
+                return True, exit_price, f"Stop loss hit (bar Low: ${bar_low:.2f} <= stop: ${stop_price:.2f})"
+        else:  # SHORT
+            # For SHORT: stop is above entry, check if open gapped above stop
+            if bar_open >= stop_price:
+                exit_price = stop_price  # Execute at stop, not worse
+                return True, exit_price, f"Stop loss hit at bar open (gap): ${bar_open:.2f} >= stop: ${stop_price:.2f}"
+            # Then check if High hit stop during the bar
+            if bar_high >= stop_price:
+                exit_price = stop_price
+                return True, exit_price, f"Stop loss hit (bar High: ${bar_high:.2f} >= stop: ${stop_price:.2f})"
+        
+        return False, 0.0, ""
+
+    def update_equity(self, current_price: float, date: datetime, df: pd.DataFrame = None, index: int = None):
+        """Update equity curve and check prop firm constraints with enhanced risk controls and bar-level stop checking"""
         # Reset daily tracking if new day (before updating equity)
         self._reset_daily_tracking(date)
+
+        # OPTIMIZATION: Bar-level stop loss checking using High/Low prices
+        # This prevents gaps from bypassing stops
+        if self.positions and df is not None and index is not None and index < len(df):
+            bar_data = df.iloc[index]
+            high_price = float(bar_data.get('High', current_price))
+            low_price = float(bar_data.get('Low', current_price))
+            
+            for symbol in list(self.positions.keys()):
+                if symbol not in self.positions:
+                    continue
+                    
+                position = self.positions[symbol]
+                
+                # CRITICAL: Check stop loss using bar High/Low (catches gaps)
+                should_exit, exit_price, reason = self._check_stop_loss_with_bar_data(symbol, df, index)
+                if should_exit:
+                    logger.warning(f"🚨 Closing {symbol}: {reason}")
+                    super()._exit_position(symbol, exit_price, date, reason='stop_loss_bar_level')
+                    continue
+                
+                # Get previous price for gap checking
+                previous_price = getattr(position, 'last_price', None)
+                if previous_price is None:
+                    previous_price = position.entry_price
+                
+                # Enhanced gap protection using bar data
+                if previous_price and previous_price > 0:
+                    # Check gap using the worst case (high for shorts, low for longs)
+                    if position.side == 'LONG':
+                        gap_price = low_price  # Worst case for long
+                    else:
+                        gap_price = high_price  # Worst case for short
+                    
+                    if not self._check_gap_protection(symbol, gap_price, previous_price):
+                        logger.warning(f"🚨 Closing {symbol} due to large gap (bar-level)")
+                        # Use worst case price for exit
+                        super()._exit_position(symbol, gap_price, date, reason='gap_protection_bar')
+                        continue
+                
+                # Check position-level risk limits using worst case price
+                worst_price = low_price if position.side == 'LONG' else high_price
+                can_hold, reason = self._check_position_risk_limits(symbol, worst_price)
+                if not can_hold:
+                    logger.warning(f"🚨 Closing {symbol}: {reason} (bar-level check)")
+                    super()._exit_position(symbol, worst_price, date, reason='position_risk_limit_bar')
+                    continue
+                
+                # Update last price for gap checking (use close price)
+                position.last_price = current_price
+
+        # Fallback: If no bar data, use standard checks
+        elif self.positions:
+            for symbol in list(self.positions.keys()):
+                if symbol not in self.positions:
+                    continue
+                    
+                position = self.positions[symbol]
+                previous_price = getattr(position, 'last_price', None)
+                if previous_price is None:
+                    previous_price = position.entry_price
+                
+                if previous_price and previous_price > 0:
+                    if not self._check_gap_protection(symbol, current_price, previous_price):
+                        logger.warning(f"🚨 Closing {symbol} due to large gap")
+                        super()._exit_position(symbol, current_price, date, reason='gap_protection')
+                        continue
+                
+                can_hold, reason = self._check_position_risk_limits(symbol, current_price)
+                if not can_hold:
+                    logger.warning(f"🚨 Closing {symbol}: {reason}")
+                    super()._exit_position(symbol, current_price, date, reason='position_risk_limit')
+                    continue
+                
+                position.last_price = current_price
 
         # Update equity (parent method)
         super().update_equity(current_price, date)

@@ -20,15 +20,18 @@ def transform_signal_to_dict(signal: Any, include_metadata: bool = False) -> Dic
     Returns:
         Dictionary representation of signal
     """
+    # Handle enum serialization
+    action_value = signal.action.value if hasattr(signal.action, 'value') else str(signal.action)
+    
     data = {
         "id": f"SIG-{signal.id}",
         "symbol": signal.symbol,
-        "action": signal.action,
+        "action": action_value,
         "entry_price": signal.price,
         "stop_loss": signal.stop_loss,
         "take_profit": signal.target_price,
-        "confidence": signal.confidence,
-        "type": "PREMIUM" if signal.confidence >= 85 else "STANDARD",
+        "confidence": signal.confidence * 100 if signal.confidence <= 1 else signal.confidence,  # Convert 0-1 to 0-100 for API
+        "type": "PREMIUM" if (signal.confidence >= 0.85 if signal.confidence <= 1 else signal.confidence >= 85) else "STANDARD",
         "timestamp": signal.created_at.isoformat() if signal.created_at else None,
         "hash": signal.verification_hash,
         "reasoning": signal.rationale

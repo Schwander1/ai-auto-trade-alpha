@@ -123,27 +123,45 @@ def query_signal_history(days: int = 30) -> List[Dict]:
             pass  # Ignore errors on close
 
 def calculate_signal_quality_metrics(signals: List[Dict]) -> Dict:
-    """Calculate signal quality metrics from historical data"""
+    """Calculate signal quality metrics from historical data - optimized"""
     if not signals:
         return {}
 
-    completed = [s for s in signals if s.get('outcome') in ['win', 'loss']]
+    # OPTIMIZATION: Single pass through signals instead of multiple list comprehensions
+    completed = []
+    wins = []
+    losses = []
+    high_confidence = []
+    high_confidence_wins = []
+    
+    for s in signals:
+        outcome = s.get('outcome')
+        if outcome in ['win', 'loss']:
+            completed.append(s)
+            if outcome == 'win':
+                wins.append(s)
+            else:
+                losses.append(s)
+            
+            # Check high confidence in same pass
+            if s.get('confidence', 0) >= 80:
+                high_confidence.append(s)
+                if outcome == 'win':
+                    high_confidence_wins.append(s)
+    
     if not completed:
         return {}
 
-    wins = [s for s in completed if s.get('outcome') == 'win']
-    losses = [s for s in completed if s.get('outcome') == 'loss']
+    # Calculate metrics with zero-division protection
+    win_rate = (len(wins) / len(completed) * 100) if completed else 0.0
 
-    win_rate = (len(wins) / len(completed)) * 100 if completed else 0
-
-    # Calculate average profit/loss
-    avg_profit = sum(s.get('profit_loss_pct', 0) or 0 for s in wins) / len(wins) if wins else 0
-    avg_loss = sum(s.get('profit_loss_pct', 0) or 0 for s in losses) / len(losses) if losses else 0
+    # Calculate average profit/loss with zero-division protection
+    avg_profit = (sum(s.get('profit_loss_pct', 0) or 0 for s in wins) / len(wins)) if wins else 0.0
+    avg_loss = (sum(s.get('profit_loss_pct', 0) or 0 for s in losses) / len(losses)) if losses else 0.0
 
     # Calculate confidence accuracy
-    high_confidence = [s for s in completed if s.get('confidence', 0) >= 80]
-    high_confidence_wins = [s for s in high_confidence if s.get('outcome') == 'win']
-    confidence_accuracy = (len(high_confidence_wins) / len(high_confidence)) * 100 if high_confidence else 0
+    confidence_accuracy = (len(high_confidence_wins) / len(high_confidence) * 100) if high_confidence else 0.0
+    high_confidence_win_rate = (len(high_confidence_wins) / len(high_confidence) * 100) if high_confidence else 0.0
 
     return {
         'total_signals': len(signals),
@@ -153,7 +171,7 @@ def calculate_signal_quality_metrics(signals: List[Dict]) -> Dict:
         'avg_loss_pct': round(avg_loss, 2),
         'confidence_accuracy': round(confidence_accuracy, 2),
         'high_confidence_signals': len(high_confidence),
-        'high_confidence_win_rate': round((len(high_confidence_wins) / len(high_confidence)) * 100, 2) if high_confidence else 0
+        'high_confidence_win_rate': round(high_confidence_win_rate, 2)
     }
 
 def evaluate_signal_generator_enhanced(days: int = 30) -> Dict:

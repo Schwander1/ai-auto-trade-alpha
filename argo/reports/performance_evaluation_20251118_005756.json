@@ -1,0 +1,33 @@
+{
+  "prop_firm_trading": {
+    "component": "prop_firm_trading",
+    "evaluation_date": "2025-11-18T00:57:56.235512",
+    "period_days": 30,
+    "prop_firm_enabled": false,
+    "account_info": {
+      "alpaca_connected": false
+    },
+    "metrics": {
+      "total_trades": 0,
+      "completed_trades": 0,
+      "pending_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate_percent": 0,
+      "total_pnl_dollars": 0,
+      "avg_pnl_per_trade": 0,
+      "profit_factor": 0,
+      "return_percent": 0,
+      "compliance_metrics": {
+        "max_drawdown_pct": null,
+        "daily_loss_breaches": null,
+        "drawdown_breaches": null,
+        "trading_halted": null
+      }
+    },
+    "performance_grade": "N/A (No Trades)",
+    "recommendations": [
+      "No trades executed. Review signal generation and prop firm constraints."
+    ]
+  }
+}

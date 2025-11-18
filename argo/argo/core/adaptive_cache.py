@@ -47,16 +47,19 @@ class AdaptiveCache:
         - Market hours (stocks) vs 24/7 (crypto)
         - Volatility (high volatility = shorter cache)
         - Time of day
+        
+        OPTIMIZED: Crypto symbols always use shorter cache for 24/7 trading
         """
         if is_market_hours is None:
             is_market_hours = self.is_market_hours()
         
-        # Crypto symbols (24/7)
+        # Crypto symbols (24/7) - always active, use shorter cache
         if '-USD' in symbol or symbol in ['BTC', 'ETH', 'SOL']:
-            # During high volatility periods, cache shorter
+            # Crypto markets are 24/7, so use shorter cache for real-time data
+            # During high volatility periods, cache even shorter
             if symbol in self.volatility and self.volatility[symbol] > 0.05:
                 return base_ttl  # 10 seconds during high volatility
-            return base_ttl * 3  # 30 seconds during low volatility
+            return base_ttl * 2  # 20 seconds during normal volatility (optimized from 30s)
         
         # Stock symbols (market hours)
         if is_market_hours:

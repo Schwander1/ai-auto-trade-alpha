@@ -367,8 +367,6 @@ class PaperTradingEngine:
 
         OPTIMIZATION: Caches volatility calculations to reduce yfinance API calls
         """
-        import time
-
         # Check cache first
         current_time = time.time()
         if symbol in self._volatility_cache:
@@ -424,20 +422,29 @@ class PaperTradingEngine:
     def execute_signal(
         self, signal, retry_count=0, existing_positions: Optional[List[Dict]] = None
     ):
-        """Execute signal with retry logic"""
+        """Execute signal with retry logic and exponential backoff"""
         if self.alpaca_enabled:
             try:
                 return self._execute_live(signal, existing_positions)
             except Exception as e:
+                error_msg = str(e).lower()
+                is_rate_limit = "rate limit" in error_msg or "429" in error_msg
+                
                 if retry_count < self._retry_attempts:
-                    logger.warning(
-                        f"Retry {retry_count + 1}/{self._retry_attempts} for {signal.get('symbol')}: {e}"
-                    )
-                    # FIX: Use asyncio.sleep if in async context, otherwise time.sleep
-                    # Note: This is a sync method, so we use time.sleep but log the delay
-                    import time
-
-                    delay = self._retry_delay * (retry_count + 1)
+                    # OPTIMIZATION: Exponential backoff with longer delay for rate limits
+                    if is_rate_limit:
+                        # Rate limits: longer backoff (2^retry_count seconds, max 30s)
+                        delay = min(2 ** retry_count, 30)
+                        logger.warning(
+                            f"Rate limit hit for {signal.get('symbol')}, waiting {delay}s before retry {retry_count + 1}/{self._retry_attempts}"
+                        )
+                    else:
+                        # Other errors: standard exponential backoff
+                        delay = self._retry_delay * (retry_count + 1)
+                        logger.warning(
+                            f"Retry {retry_count + 1}/{self._retry_attempts} for {signal.get('symbol')}: {e}"
+                        )
+                    
                     logger.debug(f"Waiting {delay}s before retry...")
                     time.sleep(delay)
                     return self.execute_signal(signal, retry_count + 1, existing_positions)
@@ -448,8 +455,6 @@ class PaperTradingEngine:
 
     def _get_cached_account(self):
         """Get account data with caching to reduce API calls"""
-        import time
-
         current_time = time.time()
 
         # Check if cache is valid
@@ -558,6 +563,7 @@ class PaperTradingEngine:
                     )
                     # Note: We don't cancel the main order here as it may have already filled
                     # Instead, we log the error and track it for manual intervention
+                    # FIX: Still return order.id even if brackets failed - order was placed successfully
 
             # Invalidate caches after trade
             self._invalidate_account_cache()
@@ -565,6 +571,8 @@ class PaperTradingEngine:
 
             self._log_order_execution(order_details, account, action)
 
+            # FIX: Always return order.id if order was placed, even if bracket orders failed
+            # The main order was successful, bracket orders are protection but not required
             return order.id
 
         except Exception as e:
@@ -594,7 +602,7 @@ class PaperTradingEngine:
         target_price = signal.get("target_price")
 
         # PROP FIRM: Enforce max stop loss limit
-        if hasattr(self, "prop_firm_enabled") and self.prop_firm_enabled and self.prop_firm_config:
+        if self.prop_firm_enabled and self.prop_firm_config:
             max_stop_loss_pct = self.prop_firm_config.get("risk_limits", {}).get(
                 "max_stop_loss_pct", 1.5
             )
@@ -620,7 +628,7 @@ class PaperTradingEngine:
             )
         else:
             return self._prepare_buy_order_details(
-                signal, account, entry_price, confidence, stop_price, target_price
+                signal, account, entry_price, confidence, stop_price, target_price, existing_positions
             )
 
     def _prepare_sell_order_details(
@@ -674,8 +682,31 @@ class PaperTradingEngine:
         confidence: float,
         stop_price: Optional[float],
         target_price: Optional[float],
+        existing_positions: Optional[List[Dict]] = None,
     ) -> Optional[Dict]:
-        """Prepare details for BUY order"""
+        """Prepare details for BUY order (close SHORT position or new LONG)"""
+        symbol = signal["symbol"]
+        # OPTIMIZATION: Use provided positions cache to avoid race condition
+        if existing_positions is not None:
+            positions = existing_positions
+        else:
+            positions = self.get_positions()
+        existing_position = next((p for p in positions if p["symbol"] == symbol), None)
+
+        # FIX: Check if we need to close a SHORT position
+        if existing_position and existing_position.get("side", "LONG").upper() == "SHORT":
+            qty = abs(int(existing_position["qty"]))
+            logger.info(f"🔄 Closing SHORT position: {qty} {symbol}")
+            return {
+                "symbol": symbol,
+                "qty": qty,
+                "side": OrderSide.BUY,  # BUY to close SHORT
+                "entry_price": entry_price,
+                "is_closing": True,
+                "place_bracket": False,
+            }
+
+        # Handle manual/test trades with specified quantity
         signal_qty = signal.get("qty") or signal.get("filled_qty")
         if signal_qty and signal_qty > 0:
             logger.info(f"📝 Using qty from signal: {int(signal_qty)} (test/manual trade)")
@@ -688,6 +719,7 @@ class PaperTradingEngine:
                 "place_bracket": False,
             }
 
+        # Calculate position size for new LONG position
         qty, side = self._calculate_position_size(signal, account, entry_price)
         return {
             "symbol": signal["symbol"],
@@ -710,7 +742,7 @@ class PaperTradingEngine:
         """
         # PROP FIRM: Use prop firm limits if enabled
         # OPTIMIZATION: prop_firm_enabled is initialized in __init__, no need for hasattr
-        if hasattr(self, "prop_firm_enabled") and self.prop_firm_enabled and self.prop_firm_config:
+        if self.prop_firm_enabled and self.prop_firm_config:
             risk_limits = self.prop_firm_config.get("risk_limits", {})
             base_position_size_pct = risk_limits.get("max_position_size_pct", 3.0)
             max_position_size_pct = base_position_size_pct  # Prop firm: fixed size
@@ -855,7 +887,8 @@ class PaperTradingEngine:
                 self._invalidate_account_cache()
             elif "rate limit" in error_msg or "429" in error_msg:
                 logger.warning(f"⚠️  Rate limit hit for {order_details['symbol']}, will retry: {e}")
-                # Could implement rate limit backoff here
+                # OPTIMIZATION: Rate limit backoff handled by retry logic in execute_signal
+                # The retry mechanism will automatically back off with exponential delay
             elif "connection" in error_msg or "timeout" in error_msg:
                 logger.error(f"❌ Connection error submitting order for {order_details['symbol']}: {e}")
                 # Invalidate caches on connection error
@@ -1088,8 +1121,6 @@ class PaperTradingEngine:
     
     def _cleanup_order_tracker(self):
         """Clean up old orders from tracker to prevent memory leaks (OPTIMIZED)"""
-        import time
-        
         current_time = time.time()
         tracker_size = len(self._order_tracker)
         
@@ -1259,7 +1290,6 @@ class PaperTradingEngine:
         
         # OPTIMIZATION: Check cache first
         if use_cache:
-            import time
             current_time = time.time()
             if (
                 self._positions_cache is not None
@@ -1273,12 +1303,27 @@ class PaperTradingEngine:
             positions = self.alpaca.get_all_positions()
             result = []
             for p in positions:
-                # Handle side - convert enum to string
-                side_str = str(p.side) if hasattr(p, "side") else "LONG"
-                if "LONG" in side_str.upper():
-                    side_str = "LONG"
-                elif "SHORT" in side_str.upper():
-                    side_str = "SHORT"
+                # FIX: Improved position side detection
+                # Alpaca can return side as enum, string, or use negative qty for SHORT
+                qty_float = float(p.qty) if isinstance(p.qty, (int, float)) else float(str(p.qty))
+                
+                # Determine side: check side attribute first, then qty sign
+                if hasattr(p, "side") and p.side is not None:
+                    # Alpaca PositionSide enum or string
+                    side_attr = str(p.side).upper()
+                    if "SHORT" in side_attr or side_attr == "SHORT":
+                        side_str = "SHORT"
+                    elif "LONG" in side_attr or side_attr == "LONG":
+                        side_str = "LONG"
+                    else:
+                        # Fallback to qty sign if side attribute is unclear
+                        side_str = "SHORT" if qty_float < 0 else "LONG"
+                else:
+                    # No side attribute - use qty sign (negative = SHORT)
+                    side_str = "SHORT" if qty_float < 0 else "LONG"
+                
+                # Normalize qty to positive value for consistency
+                qty_abs = abs(qty_float)
 
                 # Get stop loss and take profit from order tracker if available
                 stop_price = None
@@ -1293,10 +1338,8 @@ class PaperTradingEngine:
                 result.append(
                     {
                         "symbol": p.symbol,
-                        "qty": (
-                            float(p.qty) if isinstance(p.qty, (int, float)) else float(str(p.qty))
-                        ),
-                        "side": side_str,
+                        "qty": qty_abs,  # Always positive
+                        "side": side_str,  # Explicit LONG or SHORT
                         "entry_price": (
                             float(p.avg_entry_price)
                             if isinstance(p.avg_entry_price, (int, float))
@@ -1319,7 +1362,6 @@ class PaperTradingEngine:
             
             # Cache the result
             if use_cache:
-                import time
                 self._positions_cache = result
                 self._positions_cache_time = time.time()
             

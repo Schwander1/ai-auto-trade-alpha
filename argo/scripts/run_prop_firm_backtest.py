@@ -45,16 +45,24 @@ async def run_prop_firm_backtest(
     """
     logger.info(f"🚀 Starting prop firm backtest for {symbol}")
     
-    # Default date range: 1 year
+    # Default date range: 1 year (ensure end_date is not in the future)
     if end_date is None:
         end_date = datetime.now()
+    else:
+        # Cap end_date at today to avoid future dates
+        end_date = min(end_date, datetime.now())
+    
     if start_date is None:
         start_date = end_date - timedelta(days=365)
     
-    # Initialize backtester
+    # Initialize backtester with optimized prop firm parameters
     backtester = PropFirmBacktester(
         initial_capital=initial_capital,
-        min_confidence=min_confidence
+        min_confidence=min_confidence,
+        max_position_size_pct=5.0,  # Reduced from 10% to 5% for lower risk
+        max_positions=3,  # Reduced from 5 to 3 for better risk control
+        max_drawdown_pct=2.0,  # Keep strict 2% limit
+        daily_loss_limit_pct=4.5  # Keep strict 4.5% limit
     )
     
     # Run backtest
@@ -280,17 +288,17 @@ async def main():
         # "ETH-USD",  # Ethereum (crypto)
     ]
     
-    # Date range: Use None to get all available data (or specify wider range)
-    # For prop firm backtesting, we want sufficient historical data
-    end_date = None  # Use all available data up to now
-    start_date = None  # Use all available data
+    # Date range: Use historical data (5 years to ensure enough data for warmup period)
+    # For prop firm backtesting, we need at least 200+ bars for warmup period
+    end_date = datetime.now()  # Use data up to today
+    start_date = end_date - timedelta(days=1825)  # 5 years of historical data (ensures 200+ trading days)
     
-    # Run backtests
+    # Run backtests with optimized parameters
     results = await run_multi_symbol_backtest(
         symbols=symbols,
         start_date=start_date,
         end_date=end_date,
-        min_confidence=80.0,  # 80%+ confidence threshold
+        min_confidence=77.0,  # 77% confidence threshold (optimized: higher quality signals, better compliance)
         initial_capital=25000.0  # $25,000 prop firm account
     )
     

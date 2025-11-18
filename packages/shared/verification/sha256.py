@@ -1,6 +1,18 @@
 """
 SHA-256 verification utilities for trading signals
 Ensures signal integrity and authenticity
+
+PATENT-PENDING TECHNOLOGY
+Patent Application: [Application Number]
+Filing Date: [Date]
+
+This code implements patent-pending technology.
+Unauthorized use may infringe on pending patent rights.
+
+PATENT CLAIM: SHA-256 Signal Verification
+Each trading signal is cryptographically verified using SHA-256 hashing 
+to ensure data integrity and tamper detection.
+See: docs/PATENT_CLAIM_MAPPING.md for patent details
 """
 
 import hashlib

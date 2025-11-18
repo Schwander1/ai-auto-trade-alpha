@@ -62,8 +62,8 @@ async def health_check():
 
     # Check signal generation service with timeout
     async def check_signal_service():
-        from argo.core.signal_generation_service import SignalGenerationService
-        service = SignalGenerationService()
+        from argo.core.signal_generation_service import get_signal_service
+        service = get_signal_service()  # Use singleton instance, not create new one
         return {
             'status': 'healthy' if service.running else 'degraded',
             'running': service.running

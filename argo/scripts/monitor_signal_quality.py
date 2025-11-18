@@ -44,7 +44,8 @@ def get_signal_stats(hours: int = 24) -> Dict:
 
     cutoff_time = (datetime.now() - timedelta(hours=hours)).isoformat()
 
-    # Overall stats
+    # OPTIMIZATION: Use timestamp column for signal-based queries (created_at is DB insertion time)
+    # Overall stats - single optimized query
     cursor.execute("""
         SELECT
             COUNT(*) as total,
@@ -59,12 +60,12 @@ def get_signal_stats(hours: int = 24) -> Dict:
             COUNT(CASE WHEN outcome = 'loss' THEN 1 END) as losses,
             AVG(profit_loss_pct) as avg_pnl_pct
         FROM signals
-        WHERE created_at >= ?
+        WHERE timestamp >= ?
     """, (cutoff_time,))
 
     overall = dict(cursor.fetchone())
 
-    # Confidence distribution
+    # Confidence distribution - use timestamp column
     cursor.execute("""
         SELECT
             CASE
@@ -79,7 +80,7 @@ def get_signal_stats(hours: int = 24) -> Dict:
             COUNT(CASE WHEN outcome = 'win' THEN 1 END) as wins,
             COUNT(CASE WHEN outcome = 'loss' THEN 1 END) as losses
         FROM signals
-        WHERE created_at >= ?
+        WHERE timestamp >= ?
         GROUP BY confidence_tier
         ORDER BY confidence_tier DESC
     """, (cutoff_time,))
@@ -91,7 +92,7 @@ def get_signal_stats(hours: int = 24) -> Dict:
         tier_data['win_rate'] = (tier_data['wins'] / total_tier * 100) if total_tier > 0 else 0.0
         confidence_dist.append(tier_data)
 
-    # Symbol performance
+    # Symbol performance - use timestamp column
     cursor.execute("""
         SELECT
             symbol,
@@ -101,7 +102,7 @@ def get_signal_stats(hours: int = 24) -> Dict:
             COUNT(CASE WHEN outcome = 'loss' THEN 1 END) as losses,
             AVG(profit_loss_pct) as avg_pnl_pct
         FROM signals
-        WHERE created_at >= ?
+        WHERE timestamp >= ?
         GROUP BY symbol
         ORDER BY signal_count DESC
         LIMIT 10
@@ -114,12 +115,12 @@ def get_signal_stats(hours: int = 24) -> Dict:
         symbol_data['win_rate'] = (symbol_data['wins'] / total * 100) if total > 0 else 0.0
         symbol_perf.append(symbol_data)
 
-    # Recent signals
+    # Recent signals - use timestamp column for ordering
     cursor.execute("""
         SELECT symbol, action, confidence, entry_price, timestamp, outcome, profit_loss_pct
         FROM signals
-        WHERE created_at >= ?
-        ORDER BY created_at DESC
+        WHERE timestamp >= ?
+        ORDER BY timestamp DESC
         LIMIT 20
     """, (cutoff_time,))
 
@@ -160,13 +161,20 @@ def print_dashboard(stats: Dict, json_output: bool = False):
     print(f"Unique Symbols: {overall['unique_symbols']}")
     print()
     print(f"Confidence:")
-    print(f"  Average: {overall['avg_confidence']:.2f}%")
-    print(f"  Range: {overall['min_confidence']:.2f}% - {overall['max_confidence']:.2f}%")
+    if overall['avg_confidence'] is not None:
+        print(f"  Average: {overall['avg_confidence']:.2f}%")
+        print(f"  Range: {overall['min_confidence']:.2f}% - {overall['max_confidence']:.2f}%")
+    else:
+        print(f"  Average: N/A (no signals)")
+        print(f"  Range: N/A")
     print()
-    print(f"Confidence Distribution:")
-    print(f"  High (≥90%): {overall['high_confidence']} ({overall['high_confidence']/overall['total']*100:.1f}%)")
-    print(f"  Medium (85-90%): {overall['medium_confidence']} ({overall['medium_confidence']/overall['total']*100:.1f}%)")
-    print(f"  Low (<85%): {overall['low_confidence']} ({overall['low_confidence']/overall['total']*100:.1f}%)")
+    if overall['total'] > 0:
+        print(f"Confidence Distribution:")
+        print(f"  High (≥90%): {overall['high_confidence']} ({overall['high_confidence']/overall['total']*100:.1f}%)")
+        print(f"  Medium (85-90%): {overall['medium_confidence']} ({overall['medium_confidence']/overall['total']*100:.1f}%)")
+        print(f"  Low (<85%): {overall['low_confidence']} ({overall['low_confidence']/overall['total']*100:.1f}%)")
+    else:
+        print(f"Confidence Distribution: No signals in this period")
     print()
 
     if overall['wins'] + overall['losses'] > 0:
@@ -214,10 +222,10 @@ def print_dashboard(stats: Dict, json_output: bool = False):
     print("-" * 70)
     alerts = []
 
-    if overall['avg_confidence'] < 85:
+    if overall['avg_confidence'] is not None and overall['avg_confidence'] < 85:
         alerts.append("⚠️  Average confidence is below 85%")
 
-    if overall['high_confidence'] / overall['total'] < 0.3:
+    if overall['total'] > 0 and overall['high_confidence'] / overall['total'] < 0.3:
         alerts.append("⚠️  Less than 30% of signals are high confidence (≥90%)")
 
     if overall['wins'] + overall['losses'] > 10:

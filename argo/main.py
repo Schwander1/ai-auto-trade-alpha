@@ -1,6 +1,11 @@
 """Argo Trading API v6.0 - Production"""
 import os
 
+# Force production mode and 24/7 mode for continuous signal generation
+# Set environment before any imports that might check it
+if os.getenv('ARGO_ENVIRONMENT') is None:
+    os.environ['ARGO_ENVIRONMENT'] = 'production'
+
 # Enable 24/7 mode for continuous signal generation (unless explicitly disabled)
 if os.getenv('ARGO_24_7_MODE', '').lower() not in ['false', '0', 'no']:
     # Default to 24/7 mode in production, allow override via env var
@@ -235,6 +240,7 @@ async def root() -> Dict[str, Any]:
             "/api/v1/signals/tier/{tier}",
             "/api/v1/signals/live/{symbol}",
             "/api/v1/stats",
+            "/api/v1/crypto/status",
             "/docs"
         ]
     }
@@ -421,6 +427,88 @@ async def stats() -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"Error in stats endpoint: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to fetch statistics")
+
+@app.get("/api/v1/crypto/status")
+async def crypto_signal_status() -> Dict[str, Any]:
+    """
+    Verify crypto signal generation status for 24/7 trading
+    Returns information about crypto signal generation capabilities
+    """
+    try:
+        from argo.core.signal_generation_service import get_signal_service
+        
+        signal_service = get_signal_service()
+        if not signal_service:
+            return {
+                "status": "error",
+                "message": "Signal generation service not available",
+                "crypto_24_7_enabled": False
+            }
+        
+        # Check 24/7 mode
+        is_24_7 = os.getenv('ARGO_24_7_MODE', '').lower() in ['true', '1', 'yes']
+        
+        # Check data sources
+        data_sources = signal_service.data_sources if hasattr(signal_service, 'data_sources') else {}
+        crypto_sources = {}
+        
+        # Check which sources support crypto
+        if "massive" in data_sources:
+            crypto_sources["massive"] = {
+                "enabled": True,
+                "supports_crypto": True,
+                "24_7": True,
+                "weight": "40%"
+            }
+        
+        if "alpaca_pro" in data_sources:
+            crypto_sources["alpaca_pro"] = {
+                "enabled": True,
+                "supports_crypto": True,
+                "24_7": True,
+                "weight": "supplemental"
+            }
+        
+        if "x_sentiment" in data_sources:
+            crypto_sources["xai_grok"] = {
+                "enabled": True,
+                "supports_crypto": True,
+                "24_7": True,
+                "weight": "20%"
+            }
+        
+        if "sonar" in data_sources:
+            crypto_sources["sonar_ai"] = {
+                "enabled": True,
+                "supports_crypto": True,
+                "24_7": True,
+                "weight": "15%"
+            }
+        
+        # Check default crypto symbols
+        from argo.core.signal_generation_service import DEFAULT_SYMBOLS
+        crypto_symbols = [s for s in DEFAULT_SYMBOLS if '-USD' in s or s.startswith('BTC') or s.startswith('ETH')]
+        
+        # Check if service is running
+        is_running = hasattr(signal_service, 'running') and signal_service.running
+        
+        return {
+            "status": "operational" if is_running else "stopped",
+            "crypto_24_7_enabled": is_24_7,
+            "signal_service_running": is_running,
+            "crypto_symbols": crypto_symbols,
+            "crypto_data_sources": crypto_sources,
+            "total_crypto_sources": len(crypto_sources),
+            "message": "Crypto signals are generated 24/7 when enabled" if is_24_7 else "24/7 mode not enabled",
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error in crypto status endpoint: {e}", exc_info=True)
+        return {
+            "status": "error",
+            "message": str(e),
+            "crypto_24_7_enabled": False
+        }
 
 # Backtesting endpoint
 @app.get("/api/v1/backtest/{symbol}")

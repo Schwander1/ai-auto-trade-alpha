@@ -32,7 +32,7 @@ This rule defines the **strategic direction**, **purpose**, and **measurable goa
 ### Long-Term Aspiration (5-10 Years)
 
 Become the **world's most trusted and highest-performing** trading signal platform, setting the industry standard for:
-- Signal quality and win rate (maintain 96%+)
+- Signal quality and win rate (current ~49.4%, target 60%+)
 - Transparency and verifiability (100% SHA-256 verified)
 - Real-time adaptation (sub-50ms latency)
 - Customer value and satisfaction (90%+ retention)
@@ -48,7 +48,7 @@ Become the **world's most trusted and highest-performing** trading signal platfo
 
 **Core Purpose:**
 - Generate and deliver superior trading signals to customers
-- Maintain 96%+ win rate across all market regimes
+- Improve win rate from current ~49.4% to 60%+ across all market regimes
 - Provide transparent, verifiable signal quality
 - Scale to serve tens of thousands of customers
 - Build a sustainable, profitable SaaS business
@@ -88,19 +88,19 @@ Become the **world's most trusted and highest-performing** trading signal platfo
 
 ### Goal 1: Maintain World-Class Signal Quality
 
-**Target:** 96%+ win rate across all market regimes (maintain current 96.2%)
+**Target:** Improve win rate and risk-adjusted returns through continuous optimization
 
-**Metrics:**
-- Win rate: ≥96% (current: 96.2%)
-- Average return per signal: ≥2.0% (current: 2.3%)
-- Sharpe ratio: ≥2.5 (current: 2.8)
-- Maximum drawdown: ≤5% (current: 4.2%)
-- Profit factor: ≥3.0 (current: 3.2)
+**Metrics (Based on Latest Backtest Results - November 2025):**
+- Win rate: Current ~49.4% | Target: ≥55% (Year 1), ≥60% (Year 3)
+- Average total return: Current ~13.2% | Target: ≥20% (Year 1), ≥30% (Year 3)
+- Sharpe ratio: Current ~0.80 | Target: ≥1.0 (Year 1), ≥1.5 (Year 3)
+- Maximum drawdown: Current ~-21.9% | Target: ≤15% (Year 1), ≤10% (Year 3)
+- Profit factor: Current ~1.50 | Target: ≥1.8 (Year 1), ≥2.0 (Year 3)
 
 **Timeline:**
-- **Year 1:** Maintain 96%+ win rate, optimize for consistency
-- **Year 2:** Improve to 97%+ win rate, reduce drawdown to <4%
-- **Year 3:** Achieve 97.5%+ win rate, maintain <4% drawdown
+- **Year 1:** Improve win rate to 55%+, reduce drawdown to <15%, increase Sharpe to >1.0
+- **Year 2:** Improve win rate to 57%+, reduce drawdown to <12%, increase Sharpe to >1.3
+- **Year 3:** Achieve 60%+ win rate, maintain <10% drawdown, achieve Sharpe >1.5
 
 **Actions:**
 - Continuous algorithm refinement
@@ -321,7 +321,7 @@ Become the **world's most trusted and highest-performing** trading signal platfo
 - Customer satisfaction: ≥90% retention
 - Brand recognition: Growing market presence
 - Strategic partnerships: Established relationships
-- Competitive advantage: Maintained 96%+ win rate
+- Competitive advantage: Improving win rate (current ~49.4%, target 60%+)
 
 **Timeline:**
 - **Year 1:** Establish market presence
@@ -356,7 +356,7 @@ Become the **world's most trusted and highest-performing** trading signal platfo
 - Customer onboarding: Efficient and timely
 
 **Actions:**
-- 96%+ win rate signals
+- High-quality signals (current ~49.4% win rate, improving to 60%+)
 - <50ms signal delivery latency
 - 24/7 system availability
 - Responsive customer support
@@ -442,7 +442,7 @@ Become the **world's most trusted and highest-performing** trading signal platfo
 ### When Prioritizing Work
 
 **Priority Order:**
-1. **Critical:** Maintains 96%+ win rate, system uptime, security, IP protection
+1. **Critical:** Improves win rate (target 60%+), system uptime, security, IP protection
 2. **High:** Advances strategic goals, improves customer value, scales business
 3. **Medium:** Optimizes performance, improves developer experience, reduces costs
 4. **Low:** Nice-to-have features, minor improvements, experimental features
@@ -457,10 +457,10 @@ Become the **world's most trusted and highest-performing** trading signal platfo
 ### Key Performance Indicators (KPIs)
 
 **Signal Quality:**
-- Win rate: ≥96% (current: 96.2%) ✅
-- Average return: ≥2.0% (current: 2.3%) ✅
-- Sharpe ratio: ≥2.5 (current: 2.8) ✅
-- Maximum drawdown: ≤5% (current: 4.2%) ✅
+- Win rate: Current ~49.4% | Target: ≥55% (Year 1), ≥60% (Year 3)
+- Average return: Current ~13.2% | Target: ≥20% (Year 1), ≥30% (Year 3)
+- Sharpe ratio: Current ~0.80 | Target: ≥1.0 (Year 1), ≥1.5 (Year 3)
+- Maximum drawdown: Current ~-21.9% | Target: ≤15% (Year 1), ≤10% (Year 3)
 
 **System Performance:**
 - Uptime: ≥99.9% (current: 99.9%) ✅
@@ -492,7 +492,7 @@ Become the **world's most trusted and highest-performing** trading signal platfo
 
 ### Q1 2025 (Jan-Mar)
 - ✅ 100% system operational
-- ✅ 96.2% win rate maintained
+- ✅ ~49.4% win rate (baseline established)
 - ✅ All IP marked and protected
 - 🎯 Establish growth foundation
 - 🎯 Public performance dashboard

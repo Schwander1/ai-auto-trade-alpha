@@ -96,7 +96,7 @@ def get_user_notifications(user_id: int, db: Session) -> List[Dict]:
                 "user_id": n.user_id,
                 "title": n.title,
                 "message": n.message,
-                "type": n.type,
+                "type": n.type.value if hasattr(n.type, 'value') else str(n.type),  # Handle enum serialization
                 "is_read": n.is_read,
                 "created_at": format_datetime_iso(n.created_at),
                 "read_at": format_datetime_iso(n.read_at) if n.read_at else None

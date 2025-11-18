@@ -529,7 +529,7 @@ class StrategyBacktester(BaseBacktester):
                         self._check_exit_conditions(symbol, current_price, current_date, idx)
 
                     # Update equity
-                    self.update_equity(current_price, current_date)
+                    self.update_equity(current_price, current_date, df=df, index=i)
 
             logger.info(f"Backtest stats for {symbol}: {signals_generated} signals generated, "
                        f"{signals_above_threshold} above threshold ({signals_below_threshold} below), "
@@ -642,8 +642,8 @@ class StrategyBacktester(BaseBacktester):
 
                 self._check_exit_conditions(symbol, current_price, current_date, i, df)
 
-            # Update equity
-            self.update_equity(current_price, current_date)
+            # Update equity (pass df and index for bar-level stop loss checking)
+            self.update_equity(current_price, current_date, df=df, index=i)
 
         logger.info(f"Backtest stats for {symbol}: {signals_generated} signals generated, "
                    f"{signals_above_threshold} above threshold ({signals_below_threshold} below), "
