@@ -1783,7 +1783,7 @@ class SignalGenerationService:
         """Get cached AI reasoning for signal (OPTIMIZATION 12)"""
         # OPTIMIZATION: Reuse cache key if provided to avoid duplicate creation
         if cache_key is None:
-            cache_key = self._create_reasoning_cache_key(signal, consensus)
+        cache_key = self._create_reasoning_cache_key(signal, consensus)
 
         # Check Redis cache first
         if self.redis_cache:
@@ -1808,7 +1808,7 @@ class SignalGenerationService:
         """Cache AI reasoning (OPTIMIZATION 12)"""
         cache_key = self._create_reasoning_cache_key(signal, consensus)
         ttl = 3600  # 1 hour cache (reasoning is expensive)
-
+        
         # OPTIMIZATION: Use provided time or get current time
         if current_time is None:
             current_time = datetime.now(timezone.utc)
@@ -1824,7 +1824,7 @@ class SignalGenerationService:
         """Generate AI reasoning for signal (OPTIMIZATION 12: with caching)"""
         # OPTIMIZATION: Create cache key once and reuse
         cache_key = self._create_reasoning_cache_key(signal, consensus)
-
+        
         # OPTIMIZATION 12: Check cache first (pass cache_key to avoid recreating it)
         cached_reasoning = self._get_cached_reasoning(signal, consensus, cache_key)
         if cached_reasoning:
@@ -2475,13 +2475,9 @@ class SignalGenerationService:
             if not self._check_correlation_groups(symbol, existing_positions):
                 return
 
-            # OPTIMIZATION: Use async execution to avoid blocking event loop
-            # Run synchronous Alpaca API calls in thread pool
-            import asyncio
-            order_id = await asyncio.to_thread(
-                self.trading_engine.execute_signal,
-                signal,
-                existing_positions=existing_positions
+            # FIX: Pass existing_positions to avoid race condition
+            order_id = self.trading_engine.execute_signal(
+                signal, existing_positions=existing_positions
             )
             if order_id:
                 await self._handle_successful_trade(signal, order_id, existing_positions, symbol)
