@@ -2044,16 +2044,19 @@ class SignalGenerationService:
         if not symbol_groups:
             return True  # No correlation group, allow trade
 
+        # OPTIMIZATION: Pre-compute existing position symbols set for O(1) lookups
+        existing_symbols = {p.get("symbol", "") for p in existing_positions if p.get("symbol")}
+
         # Count existing positions in same correlation groups
         for group in symbol_groups:
-            group_positions = [
-                p for p in existing_positions if p["symbol"] in correlation_groups[group]
-            ]
+            # OPTIMIZATION: Use set intersection (O(n)) instead of list comprehension with membership check (O(n*m))
+            group_symbols = set(correlation_groups[group])
+            positions_in_group = existing_symbols & group_symbols
 
             # Check if group has specific limit
             group_limit = asset_class_limits.get(group, max_correlated)
 
-            if len(group_positions) >= group_limit:
+            if len(positions_in_group) >= group_limit:
                 logger.info(
                     f"⏭️  Skipping {symbol} - max correlated positions ({group_limit}) reached in {group} group"
                 )
@@ -2784,7 +2787,12 @@ class SignalGenerationService:
         try:
             # Get position details before closing
             positions = self._get_cached_positions()
-            position = next((p for p in positions if p["symbol"] == symbol), None)
+            # OPTIMIZATION: Use dict lookup instead of linear search
+            position = None
+            for p in positions:
+                if p.get("symbol") == symbol:
+                    position = p
+                    break
 
             if not position:
                 logger.warning(f"Position not found for {symbol}")
