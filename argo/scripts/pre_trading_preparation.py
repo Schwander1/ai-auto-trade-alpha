@@ -1199,10 +1199,17 @@ class PreTradingPreparation:
                     mode = file_stat.st_mode
                     
                     # Check if world-readable (security risk)
-                    if mode & stat.S_IROTH:
+                    # Also check if group-readable (less secure than 600)
+                    is_world_readable = mode & stat.S_IROTH
+                    is_group_readable = mode & stat.S_IRGRP
+                    
+                    if is_world_readable:
                         issues.append("Config file is world-readable (security risk)")
+                    elif is_group_readable:
+                        # Group readable is less secure but not critical
+                        checks_passed.append("Config file permissions acceptable (group-readable)")
                     else:
-                        checks_passed.append("Config file permissions secure")
+                        checks_passed.append("Config file permissions secure (600 or better)")
                     break
             
             if not config_found:
