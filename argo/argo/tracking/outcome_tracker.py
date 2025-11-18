@@ -205,7 +205,7 @@ class OutcomeTracker:
                 SELECT signal_id, symbol, entry_price, target_price, stop_price, action, timestamp
                 FROM signals
                 WHERE outcome IS NULL
-                AND timestamp >= datetime('now', '-30 days')  # Only recent signals
+                AND timestamp >= datetime('now', '-30 days')
             """)
             
             signals = cursor.fetchall()
