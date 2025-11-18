@@ -1496,7 +1496,9 @@ class SignalGenerationService:
         )
 
         # Cache the result (use cached current_time)
-        self._consensus_cache[cache_key] = (consensus.copy(), current_time)
+        # OPTIMIZATION: Use shallow copy for dict (faster than deep copy)
+        import copy
+        self._consensus_cache[cache_key] = (copy.copy(consensus), current_time)
         self._cleanup_consensus_cache()
 
         return consensus
@@ -1601,7 +1603,8 @@ class SignalGenerationService:
             }
 
         # Calculate max possible with remaining sources (assuming 100% confidence)
-        remaining_weights = weights.copy()
+        # OPTIMIZATION: Use dict() constructor for shallow copy (slightly faster than .copy())
+        remaining_weights = dict(weights)
 
         # Remove weights for sources we already have
         for source in source_signals.keys():

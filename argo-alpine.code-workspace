@@ -140,19 +140,35 @@
     "javascript.suggest.autoImports": true,
     "[typescript]": {
       "editor.defaultFormatter": "esbenp.prettier-vscode",
-      "editor.formatOnSave": true
+      "editor.formatOnSave": true,
+      "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit",
+        "source.organizeImports": "explicit"
+      }
     },
     "[typescriptreact]": {
       "editor.defaultFormatter": "esbenp.prettier-vscode",
-      "editor.formatOnSave": true
+      "editor.formatOnSave": true,
+      "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit",
+        "source.organizeImports": "explicit"
+      }
     },
     "[javascript]": {
       "editor.defaultFormatter": "esbenp.prettier-vscode",
-      "editor.formatOnSave": true
+      "editor.formatOnSave": true,
+      "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit",
+        "source.organizeImports": "explicit"
+      }
     },
     "[javascriptreact]": {
       "editor.defaultFormatter": "esbenp.prettier-vscode",
-      "editor.formatOnSave": true
+      "editor.formatOnSave": true,
+      "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit",
+        "source.organizeImports": "explicit"
+      }
     },
     "[json]": {
       "editor.defaultFormatter": "esbenp.prettier-vscode",
@@ -161,6 +177,30 @@
     "[jsonc]": {
       "editor.defaultFormatter": "esbenp.prettier-vscode",
       "editor.formatOnSave": true
+    },
+    "[css]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
+      "editor.formatOnSave": true
+    },
+    "[scss]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
+      "editor.formatOnSave": true
+    },
+    "[html]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
+      "editor.formatOnSave": true,
+      "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit"
+      }
+    },
+    "[shellscript]": {
+      "editor.formatOnSave": true,
+      "editor.tabSize": 2,
+      "editor.insertSpaces": true
+    },
+    "[sql]": {
+      "editor.formatOnSave": false,
+      "editor.tabSize": 2
     },
 
     // ESLint settings
@@ -203,7 +243,12 @@
       "*.env.*": "dotenv",
       "Dockerfile*": "dockerfile",
       "docker-compose*.yml": "dockercompose",
-      "*.prisma": "prisma"
+      "docker-compose*.yaml": "dockercompose",
+      "*.prisma": "prisma",
+      "*.toml": "toml",
+      "*.jinja": "jinja",
+      "*.jinja2": "jinja",
+      "*.j2": "jinja"
     },
 
     // Testing settings
