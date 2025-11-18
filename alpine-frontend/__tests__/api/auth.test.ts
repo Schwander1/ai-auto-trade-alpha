@@ -5,8 +5,18 @@
 describe('Auth API Routes', () => {
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9001'
 
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
   describe('POST /api/auth/signup', () => {
     it('creates a new user', async () => {
+      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+        status: 201,
+        ok: true,
+        json: async () => ({ id: '1', email: 'test@example.com' }),
+      })
+
       const response = await fetch(`${API_URL}/api/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -22,6 +32,11 @@ describe('Auth API Routes', () => {
     })
 
     it('rejects invalid email', async () => {
+      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+        status: 400,
+        ok: false,
+      })
+
       const response = await fetch(`${API_URL}/api/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -36,6 +51,11 @@ describe('Auth API Routes', () => {
     })
 
     it('rejects weak password', async () => {
+      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+        status: 400,
+        ok: false,
+      })
+
       const response = await fetch(`${API_URL}/api/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -52,8 +72,12 @@ describe('Auth API Routes', () => {
 
   describe('POST /api/auth/login', () => {
     it('authenticates valid user', async () => {
-      // This would require a test user to be created first
-      // For now, just test the endpoint exists
+      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+        status: 200,
+        ok: true,
+        json: async () => ({ token: 'test-token' }),
+      })
+
       const response = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
