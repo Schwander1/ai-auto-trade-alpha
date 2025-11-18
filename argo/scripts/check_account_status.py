@@ -82,4 +82,15 @@ def main():
             print(f'\n❌ Alpaca not connected')
 
         print('\n' + '='*70 + '\n')
+    except KeyboardInterrupt:
+        logger.warning("Account check interrupted by user")
+        print("\n⚠️  Account check interrupted by user")
+        sys.exit(130)
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}", exc_info=True)
+        print(f'\n❌ Unexpected error: {e}')
+        sys.exit(1)
+
+if __name__ == '__main__':
+    main()
 
