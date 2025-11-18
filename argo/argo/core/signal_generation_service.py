@@ -1108,10 +1108,24 @@ class SignalGenerationService:
             return None, regime
 
         # Apply adaptive threshold check
-        threshold = self.regime_thresholds.get(regime, self.confidence_threshold)
+        # IMPROVEMENT: Use adaptive threshold based on number of sources
+        num_sources = len(source_signals)
+        base_threshold = self.regime_thresholds.get(regime, self.confidence_threshold)
+        
+        # Adjust threshold based on number of sources
+        if num_sources == 1:
+            # Single source: require higher confidence (70% for NEUTRAL, 65% for directional)
+            threshold = max(base_threshold, 70.0 if consensus.get("direction") == "NEUTRAL" else 65.0)
+        elif num_sources == 2:
+            # Two sources: slightly lower threshold
+            threshold = max(base_threshold - 5.0, 60.0)
+        else:
+            # Three or more sources: use base threshold
+            threshold = base_threshold
+        
         if consensus["confidence"] < threshold:
             logger.warning(
-                f"⚠️  Consensus confidence {consensus['confidence']:.1f}% below {threshold}% threshold for {symbol} ({regime}) - source signals: {list(source_signals.keys())}"
+                f"⚠️  Consensus confidence {consensus['confidence']:.1f}% below {threshold}% threshold for {symbol} ({regime}, {num_sources} sources) - source signals: {list(source_signals.keys())}"
             )
             return None, regime
 

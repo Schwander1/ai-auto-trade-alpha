@@ -237,6 +237,34 @@ class WeightedConsensusEngine:
         long_votes = {}
         short_votes = {}
 
+        # IMPROVEMENT: Handle single-source NEUTRAL signals specially
+        # If only 1 source with high-confidence NEUTRAL, use it directly
+        if len(valid) == 1:
+            source, signal = next(iter(valid.items()))
+            direction = signal.get("direction")
+            confidence = signal.get("confidence", 0)
+            
+            # For single high-confidence NEUTRAL signal, use it directly
+            if direction == "NEUTRAL" and confidence >= 0.65:
+                return {
+                    "direction": "NEUTRAL",
+                    "confidence": round(confidence * 100, 2),
+                    "total_long_vote": confidence * 0.55,
+                    "total_short_vote": confidence * 0.45,
+                    "sources": 1,
+                    "agreement": round(confidence * 100, 2),
+                }
+            # For single directional signal, use it directly if confidence is reasonable
+            elif direction in ["LONG", "SHORT"] and confidence >= 0.60:
+                return {
+                    "direction": direction,
+                    "confidence": round(confidence * 100, 2),
+                    "total_long_vote": confidence if direction == "LONG" else 0,
+                    "total_short_vote": confidence if direction == "SHORT" else 0,
+                    "sources": 1,
+                    "agreement": round(confidence * 100, 2),
+                }
+
         for source, signal in valid.items():
             direction = signal.get("direction")
             confidence = signal.get("confidence", 0)
