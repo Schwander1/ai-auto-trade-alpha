@@ -2,9 +2,9 @@
 
 **Purpose:** Centralized, organized rules for the workspace, divided by function for easy maintenance and reference. Note: This workspace contains two separate, independent entities (Argo Capital and Alpine Analytics LLC) with no cross-references.
 
-**Last Updated:** January 17, 2025  
+**Last Updated:** November 18, 2025  
 **Total Rules Files:** 36  
-**Current System State:** v6.0 - All 15 optimizations complete, prop firm trading system operational
+**Current System State:** v3.0 - Unified Architecture - Single signal generator with multi-executor trading
 
 **Note:** For current system status, see [SYSTEM_STATUS.md](../SYSTEM_STATUS.md) (single source of truth)
 

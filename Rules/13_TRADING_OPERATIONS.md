@@ -1,7 +1,7 @@
 # Trading Operations Rules
 
-**Last Updated:** January 15, 2025  
-**Version:** 2.0  
+**Last Updated:** November 18, 2025  
+**Version:** 3.0 - Unified Architecture  
 **Applies To:** Argo Trading Engine
 
 ---
@@ -10,7 +10,43 @@
 
 Trading operations rules for signal generation, risk management, position monitoring, and trade execution in the Argo trading system.
 
+**Architecture:** Unified signal generation with multi-executor trading architecture (v3.0)
+
 **Strategic Context:** Signal quality targets (96%+ win rate) align with strategic goals defined in [24_VISION_MISSION_GOALS.md](24_VISION_MISSION_GOALS.md) Goal 1.
+
+---
+
+## Unified Architecture (v3.0)
+
+### Architecture Overview
+
+**NEW:** The system now uses a unified architecture with:
+- **Single Signal Generator:** One service generates all signals
+- **Unified Database:** All signals stored in one database with service tagging
+- **Multiple Executors:** Lightweight executor services handle trade execution
+- **Signal Distribution:** Signals automatically distributed to appropriate executors
+
+**Components:**
+- `argo/argo/core/unified_signal_tracker.py` - Unified signal storage
+- `argo/argo/core/signal_distributor.py` - Signal distribution service
+- `argo/argo/core/trading_executor.py` - Lightweight executor service
+- `argo/argo/core/signal_generation_service.py` - Signal generation (updated)
+
+### Signal Flow
+
+```
+Signal Generator (Port 7999)
+    ↓
+Unified Database (signals_unified.db)
+    ↓
+Signal Distributor
+    ├──→ Argo Executor (Port 8000)
+    └──→ Prop Firm Executor (Port 8001)
+```
+
+**Rule:** Signals are generated once and distributed to executors
+**Rule:** Each executor validates and executes independently
+**Rule:** Argo and Prop Firm trade signals separately with their own risk rules
 
 ---
 
@@ -28,6 +64,31 @@ Trading operations rules for signal generation, risk management, position monito
 - **Minimum Confidence:** 60% confidence threshold required (configurable in config.json)
 - **SHA-256 Verification:** All signals include SHA-256 hash for integrity
 - **AI Reasoning:** All signals include AI-generated reasoning (minimum 20 characters)
+- **Service Tagging:** All signals tagged with `service_type` and `generated_by`
+
+#### Unified Signal Storage
+
+**Component:** `argo/argo/core/unified_signal_tracker.py`
+
+**Rule:** All signals stored in unified database (`signals_unified.db`)
+**Rule:** Signals tagged with:
+- `service_type`: 'argo', 'prop_firm', or 'both'
+- `executor_id`: Which executor should handle (optional)
+- `generated_by`: 'signal_generator' (source identifier)
+
+**Rule:** Database supports service-based queries for analytics
+
+#### Signal Distribution
+
+**Component:** `argo/argo/core/signal_distributor.py`
+
+**Rule:** Signals automatically distributed to executors based on:
+- Service type matching
+- Confidence thresholds
+- Executor-specific filters (e.g., prop firm skips CRISIS signals)
+
+**Rule:** Distribution is non-blocking (async)
+**Rule:** Failed distributions are logged but don't block signal generation
 
 #### Data Sources
 
@@ -51,63 +112,48 @@ Trading operations rules for signal generation, risk management, position monito
 
 #### Market Regime Detection
 
-**Regimes:** BULL, BEAR, CHOP, CRISIS
+**Regimes:** BULL, BEAR, CHOP, CRISIS, TRENDING, CONSOLIDATION, VOLATILE
 
 **Rule:** Confidence adjusted based on market regime
 - BULL: Standard confidence
 - BEAR: Slightly reduced confidence
 - CHOP: Reduced confidence
 - CRISIS: Significantly reduced confidence, higher threshold
-
----
-
-## Risk Management
-
-### 7-Layer Risk Protection System
-
-**Component:** `argo/argo/core/signal_generation_service.py` → `_validate_trade()`
-
-#### Layer 1: Account Status Checks
-- **Rule:** Verify account is not blocked
-- **Rule:** Verify trading is not paused
-- **Rule:** Verify account has trading permissions
-
-#### Layer 2: Confidence Thresholds
-- **Rule:** Minimum confidence: 60% (configurable, current: 60%)
-- **Rule:** Consensus threshold: 60% (configurable)
-- **Action:** Reject signals below threshold
-
-#### Layer 3: Position Size Limits
-- **Rule:** Default position size: 9% of capital (configurable, current: 9%)
-- **Rule:** Maximum position size: 16% of capital (configurable, current: 16%)
-- **Rule:** Position size adjusted by confidence
-- **Rule:** Position size adjusted by volatility
-
-#### Layer 4: Correlation Limits
-- **Rule:** Maximum correlated positions: 5 (configurable, current: 5)
-- **Rule:** Check correlation groups before trade
-- **Action:** Reject if correlation limit exceeded
-
-#### Layer 5: Daily Loss Limits
-- **Rule:** Daily loss limit: 5% of equity (configurable, current: 5%)
-- **Rule:** Pause trading if limit exceeded
-- **Action:** Circuit breaker activates
-
-#### Layer 6: Drawdown Protection
-- **Rule:** Maximum drawdown: 20% from peak equity (configurable, current: 20%)
-- **Rule:** Track peak equity continuously
-- **Action:** Block trades if drawdown exceeded
-
-#### Layer 7: Buying Power Checks
-- **Rule:** Verify sufficient buying power
-- **Rule:** Leave 5% buffer for margin
-- **Action:** Reject if insufficient capital
+- TRENDING: Enhanced confidence
+- CONSOLIDATION: Reduced confidence
+- VOLATILE: Reduced confidence
 
 ---
 
 ## Trade Execution
 
-### Paper Trading Engine
+### Trading Executors
+
+**Component:** `argo/argo/core/trading_executor.py`
+
+**NEW:** Lightweight executor services that only execute trades (don't generate signals)
+
+#### Executor Types
+
+**Argo Executor (Port 8000):**
+- Standard trading rules
+- Minimum confidence: 75% (configurable)
+- Uses Argo Alpaca account
+
+**Prop Firm Executor (Port 8001):**
+- Stricter trading rules
+- Minimum confidence: 82% (configurable)
+- Skips CRISIS regime signals
+- Uses Prop Firm Alpaca account
+
+#### Executor Rules
+
+**Rule:** Each executor validates signals independently
+**Rule:** Executors check confidence thresholds before execution
+**Rule:** Executors apply their own risk management rules
+**Rule:** Failed executions are logged but don't affect other executors
+
+#### Paper Trading Engine
 
 **Component:** `argo/argo/core/paper_trading_engine.py`
 
@@ -149,11 +195,60 @@ Trading operations rules for signal generation, risk management, position monito
 
 ---
 
+## Risk Management
+
+### 7-Layer Risk Protection System
+
+**Component:** Executors validate trades through risk layers
+
+#### Layer 1: Account Status Checks
+- **Rule:** Verify account is not blocked
+- **Rule:** Verify trading is not paused
+- **Rule:** Verify account has trading permissions
+
+#### Layer 2: Confidence Thresholds
+- **Rule:** Minimum confidence: 60% (configurable, current: 60%)
+- **Rule:** Argo executor: 75% minimum
+- **Rule:** Prop Firm executor: 82% minimum
+- **Action:** Reject signals below threshold
+
+#### Layer 3: Position Size Limits
+- **Rule:** Default position size: 9% of capital (configurable, current: 9%)
+- **Rule:** Maximum position size: 16% of capital (configurable, current: 16%)
+- **Rule:** Prop Firm: 3% maximum (stricter)
+- **Rule:** Position size adjusted by confidence
+- **Rule:** Position size adjusted by volatility
+
+#### Layer 4: Correlation Limits
+- **Rule:** Maximum correlated positions: 5 (configurable, current: 5)
+- **Rule:** Prop Firm: 3 maximum positions
+- **Rule:** Check correlation groups before trade
+- **Action:** Reject if correlation limit exceeded
+
+#### Layer 5: Daily Loss Limits
+- **Rule:** Daily loss limit: 5% of equity (configurable, current: 5%)
+- **Rule:** Prop Firm: 4.5% daily loss limit
+- **Rule:** Pause trading if limit exceeded
+- **Action:** Circuit breaker activates
+
+#### Layer 6: Drawdown Protection
+- **Rule:** Maximum drawdown: 20% from peak equity (configurable, current: 20%)
+- **Rule:** Prop Firm: 2% maximum drawdown
+- **Rule:** Track peak equity continuously
+- **Action:** Block trades if drawdown exceeded
+
+#### Layer 7: Buying Power Checks
+- **Rule:** Verify sufficient buying power
+- **Rule:** Leave 5% buffer for margin
+- **Action:** Reject if insufficient capital
+
+---
+
 ## Position Monitoring
 
 ### Real-Time Position Tracking
 
-**Component:** `argo/argo/core/signal_generation_service.py` → `monitor_positions()`
+**Component:** Executors monitor their own positions
 
 #### Monitoring Rules
 
@@ -191,21 +286,21 @@ Trading operations rules for signal generation, risk management, position monito
 
 **Entry Recording:**
 - **When:** After successful trade execution
-- **Data:** Trade ID, symbol, entry price, quantity, timestamp
+- **Data:** Trade ID, symbol, entry price, quantity, timestamp, executor_id
 - **Verification:** SHA-256 hash for integrity
 
 **Exit Recording:**
 - **When:** Position closed (stop-loss, take-profit, manual)
-- **Data:** Trade ID, exit price, P&L, timestamp
+- **Data:** Trade ID, exit price, P&L, timestamp, executor_id
 - **Verification:** SHA-256 hash for integrity
 
 #### Metrics Calculated
 
-- **Total P&L:** Sum of all trade profits/losses
-- **Win Rate:** Percentage of profitable trades
-- **Sharpe Ratio:** Risk-adjusted returns
-- **Max Drawdown:** Maximum portfolio decline
-- **Average Win/Loss:** Average profit vs average loss
+- **Total P&L:** Sum of all trade profits/losses (per executor)
+- **Win Rate:** Percentage of profitable trades (per executor)
+- **Sharpe Ratio:** Risk-adjusted returns (per executor)
+- **Max Drawdown:** Maximum portfolio decline (per executor)
+- **Average Win/Loss:** Average profit vs average loss (per executor)
 
 ---
 
@@ -228,23 +323,50 @@ Trading operations rules for signal generation, risk management, position monito
 - Trading always enabled
 - Required signal storage
 - Always active (24/7, never pauses)
+- Unified architecture with signal generator and executors
 
 ---
 
 ## Configuration
 
-### Trading Configuration (`config.json` → `trading`)
+### Unified Signal Generator Configuration
+
+**Path:** `/root/argo-production-unified/config.json`
+
+```json
+{
+  "signal_generation": {
+    "enabled": true,
+    "interval_seconds": 5,
+    "symbols": ["AAPL", "NVDA", "TSLA", "MSFT", "BTC-USD", "ETH-USD"],
+    "min_confidence": 60.0,
+    "price_change_threshold": 0.001,
+    "distribute_to": ["argo", "prop_firm"]
+  },
+  "database": {
+    "path": "/root/argo-production-unified/data/signals_unified.db",
+    "unified": true
+  }
+}
+```
+
+### Executor Configuration
+
+**Argo Executor:** `/root/argo-production-green/config.json`
+**Prop Firm Executor:** `/root/argo-production-prop-firm/config.json`
+
+**Trading Configuration (`config.json` → `trading`):**
 
 **Required Parameters:**
-- `min_confidence`: 60.0 (minimum signal confidence, current: 60%)
-- `consensus_threshold`: 60.0 (consensus requirement, current: 60%)
+- `min_confidence`: 75.0 (Argo), 82.0 (Prop Firm)
+- `consensus_threshold`: 60.0 (consensus requirement)
 - `profit_target`: 0.05 (5% profit target)
-- `stop_loss`: 0.025 (2.5% stop loss, current: 2.5%)
-- `position_size_pct`: 9 (default position size %, current: 9%)
-- `max_position_size_pct`: 16 (maximum position size %, current: 16%)
-- `max_correlated_positions`: 5 (correlation limit, current: 5)
-- `max_drawdown_pct`: 20 (maximum drawdown %, current: 20%)
-- `daily_loss_limit_pct`: 5.0 (daily loss limit %, current: 5%)
+- `stop_loss`: 0.025 (2.5% stop loss)
+- `position_size_pct`: 9 (Argo), 3 (Prop Firm)
+- `max_position_size_pct`: 16 (Argo), 3 (Prop Firm)
+- `max_correlated_positions`: 5 (Argo), 3 (Prop Firm)
+- `max_drawdown_pct`: 20 (Argo), 2 (Prop Firm)
+- `daily_loss_limit_pct`: 5.0 (Argo), 4.5 (Prop Firm)
 - `auto_execute`: true (enable automatic trading)
 
 **See:** [06_CONFIGURATION.md](06_CONFIGURATION.md) for full configuration details
@@ -261,6 +383,8 @@ Trading operations rules for signal generation, risk management, position monito
 - ✅ Adjust position size based on confidence and volatility
 - ✅ Respect daily loss limits
 - ✅ Track peak equity for drawdown calculation
+- ✅ Use unified architecture for signal generation
+- ✅ Let executors handle trade execution independently
 
 ### DON'T
 - ❌ Execute trades without risk validation
@@ -270,6 +394,7 @@ Trading operations rules for signal generation, risk management, position monito
 - ❌ Exceed position size limits
 - ❌ Trade after daily loss limit exceeded
 - ❌ Ignore drawdown protection
+- ❌ Generate signals in executor services (use unified generator)
 
 ---
 
@@ -279,15 +404,14 @@ Trading operations rules for signal generation, risk management, position monito
 
 **CRITICAL:** Prop firm trading uses a completely separate Alpaca account and is isolated from regular trading.
 
-**Rule:** When `prop_firm.enabled = true`, the system automatically uses the `prop_firm_test` account instead of dev/production accounts.
-
-**Rule:** Prop firm trading and regular trading NEVER interact or share positions.
-
-**Rule:** Prop firm risk monitoring is completely independent from regular trading risk management.
+**Rule:** Prop Firm executor uses `prop_firm_test` account
+**Rule:** Argo executor uses standard dev/production accounts
+**Rule:** Prop firm trading and regular trading NEVER interact or share positions
+**Rule:** Prop firm risk monitoring is completely independent
 
 ### Prop Firm Configuration
 
-**Component:** `argo/config.json` → `prop_firm` section
+**Component:** `/root/argo-production-prop-firm/config.json` → `prop_firm` section
 
 **Required Configuration:**
 ```json
@@ -344,25 +468,38 @@ Trading operations rules for signal generation, risk management, position monito
 **Rule:** Maximum 3% position size (conservative, configurable)
 **Rule:** Minimum 82% confidence (high quality signals only)
 **Rule:** Maximum 1.5% stop loss (tight risk control)
+**Rule:** Skips CRISIS regime signals
 
-### Prop Firm Account Switching
+### Unified Architecture for Prop Firm
 
-**Rule:** Account selection is automatic based on `prop_firm.enabled` flag:
-- `prop_firm.enabled = false` → Uses dev or production account (based on environment)
-- `prop_firm.enabled = true` → Uses `prop_firm_test` account
+**Rule:** Prop Firm executor receives signals from unified generator
+**Rule:** Signals filtered by executor (confidence, regime, etc.)
+**Rule:** Prop Firm executor validates and executes independently
+**Rule:** All signals stored in unified database with service tagging
 
-**Rule:** No manual account selection needed - system handles switching automatically.
+---
 
-### Dual Service Operation (Optional)
+## Monitoring and Observability
 
-**Rule:** Can run regular trading and prop firm trading simultaneously:
-- **Regular Service:** Port 8000, `prop_firm.enabled = false`
-- **Prop Firm Service:** Port 8001, `prop_firm.enabled = true`
+### Signal Generation Rate Monitor
 
-**Rule:** Each service uses its own account and risk monitoring independently.
+**Component:** `argo/argo/monitoring/signal_rate_monitor.py`
 
-**See:** `docs/PROP_FIRM_SETUP_GUIDE.md` for complete setup documentation
-**See:** `docs/PROP_FIRM_DEPLOYMENT_GUIDE.md` for dual service deployment
+**Rule:** Monitor signal generation rate continuously
+**Rule:** Alert if rate drops below 50% of expected
+**Rule:** Expected rate: 500-1,000 signals/hour
+**Rule:** Track breakdown by service type
+
+### Health Checks
+
+**Signal Generator:**
+- Endpoint: `http://localhost:7999/health`
+- Checks: Service status, database connectivity
+
+**Executors:**
+- Argo: `http://localhost:8000/health`
+- Prop Firm: `http://localhost:8001/health`
+- Checks: Service status, account connectivity, trading engine
 
 ---
 
@@ -374,4 +511,21 @@ Trading operations rules for signal generation, risk management, position monito
 - [12A_ARGO_BACKEND.md](12A_ARGO_BACKEND.md) - Argo Capital Backend practices
 - [07_SECURITY.md](07_SECURITY.md) - Security practices
 - [10_MONOREPO.md](10_MONOREPO.md) - Entity separation (prop firm is Argo-only)
+- [14_MONITORING_OBSERVABILITY.md](14_MONITORING_OBSERVABILITY.md) - Monitoring and observability
 
+---
+
+## Migration from v2.0 to v3.0
+
+**See:** `docs/UNIFIED_ARCHITECTURE_MIGRATION.md` for complete migration guide
+
+**Key Changes:**
+- Single signal generator instead of multiple services
+- Unified database instead of separate databases
+- Lightweight executors instead of full services
+- Signal distribution instead of direct execution
+
+**Backward Compatibility:**
+- Legacy mode supported (direct execution if distributor unavailable)
+- Old databases can be migrated using migration script
+- Old services can run alongside new architecture during transition

@@ -82,8 +82,31 @@ class SignalGenerationService:
     - Includes AI-generated reasoning
     """
 
-    def __init__(self):
-        self.tracker = SignalTracker()
+    def __init__(self, use_unified_tracker: bool = True):
+        # Use unified tracker by default for new architecture
+        if use_unified_tracker:
+            try:
+                from argo.core.unified_signal_tracker import UnifiedSignalTracker
+                self.tracker = UnifiedSignalTracker()
+                self._use_unified = True
+                logger.info("✅ Using Unified Signal Tracker")
+            except ImportError:
+                logger.warning("⚠️  Unified tracker not available, falling back to standard tracker")
+                self.tracker = SignalTracker()
+                self._use_unified = False
+        else:
+            self.tracker = SignalTracker()
+            self._use_unified = False
+        
+        # Initialize signal distributor for multi-executor architecture
+        self.distributor = None
+        try:
+            from argo.core.signal_distributor import SignalDistributor
+            self.distributor = SignalDistributor(self.trading_config if hasattr(self, 'trading_config') else {})
+            logger.info("✅ Signal Distributor initialized")
+        except ImportError:
+            logger.warning("⚠️  Signal distributor not available, using direct execution")
+        
         # Initialize risk_monitor attribute early to avoid AttributeError
         self.risk_monitor = None
         self.prop_firm_mode = False
@@ -2424,8 +2447,12 @@ class SignalGenerationService:
     async def _process_and_store_signal(
         self, signal: Dict, symbol: str, account: Optional[Dict], existing_positions: List[Dict]
     ) -> Optional[Dict]:
-        """Process, store, and execute signal if valid (OPTIMIZED: async non-blocking database insert)"""
+        """Process, store, and distribute signal (OPTIMIZED: async non-blocking database insert)"""
         # OPTIMIZATION: Use async signal logging to avoid blocking the pipeline
+        # Add service tagging for unified architecture
+        signal['service_type'] = 'both'  # Can be executed by both Argo and Prop Firm
+        signal['generated_by'] = 'signal_generator'
+        
         # Store signal in database (non-blocking async batch insert)
         signal_id = await self.tracker.log_signal_async(signal)
         signal["signal_id"] = signal_id
@@ -2440,32 +2467,60 @@ class SignalGenerationService:
         # Track signal generation
         self._track_signal_generated(signal, signal_id, symbol)
 
-        # Execute trade if enabled
-        # Enhanced logging for execution debugging
-        execution_conditions = {
-            'auto_execute': self.auto_execute,
-            'trading_engine': self.trading_engine is not None,
-            'account': account is not None,
-            'not_paused': not self._paused,
-        }
-        
-        # Always log execution conditions for debugging
-        logger.info(f"🔍 Execution check for {symbol}: auto_execute={self.auto_execute}, trading_engine={self.trading_engine is not None}, account={account is not None}, not_paused={not self._paused}")
-        
-        if all(execution_conditions.values()):
-            logger.info(f"✅ All conditions met for {symbol}, attempting execution")
-            executed = await self._execute_trade_if_valid(
-                signal, account, existing_positions, symbol
-            )
-            self._track_trade_execution(signal, signal_id, executed)
-            if not executed:
-                logger.warning(f"⚠️  Trade execution returned False for {symbol} - check risk validation logs")
+        # DISTRIBUTE signal to executors (unified architecture)
+        if self.distributor:
+            # Distribute to executors (non-blocking)
+            asyncio.create_task(self._distribute_signal_to_executors(signal))
         else:
-            failed_conditions = [k for k, v in execution_conditions.items() if not v]
-            logger.warning(f"⏭️  Skipping {symbol} - Failed conditions: {', '.join(failed_conditions)}")
-            self._track_signal_skipped(signal_id)
+            # Fallback to direct execution (legacy mode)
+            execution_conditions = {
+                'auto_execute': self.auto_execute,
+                'trading_engine': self.trading_engine is not None,
+                'account': account is not None,
+                'not_paused': not self._paused,
+            }
+            
+            logger.info(f"🔍 Execution check for {symbol}: auto_execute={self.auto_execute}, trading_engine={self.trading_engine is not None}, account={account is not None}, not_paused={not self._paused}")
+            
+            if all(execution_conditions.values()):
+                logger.info(f"✅ All conditions met for {symbol}, attempting execution")
+                executed = await self._execute_trade_if_valid(
+                    signal, account, existing_positions, symbol
+                )
+                self._track_trade_execution(signal, signal_id, executed)
+                if not executed:
+                    logger.warning(f"⚠️  Trade execution returned False for {symbol} - check risk validation logs")
+            else:
+                failed_conditions = [k for k, v in execution_conditions.items() if not v]
+                logger.warning(f"⏭️  Skipping {symbol} - Failed conditions: {', '.join(failed_conditions)}")
+                self._track_signal_skipped(signal_id)
 
         return signal
+    
+    async def _distribute_signal_to_executors(self, signal: Dict):
+        """Distribute signal to trading executors (non-blocking)"""
+        if not self.distributor:
+            return
+        
+        try:
+            results = await self.distributor.distribute_signal(signal)
+            for result in results:
+                if result.get('success'):
+                    logger.info(
+                        f"✅ Signal distributed to {result.get('executor_id')}: "
+                        f"Order ID: {result.get('order_id', 'N/A')}"
+                    )
+                    # Update signal with executor info
+                    if result.get('order_id'):
+                        signal['order_id'] = result.get('order_id')
+                        signal['executor_id'] = result.get('executor_id')
+                else:
+                    logger.warning(
+                        f"⚠️  Failed to distribute to {result.get('executor_id')}: "
+                        f"{result.get('error', 'Unknown error')}"
+                    )
+        except Exception as e:
+            logger.error(f"❌ Error distributing signal: {e}", exc_info=True)
 
     def _sync_signal_to_alpine(self, signal: Dict):
         """Sync signal to Alpine backend (async, non-blocking)"""
