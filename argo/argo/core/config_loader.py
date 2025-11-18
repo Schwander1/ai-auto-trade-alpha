@@ -15,11 +15,13 @@ class ConfigLoader:
     """Unified configuration loader with environment-based precedence"""
     
     # Configuration paths in order of precedence (highest to lowest)
+    # Note: Current working directory is checked first (before these paths)
     CONFIG_PATHS = {
         'production': [
-            '/root/argo-production-green/config.json',  # Current environment
-            '/root/argo-production-blue/config.json',   # Blue environment
-            '/root/argo-production/config.json',        # Legacy
+            '/root/argo-production-prop-firm/config.json',  # Prop firm service
+            '/root/argo-production-green/config.json',      # Regular trading (green)
+            '/root/argo-production-blue/config.json',       # Regular trading (blue)
+            '/root/argo-production/config.json',            # Legacy
         ],
         'development': [
             'config.json',  # Local development
@@ -38,6 +40,20 @@ class ConfigLoader:
     @staticmethod
     def find_config_file() -> Optional[str]:
         """Find the appropriate config file based on environment"""
+        # Check environment variable first (highest priority)
+        config_path = os.getenv('ARGO_CONFIG_PATH')
+        if config_path and os.path.exists(config_path):
+            logger.debug(f"Found config file from ARGO_CONFIG_PATH: {config_path}")
+            return config_path
+        
+        # Check current working directory first (for services running from their deployment directory)
+        # This ensures prop firm service loads its own config
+        cwd = Path.cwd()
+        cwd_config = cwd / 'config.json'
+        if cwd_config.exists():
+            logger.debug(f"Found config file in current working directory: {cwd_config}")
+            return str(cwd_config)
+        
         env = ConfigLoader.detect_environment()
         paths = ConfigLoader.CONFIG_PATHS.get(env, ConfigLoader.CONFIG_PATHS['development'])
         
