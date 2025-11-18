@@ -78,11 +78,24 @@ def main():
     parser = argparse.ArgumentParser(description='Generate performance report')
     parser.add_argument('--hours', type=int, default=24, help='Hours to look back (default: 24)')
     parser.add_argument('--json', action='store_true', help='Output as JSON')
+    parser.add_argument('--verbose', '-v', action='store_true', help='Verbose output')
     args = parser.parse_args()
 
-    monitor = get_performance_monitor()
-    stats = monitor.get_all_stats(args.hours)
-    print_performance_report(stats, args.json)
+    if args.verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
+
+    try:
+        monitor = get_performance_monitor()
+        stats = monitor.get_all_stats(args.hours)
+        print_performance_report(stats, args.json)
+    except Exception as e:
+        logger.error(f"Error generating performance report: {e}", exc_info=True)
+        print(f"❌ Error generating performance report: {e}")
+        sys.exit(1)
+    except KeyboardInterrupt:
+        logger.warning("Report generation interrupted by user")
+        print("\n⚠️  Report generation interrupted by user")
+        sys.exit(130)
 
 if __name__ == "__main__":
     main()

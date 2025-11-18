@@ -12,6 +12,7 @@ Usage:
 import sys
 import json
 import argparse
+import logging
 from pathlib import Path
 from datetime import datetime, timedelta
 from typing import Dict, Optional, List
@@ -19,11 +20,22 @@ from typing import Dict, Optional, List
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from argo.core.performance_metrics import get_performance_metrics
-from argo.core.performance_monitor import get_performance_monitor
-from argo.tracking.unified_tracker import UnifiedPerformanceTracker
-from argo.core.paper_trading_engine import PaperTradingEngine
-from argo.core.environment import detect_environment
+# Configure logging
+logging.basicConfig(
+    level=logging.WARNING,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+try:
+    from argo.core.performance_metrics import get_performance_metrics
+    from argo.core.performance_monitor import get_performance_monitor
+    from argo.tracking.unified_tracker import UnifiedPerformanceTracker
+    from argo.core.paper_trading_engine import PaperTradingEngine
+    from argo.core.environment import detect_environment
+except ImportError as e:
+    logger.warning(f"Could not import some modules: {e}")
+    logger.warning("Some features may be limited")
 
 def evaluate_signal_generator(days: int = 30) -> Dict:
     """Evaluate signal generator performance"""
@@ -639,7 +651,11 @@ def main():
     parser.add_argument('--json', action='store_true', help='Output as JSON')
     parser.add_argument('--component', choices=['all', 'signal', 'production', 'prop_firm'],
                        default='all', help='Component to evaluate (default: all)')
+    parser.add_argument('--verbose', '-v', action='store_true', help='Verbose output')
     args = parser.parse_args()
+    
+    if args.verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
 
     results = {}
 
@@ -677,10 +693,16 @@ def main():
             print(f"\n💾 Full report saved to: {report_file}")
 
     except Exception as e:
+        logger.error(f"Error during evaluation: {e}", exc_info=True)
         print(f"\n❌ Error during evaluation: {e}")
-        import traceback
-        traceback.print_exc()
+        if args.verbose:
+            import traceback
+            traceback.print_exc()
         sys.exit(1)
+    except KeyboardInterrupt:
+        logger.warning("Evaluation interrupted by user")
+        print("\n⚠️  Evaluation interrupted by user")
+        sys.exit(130)
 
 if __name__ == '__main__':
     main()
