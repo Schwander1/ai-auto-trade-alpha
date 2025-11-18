@@ -236,10 +236,29 @@ def main():
     parser = argparse.ArgumentParser(description='Monitor signal quality metrics')
     parser.add_argument('--hours', type=int, default=24, help='Hours to look back (default: 24)')
     parser.add_argument('--json', action='store_true', help='Output as JSON')
+    parser.add_argument('--verbose', '-v', action='store_true', help='Verbose output')
     args = parser.parse_args()
 
-    stats = get_signal_stats(args.hours)
-    print_dashboard(stats, args.json)
+    if args.verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
+
+    try:
+        stats = get_signal_stats(args.hours)
+        
+        if 'error' in stats:
+            logger.error(f"Error getting signal stats: {stats['error']}")
+            print(f"❌ {stats['error']}")
+            sys.exit(1)
+        
+        print_dashboard(stats, args.json)
+    except KeyboardInterrupt:
+        logger.warning("Signal quality monitoring interrupted by user")
+        print("\n⚠️  Monitoring interrupted by user")
+        sys.exit(130)
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}", exc_info=True)
+        print(f"❌ Unexpected error: {e}")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
