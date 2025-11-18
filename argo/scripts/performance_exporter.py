@@ -6,29 +6,49 @@ Exports performance evaluation metrics to Prometheus format
 import sys
 import json
 import argparse
+import logging
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, Optional
 
+# Configure logging
+logging.basicConfig(
+    level=logging.WARNING,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 def load_latest_report(reports_dir: str = "reports") -> Optional[Dict]:
-    """Load latest performance evaluation report"""
-    reports_path = Path(reports_dir)
-    if not reports_path.exists():
-        return None
-
-    reports = list(reports_path.glob("daily_evaluation_*.json"))
-    if not reports:
-        reports = list(reports_path.glob("performance_evaluation*.json"))
-
-    if not reports:
-        return None
-
-    reports.sort(key=lambda p: p.stat().st_mtime, reverse=True)
-
+    """Load latest performance evaluation report with improved error handling"""
     try:
-        with open(reports[0], 'r') as f:
-            return json.load(f)
-    except Exception:
+        reports_path = Path(reports_dir)
+        if not reports_path.exists():
+            logger.warning(f"Reports directory does not exist: {reports_dir}")
+            return None
+
+        # Try daily evaluation reports first
+        reports = list(reports_path.glob("daily_evaluation_*.json"))
+        if not reports:
+            # Fallback to any performance evaluation reports
+            reports = list(reports_path.glob("performance_evaluation*.json"))
+
+        if not reports:
+            logger.debug(f"No performance reports found in {reports_dir}")
+            return None
+
+        reports.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+
+        try:
+            with open(reports[0], 'r') as f:
+                return json.load(f)
+        except json.JSONDecodeError as e:
+            logger.error(f"Invalid JSON in {reports[0]}: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Error reading report {reports[0]}: {e}")
+            return None
+    except Exception as e:
+        logger.error(f"Error loading latest report: {e}", exc_info=True)
         return None
 
 def grade_to_number(grade: str) -> float:
@@ -105,8 +125,12 @@ def main():
     parser.add_argument('--report', help='Specific report file to export')
     parser.add_argument('--port', type=int, default=9091, help='HTTP server port (if running as server)')
     parser.add_argument('--server', action='store_true', help='Run as HTTP server')
+    parser.add_argument('--verbose', '-v', action='store_true', help='Verbose output')
 
     args = parser.parse_args()
+    
+    if args.verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
 
     if args.server:
         # Run as HTTP server
@@ -142,18 +166,35 @@ def main():
             print("\n👋 Exporter stopped")
     else:
         # Export once
-        if args.report:
-            with open(args.report, 'r') as f:
-                report = json.load(f)
-        else:
-            report = load_latest_report(args.reports_dir)
+        try:
+            if args.report:
+                report_file = Path(args.report)
+                if not report_file.exists():
+                    print(f"❌ Report file not found: {args.report}", file=sys.stderr)
+                    sys.exit(1)
+                try:
+                    with open(report_file, 'r') as f:
+                        report = json.load(f)
+                except json.JSONDecodeError as e:
+                    logger.error(f"Invalid JSON in {args.report}: {e}")
+                    print(f"❌ Invalid JSON in report: {e}", file=sys.stderr)
+                    sys.exit(1)
+            else:
+                report = load_latest_report(args.reports_dir)
 
-        if not report:
-            print("❌ No report found")
+            if not report:
+                print(f"❌ No report found in {args.reports_dir}", file=sys.stderr)
+                sys.exit(1)
+
+            metrics = export_metrics(report)
+            print(metrics)
+        except KeyboardInterrupt:
+            print("\n⚠️  Operation interrupted by user", file=sys.stderr)
+            sys.exit(130)
+        except Exception as e:
+            logger.error(f"Unexpected error: {e}", exc_info=True)
+            print(f"❌ Unexpected error: {e}", file=sys.stderr)
             sys.exit(1)
-
-        metrics = export_metrics(report)
-        print(metrics)
 
 if __name__ == '__main__':
     main()

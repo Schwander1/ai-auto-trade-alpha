@@ -45,7 +45,7 @@ def get_db_connection() -> Optional[sqlite3.Connection]:
     """Get database connection for signal/trade history with improved error handling"""
     import logging
     logger = logging.getLogger(__name__)
-    
+
     # Try multiple possible database locations
     db_paths = [
         Path(__file__).parent.parent / "argo.db",
@@ -77,7 +77,7 @@ def query_signal_history(days: int = 30) -> List[Dict]:
     """Query signal history from database with improved error handling and retry logic"""
     import logging
     logger = logging.getLogger(__name__)
-    
+
     conn = get_db_connection()
     if not conn:
         logger.warning("No database connection available for signal history")
@@ -87,9 +87,10 @@ def query_signal_history(days: int = 30) -> List[Dict]:
         cutoff_date = datetime.now() - timedelta(days=days)
         cursor = conn.cursor()
 
-        # Try to query signals table with improved query
+        # Try to query signals table with optimized query
         try:
             # Use parameterized query to prevent SQL injection
+            # Optimized: Use index on timestamp, limit results early
             cursor.execute("""
                 SELECT symbol, action, entry_price, confidence, timestamp, outcome, profit_loss_pct
                 FROM signals
@@ -97,6 +98,9 @@ def query_signal_history(days: int = 30) -> List[Dict]:
                 ORDER BY timestamp DESC
                 LIMIT 1000
             """, (cutoff_date.isoformat(),))
+            
+            # Enable query optimization hints
+            cursor.execute("PRAGMA optimize")
 
             rows = cursor.fetchall()
             result = [dict(row) for row in rows]
