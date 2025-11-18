@@ -25,7 +25,7 @@ export default function SignalCard({ signal, className = '', compact = false }: 
   }
 
   const getActionColor = (action: string) => {
-    return action === 'BUY' 
+    return action === 'BUY'
       ? 'bg-alpine-neon-cyan/20 text-alpine-neon-cyan border-alpine-neon-cyan/30'
       : 'bg-alpine-semantic-error20 text-alpine-semantic-errorborder-alpine-semantic-error30'
   }
@@ -90,9 +90,9 @@ export default function SignalCard({ signal, className = '', compact = false }: 
 
           {signal.outcome && (
             <div className={`flex items-center gap-2 p-2 rounded ${
-              signal.outcome === 'win' 
-                ? 'bg-alpine-neon-cyan/10 text-alpine-neon-cyan' 
-                : 'bg-alpine-semantic-error10 text-alpine-semantic-error
+              signal.outcome === 'win'
+                ? 'bg-alpine-neon-cyan/10 text-alpine-neon-cyan'
+                : 'bg-alpine-semantic-error10 text-alpine-semantic-error'
             }`}>
               {signal.outcome === 'win' ? (
                 <CheckCircle2 className="w-4 h-4" />
@@ -133,4 +133,3 @@ export default function SignalCard({ signal, className = '', compact = false }: 
     </div>
   )
 }
-

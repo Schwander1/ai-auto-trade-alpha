@@ -1,85 +1,92 @@
-'use client'
+"use client";
 
-import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
-import Navigation from '@/components/dashboard/Navigation'
-import PerformanceChart from '@/components/dashboard/PerformanceChart'
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import Navigation from "@/components/dashboard/Navigation";
+import PerformanceChart from "@/components/dashboard/PerformanceChart";
 import {
-  TrendingUp, Users, DollarSign, Activity, Loader2,
-  AlertCircle, BarChart3, Calendar, Download
-} from 'lucide-react'
+  TrendingUp,
+  Users,
+  DollarSign,
+  Activity,
+  Loader2,
+  AlertCircle,
+  BarChart3,
+  Calendar,
+  Download,
+} from "lucide-react";
 
 /**
  * Admin Page - Revenue, users, and analytics (admin only)
  */
 export default function AdminPage() {
-  const { data: session, status } = useSession()
-  const router = useRouter()
-  const [analytics, setAnalytics] = useState<any>(null)
-  const [users, setUsers] = useState<any[]>([])
-  const [revenue, setRevenue] = useState<any>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'revenue'>('overview')
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [analytics, setAnalytics] = useState<any>(null);
+  const [users, setUsers] = useState<any[]>([]);
+  const [revenue, setRevenue] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"overview" | "users" | "revenue">("overview");
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login')
+    if (status === "unauthenticated") {
+      router.push("/login");
     }
-  }, [status, router])
+  }, [status, router]);
 
   useEffect(() => {
     const fetchAdminData = async () => {
-      if (!session) return
+      if (!session) return;
 
       try {
-        setIsLoading(true)
+        setIsLoading(true);
         const [analyticsRes, usersRes, revenueRes] = await Promise.all([
-          fetch('/api/admin/analytics'),
-          fetch('/api/admin/users?limit=50'),
-          fetch('/api/admin/revenue'),
-        ])
+          fetch("/api/admin/analytics"),
+          fetch("/api/admin/users?limit=50"),
+          fetch("/api/admin/revenue"),
+        ]);
 
         if (analyticsRes.ok) {
-          const data = await analyticsRes.json()
-          setAnalytics(data)
+          const data = await analyticsRes.json();
+          setAnalytics(data);
         } else if (analyticsRes.status === 403) {
-          setError('Admin access required')
+          setError("Admin access required");
         }
 
         if (usersRes.ok) {
-          const data = await usersRes.json()
-          setUsers(data.items || [])
+          const data = await usersRes.json();
+          setUsers(data.items || []);
         }
 
         if (revenueRes.ok) {
-          const data = await revenueRes.json()
-          setRevenue(data)
+          const data = await revenueRes.json();
+          setRevenue(data);
         }
       } catch (err) {
-        console.error('Failed to fetch admin data:', err)
-        setError('Failed to load admin data')
+        console.error("Failed to fetch admin data:", err);
+        setError("Failed to load admin data");
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
     if (session) {
-      fetchAdminData()
+      fetchAdminData();
     }
-  }, [session])
+  }, [session]);
 
-  if (status === 'loading' || isLoading) {
+  if (status === "loading" || isLoading) {
     return (
       <div className="min-h-screen bg-alpine-black-primary flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-alpine-neon-cyan animate-spin" />
       </div>
-    )
+    );
   }
 
-  if (status === 'unauthenticated') {
-    return null
+  if (status === "unauthenticated") {
+    return null;
   }
 
   if (error) {
@@ -91,7 +98,7 @@ export default function AdminPage() {
           <p className="text-alpine-text-secondary">{error}</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -103,17 +110,17 @@ export default function AdminPage() {
         {/* Tabs */}
         <div className="flex items-center gap-2 mb-6 border-b border-alpine-black-border">
           {[
-            { id: 'overview', label: 'Overview' },
-            { id: 'users', label: 'Users' },
-            { id: 'revenue', label: 'Revenue' },
+            { id: "overview", label: "Overview" },
+            { id: "users", label: "Users" },
+            { id: "revenue", label: "Revenue" },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
               className={`px-4 py-2 font-semibold transition-colors ${
                 activeTab === tab.id
-                  ? 'text-alpine-neon-cyan border-b-2 border-alpine-neon-cyan'
-                  : 'text-alpine-text-secondary hover:text-alpine-text-primary'
+                  ? "text-alpine-neon-cyan border-b-2 border-alpine-neon-cyan"
+                  : "text-alpine-text-secondary hover:text-alpine-text-primary"
               }`}
             >
               {tab.label}
@@ -122,7 +129,7 @@ export default function AdminPage() {
         </div>
 
         {/* Overview Tab */}
-        {activeTab === 'overview' && analytics && (
+        {activeTab === "overview" && analytics && (
           <div className="space-y-6">
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -156,12 +163,16 @@ export default function AdminPage() {
             <div className="bg-alpine-black-secondary border border-alpine-black-border rounded-lg p-6">
               <h3 className="text-lg font-bold text-alpine-text-primary mb-4">Users by Tier</h3>
               <div className="grid grid-cols-3 gap-4">
-                {Object.entries(analytics.users_by_tier || {}).map(([tier, count]: [string, any]) => (
-                  <div key={tier} className="text-center p-4 bg-alpine-black-primary rounded-lg">
-                    <div className="text-2xl font-black text-alpine-text-primary mb-1">{count}</div>
-                    <div className="text-sm text-alpine-text-secondary capitalize">{tier}</div>
-                  </div>
-                ))}
+                {Object.entries(analytics.users_by_tier || {}).map(
+                  ([tier, count]: [string, any]) => (
+                    <div key={tier} className="text-center p-4 bg-alpine-black-primary rounded-lg">
+                      <div className="text-2xl font-black text-alpine-text-primary mb-1">
+                        {count}
+                      </div>
+                      <div className="text-sm text-alpine-text-secondary capitalize">{tier}</div>
+                    </div>
+                  )
+                )}
               </div>
             </div>
 
@@ -170,7 +181,9 @@ export default function AdminPage() {
               <h3 className="text-lg font-bold text-alpine-text-primary mb-4">Platform Activity</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="text-sm text-alpine-text-secondary mb-1">API Requests (Today)</div>
+                  <div className="text-sm text-alpine-text-secondary mb-1">
+                    API Requests (Today)
+                  </div>
                   <div className="text-2xl font-black text-alpine-text-primary ">
                     {analytics.api_requests_today?.toLocaleString() || 0}
                   </div>
@@ -187,7 +200,7 @@ export default function AdminPage() {
         )}
 
         {/* Users Tab */}
-        {activeTab === 'users' && (
+        {activeTab === "users" && (
           <div className="bg-alpine-black-secondary border border-alpine-black-border rounded-lg overflow-hidden">
             <div className="p-4 border-b border-alpine-black-border flex items-center justify-between">
               <h3 className="text-lg font-bold text-alpine-text-primary ">All Users</h3>
@@ -200,15 +213,26 @@ export default function AdminPage() {
               <table className="w-full">
                 <thead className="bg-alpine-black-primary border border-alpine-black-border">
                   <tr>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-alpine-text-secondary uppercase">Email</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-alpine-text-secondary uppercase">Tier</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-alpine-text-secondary uppercase">Status</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-alpine-text-secondary uppercase">Joined</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-alpine-text-secondary uppercase">
+                      Email
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-alpine-text-secondary uppercase">
+                      Tier
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-alpine-text-secondary uppercase">
+                      Status
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-alpine-text-secondary uppercase">
+                      Joined
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-alpine-black-border">
                   {users.map((user: any) => (
-                    <tr key={user.id} className="hover:bg-alpine-black-primary/50 transition-colors">
+                    <tr
+                      key={user.id}
+                      className="hover:bg-alpine-black-primary/50 transition-colors"
+                    >
                       <td className="px-4 py-3 text-alpine-text-primary ">{user.email}</td>
                       <td className="px-4 py-3">
                         <span className="px-2 py-1 text-sm font-semibold rounded bg-alpine-neon-cyan/10 text-alpine-neon-cyan capitalize">
@@ -216,12 +240,14 @@ export default function AdminPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`px-2 py-1 text-sm font-semibold rounded ${
-                          user.is_active
-                            ? 'bg-alpine-neon-cyan/10 text-alpine-neon-cyan'
-                            : 'bg-alpine-semantic-error/10 text-alpine-semantic-error'
-                        }`}>
-                          {user.is_active ? 'Active' : 'Inactive'}
+                        <span
+                          className={`px-2 py-1 text-sm font-semibold rounded ${
+                            user.is_active
+                              ? "bg-alpine-neon-cyan/10 text-alpine-neon-cyan"
+                              : "bg-alpine-semantic-error/10 text-alpine-semantic-error"
+                          }`}
+                        >
+                          {user.is_active ? "Active" : "Inactive"}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-sm text-alpine-text-secondary">
@@ -236,7 +262,7 @@ export default function AdminPage() {
         )}
 
         {/* Revenue Tab */}
-        {activeTab === 'revenue' && revenue && (
+        {activeTab === "revenue" && revenue && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard
@@ -268,14 +294,16 @@ export default function AdminPage() {
             <div className="bg-alpine-black-secondary border border-alpine-black-border rounded-lg p-6">
               <h3 className="text-lg font-bold text-alpine-text-primary mb-4">Revenue by Tier</h3>
               <div className="grid grid-cols-3 gap-4">
-                {Object.entries(revenue.revenue_by_tier || {}).map(([tier, amount]: [string, any]) => (
-                  <div key={tier} className="text-center p-4 bg-alpine-black-primary rounded-lg">
-                    <div className="text-2xl font-black text-alpine-text-primary mb-1">
-                      ${amount?.toLocaleString() || 0}
+                {Object.entries(revenue.revenue_by_tier || {}).map(
+                  ([tier, amount]: [string, any]) => (
+                    <div key={tier} className="text-center p-4 bg-alpine-black-primary rounded-lg">
+                      <div className="text-2xl font-black text-alpine-text-primary mb-1">
+                        ${amount?.toLocaleString() || 0}
+                      </div>
+                      <div className="text-sm text-alpine-text-secondary capitalize">{tier}</div>
                     </div>
-                    <div className="text-sm text-alpine-text-secondary capitalize">{tier}</div>
-                  </div>
-                ))}
+                  )
+                )}
               </div>
             </div>
 
@@ -283,19 +311,19 @@ export default function AdminPage() {
               <div className="bg-alpine-black-secondary border border-alpine-black-border rounded-lg p-4">
                 <div className="text-sm text-alpine-text-secondary mb-1">Revenue Today</div>
                 <div className="text-xl font-black text-alpine-text-primary ">
-                  ${revenue.revenue_today?.toFixed(2) || '0.00'}
+                  ${revenue.revenue_today?.toFixed(2) || "0.00"}
                 </div>
               </div>
               <div className="bg-alpine-black-secondary border border-alpine-black-border rounded-lg p-4">
                 <div className="text-sm text-alpine-text-secondary mb-1">Revenue This Week</div>
                 <div className="text-xl font-black text-alpine-text-primary ">
-                  ${revenue.revenue_this_week?.toFixed(2) || '0.00'}
+                  ${revenue.revenue_this_week?.toFixed(2) || "0.00"}
                 </div>
               </div>
               <div className="bg-alpine-black-secondary border border-alpine-black-border rounded-lg p-4">
                 <div className="text-sm text-alpine-text-secondary mb-1">Revenue This Month</div>
                 <div className="text-xl font-black text-alpine-text-primary ">
-                  ${revenue.revenue_this_month?.toFixed(2) || '0.00'}
+                  ${revenue.revenue_this_month?.toFixed(2) || "0.00"}
                 </div>
               </div>
             </div>
@@ -303,19 +331,17 @@ export default function AdminPage() {
         )}
       </main>
     </div>
-  )
+  );
 }
 
 function StatCard({ title, value, icon, color }: any) {
   return (
     <div className="bg-alpine-black-secondary border border-alpine-black-border rounded-lg p-6">
       <div className="flex items-center justify-between mb-2">
-        <div className={`p-2 rounded-lg bg-${color}/10 text-${color}`}>
-          {icon}
-        </div>
+        <div className={`p-2 rounded-lg bg-${color}/10 text-${color}`}>{icon}</div>
       </div>
       <div className="text-2xl font-black text-alpine-text-primary mb-1">{value}</div>
       <div className="text-sm text-alpine-text-secondary">{title}</div>
     </div>
-  )
+  );
 }

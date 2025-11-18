@@ -27,7 +27,18 @@ import {
   getTierDisplayName,
   getTierPrice,
 } from '@/lib/stripe-helpers'
-import type { User } from '@prisma/client'
+// Define User type locally since @prisma/client may not be available in tests
+type User = {
+  id: string
+  email: string
+  tier: 'STARTER' | 'PROFESSIONAL' | 'INSTITUTIONAL'
+  subscriptionStatus: string | null
+  subscriptionStart: Date | null
+  subscriptionEnd: Date | null
+  stripeCustomerId: string | null
+  stripeSubscriptionId: string | null
+  stripePriceId: string | null
+}
 
 describe('Stripe Helpers', () => {
   describe('isSubscriptionActive', () => {
@@ -86,7 +97,7 @@ describe('Stripe Helpers', () => {
 
     it('returns correct days until renewal', () => {
       const futureDate = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000)
-      const user = { subscriptionEnd: futureDate } as User
+      const user = { subscriptionEnd: futureDate as Date | null } as User
       const days = getDaysUntilRenewal(user)
       expect(days).toBeGreaterThanOrEqual(9)
       expect(days).toBeLessThanOrEqual(10)
@@ -94,7 +105,7 @@ describe('Stripe Helpers', () => {
 
     it('returns 0 when subscription has expired', () => {
       const pastDate = new Date(Date.now() - 1000)
-      const user = { subscriptionEnd: pastDate } as User
+      const user = { subscriptionEnd: pastDate as Date | null } as User
       expect(getDaysUntilRenewal(user)).toBe(0)
     })
   })
@@ -109,7 +120,7 @@ describe('Stripe Helpers', () => {
       const futureDate = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)
       const user = {
         subscriptionStatus: 'trialing',
-        subscriptionEnd: futureDate,
+        subscriptionEnd: futureDate as Date | null,
       } as User
       const days = getTrialDaysRemaining(user)
       expect(days).toBeGreaterThanOrEqual(4)
@@ -269,4 +280,3 @@ describe('Stripe Helpers', () => {
     })
   })
 })
-

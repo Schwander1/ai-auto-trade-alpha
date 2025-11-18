@@ -29,7 +29,7 @@ describe('TradingEnvironmentBadge', () => {
     mockUseTradingEnvironment.mockReturnValue({
       status: null,
       loading: false,
-      error: new Error('Failed to fetch'),
+      error: 'Failed to fetch',
       refresh: jest.fn()
     })
 
@@ -137,7 +137,7 @@ describe('TradingEnvironmentBadge', () => {
     mockUseTradingEnvironment.mockReturnValue({
       status: null,
       loading: false,
-      error: new Error('Failed'),
+      error: 'Failed',
       refresh: mockRefresh
     })
 

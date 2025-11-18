@@ -1096,12 +1096,16 @@ class SignalGenerationService:
             # Calculate recent volatility (last 5 days) using pandas vectorized operations
             recent_prices = df["Close"].tail(5)
             price_changes = recent_prices.pct_change().abs()
-            volatility = price_changes.mean() if len(price_changes) > 0 and not price_changes.isna().all() else 0.0
-            
+            volatility = (
+                price_changes.mean()
+                if len(price_changes) > 0 and not price_changes.isna().all()
+                else 0.0
+            )
+
             # Handle NaN values (first row will be NaN from pct_change)
             if pd.isna(volatility):
                 volatility = 0.0
-                
+
             self._symbol_volatility[symbol] = float(volatility)
         except Exception:
             pass
@@ -1485,7 +1489,7 @@ class SignalGenerationService:
         # OPTIMIZATION: Use list comprehension and join for better performance
         if not source_signals:
             return f"{symbol}:"
-        
+
         signal_summary = [
             f"{source}:{signal.get('direction', 'NEUTRAL')}:{int(signal.get('confidence', 0) // 5) * 5}"
             for source, signal in sorted(source_signals.items())
@@ -2006,7 +2010,7 @@ class SignalGenerationService:
 
     def _check_daily_loss_limit(self, account: Dict) -> Tuple[bool, str]:
         """Check if daily loss limit has been exceeded"""
-        equity = account.get("equity", 0)
+        equity = account.get("equity", 0) or 0
 
         # Initialize daily start equity if not set (first check of the day)
         if self._daily_start_equity is None:
@@ -2091,10 +2095,10 @@ class SignalGenerationService:
         # Check drawdown using peak equity (more accurate)
         max_drawdown_pct = self.trading_config.get("max_drawdown_pct", 10)
         if max_drawdown_pct:
-            equity = account.get("equity", 0)
+            equity = account.get("equity", 0) or 0
             peak_equity = self._update_peak_equity(equity)
 
-            if peak_equity > 0:
+            if peak_equity > 0 and equity is not None:
                 drawdown_pct = ((peak_equity - equity) / peak_equity) * 100
                 if drawdown_pct > max_drawdown_pct:
                     return (
@@ -2103,7 +2107,7 @@ class SignalGenerationService:
                     )
 
         # Check buying power
-        buying_power = account.get("buying_power", 0)
+        buying_power = account.get("buying_power", 0) or 0
 
         # PROP FIRM: Use prop firm position size limit if enabled
         if hasattr(self, "prop_firm_mode") and self.prop_firm_mode:
@@ -2226,6 +2230,9 @@ class SignalGenerationService:
                 asyncio.create_task(self.alpine_sync.sync_signal(signal))
             else:
                 logger.debug("No event loop for Alpine sync")
+        except RuntimeError:
+            # No event loop available - this is fine, sync will be skipped
+            logger.debug("No event loop available for Alpine sync")
         except Exception as e:
             logger.warning(f"⚠️  Failed to queue Alpine sync: {e}")
 
@@ -2282,13 +2289,25 @@ class SignalGenerationService:
 
     def _finalize_signal_cycle(self, symbols: List[str]):
         """Finalize signal cycle with cleanup and outcome tracking"""
-        # Explicit memory cleanup
+        # OPTIMIZATION: Conditional memory cleanup (only if memory pressure detected)
+        # Only run gc.collect() periodically to avoid overhead
         import gc
+        import time
 
-        gc.collect()
+        current_time = time.time()
+        if not hasattr(self, "_last_gc_time"):
+            self._last_gc_time = 0.0
+
+        # Run GC every 5 minutes or if memory usage is high
+        if (current_time - self._last_gc_time) > 300:  # 5 minutes
+            gc.collect()
+            self._last_gc_time = current_time
 
         # Flush any pending batch inserts
-        self.tracker.flush_pending()
+        try:
+            self.tracker.flush_pending()
+        except Exception as e:
+            logger.debug(f"Error flushing pending signals: {e}")
 
         # Track outcomes for open signals (periodic check)
         self._update_outcome_tracking(symbols)
@@ -2309,18 +2328,21 @@ class SignalGenerationService:
                 or (now - self._last_outcome_check).total_seconds() >= self._outcome_check_interval
             ):
 
-                # Get current prices for all symbols
+                # OPTIMIZATION: Safe dictionary access - only get prices for symbols we have
                 current_prices = {
                     symbol: self._last_prices[symbol]
                     for symbol in symbols
-                    if symbol in self._last_prices
+                    if symbol in self._last_prices and self._last_prices[symbol] is not None
                 }
 
                 # Update outcomes if we have prices
                 if current_prices:
-                    updated = self._outcome_tracker.track_open_signals(current_prices)
-                    if updated > 0:
-                        logger.debug(f"📊 Updated {updated} signal outcomes")
+                    try:
+                        updated = self._outcome_tracker.track_open_signals(current_prices)
+                        if updated > 0:
+                            logger.debug(f"📊 Updated {updated} signal outcomes")
+                    except Exception as e:
+                        logger.debug(f"Error tracking outcomes: {e}")
 
                 self._last_outcome_check = now
         except Exception as e:
@@ -2859,17 +2881,36 @@ class SignalGenerationService:
         if (
             hasattr(self, "risk_monitor")
             and self.risk_monitor
+            and hasattr(self.risk_monitor, "monitoring_active")
             and self.risk_monitor.monitoring_active
         ):
             import asyncio
 
             try:
-                asyncio.create_task(self.risk_monitor.stop_monitoring())
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    # Schedule async cleanup if loop is running
+                    asyncio.create_task(self.risk_monitor.stop_monitoring())
+                else:
+                    # Run synchronously if no loop is running
+                    loop.run_until_complete(self.risk_monitor.stop_monitoring())
+            except RuntimeError:
+                # No event loop available, try to create one
+                try:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    loop.run_until_complete(self.risk_monitor.stop_monitoring())
+                    loop.close()
+                except Exception as e:
+                    logger.warning(f"Error stopping risk monitor: {e}")
             except Exception as e:
                 logger.warning(f"Error stopping risk monitor: {e}")
 
         # OPTIMIZATION: Flush any pending batch inserts before stopping
-        self.tracker.flush_pending()
+        try:
+            self.tracker.flush_pending()
+        except Exception as e:
+            logger.warning(f"Error flushing pending signals: {e}")
 
         # Close Alpine sync service
         if hasattr(self, "alpine_sync") and self.alpine_sync:
@@ -2879,13 +2920,55 @@ class SignalGenerationService:
                 # Try to close async
                 loop = asyncio.get_event_loop()
                 if loop.is_running():
+                    # Schedule async cleanup if loop is running
                     asyncio.create_task(self.alpine_sync.close())
                 else:
+                    # Run synchronously if no loop is running
                     loop.run_until_complete(self.alpine_sync.close())
+            except RuntimeError:
+                # No event loop available, try to create one
+                try:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    loop.run_until_complete(self.alpine_sync.close())
+                    loop.close()
+                except Exception as e:
+                    logger.debug(f"Error closing Alpine sync service: {e}")
             except Exception as e:
                 logger.debug(f"Error closing Alpine sync service: {e}")
 
         logger.info("🛑 Signal Generation Service stopped")
+
+    async def stop_async(self):
+        """Async version of stop() for proper async cleanup"""
+        self.running = False
+
+        # Stop risk monitoring if enabled
+        if (
+            hasattr(self, "risk_monitor")
+            and self.risk_monitor
+            and hasattr(self.risk_monitor, "monitoring_active")
+            and self.risk_monitor.monitoring_active
+        ):
+            try:
+                await self.risk_monitor.stop_monitoring()
+            except Exception as e:
+                logger.warning(f"Error stopping risk monitor: {e}")
+
+        # OPTIMIZATION: Flush any pending batch inserts before stopping
+        try:
+            self.tracker.flush_pending()
+        except Exception as e:
+            logger.warning(f"Error flushing pending signals: {e}")
+
+        # Close Alpine sync service
+        if hasattr(self, "alpine_sync") and self.alpine_sync:
+            try:
+                await self.alpine_sync.close()
+            except Exception as e:
+                logger.debug(f"Error closing Alpine sync service: {e}")
+
+        logger.info("🛑 Signal Generation Service stopped (async)")
 
 
 class PauseStateChecker:

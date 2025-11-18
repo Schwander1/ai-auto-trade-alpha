@@ -1,6 +1,26 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import UserMenu from '@/components/dashboard/UserMenu'
 
+jest.mock('next-auth/react', () => ({
+  useSession: jest.fn(() => ({
+    data: {
+      user: {
+        id: '1',
+        email: 'test@example.com',
+        tier: 'STARTER',
+      },
+    },
+    status: 'authenticated',
+  })),
+  signOut: jest.fn(),
+}))
+
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+  }),
+}))
+
 describe('UserMenu Edge Cases', () => {
   it('handles missing user email', () => {
     const { useSession } = require('next-auth/react')

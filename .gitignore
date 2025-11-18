@@ -18,6 +18,7 @@ htmlcov/
 __pycache__/
 *.py[cod]
 *$py.class
+.jest-cache/
 
 # Production builds
 dist/

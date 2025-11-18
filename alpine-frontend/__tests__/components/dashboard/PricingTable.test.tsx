@@ -10,7 +10,7 @@ describe('PricingTable', () => {
 
   it('renders all three tiers', () => {
     render(<PricingTable onUpgrade={mockOnUpgrade} />)
-    
+
     expect(screen.getByText(/founder/i)).toBeInTheDocument()
     expect(screen.getByText(/professional/i)).toBeInTheDocument()
     expect(screen.getByText(/institutional/i)).toBeInTheDocument()
@@ -18,7 +18,7 @@ describe('PricingTable', () => {
 
   it('displays pricing for each tier', () => {
     render(<PricingTable onUpgrade={mockOnUpgrade} />)
-    
+
     expect(screen.getByText(/\$49/)).toBeInTheDocument()
     expect(screen.getByText(/\$99/)).toBeInTheDocument()
     expect(screen.getByText(/\$249/)).toBeInTheDocument()
@@ -26,59 +26,54 @@ describe('PricingTable', () => {
 
   it('highlights popular tier', () => {
     render(<PricingTable onUpgrade={mockOnUpgrade} />)
-    
+
     expect(screen.getByText(/most popular/i)).toBeInTheDocument()
   })
 
   it('shows current tier', () => {
     render(<PricingTable currentTier="starter" onUpgrade={mockOnUpgrade} />)
-    
-    // Should show current plan indicator
-    const currentPlan = screen.queryByText(/current plan/i) || 
-      screen.queryByText(/current/i)
-    if (currentPlan) {
-      expect(currentPlan).toBeInTheDocument()
-    } else {
-      // May not show if tier doesn't match exactly
-      expect(screen.getByText(/founder/i)).toBeInTheDocument()
-    }
+
+    // Should show current plan indicator (may appear multiple times - badge and button)
+    const currentPlanElements = screen.queryAllByText(/current plan/i)
+    expect(currentPlanElements.length).toBeGreaterThan(0)
+    // Also verify the tier is displayed
+    expect(screen.getByText(/founder/i)).toBeInTheDocument()
   })
 
   it('calls onUpgrade when upgrade button clicked', () => {
     render(<PricingTable onUpgrade={mockOnUpgrade} />)
-    
+
     const upgradeButtons = screen.getAllByText(/upgrade/i)
     fireEvent.click(upgradeButtons[0])
-    
+
     expect(mockOnUpgrade).toHaveBeenCalled()
   })
 
   it('disables upgrade button for current tier', () => {
     render(<PricingTable currentTier="starter" onUpgrade={mockOnUpgrade} />)
-    
-    const currentPlanButton = screen.queryByText(/current plan/i) ||
-      screen.queryByText(/current/i)
-    
+
+    // Find the button with "Current Plan" text (not the badge)
+    const buttons = screen.getAllByRole('button')
+    const currentPlanButton = buttons.find(button =>
+      button.textContent?.toLowerCase().includes('current plan')
+    )
+
     if (currentPlanButton) {
-      const button = currentPlanButton.closest('button')
-      if (button) {
-        expect(button).toBeDisabled()
-      }
+      expect(currentPlanButton).toBeDisabled()
     } else {
-      // Button may not be disabled if implementation differs
+      // Verify the tier is displayed even if button structure differs
       expect(screen.getByText(/founder/i)).toBeInTheDocument()
     }
   })
 
   it('displays features for each tier', () => {
     render(<PricingTable onUpgrade={mockOnUpgrade} />)
-    
-    // Should display features (may vary by implementation)
-    const hasFeatures = screen.queryByText(/signals/i) ||
-      screen.queryByText(/support/i) ||
-      screen.queryByText(/api/i)
-    
-    expect(hasFeatures).toBeTruthy()
+
+    // Should display features (may appear multiple times across tiers)
+    const signalsElements = screen.queryAllByText(/signals/i)
+    const supportElements = screen.queryAllByText(/support/i)
+
+    // At least one tier should have features
+    expect(signalsElements.length + supportElements.length).toBeGreaterThan(0)
   })
 })
-

@@ -11,6 +11,8 @@ jest.mock('@/hooks/useSignals', () => ({
         entry_price: 150.25,
         confidence: 95.5,
         timestamp: new Date().toISOString(),
+        hash: 'hash1',
+        type: 'PREMIUM',
       },
       {
         id: '2',
@@ -19,11 +21,26 @@ jest.mock('@/hooks/useSignals', () => ({
         entry_price: 2800.50,
         confidence: 88.2,
         timestamp: new Date().toISOString(),
+        hash: 'hash2',
+        type: 'STANDARD',
       },
     ],
     isLoading: false,
     error: null,
     refresh: jest.fn(),
+  })),
+}))
+
+jest.mock('next-auth/react', () => ({
+  useSession: jest.fn(() => ({
+    data: {
+      user: {
+        id: '1',
+        email: 'test@example.com',
+        tier: 'STARTER',
+      },
+    },
+    status: 'authenticated',
   })),
 }))
 

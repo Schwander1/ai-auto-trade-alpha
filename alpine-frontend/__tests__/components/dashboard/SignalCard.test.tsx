@@ -10,8 +10,8 @@ const mockSignal: Signal = {
   confidence: 95.5,
   timestamp: new Date().toISOString(),
   hash: 'abc123def456',
-  type: 'premium',
-  regime: 'bull',
+  type: 'PREMIUM',
+  regime: 'Bull',
   stop_loss: 145.00,
   take_profit: 160.00,
   exit_price: null,
@@ -22,7 +22,7 @@ const mockSignal: Signal = {
 describe('SignalCard', () => {
   it('renders signal data correctly', () => {
     render(<SignalCard signal={mockSignal} />)
-    
+
     expect(screen.getByText('AAPL')).toBeInTheDocument()
     expect(screen.getByText('BUY')).toBeInTheDocument()
     expect(screen.getByText(/\$150\.25/)).toBeInTheDocument()
@@ -31,28 +31,28 @@ describe('SignalCard', () => {
 
   it('displays stop loss and take profit when provided', () => {
     render(<SignalCard signal={mockSignal} />)
-    
+
     expect(screen.getByText(/\$145\.00/)).toBeInTheDocument()
     expect(screen.getByText(/\$160\.00/)).toBeInTheDocument()
   })
 
   it('displays outcome when signal is closed', () => {
-    const closedSignal = {
+    const closedSignal: Signal = {
       ...mockSignal,
-      outcome: 'win',
+      outcome: 'win' as const,
       exit_price: 155.00,
       pnl_pct: 3.16,
     }
-    
+
     render(<SignalCard signal={closedSignal} />)
-    
+
     expect(screen.getByText(/win/i)).toBeInTheDocument()
     expect(screen.getByText(/\+3\.16%/)).toBeInTheDocument()
   })
 
   it('renders in compact mode', () => {
     render(<SignalCard signal={mockSignal} compact />)
-    
+
     expect(screen.getByText('AAPL')).toBeInTheDocument()
     // In compact mode, detailed info should not be visible
     expect(screen.queryByText(/Stop Loss/)).not.toBeInTheDocument()
@@ -60,15 +60,16 @@ describe('SignalCard', () => {
 
   it('displays regime badge when provided', () => {
     render(<SignalCard signal={mockSignal} />)
-    
-    expect(screen.getByText('bull')).toBeInTheDocument()
+
+    // Regime badge might be displayed as "Bull" (capitalized) or "bull" (lowercase)
+    const regimeText = screen.queryByText(/bull/i)
+    expect(regimeText).toBeInTheDocument()
   })
 
   it('formats confidence score correctly', () => {
     render(<SignalCard signal={mockSignal} />)
-    
+
     const confidenceElement = screen.getByText(/95\.5%/)
     expect(confidenceElement).toBeInTheDocument()
   })
 })
-

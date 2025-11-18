@@ -303,7 +303,7 @@ export default function BacktestPage() {
                     title="Max Drawdown"
                     value={`${results.max_drawdown?.toFixed(1)}%`}
                     icon={<Target className="w-5 h-5" />}
-                    color="alpine-semantic-error
+                    color="alpine-semantic-error"
                   />
                 </div>
 

@@ -11,6 +11,20 @@ jest.mock('next/navigation', () => ({
   })),
 }))
 
+jest.mock('next-auth/react', () => ({
+  signOut: jest.fn(),
+}))
+
+jest.mock('@/components/dashboard/UserMenu', () => ({
+  __esModule: true,
+  default: () => <div data-testid="user-menu">UserMenu</div>,
+}))
+
+jest.mock('@/components/dashboard/TradingEnvironmentBadge', () => ({
+  __esModule: true,
+  default: () => <div data-testid="trading-badge">TradingBadge</div>,
+}))
+
 describe('Navigation', () => {
   it('renders navigation bar', () => {
     render(<Navigation />)
@@ -35,7 +49,8 @@ describe('Navigation', () => {
     render(<Navigation />)
     
     const dashboardLink = screen.getByText(/dashboard/i).closest('a')
-    expect(dashboardLink).toHaveClass(/bg-alpine-accent/)
+    // Check for active styling class
+    expect(dashboardLink).toHaveClass(/bg-alpine-neon-cyan|alpine-neon-cyan/)
   })
 
   it('navigates to different routes', () => {

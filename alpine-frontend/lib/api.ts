@@ -84,48 +84,59 @@ export async function fetchWithRetry(
                     },
                 })
 
-      // If successful, return immediately
-      if (response.ok) {
-        return response
-      }
+                // If successful, return immediately
+                if (response.ok) {
+                    pendingRequests.delete(requestKey)
+                    return response
+                }
 
-      // If 4xx error (client error), don't retry
-      if (response.status >= 400 && response.status < 500) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new ApiError(
-          `Client error: ${response.statusText}`,
-          response.status,
-          errorData
-        )
-      }
+                // If 4xx error (client error), don't retry
+                if (response.status >= 400 && response.status < 500) {
+                    const errorData = await response.json().catch(() => ({}))
+                    pendingRequests.delete(requestKey)
+                    throw new ApiError(
+                        `Client error: ${response.statusText}`,
+                        response.status,
+                        errorData
+                    )
+                }
 
-      // For 5xx errors or network errors, throw to trigger retry
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-      }
-    } catch (error) {
-      // Don't retry if request was aborted
-      if (error instanceof Error && error.name === 'AbortError') {
-        throw error
-      }
+                // For 5xx errors or network errors, throw to trigger retry
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+                }
+            } catch (error) {
+                // Don't retry if request was aborted
+                if (error instanceof Error && error.name === 'AbortError') {
+                    pendingRequests.delete(requestKey)
+                    throw error
+                }
 
-      lastError = error instanceof Error ? error : new Error(String(error))
+                lastError = error instanceof Error ? error : new Error(String(error))
 
-      // Don't retry on last attempt
-      if (attempt === maxAttempts) {
-        break
-      }
+                // Don't retry on last attempt
+                if (attempt === maxAttempts) {
+                    pendingRequests.delete(requestKey)
+                    break
+                }
 
-      // Calculate delay with exponential backoff if enabled
-      const retryDelay = backoff ? delay * Math.pow(2, attempt - 1) : delay
+                // Calculate delay with exponential backoff if enabled
+                const retryDelay = backoff ? delay * Math.pow(2, attempt - 1) : delay
 
-      // Wait before retrying
-      await sleep(retryDelay)
-    }
-  }
+                // Wait before retrying
+                await sleep(retryDelay)
+            }
+        }
 
-  // If we get here, all retries failed
-  throw lastError || new Error('Request failed after retries')
+        // If we get here, all retries failed
+        pendingRequests.delete(requestKey)
+        throw lastError || new Error('Request failed after retries')
+    })()
+
+    // Store the promise for deduplication
+    pendingRequests.set(requestKey, fetchPromise)
+
+    return fetchPromise
 }
 
 /**

@@ -3,6 +3,25 @@ import PricingPage from '@/app/pricing/page'
 
 global.fetch = jest.fn()
 
+jest.mock('next-auth/react', () => ({
+  useSession: jest.fn(() => ({
+    data: {
+      user: {
+        id: '1',
+        email: 'test@example.com',
+        tier: 'STARTER',
+      },
+    },
+    status: 'authenticated',
+  })),
+}))
+
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+  }),
+}))
+
 describe('PricingPage', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -70,15 +89,16 @@ describe('PricingPage', () => {
 
   it('shows CTA for unauthenticated users', () => {
     // Mock unauthenticated session
-    const { useSession } = require('next-auth/react')
-    useSession.mockReturnValueOnce({
-      data: null,
-      status: 'unauthenticated',
-    })
+    jest.mock('next-auth/react', () => ({
+      useSession: jest.fn(() => ({
+        data: null,
+        status: 'unauthenticated',
+      })),
+    }))
 
     render(<PricingPage />)
     
-    expect(screen.getByText(/ready to get started/i)).toBeInTheDocument()
+    expect(screen.getByText(/ready to get started\?/i)).toBeInTheDocument()
   })
 })
 

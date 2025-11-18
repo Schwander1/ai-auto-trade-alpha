@@ -4,7 +4,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import Navigation from '@/components/dashboard/Navigation'
-import { 
+import {
   User, Settings, CreditCard, Bell, Save, Loader2,
   AlertCircle, CheckCircle2, Mail, Lock, Trash2
 } from 'lucide-react'
@@ -311,7 +311,7 @@ export default function AccountPage() {
                     <h3 className="text-lg font-semibold text-alpine-text-primary mb-4">Danger Zone</h3>
                     <button
                       onClick={handleDeleteAccount}
-                      className="w-full flex items-center justify-between p-4 bg-alpine-semantic-error/10 border border-alpine-semantic-error/30 rounded-lg hover:bg-alpine-semantic-error20 transition-colors text-alpine-semantic-error
+                      className="w-full flex items-center justify-between p-4 bg-alpine-semantic-error/10 border border-alpine-semantic-error/30 rounded-lg hover:bg-alpine-semantic-error20 transition-colors text-alpine-semantic-error"
                     >
                       <div className="flex items-center gap-3">
                         <Trash2 className="w-5 h-5" />
@@ -343,4 +343,3 @@ export default function AccountPage() {
     </div>
   )
 }
-

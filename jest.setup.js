@@ -68,25 +68,59 @@ try {
 // Mock fetch globally (can be overridden in individual tests)
 global.fetch = jest.fn()
 
-// Mock window.location (delete first if it exists)
-try {
-  delete window.location
-} catch (e) {
-  // Location is read-only in some environments
+// Mock window.location using Object.defineProperty to avoid jsdom warnings
+// Note: jsdom may have issues with this, so we'll handle it per-test if needed
+if (typeof window !== 'undefined') {
+  try {
+    Object.defineProperty(window, 'location', {
+      value: {
+        href: '',
+        assign: jest.fn(),
+        replace: jest.fn(),
+        reload: jest.fn(),
+        origin: 'http://localhost',
+        protocol: 'http:',
+        host: 'localhost',
+        hostname: 'localhost',
+        port: '',
+        pathname: '/',
+        search: '',
+        hash: '',
+      },
+      writable: true,
+      configurable: true,
+    })
+  } catch (e) {
+    // Location may already be defined, that's okay
+  }
 }
-window.location = {
-  href: '',
-  assign: jest.fn(),
-  replace: jest.fn(),
-  reload: jest.fn(),
-  origin: 'http://localhost',
-  protocol: 'http:',
-  host: 'localhost',
-  hostname: 'localhost',
-  port: '',
-  pathname: '/',
-  search: '',
-  hash: '',
+
+// Mock IntersectionObserver
+global.IntersectionObserver = class IntersectionObserver {
+  constructor() {}
+  disconnect() {}
+  observe() {}
+  takeRecords() {
+    return []
+  }
+  unobserve() {}
+}
+
+// Mock window.matchMedia for dark mode detection
+if (typeof window !== 'undefined') {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: jest.fn().mockImplementation(query => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: jest.fn(), // deprecated
+      removeListener: jest.fn(), // deprecated
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    })),
+  })
 }
 
 // Suppress console warnings in tests (optional)

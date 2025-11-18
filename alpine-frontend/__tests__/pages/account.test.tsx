@@ -3,6 +3,25 @@ import AccountPage from '@/app/account/page'
 
 global.fetch = jest.fn()
 
+jest.mock('next-auth/react', () => ({
+  useSession: jest.fn(() => ({
+    data: {
+      user: {
+        id: '1',
+        email: 'test@example.com',
+        tier: 'STARTER',
+      },
+    },
+    status: 'authenticated',
+  })),
+}))
+
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+  }),
+}))
+
 describe('AccountPage', () => {
   beforeEach(() => {
     jest.clearAllMocks()

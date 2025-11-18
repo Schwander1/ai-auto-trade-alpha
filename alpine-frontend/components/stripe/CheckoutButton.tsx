@@ -5,7 +5,8 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Loader2, AlertCircle } from 'lucide-react'
-import type { UserTier } from '@prisma/client'
+// UserTier type definition
+type UserTier = 'STARTER' | 'PROFESSIONAL' | 'INSTITUTIONAL'
 
 interface CheckoutButtonProps {
   tier: UserTier

@@ -42,6 +42,24 @@
       "stocks": ["AAPL", "NVDA", "TSLA", "MSFT", "GOOGL", "META", "AMD", "AMZN", "SPY", "QQQ"],
       "crypto": ["BTC-USD", "ETH-USD", "SOL-USD", "AVAX-USD"]
     }
+  },
+  "prop_firm": {
+    "enabled": false,
+    "account": "prop_firm_test",
+    "risk_limits": {
+      "max_drawdown_pct": 2.0,
+      "daily_loss_limit_pct": 4.5,
+      "max_position_size_pct": 3.0,
+      "min_confidence": 82.0,
+      "max_positions": 3,
+      "max_stop_loss_pct": 1.5
+    },
+    "monitoring": {
+      "enabled": true,
+      "check_interval_seconds": 5,
+      "alert_on_warning": true,
+      "auto_shutdown": true
+    }
   }
 }
 
