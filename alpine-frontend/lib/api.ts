@@ -46,7 +46,7 @@ const sleep = (ms: number): Promise<void> => {
 /**
  * Fetch with retry logic and request deduplication
  */
-async function fetchWithRetry(
+export async function fetchWithRetry(
     url: string,
     options: RequestInit = {},
     retryConfig: RetryConfig = {}

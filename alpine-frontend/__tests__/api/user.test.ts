@@ -39,4 +39,3 @@ describe('User API Routes', () => {
     })
   })
 })
-

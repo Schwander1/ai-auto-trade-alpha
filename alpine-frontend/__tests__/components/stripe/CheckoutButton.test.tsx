@@ -28,13 +28,13 @@ describe('CheckoutButton', () => {
 
   it('renders button with default text', () => {
     render(<CheckoutButton tier="STARTER" />)
-    
+
     expect(screen.getByText(/start free trial/i)).toBeInTheDocument()
   })
 
   it('renders custom children', () => {
     render(<CheckoutButton tier="STARTER">Custom Text</CheckoutButton>)
-    
+
     expect(screen.getByText('Custom Text')).toBeInTheDocument()
   })
 
@@ -50,7 +50,7 @@ describe('CheckoutButton', () => {
     useRouter.mockReturnValueOnce({ push: mockPush })
 
     render(<CheckoutButton tier="STARTER" />)
-    
+
     const button = screen.getByRole('button')
     fireEvent.click(button)
 
@@ -64,7 +64,7 @@ describe('CheckoutButton', () => {
     })
 
     render(<CheckoutButton tier="PROFESSIONAL" />)
-    
+
     const button = screen.getByRole('button')
     fireEvent.click(button)
 
@@ -89,7 +89,7 @@ describe('CheckoutButton', () => {
     })
 
     render(<CheckoutButton tier="STARTER" />)
-    
+
     const button = screen.getByRole('button')
     fireEvent.click(button)
 
@@ -107,7 +107,7 @@ describe('CheckoutButton', () => {
     )
 
     render(<CheckoutButton tier="STARTER" />)
-    
+
     const button = screen.getByRole('button')
     fireEvent.click(button)
 
@@ -119,7 +119,7 @@ describe('CheckoutButton', () => {
     ;(global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'))
 
     render(<CheckoutButton tier="STARTER" />)
-    
+
     const button = screen.getByRole('button')
     fireEvent.click(button)
 
@@ -128,4 +128,3 @@ describe('CheckoutButton', () => {
     })
   })
 })
-

@@ -24,7 +24,7 @@ describe('LoginPage', () => {
 
   it('renders login form', () => {
     render(<LoginPage />)
-    
+
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument()
@@ -34,7 +34,7 @@ describe('LoginPage', () => {
     ;(signIn as jest.Mock).mockResolvedValueOnce({ ok: true })
 
     render(<LoginPage />)
-    
+
     const emailInput = screen.getByLabelText(/email/i)
     const passwordInput = screen.getByLabelText(/password/i)
     const submitButton = screen.getByRole('button', { name: /sign in/i })
@@ -53,13 +53,13 @@ describe('LoginPage', () => {
   })
 
   it('displays error on failed login', async () => {
-    ;(signIn as jest.Mock).mockResolvedValueOnce({ 
-      ok: false, 
-      error: 'Invalid credentials' 
+    ;(signIn as jest.Mock).mockResolvedValueOnce({
+      ok: false,
+      error: 'Invalid credentials'
     })
 
     render(<LoginPage />)
-    
+
     const emailInput = screen.getByLabelText(/email/i)
     const passwordInput = screen.getByLabelText(/password/i)
     const submitButton = screen.getByRole('button', { name: /sign in/i })
@@ -79,7 +79,7 @@ describe('LoginPage', () => {
     )
 
     render(<LoginPage />)
-    
+
     const emailInput = screen.getByLabelText(/email/i)
     const passwordInput = screen.getByLabelText(/password/i)
     const submitButton = screen.getByRole('button', { name: /sign in/i })
@@ -95,8 +95,7 @@ describe('LoginPage', () => {
 
   it('has link to signup page', () => {
     render(<LoginPage />)
-    
+
     expect(screen.getByText(/sign up/i)).toBeInTheDocument()
   })
 })
-
