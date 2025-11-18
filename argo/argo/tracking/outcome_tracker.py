@@ -20,12 +20,16 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("OutcomeTracker")
 
 # Use relative path that works in both dev and production
-if os.path.exists("/root/argo-production"):
+# Check for unified database first, then fallback to old locations
+if os.path.exists("/root/argo-production-unified"):
+    BASE_DIR = Path("/root/argo-production-unified")
+    DB_FILE = BASE_DIR / "data" / "signals_unified.db"
+elif os.path.exists("/root/argo-production"):
     BASE_DIR = Path("/root/argo-production")
+    DB_FILE = BASE_DIR / "data" / "signals.db"
 else:
     BASE_DIR = Path(__file__).parent.parent.parent.parent
-
-DB_FILE = BASE_DIR / "data" / "signals.db"
+    DB_FILE = BASE_DIR / "data" / "signals.db"
 
 
 class OutcomeTracker:
