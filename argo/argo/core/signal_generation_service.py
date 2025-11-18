@@ -2382,9 +2382,9 @@ class SignalGenerationService:
                 # Update outcomes if we have prices
                 if current_prices:
                     try:
-                    updated = self._outcome_tracker.track_open_signals(current_prices)
-                    if updated > 0:
-                        logger.debug(f"📊 Updated {updated} signal outcomes")
+                        updated = self._outcome_tracker.track_open_signals(current_prices)
+                        if updated > 0:
+                            logger.debug(f"📊 Updated {updated} signal outcomes")
                     except Exception as e:
                         logger.debug(f"Error tracking outcomes: {e}")
 
