@@ -83,15 +83,15 @@ class UnifiedSignalTracker:
         self._periodic_flush_interval = 5.0  # Reduced from 10.0s for more frequent flushes
         self._last_flush = datetime.now(timezone.utc)
         self._periodic_flush_task = None
-            
-            # OPTIMIZATION: Query result caching
-            self._query_cache: Dict[str, tuple] = {}
-            self._cache_ttl = 30
-            
-            self._init_database()
-            self._start_periodic_flush()
-            self._initialized = True
-            logger.info(f"✅ Unified Signal Tracker initialized: {self.db_file}")
+        
+        # OPTIMIZATION: Query result caching
+        self._query_cache: Dict[str, tuple] = {}
+        self._cache_ttl = 30
+        
+        self._init_database()
+        self._start_periodic_flush()
+        self._initialized = True
+        logger.info(f"✅ Unified Signal Tracker initialized: {self.db_file}")
     
     def _init_database(self):
         """Initialize unified database with service tagging"""
