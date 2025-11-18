@@ -327,6 +327,7 @@ class UnifiedSignalTracker:
                             signal.get('outcome'),
                             signal.get('exit_price'),
                             signal.get('profit_loss_pct'),
+                            signal.get('sha256'),
                             signal.get('order_id'),
                             signal.get('created_at', datetime.now(timezone.utc).isoformat()),
                             signal.get('service_type', 'both'),
