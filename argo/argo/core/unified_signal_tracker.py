@@ -89,6 +89,7 @@ class UnifiedSignalTracker:
             self._cache_ttl = 30
             
             self._init_database()
+            self._start_periodic_flush()
             self._initialized = True
             logger.info(f"✅ Unified Signal Tracker initialized: {self.db_file}")
     
@@ -166,7 +167,14 @@ class UnifiedSignalTracker:
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_created_at ON signals(created_at)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_order_id ON signals(order_id)')
         
-        # OPTIMIZATION: Optimize SQLite settings
+        # OPTIMIZATION: Additional composite indexes for common query patterns
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_symbol_confidence ON signals(symbol, confidence DESC)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_symbol_action ON signals(symbol, action)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_created_outcome ON signals(created_at DESC, outcome)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_service_symbol ON signals(service_type, symbol)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_regime_confidence ON signals(regime, confidence DESC)')
+        
+        # OPTIMIZATION: Optimize SQLite settings for better performance
         try:
             from argo.backtest.constants import DatabaseConstants
             cursor.execute(f'PRAGMA synchronous={DatabaseConstants.SQLITE_SYNCHRONOUS}')
@@ -174,11 +182,13 @@ class UnifiedSignalTracker:
             cursor.execute(f'PRAGMA temp_store={DatabaseConstants.SQLITE_TEMP_STORE}')
             cursor.execute(f'PRAGMA mmap_size={DatabaseConstants.SQLITE_MMAP_SIZE_BYTES}')
         except ImportError:
-            # Fallback if constants not available
-            cursor.execute('PRAGMA synchronous=NORMAL')
-            cursor.execute('PRAGMA cache_size=-64000')
-            cursor.execute('PRAGMA temp_store=MEMORY')
-            cursor.execute('PRAGMA mmap_size=268435456')
+            # Fallback if constants not available - optimized settings
+            cursor.execute('PRAGMA synchronous=NORMAL')  # Balance between safety and speed
+            cursor.execute('PRAGMA cache_size=-128000')  # Increased to 128MB for better performance
+            cursor.execute('PRAGMA temp_store=MEMORY')  # Use memory for temp tables
+            cursor.execute('PRAGMA mmap_size=536870912')  # Increased to 512MB for better I/O
+            cursor.execute('PRAGMA page_size=4096')  # Optimal page size
+            cursor.execute('PRAGMA optimize')  # Run optimization
         
         conn.commit()
         conn.close()
@@ -292,7 +302,7 @@ class UnifiedSignalTracker:
         return signal
     
     def _flush_batch(self):
-        """Flush pending signals to database (synchronous)"""
+        """Flush pending signals to database (synchronous) - OPTIMIZED with executemany"""
         if not self._pending_signals:
             return
         
@@ -303,47 +313,66 @@ class UnifiedSignalTracker:
             with self._get_connection() as conn:
                 cursor = conn.cursor()
                 
+                # OPTIMIZATION: Prepare all values in batch for executemany
+                values_list = []
                 for signal in signals_to_insert:
-                    try:
-                        cursor.execute('''
-                            INSERT OR IGNORE INTO signals (
-                                signal_id, symbol, action, entry_price, target_price, stop_price,
-                                confidence, strategy, asset_type, data_source, timestamp,
-                                outcome, exit_price, profit_loss_pct, sha256, order_id, created_at,
-                                service_type, executor_id, generated_by, regime, reasoning
-                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                        ''', (
-                            signal.get('signal_id'),
-                            signal.get('symbol'),
-                            signal.get('action'),
-                            signal.get('entry_price'),
-                            signal.get('target_price'),
-                            signal.get('stop_price'),
-                            signal.get('confidence'),
-                            signal.get('strategy', 'weighted_consensus_v6'),
-                            signal.get('asset_type', 'stock'),
-                            signal.get('data_source', 'weighted_consensus'),
-                            signal.get('timestamp'),
-                            signal.get('outcome'),
-                            signal.get('exit_price'),
-                            signal.get('profit_loss_pct'),
-                            signal.get('sha256'),
-                            signal.get('order_id'),
-                            signal.get('created_at', datetime.now(timezone.utc).isoformat()),
-                            signal.get('service_type', 'both'),
-                            signal.get('executor_id'),
-                            signal.get('generated_by', 'signal_generator'),
-                            signal.get('regime'),
-                            signal.get('reasoning')
-                        ))
-                    except sqlite3.IntegrityError:
-                        # Signal already exists, skip
-                        logger.debug(f"Signal {signal.get('signal_id')} already exists, skipping")
-                    except Exception as e:
-                        logger.error(f"Error inserting signal: {e}")
+                    values_list.append((
+                        signal.get('signal_id'),
+                        signal.get('symbol'),
+                        signal.get('action'),
+                        signal.get('entry_price'),
+                        signal.get('target_price'),
+                        signal.get('stop_price'),
+                        signal.get('confidence'),
+                        signal.get('strategy', 'weighted_consensus_v6'),
+                        signal.get('asset_type', 'stock'),
+                        signal.get('data_source', 'weighted_consensus'),
+                        signal.get('timestamp'),
+                        signal.get('outcome'),
+                        signal.get('exit_price'),
+                        signal.get('profit_loss_pct'),
+                        signal.get('sha256'),
+                        signal.get('order_id'),
+                        signal.get('created_at', datetime.now(timezone.utc).isoformat()),
+                        signal.get('service_type', 'both'),
+                        signal.get('executor_id'),
+                        signal.get('generated_by', 'signal_generator'),
+                        signal.get('regime'),
+                        signal.get('reasoning')
+                    ))
                 
-                conn.commit()
-                logger.debug(f"✅ Batch inserted {len(signals_to_insert)} signals")
+                # OPTIMIZATION: Use executemany for batch insert (much faster)
+                try:
+                    cursor.executemany('''
+                        INSERT OR IGNORE INTO signals (
+                            signal_id, symbol, action, entry_price, target_price, stop_price,
+                            confidence, strategy, asset_type, data_source, timestamp,
+                            outcome, exit_price, profit_loss_pct, sha256, order_id, created_at,
+                            service_type, executor_id, generated_by, regime, reasoning
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ''', values_list)
+                    conn.commit()
+                    logger.debug(f"✅ Batch inserted {len(signals_to_insert)} signals (optimized)")
+                except sqlite3.IntegrityError:
+                    # Some signals may already exist, insert individually with error handling
+                    inserted = 0
+                    for signal, values in zip(signals_to_insert, values_list):
+                        try:
+                            cursor.execute('''
+                                INSERT OR IGNORE INTO signals (
+                                    signal_id, symbol, action, entry_price, target_price, stop_price,
+                                    confidence, strategy, asset_type, data_source, timestamp,
+                                    outcome, exit_price, profit_loss_pct, sha256, order_id, created_at,
+                                    service_type, executor_id, generated_by, regime, reasoning
+                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            ''', values)
+                            inserted += 1
+                        except sqlite3.IntegrityError:
+                            logger.debug(f"Signal {signal.get('signal_id')} already exists, skipping")
+                        except Exception as e:
+                            logger.error(f"Error inserting signal {signal.get('signal_id')}: {e}")
+                    conn.commit()
+                    logger.debug(f"✅ Batch inserted {inserted}/{len(signals_to_insert)} signals (with duplicates)")
         except Exception as e:
             logger.error(f"Error flushing batch: {e}")
             # Re-add signals to queue for retry
@@ -362,6 +391,31 @@ class UnifiedSignalTracker:
     def flush_pending(self):
         """Flush all pending signals synchronously"""
         self._flush_batch()
+    
+    def _start_periodic_flush(self):
+        """Start periodic flush task to ensure signals are written even if batch isn't full"""
+        def periodic_flush_worker():
+            while True:
+                try:
+                    time.sleep(self._periodic_flush_interval)
+                    now = datetime.now(timezone.utc)
+                    time_since_flush = (now - self._last_flush).total_seconds()
+                    
+                    # Flush if timeout exceeded or batch has signals
+                    if time_since_flush >= self._batch_timeout or len(self._pending_signals) > 0:
+                        with self._batch_lock:
+                            if self._pending_signals:
+                                self._flush_batch()
+                                self._last_flush = now
+                except Exception as e:
+                    logger.error(f"Error in periodic flush worker: {e}")
+                    time.sleep(5)  # Wait before retrying
+        
+        # Start periodic flush in background thread
+        import threading
+        flush_thread = threading.Thread(target=periodic_flush_worker, daemon=True)
+        flush_thread.start()
+        logger.debug("✅ Periodic flush task started")
     
     def get_stats(self) -> Dict:
         """Get database statistics"""

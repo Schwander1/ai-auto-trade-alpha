@@ -1520,8 +1520,9 @@ class SignalGenerationService:
                         signal['timestamp'] = datetime.now(timezone.utc).isoformat()
                     source_signals["sonar"] = signal
 
-            elif source_name == "chinese_models" and result:
-                # Chinese models already return signal format
+            elif source_name == "chinese_models":
+                # OPTIMIZATION: Handle Chinese models failures gracefully
+                # They frequently fail due to rate limits, so don't log as errors
                 if result:
                     # Ensure signal has required fields for validation
                     result['symbol'] = symbol
