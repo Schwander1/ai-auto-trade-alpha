@@ -10,6 +10,7 @@ import sys
 import argparse
 import sqlite3
 import json
+import logging
 from pathlib import Path
 from datetime import datetime, timedelta
 from typing import Dict, List
@@ -18,16 +19,28 @@ from collections import defaultdict
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+# Configure logging
+logging.basicConfig(
+    level=logging.WARNING,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 def get_signal_stats(hours: int = 24) -> Dict:
-    """Get signal statistics from database"""
+    """Get signal statistics from database with improved error handling"""
     db_path = Path(__file__).parent.parent / "data" / "signals.db"
 
     if not db_path.exists():
+        logger.warning(f"Database not found: {db_path}")
         return {'error': 'Database not found'}
 
-    conn = sqlite3.connect(str(db_path))
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
+    try:
+        conn = sqlite3.connect(str(db_path), timeout=10.0)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+    except sqlite3.Error as e:
+        logger.error(f"Database connection error: {e}")
+        return {'error': f'Database connection failed: {e}'}
 
     cutoff_time = (datetime.now() - timedelta(hours=hours)).isoformat()
 

@@ -1,26 +1,50 @@
 #!/usr/bin/env python3
 """Check which Alpaca account is active"""
 import sys
+import logging
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from argo.core.environment import detect_environment, get_environment_info
-from argo.core.paper_trading_engine import PaperTradingEngine
+# Configure logging
+logging.basicConfig(
+    level=logging.WARNING,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
-print('\n' + '='*70)
-print('🔍 ALPACA ACCOUNT STATUS CHECK')
-print('='*70)
+try:
+    from argo.core.environment import detect_environment, get_environment_info
+    from argo.core.paper_trading_engine import PaperTradingEngine
+except ImportError as e:
+    logger.error(f"Could not import required modules: {e}")
+    print(f"❌ Error: Could not import required modules: {e}")
+    sys.exit(1)
 
-# Environment info
-env_info = get_environment_info()
-print(f'\n🌍 Environment: {env_info["environment"].upper()}')
-print(f'   Hostname: {env_info["hostname"]}')
-print(f'   Working Directory: {env_info["cwd"]}')
+def main():
+    try:
+        print('\n' + '='*70)
+        print('🔍 ALPACA ACCOUNT STATUS CHECK')
+        print('='*70)
 
-# Trading engine
-engine = PaperTradingEngine()
+        # Environment info
+        try:
+            env_info = get_environment_info()
+            print(f'\n🌍 Environment: {env_info["environment"].upper()}')
+            print(f'   Hostname: {env_info["hostname"]}')
+            print(f'   Working Directory: {env_info["cwd"]}')
+        except Exception as e:
+            logger.error(f"Error getting environment info: {e}")
+            print(f'\n⚠️  Could not get environment info: {e}')
 
-if engine.alpaca_enabled:
+        # Trading engine
+        try:
+            engine = PaperTradingEngine()
+        except Exception as e:
+            logger.error(f"Error initializing trading engine: {e}")
+            print(f'\n❌ Error initializing trading engine: {e}')
+            sys.exit(1)
+
+        if engine.alpaca_enabled:
     account = engine.get_account_details()
     print(f'\n✅ Connected to Alpaca')
     print(f'   Account Name: {engine.account_name}')
