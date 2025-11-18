@@ -17,7 +17,13 @@ class FeatureFlags:
     
     def __init__(self, config_path: Optional[str] = None):
         if config_path is None:
-            config_path = os.getenv('ARGO_CONFIG_PATH', 'argo/config.json')
+            # Use same config path detection as ConfigLoader
+            from argo.core.config_loader import ConfigLoader
+            detected_path = ConfigLoader.find_config_file()
+            if detected_path:
+                config_path = detected_path
+            else:
+                config_path = os.getenv('ARGO_CONFIG_PATH', 'argo/config.json')
         
         self.config_path = Path(config_path)
         self.flags: Dict[str, bool] = {}
