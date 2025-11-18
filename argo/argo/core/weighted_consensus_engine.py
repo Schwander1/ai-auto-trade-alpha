@@ -28,27 +28,28 @@ from datetime import datetime, timezone
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("AlpineConsensus")
 
+
 def _get_config_path():
     """Get config path for dev or production"""
     # Check environment variable first (highest priority)
-    config_path = os.getenv('ARGO_CONFIG_PATH')
+    config_path = os.getenv("ARGO_CONFIG_PATH")
     if config_path and os.path.exists(config_path):
         return config_path
 
     # Check current working directory (for services running from their deployment directory)
     # This ensures prop firm service loads its own config
     cwd = Path.cwd()
-    cwd_config = cwd / 'config.json'
+    cwd_config = cwd / "config.json"
     if cwd_config.exists():
         return str(cwd_config)
 
     # Check production paths (in order of preference)
     # Only check these if we're not in a deployment directory
     prod_paths = [
-        '/root/argo-production-prop-firm/config.json',  # Prop firm service
-        '/root/argo-production-green/config.json',      # Regular trading (green)
-        '/root/argo-production-blue/config.json',       # Regular trading (blue)
-        '/root/argo-production/config.json',            # Legacy
+        "/root/argo-production-prop-firm/config.json",  # Prop firm service
+        "/root/argo-production-green/config.json",  # Regular trading (green)
+        "/root/argo-production-blue/config.json",  # Regular trading (blue)
+        "/root/argo-production/config.json",  # Legacy
     ]
 
     for prod_path in prod_paths:
@@ -56,12 +57,13 @@ def _get_config_path():
             return prod_path
 
     # Check dev path (argo/config.json)
-    dev_path = Path(__file__).parent.parent.parent / 'config.json'
+    dev_path = Path(__file__).parent.parent.parent / "config.json"
     if dev_path.exists():
         return str(dev_path)
 
     # Fallback to production path (will fail gracefully if not exists)
-    return '/root/argo-production/config.json'
+    return "/root/argo-production/config.json"
+
 
 class WeightedConsensusEngine:
     """
@@ -82,60 +84,63 @@ class WeightedConsensusEngine:
         except FileNotFoundError:
             logger.warning(f"⚠️  Config file not found: {config_path}, using defaults")
             self.config = {
-                'strategy': {
-                    'weight_massive': 0.4,
-                    'weight_alpha_vantage': 0.25,
-                    'weight_x_sentiment': 0.2,
-                    'weight_sonar': 0.15
+                "strategy": {
+                    "weight_massive": 0.4,
+                    "weight_alpha_vantage": 0.25,
+                    "weight_x_sentiment": 0.2,
+                    "weight_sonar": 0.15,
                 },
-                'trading': {
-                    'min_confidence': 75.0,
-                    'profit_target': 0.05,
-                    'stop_loss': 0.03
-                }
+                "trading": {"min_confidence": 75.0, "profit_target": 0.05, "stop_loss": 0.03},
             }
 
         # Check feature flag for optimized weights
         try:
             from argo.core.feature_flags import get_feature_flags
+
             feature_flags = get_feature_flags()
 
-            if feature_flags.is_enabled('optimized_weights'):
+            if feature_flags.is_enabled("optimized_weights"):
                 # Use optimized weights (from Perplexity analysis)
                 optimized_weights = {
-                    'massive': 0.50,      # ↑ from 0.40
-                    'alpaca_pro': 0.50,   # ↑ from 0.40
-                    'alpha_vantage': 0.30, # ↑ from 0.25
-                    'yfinance': 0.30,     # ↑ from 0.25
-                    'x_sentiment': 0.15,   # ↓ from 0.20
-                    'sonar': 0.05,         # ↓ from 0.15
-                    'chinese_models': 0.10  # 10% (20% off-hours)
+                    "massive": 0.50,  # ↑ from 0.40
+                    "alpaca_pro": 0.50,  # ↑ from 0.40
+                    "alpha_vantage": 0.30,  # ↑ from 0.25
+                    "yfinance": 0.30,  # ↑ from 0.25
+                    "x_sentiment": 0.15,  # ↓ from 0.20
+                    "sonar": 0.05,  # ↓ from 0.15
+                    "chinese_models": 0.10,  # 10% (20% off-hours)
                 }
                 self.weights = optimized_weights
                 logger.info("✅ Using OPTIMIZED weights (feature flag enabled)")
             else:
                 # Use original weights from config
                 self.weights = {
-                    'massive': self.config['strategy']['weight_massive'],
-                    'alpaca_pro': self.config['strategy']['weight_massive'],  # Same weight as Massive
-                    'alpha_vantage': self.config['strategy']['weight_alpha_vantage'],
-                    'yfinance': self.config['strategy']['weight_alpha_vantage'],  # Same weight as Alpha Vantage
-                    'x_sentiment': self.config['strategy']['weight_x_sentiment'],
-                    'sonar': self.config['strategy']['weight_sonar'],
-                    'chinese_models': self.config['strategy'].get('weight_chinese_models', 0.10)  # 10% default
+                    "massive": self.config["strategy"]["weight_massive"],
+                    "alpaca_pro": self.config["strategy"][
+                        "weight_massive"
+                    ],  # Same weight as Massive
+                    "alpha_vantage": self.config["strategy"]["weight_alpha_vantage"],
+                    "yfinance": self.config["strategy"][
+                        "weight_alpha_vantage"
+                    ],  # Same weight as Alpha Vantage
+                    "x_sentiment": self.config["strategy"]["weight_x_sentiment"],
+                    "sonar": self.config["strategy"]["weight_sonar"],
+                    "chinese_models": self.config["strategy"].get(
+                        "weight_chinese_models", 0.10
+                    ),  # 10% default
                 }
                 logger.info("Using original weights from config")
         except Exception as e:
             logger.warning(f"⚠️  Could not load feature flags: {e}, using config weights")
             # Fallback to config weights
             self.weights = {
-                'massive': self.config['strategy']['weight_massive'],
-                'alpaca_pro': self.config['strategy']['weight_massive'],
-                'alpha_vantage': self.config['strategy']['weight_alpha_vantage'],
-                'yfinance': self.config['strategy']['weight_alpha_vantage'],
-                'x_sentiment': self.config['strategy']['weight_x_sentiment'],
-                'sonar': self.config['strategy']['weight_sonar'],
-                'chinese_models': self.config['strategy'].get('weight_chinese_models', 0.10)
+                "massive": self.config["strategy"]["weight_massive"],
+                "alpaca_pro": self.config["strategy"]["weight_massive"],
+                "alpha_vantage": self.config["strategy"]["weight_alpha_vantage"],
+                "yfinance": self.config["strategy"]["weight_alpha_vantage"],
+                "x_sentiment": self.config["strategy"]["weight_x_sentiment"],
+                "sonar": self.config["strategy"]["weight_sonar"],
+                "chinese_models": self.config["strategy"].get("weight_chinese_models", 0.10),
             }
 
         # OPTIMIZATION 6: Consensus calculation caching
@@ -158,10 +163,11 @@ class WeightedConsensusEngine:
         """Clean up old cache entries (OPTIMIZATION 6)"""
         # OPTIMIZATION: Single datetime call, use dict comprehension for cleanup
         now = datetime.now(timezone.utc)
-        
+
         # Remove expired entries using dict comprehension (more efficient)
         self._consensus_cache = {
-            key: value for key, (consensus, timestamp) in self._consensus_cache.items()
+            key: (consensus, timestamp)
+            for key, (consensus, timestamp) in self._consensus_cache.items()
             if (now - timestamp).total_seconds() < self._cache_ttl
         }
 
@@ -169,7 +175,7 @@ class WeightedConsensusEngine:
         if len(self._consensus_cache) > self._max_cache_size:
             # Remove oldest entries (simple FIFO) - convert to list once, slice once
             all_keys = list(self._consensus_cache.keys())
-            keys_to_keep = all_keys[-(self._max_cache_size):]  # Keep last N entries
+            keys_to_keep = all_keys[-(self._max_cache_size) :]  # Keep last N entries
             self._consensus_cache = {key: self._consensus_cache[key] for key in keys_to_keep}
 
     def calculate_consensus(self, signals: Dict, regime: Optional[str] = None) -> Optional[Dict]:
@@ -184,10 +190,12 @@ class WeightedConsensusEngine:
             regime: Optional market regime for regime-based weight adaptation
         """
         # OPTIMIZATION 6: Check cache first
+        # OPTIMIZATION: Single datetime call for both cache check and storage
+        now = datetime.now(timezone.utc)
         cache_key = self._hash_signals(signals, regime)
         if cache_key in self._consensus_cache:
             cached_consensus, timestamp = self._consensus_cache[cache_key]
-            if (datetime.now(timezone.utc) - timestamp).total_seconds() < self._cache_ttl:
+            if (now - timestamp).total_seconds() < self._cache_ttl:
                 logger.debug("✅ Using cached consensus")
                 return cached_consensus
 
@@ -199,20 +207,20 @@ class WeightedConsensusEngine:
             feature_flags = get_feature_flags()
 
             # Use regime-based weights if enabled
-            if feature_flags.is_enabled('regime_based_weights') and regime:
+            if feature_flags.is_enabled("regime_based_weights") and regime:
                 # Map legacy regime to enhanced if needed
                 enhanced_regime = map_legacy_regime_to_enhanced(regime)
                 regime_weights = get_regime_weights(enhanced_regime)
 
                 # Map to actual source names
                 active_weights = {
-                    'massive': regime_weights.get('massive', 0.50),
-                    'alpaca_pro': regime_weights.get('massive', 0.50),
-                    'alpha_vantage': regime_weights.get('alpha_vantage', 0.30),
-                    'yfinance': regime_weights.get('alpha_vantage', 0.30),
-                    'x_sentiment': regime_weights.get('xai_grok', 0.15),
-                    'sonar': regime_weights.get('sonar', 0.05),
-                    'chinese_models': regime_weights.get('chinese_models', 0.10)
+                    "massive": regime_weights.get("massive", 0.50),
+                    "alpaca_pro": regime_weights.get("massive", 0.50),
+                    "alpha_vantage": regime_weights.get("alpha_vantage", 0.30),
+                    "yfinance": regime_weights.get("alpha_vantage", 0.30),
+                    "x_sentiment": regime_weights.get("xai_grok", 0.15),
+                    "sonar": regime_weights.get("sonar", 0.05),
+                    "chinese_models": regime_weights.get("chinese_models", 0.10),
                 }
                 logger.debug(f"Using regime-based weights for {enhanced_regime}: {active_weights}")
             else:
@@ -230,14 +238,14 @@ class WeightedConsensusEngine:
         short_votes = {}
 
         for source, signal in valid.items():
-            direction = signal.get('direction')
-            confidence = signal.get('confidence', 0)
+            direction = signal.get("direction")
+            confidence = signal.get("confidence", 0)
             weight = active_weights[source]
             vote = confidence * weight
 
-            if direction == 'LONG':
+            if direction == "LONG":
                 long_votes[source] = vote
-            elif direction == 'SHORT':
+            elif direction == "SHORT":
                 short_votes[source] = vote
 
         total_long = sum(long_votes.values())
@@ -251,43 +259,45 @@ class WeightedConsensusEngine:
             return None
 
         if total_long > total_short and total_long > 0:
-            consensus_direction = 'LONG'
+            consensus_direction = "LONG"
             # Divide by active weights sum, not all weights (fixes bug when sources fail)
             consensus_confidence = total_long / active_weights_sum * 100
         elif total_short > total_long and total_short > 0:
-            consensus_direction = 'SHORT'
+            consensus_direction = "SHORT"
             # Divide by active weights sum, not all weights (fixes bug when sources fail)
             consensus_confidence = total_short / active_weights_sum * 100
         else:
             return None
 
         consensus = {
-            'direction': consensus_direction,
-            'confidence': round(consensus_confidence, 2),
-            'total_long_vote': round(total_long, 4),
-            'total_short_vote': round(total_short, 4),
-            'sources': len(valid),
-            'agreement': round(max(total_long, total_short) / active_weights_sum * 100, 2)
+            "direction": consensus_direction,
+            "confidence": round(consensus_confidence, 2),
+            "total_long_vote": round(total_long, 4),
+            "total_short_vote": round(total_short, 4),
+            "sources": len(valid),
+            "agreement": round(max(total_long, total_short) / active_weights_sum * 100, 2),
         }
 
         # OPTIMIZATION 6: Cache result
+        # OPTIMIZATION: Reuse 'now' variable from earlier instead of new datetime call
         if consensus:
-            self._consensus_cache[cache_key] = (consensus, datetime.now(timezone.utc))
+            self._consensus_cache[cache_key] = (consensus, now)
             # Cleanup old cache entries periodically
             if len(self._consensus_cache) % 100 == 0:  # Cleanup every 100 entries
                 self._cleanup_cache()
 
         return consensus
 
+
 if __name__ == "__main__":
     engine = WeightedConsensusEngine()
 
     # Test with mock signals
     test_signals = {
-        'massive': {'direction': 'LONG', 'confidence': 85},
-        'alpha_vantage': {'direction': 'LONG', 'confidence': 80},
-        'x_sentiment': {'direction': 'LONG', 'confidence': 75},
-        'sonar': {'direction': 'LONG', 'confidence': 90}
+        "massive": {"direction": "LONG", "confidence": 85},
+        "alpha_vantage": {"direction": "LONG", "confidence": 80},
+        "x_sentiment": {"direction": "LONG", "confidence": 75},
+        "sonar": {"direction": "LONG", "confidence": 90},
     }
 
     consensus = engine.calculate_consensus(test_signals)

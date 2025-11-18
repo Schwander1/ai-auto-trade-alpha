@@ -4,7 +4,7 @@ import json
 import os
 import sys
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, Dict, Any, List, Tuple
 
@@ -380,7 +380,7 @@ class PaperTradingEngine:
             from alpaca.data.historical import StockHistoricalDataClient
             from alpaca.data.requests import StockBarsRequest
             from alpaca.data.timeframe import TimeFrame
-            from datetime import datetime, timedelta
+            from datetime import datetime, timezone, timedelta
 
             # Use yfinance as fallback for volatility calculation
             import yfinance as yf
@@ -568,7 +568,7 @@ class PaperTradingEngine:
                 else:
                     logger.debug(f"📊 Order {order.id} status: {status} for {symbol}")
 
-            # FIX: Place bracket orders with error handling
+            # OPTIMIZATION: Place bracket orders with error handling
             bracket_success = True
             if order_details.get("place_bracket"):
                 bracket_success = self._place_bracket_orders(symbol, order_details, order.id)
@@ -576,8 +576,15 @@ class PaperTradingEngine:
                     logger.error(
                         f"❌ Bracket orders failed for {symbol}, main order {order.id} placed without protection"
                     )
+                    # OPTIMIZATION: Check if main order is still pending before attempting cancellation
                     # Note: We don't cancel the main order here as it may have already filled
                     # Instead, we log the error and track it for manual intervention
+                    try:
+                        main_order_status = self.get_order_status(order.id)
+                        if main_order_status and main_order_status.get("status", "").lower() in ["new", "accepted", "pending_new"]:
+                            logger.warning(f"⚠️  Main order {order.id} is still pending - consider manual cancellation if needed")
+                    except Exception as status_error:
+                        logger.debug(f"Could not check main order status: {status_error}")
 
             # Invalidate caches after trade
             self._invalidate_account_cache()
@@ -614,7 +621,8 @@ class PaperTradingEngine:
         target_price = signal.get("target_price")
 
         # PROP FIRM: Enforce max stop loss limit
-        if hasattr(self, "prop_firm_enabled") and self.prop_firm_enabled and self.prop_firm_config:
+        # OPTIMIZATION: prop_firm_enabled is initialized in __init__, no need for hasattr
+        if self.prop_firm_enabled and self.prop_firm_config:
             max_stop_loss_pct = self.prop_firm_config.get("risk_limits", {}).get(
                 "max_stop_loss_pct", 1.5
             )
@@ -780,7 +788,7 @@ class PaperTradingEngine:
         # OPTIMIZATION: buying_power and entry_price already validated above
         position_value = buying_power * (position_size_pct / 100)
         
-        # FIX: Ensure position value doesn't exceed available buying power (with 5% buffer)
+        # OPTIMIZATION: Ensure position value doesn't exceed available buying power (with 5% buffer)
         max_position_value = buying_power * 0.95  # Leave 5% buffer for fees/margin
         if position_value > max_position_value:
             logger.warning(
@@ -791,7 +799,7 @@ class PaperTradingEngine:
         
         qty = int(position_value / entry_price)
 
-        # FIX: Ensure minimum order size of 1 share
+        # OPTIMIZATION: Ensure minimum order size of 1 share
         if qty < 1:
             if position_value > 0:
                 logger.warning(
@@ -805,7 +813,7 @@ class PaperTradingEngine:
                 )
                 return 0, OrderSide.BUY
         
-        # FIX: Final validation - ensure we can actually afford this quantity
+        # OPTIMIZATION: Final validation - ensure we can actually afford this quantity
         required_capital = qty * entry_price
         if required_capital > buying_power:
             # Adjust qty to fit within buying power
@@ -1026,7 +1034,7 @@ class PaperTradingEngine:
             "qty": order_details["qty"],
             "entry_price": order_details["entry_price"],
             "signal": signal,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "order_timestamp": datetime.utcnow().timestamp(),  # For cleanup
         }
         

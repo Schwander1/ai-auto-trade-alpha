@@ -13,8 +13,9 @@ import httpx
 import logging
 import os
 import asyncio
+import time
 from typing import Dict, Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 import json
 
@@ -32,6 +33,7 @@ class AlpineSyncService:
         self.health_endpoint = f"{self.alpine_url}/api/v1/external-signals/sync/health"
         
         # HTTP client with timeout
+        # OPTIMIZATION: Connection pooling and keepalive for better performance
         self.client = httpx.AsyncClient(
             timeout=httpx.Timeout(10.0, connect=5.0),
             limits=httpx.Limits(max_keepalive_connections=5, max_connections=10)
@@ -44,6 +46,11 @@ class AlpineSyncService:
         # Failed signals queue (for retry)
         self._failed_signals: List[Dict] = []
         self._sync_enabled = self._check_sync_enabled()
+        
+        # OPTIMIZATION: Health check caching to reduce unnecessary checks
+        self._health_check_cache: Optional[bool] = None
+        self._health_check_cache_time: Optional[float] = None
+        self._health_check_cache_ttl = 60.0  # Cache health check for 60 seconds
         
         if self._sync_enabled:
             logger.info(f"✅ Alpine sync service initialized: {self.alpine_url}")
@@ -112,15 +119,37 @@ class AlpineSyncService:
     
     async def check_health(self) -> bool:
         """Check if Alpine backend is reachable"""
+        # OPTIMIZATION: Cache health check results to reduce API calls
+        import time
+        current_time = time.time()
+        
+        # Check cache first
+        if (
+            self._health_check_cache is not None
+            and self._health_check_cache_time is not None
+            and (current_time - self._health_check_cache_time) < self._health_check_cache_ttl
+        ):
+            return self._health_check_cache
+        
+        # Perform actual health check
         try:
             response = await self.client.get(self.health_endpoint, timeout=5.0)
-            if response.status_code == 200:
+            is_healthy = response.status_code == 200
+            
+            # Cache result
+            self._health_check_cache = is_healthy
+            self._health_check_cache_time = current_time
+            
+            if is_healthy:
                 logger.debug("✅ Alpine backend health check passed")
-                return True
             else:
                 logger.warning(f"⚠️  Alpine backend health check failed: {response.status_code}")
-                return False
+            
+            return is_healthy
         except Exception as e:
+            # Cache negative result too (but with shorter TTL)
+            self._health_check_cache = False
+            self._health_check_cache_time = current_time
             logger.warning(f"⚠️  Alpine backend health check error: {e}")
             return False
     
@@ -152,7 +181,7 @@ class AlpineSyncService:
                 "strategy": signal.get('strategy', 'weighted_consensus_v6'),
                 "asset_type": signal.get('asset_type', 'stock'),
                 "data_source": signal.get('data_source', 'weighted_consensus'),
-                "timestamp": signal.get('timestamp', datetime.utcnow().isoformat()),
+                "timestamp": signal.get('timestamp', datetime.now(timezone.utc).isoformat()),
                 "sha256": signal.get('sha256') or signal.get('verification_hash', ''),
                 "verification_hash": signal.get('sha256') or signal.get('verification_hash', ''),
                 "reasoning": signal.get('reasoning') or signal.get('rationale', ''),

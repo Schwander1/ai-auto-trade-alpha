@@ -1808,7 +1808,7 @@ class SignalGenerationService:
         """Cache AI reasoning (OPTIMIZATION 12)"""
         cache_key = self._create_reasoning_cache_key(signal, consensus)
         ttl = 3600  # 1 hour cache (reasoning is expensive)
-        
+
         # OPTIMIZATION: Use provided time or get current time
         if current_time is None:
             current_time = datetime.now(timezone.utc)
@@ -1824,7 +1824,7 @@ class SignalGenerationService:
         """Generate AI reasoning for signal (OPTIMIZATION 12: with caching)"""
         # OPTIMIZATION: Create cache key once and reuse
         cache_key = self._create_reasoning_cache_key(signal, consensus)
-        
+
         # OPTIMIZATION 12: Check cache first (pass cache_key to avoid recreating it)
         cached_reasoning = self._get_cached_reasoning(signal, consensus, cache_key)
         if cached_reasoning:

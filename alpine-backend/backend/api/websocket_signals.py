@@ -28,6 +28,7 @@ class ConnectionManager:
         self.active_connections: Dict[str, WebSocket] = {}
         self.user_connections: Dict[int, Set[str]] = {}  # user_id -> set of connection_ids
         self.connection_users: Dict[str, int] = {}  # connection_id -> user_id
+        self.user_tiers: Dict[int, UserTier] = {}  # user_id -> tier (cached)
         
     async def connect(self, websocket: WebSocket, user: User, connection_id: str):
         """Accept WebSocket connection and store it"""
@@ -38,8 +39,10 @@ class ConnectionManager:
             self.user_connections[user.id] = set()
         self.user_connections[user.id].add(connection_id)
         self.connection_users[connection_id] = user.id
+        # Cache user tier
+        self.user_tiers[user.id] = user.tier
         
-        logger.info(f"WebSocket connected: {connection_id} for user {user.id} ({user.email})")
+        logger.info(f"WebSocket connected: {connection_id} for user {user.id} ({user.email}, tier: {user.tier.value})")
         
     def disconnect(self, connection_id: str):
         """Remove WebSocket connection"""
@@ -51,6 +54,9 @@ class ConnectionManager:
             self.user_connections[user_id].discard(connection_id)
             if not self.user_connections[user_id]:
                 del self.user_connections[user_id]
+                # Remove cached tier if user has no more connections
+                if user_id in self.user_tiers:
+                    del self.user_tiers[user_id]
                 
         if connection_id in self.connection_users:
             del self.connection_users[connection_id]
@@ -81,9 +87,9 @@ class ConnectionManager:
             for connection_id in disconnected:
                 self.disconnect(connection_id)
                 
-    async def broadcast_new_signal(self, signal: Signal, user_tier: UserTier):
+    async def broadcast_new_signal(self, signal: Signal, db: Session):
         """Broadcast new signal to all users who can access it"""
-        # Check if signal is premium and user tier allows it
+        # Check if signal is premium
         is_premium = signal.type and signal.type.upper() in ['PREMIUM', 'ELITE']
         
         signal_data = {
@@ -104,8 +110,25 @@ class ConnectionManager:
             }
         }
         
+        # Refresh user tiers for users not in cache (new connections)
+        missing_user_ids = [
+            user_id for user_id in self.user_connections.keys() 
+            if user_id not in self.user_tiers
+        ]
+        
+        if missing_user_ids:
+            try:
+                users = db.query(User).filter(User.id.in_(missing_user_ids)).all()
+                for user in users:
+                    self.user_tiers[user.id] = user.tier
+            except Exception as e:
+                logger.warning(f"Error refreshing user tiers: {e}")
+        
         # Broadcast to all users who can access this signal
         for user_id, connection_ids in list(self.user_connections.items()):
+            # Use cached tier, default to STARTER if not found
+            user_tier = self.user_tiers.get(user_id, UserTier.STARTER)
+            
             # Check tier access
             if is_premium:
                 # Premium signals only for pro and elite tiers
@@ -165,17 +188,24 @@ async def websocket_signals_endpoint(
     import uuid
     connection_id = str(uuid.uuid4())
     user = None
-    db = next(get_db())
+    db = None
     
     try:
+        # Get database session
+        db = next(get_db())
+        
         # Authenticate user
         if not token:
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Authentication required")
+            if db:
+                db.close()
             return
             
         user = await get_user_from_token(token, db)
         if not user:
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Invalid authentication")
+            if db:
+                db.close()
             return
             
         # Connect
@@ -227,21 +257,22 @@ async def websocket_signals_endpoint(
         logger.error(f"WebSocket error for {connection_id}: {e}")
     finally:
         manager.disconnect(connection_id)
+        # Close database session
+        if db:
+            try:
+                db.close()
+            except Exception as e:
+                logger.error(f"Error closing database session: {e}")
 
 
 # Function to broadcast new signal (called from signal sync endpoint)
 async def broadcast_signal_to_websockets(signal: Signal, db: Session):
     """Broadcast a new signal to all connected WebSocket clients"""
     try:
-        # Get signal type to determine tier access
-        signal_tier = UserTier.STARTER  # Default
-        if signal.type and signal.type.upper() in ['PREMIUM', 'ELITE']:
-            signal_tier = UserTier.PRO
-            
-        await manager.broadcast_new_signal(signal, signal_tier)
+        await manager.broadcast_new_signal(signal, db)
         logger.info(f"Broadcasted signal {signal.id} to WebSocket clients")
     except Exception as e:
-        logger.error(f"Error broadcasting signal to WebSocket clients: {e}")
+        logger.error(f"Error broadcasting signal to WebSocket clients: {e}", exc_info=True)
 
 
 @router.get("/ws/stats")
@@ -249,6 +280,11 @@ async def websocket_stats():
     """Get WebSocket connection statistics"""
     return {
         "total_connections": manager.get_connection_count(),
-        "active_users": len(manager.user_connections)
+        "active_users": len(manager.user_connections),
+        "users_by_tier": {
+            tier.value: sum(1 for uid in manager.user_connections.keys() 
+                          if manager.user_tiers.get(uid) == tier)
+            for tier in UserTier
+        }
     }
 

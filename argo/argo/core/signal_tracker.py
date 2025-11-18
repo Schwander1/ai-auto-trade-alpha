@@ -170,7 +170,8 @@ class SignalTracker:
             raise
     
     def _generate_signal_id(self):
-        timestamp = datetime.utcnow().isoformat()
+        # OPTIMIZATION: Use timezone-aware datetime for consistency
+        timestamp = datetime.now(timezone.utc).isoformat()
         combined = f"{timestamp}:{threading.current_thread().ident}"
         return hashlib.sha256(combined.encode()).hexdigest()[:16]
     
@@ -385,10 +386,13 @@ class SignalTracker:
     
     def _prepare_signal(self, signal, start_time):
         """Prepare signal with ID, timestamp, hash, and latency tracking"""
+        # OPTIMIZATION: Single datetime call for consistency
+        now = datetime.now(timezone.utc)
+        
         if 'signal_id' not in signal:
             signal['signal_id'] = self._generate_signal_id()
         if 'timestamp' not in signal:
-            signal['timestamp'] = datetime.utcnow().isoformat()
+            signal['timestamp'] = now.isoformat()
         
         # Add server timestamp for latency calculation
         signal['server_timestamp'] = start_time
