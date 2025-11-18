@@ -7,7 +7,7 @@ from fastapi import HTTPException, status
 from fastapi.responses import JSONResponse
 import logging
 import traceback
-from datetime import datetime
+from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 
@@ -123,7 +123,7 @@ def create_error_response(
         "error": {
             "code": error_code,
             "message": message,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "request_id": request_id
         }
     }

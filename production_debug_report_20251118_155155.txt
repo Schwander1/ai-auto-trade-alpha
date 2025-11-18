@@ -1,0 +1,133 @@
+
+[0;36m================================================================================[0m
+[0;36m[1mCOMPREHENSIVE REMOTE PRODUCTION DEBUGGING[0m
+[0;36m================================================================================[0m
+
+[0;36mStarted at: 2025-11-18 15:51:55[0m
+
+[0;36mArgo Server: 178.156.194.174[0m
+[0;36mAlpine Server: 91.98.153.49[0m
+
+
+[0;34m--------------------------------------------------------------------------------[0m
+[0;34m[1m1. ARGO PRODUCTION SERVICE[0m
+[0;34m--------------------------------------------------------------------------------[0m
+
+[0;32m✅ Argo service is running on 178.156.194.174[0m
+[0;32m✅ Argo health endpoint: HTTP 200[0m
+[0;36mℹ️    Status: healthy[0m
+[0;36mℹ️    Version: 6.0[0m
+[0;36mℹ️    Uptime: 100%[0m
+[0;36mℹ️  Active environment: unknown[0m
+
+[0;34m--------------------------------------------------------------------------------[0m
+[0;34m[1m2. ALPINE PRODUCTION CONTAINERS[0m
+[0;34m--------------------------------------------------------------------------------[0m
+
+[1;33m⚠️  Could not find expected Alpine containers[0m
+
+[0;34m--------------------------------------------------------------------------------[0m
+[0;34m[1m3. ALPINE HEALTH ENDPOINTS[0m
+[0;34m--------------------------------------------------------------------------------[0m
+
+[0;31m❌ Backend-1: HTTPConnectionPool(host='91.98.153.49', port=8001)[0m
+[0;31m❌ Backend-2: HTTPConnectionPool(host='91.98.153.49', port=8002)[0m
+[0;31m❌ Backend-3: HTTPConnectionPool(host='91.98.153.49', port=8003)[0m
+[0;31m❌ Frontend-1: HTTPConnectionPool(host='91.98.153.49', port=3000)[0m
+
+[0;34m--------------------------------------------------------------------------------[0m
+[0;34m[1m4. ALPINE DATABASE[0m
+[0;34m--------------------------------------------------------------------------------[0m
+
+[0;32m✅ PostgreSQL container found: alpine-postgres-exporter[0m
+
+[0;34m--------------------------------------------------------------------------------[0m
+[0;34m[1m5. ALPINE REDIS[0m
+[0;34m--------------------------------------------------------------------------------[0m
+
+[0;32m✅ Redis container found: alpine-redis-exporter[0m
+
+[0;34m--------------------------------------------------------------------------------[0m
+[0;34m[1m6. ALPINE API ENDPOINTS[0m
+[0;34m--------------------------------------------------------------------------------[0m
+
+[1;33m⚠️  Backend-1 Health: HTTPConnectionPool(host='91.98.153.49', port=8001)[0m
+[1;33m⚠️  Backend-1 Metrics: HTTPConnectionPool(host='91.98.153.49', port=8001)[0m
+[1;33m⚠️  Backend-1 Docs: HTTPConnectionPool(host='91.98.153.49', port=8001)[0m
+
+[0;34m--------------------------------------------------------------------------------[0m
+[0;34m[1m7. ALPINE LOGS[0m
+[0;34m--------------------------------------------------------------------------------[0m
+
+
+[0;34m--------------------------------------------------------------------------------[0m
+[0;34m[1m8. ALPINE SERVER RESOURCES[0m
+[0;34m--------------------------------------------------------------------------------[0m
+
+
+[0;34m--------------------------------------------------------------------------------[0m
+[0;34m[1m9. NETWORK CONNECTIVITY[0m
+[0;34m--------------------------------------------------------------------------------[0m
+
+[0;32m✅ SSH connection to Argo server (178.156.194.174): OK[0m
+[0;32m✅ SSH connection to Alpine server (91.98.153.49): OK[0m
+[0;32m✅ Argo API (178.156.194.174:8000): Accessible externally[0m
+[1;33m⚠️  Alpine Backend-1 (91.98.153.49:8001): Not accessible externally (may be firewall-protected)[0m
+[1;33m⚠️  Alpine Frontend (91.98.153.49:3000): Not accessible externally (may be firewall-protected)[0m
+
+[0;34m--------------------------------------------------------------------------------[0m
+[0;34m[1m9.1 INTERNAL NETWORK CONNECTIVITY[0m
+[0;34m--------------------------------------------------------------------------------[0m
+
+[0;32m✅ Backend-1 (localhost:8001): HTTP 200 (internal)[0m
+[0;32m✅ Backend-2 (localhost:8002): HTTP 200 (internal)[0m
+[0;32m✅ Backend-3 (localhost:8003): HTTP 200 (internal)[0m
+[1;33m⚠️  Frontend (localhost:3000): HTTP 000000 (internal)[0m
+
+[0;34m--------------------------------------------------------------------------------[0m
+[0;34m[1m10. SIGNAL GENERATION STATUS[0m
+[0;34m--------------------------------------------------------------------------------[0m
+
+[1;33m⚠️  Signal generation: running[0m
+[1;33m⚠️  Could not check recent signals: HTTPConnectionPool(host='178.156.194.174', port=80[0m
+
+[0;34m--------------------------------------------------------------------------------[0m
+[0;34m[1m11. TRADING SYSTEM STATUS[0m
+[0;34m--------------------------------------------------------------------------------[0m
+
+[0;32m✅ Trading status endpoint: Accessible[0m
+[0;36mℹ️    Environment: production[0m
+[0;36mℹ️    Trading Mode: production[0m
+[0;36mℹ️    Alpaca Connected: True[0m
+[0;36mℹ️    Trading Blocked: False[0m
+[0;36mℹ️    Portfolio Value: $93,681.87[0m
+
+[0;36m================================================================================[0m
+[0;36m[1mREMOTE PRODUCTION DEBUG REPORT[0m
+[0;36m================================================================================[0m
+
+
+[1mExecution Time: 51.04 seconds[0m
+
+[1mIssues Found: 4[0m
+  1. Backend-1: HTTPConnectionPool(host='91.98.153.49', port=8001)
+  2. Backend-2: HTTPConnectionPool(host='91.98.153.49', port=8002)
+  3. Backend-3: HTTPConnectionPool(host='91.98.153.49', port=8003)
+  4. Frontend-1: HTTPConnectionPool(host='91.98.153.49', port=3000)
+
+[1mWarnings: 9[0m
+  1. Could not find expected Alpine containers
+  2. Backend-1 Health: HTTPConnectionPool(host='91.98.153.49', port=8001)
+  3. Backend-1 Metrics: HTTPConnectionPool(host='91.98.153.49', port=8001)
+  4. Backend-1 Docs: HTTPConnectionPool(host='91.98.153.49', port=8001)
+  5. Alpine Backend-1 (91.98.153.49:8001): Not accessible externally (may be firewall-protected)
+  6. Alpine Frontend (91.98.153.49:3000): Not accessible externally (may be firewall-protected)
+  7. Frontend (localhost:3000): HTTP 000000 (internal)
+  8. Signal generation: running
+  9. Could not check recent signals: HTTPConnectionPool(host='178.156.194.174', port=80
+
+[1mMetrics:[0m
+  alpine_containers_running: 0
+
+[1mOverall Status:[0m
+[0;31m❌ Production systems have critical issues[0m

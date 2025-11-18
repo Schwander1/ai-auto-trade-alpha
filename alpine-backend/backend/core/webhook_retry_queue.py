@@ -3,7 +3,7 @@ import json
 import logging
 import asyncio
 from typing import Dict, Optional, List
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from dataclasses import dataclass, asdict
 from enum import Enum
 
@@ -39,10 +39,10 @@ class WebhookRetryJob:
 
     def __post_init__(self):
         if self.created_at is None:
-            self.created_at = datetime.utcnow().isoformat()
+            self.created_at = datetime.now(timezone.utc).isoformat()
         if self.next_retry_at is None:
             # First retry after 1 minute
-            self.next_retry_at = (datetime.utcnow() + timedelta(minutes=1)).isoformat()
+            self.next_retry_at = (datetime.now(timezone.utc) + timedelta(minutes=1)).isoformat()
 
     def to_dict(self) -> Dict:
         """Convert to dictionary for Redis storage"""
@@ -148,7 +148,7 @@ class WebhookRetryQueue:
             return []
 
         try:
-            now = datetime.utcnow().timestamp()
+            now = datetime.now(timezone.utc).timestamp()
 
             # Get jobs ready for retry (next_retry_at <= now)
             job_ids = self.redis.zrangebyscore(
@@ -281,7 +281,7 @@ class WebhookRetryQueue:
                 # Calculate next retry time
                 delay_index = min(job.retry_count - 1, len(self.retry_delays) - 1)
                 delay = self.retry_delays[delay_index]
-                job.next_retry_at = (datetime.utcnow() + delay).isoformat()
+                job.next_retry_at = (datetime.now(timezone.utc) + delay).isoformat()
                 job.status = WebhookStatus.PENDING
 
                 # Re-add to queue

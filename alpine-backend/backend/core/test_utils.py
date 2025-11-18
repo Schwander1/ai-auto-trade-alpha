@@ -9,7 +9,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import pytest
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from backend.core.database import Base, get_db
 from backend.models.user import User, UserTier
@@ -222,7 +222,7 @@ def create_test_signal(
         confidence = confidence / 100.0
     
     # Generate valid SHA-256 hash
-    hash_input = f"test_hash_{symbol}_{action}_{price}_{datetime.utcnow().timestamp()}"
+    hash_input = f"test_hash_{symbol}_{action}_{price}_{datetime.now(timezone.utc).timestamp()}"
     verification_hash = hashlib.sha256(hash_input.encode()).hexdigest()
     
     signal = Signal(

@@ -29,6 +29,18 @@ else
     exit 1
 fi
 
+# Copy helper scripts
+HELPER_SCRIPTS_DIR="$WORKSPACE_ROOT/infrastructure/systemd"
+if [ -d "$HELPER_SCRIPTS_DIR" ]; then
+    # Ensure helper scripts are executable
+    chmod +x "$HELPER_SCRIPTS_DIR/wait-for-dependencies.sh" 2>/dev/null || true
+    chmod +x "$HELPER_SCRIPTS_DIR/verify-service-health.sh" 2>/dev/null || true
+    echo "✅ Helper scripts verified"
+else
+    echo "⚠️  Helper scripts directory not found: $HELPER_SCRIPTS_DIR"
+    echo "   Service may fail if scripts are not accessible"
+fi
+
 # Reload systemd
 systemctl daemon-reload
 echo "✅ Systemd daemon reloaded"

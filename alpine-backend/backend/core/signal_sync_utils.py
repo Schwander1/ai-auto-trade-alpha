@@ -5,7 +5,7 @@ Used by external_signal_sync.py
 from fastapi import HTTPException, Header
 from sqlalchemy.orm import Session
 from typing import Optional, Any
-from datetime import datetime
+from datetime import datetime, timezone
 import hashlib
 import hmac
 import json
@@ -114,7 +114,7 @@ def parse_signal_timestamp(timestamp_str: str) -> datetime:
     try:
         return datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
     except Exception:
-        return datetime.utcnow()
+        return datetime.now(timezone.utc)
 
 
 def create_signal_from_request(signal_data: Any, verification_hash: str) -> Signal:

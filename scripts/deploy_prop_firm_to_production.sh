@@ -213,14 +213,25 @@ set -e
 
 # Restart regular service
 systemctl restart argo-trading.service 2>/dev/null || systemctl start argo-trading.service
-echo "✅ Regular service started/restarted"
+echo "⏳ Waiting for regular service to start..."
 
-# Check status
-sleep 3
-if systemctl is-active --quiet argo-trading.service; then
-    echo "✅ Regular service is running"
-else
-    echo "❌ Regular service failed to start"
+# Wait for service to be active with retry logic
+MAX_RETRIES=30
+RETRY_COUNT=0
+while [ \$RETRY_COUNT -lt \$MAX_RETRIES ]; do
+    if systemctl is-active --quiet argo-trading.service; then
+        echo "✅ Regular service is running"
+        break
+    fi
+    RETRY_COUNT=\$((RETRY_COUNT + 1))
+    if [ \$RETRY_COUNT -lt \$MAX_RETRIES ]; then
+        echo "  Waiting... (\$RETRY_COUNT/\$MAX_RETRIES)"
+        sleep 2
+    fi
+done
+
+if [ \$RETRY_COUNT -eq \$MAX_RETRIES ]; then
+    echo "❌ Regular service failed to start after \$MAX_RETRIES attempts"
     systemctl status argo-trading.service --no-pager -l | head -20
     exit 1
 fi
@@ -233,14 +244,25 @@ set -e
 
 # Restart prop firm service
 systemctl restart argo-trading-prop-firm.service 2>/dev/null || systemctl start argo-trading-prop-firm.service
-echo "✅ Prop firm service started/restarted"
+echo "⏳ Waiting for prop firm service to start..."
 
-# Check status
-sleep 3
-if systemctl is-active --quiet argo-trading-prop-firm.service; then
-    echo "✅ Prop firm service is running"
-else
-    echo "❌ Prop firm service failed to start"
+# Wait for service to be active with retry logic
+MAX_RETRIES=30
+RETRY_COUNT=0
+while [ \$RETRY_COUNT -lt \$MAX_RETRIES ]; do
+    if systemctl is-active --quiet argo-trading-prop-firm.service; then
+        echo "✅ Prop firm service is running"
+        break
+    fi
+    RETRY_COUNT=\$((RETRY_COUNT + 1))
+    if [ \$RETRY_COUNT -lt \$MAX_RETRIES ]; then
+        echo "  Waiting... (\$RETRY_COUNT/\$MAX_RETRIES)"
+        sleep 2
+    fi
+done
+
+if [ \$RETRY_COUNT -eq \$MAX_RETRIES ]; then
+    echo "❌ Prop firm service failed to start after \$MAX_RETRIES attempts"
     systemctl status argo-trading-prop-firm.service --no-pager -l | head -20
     exit 1
 fi

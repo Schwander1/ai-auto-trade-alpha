@@ -159,21 +159,42 @@ echo ""
 read -p "Start test service on port $TARGET_PORT? (yes/no): " START_SERVICE
 if [ "$START_SERVICE" = "yes" ]; then
     echo "🚀 Starting test service on port $TARGET_PORT..."
+    
+    # Copy startup wrapper to production server if not exists
     ssh ${ARGO_USER}@${ARGO_SERVER} "
-      cd ${TARGET_PATH}
-      source venv/bin/activate
-      
-      # Stop any existing service on target port
-      pkill -f \"uvicorn.*--port $TARGET_PORT\" || true
-      sleep 2
-      
-      # Start service on internal port
-      nohup uvicorn main:app --host 0.0.0.0 --port $TARGET_PORT > /tmp/argo-${TARGET_COLOR}-test.log 2>&1 &
-      echo \$! > /tmp/argo-${TARGET_COLOR}-test.pid
-      
-      sleep 5
-      echo '✅ Test service started on port $TARGET_PORT'
-    "
+      mkdir -p /root/argo-alpine-workspace/scripts/lib
+      if [ ! -f /root/argo-alpine-workspace/scripts/lib/start-argo-service.sh ]; then
+        echo '⚠️  Startup wrapper not found, using direct startup'
+        USE_WRAPPER=false
+      else
+        chmod +x /root/argo-alpine-workspace/scripts/lib/start-argo-service.sh
+        USE_WRAPPER=true
+      fi
+    " 2>/dev/null || USE_WRAPPER=false
+    
+    if [ "$USE_WRAPPER" = "true" ]; then
+      # Use startup wrapper with dependency checking
+      ssh ${ARGO_USER}@${ARGO_SERVER} "
+        /root/argo-alpine-workspace/scripts/lib/start-argo-service.sh ${TARGET_PATH} $TARGET_PORT ${TARGET_COLOR}-test /tmp/argo-${TARGET_COLOR}-test.log
+      "
+    else
+      # Fallback to direct startup
+      ssh ${ARGO_USER}@${ARGO_SERVER} "
+        cd ${TARGET_PATH}
+        source venv/bin/activate
+        
+        # Stop any existing service on target port
+        pkill -f \"uvicorn.*--port $TARGET_PORT\" || true
+        sleep 2
+        
+        # Start service on internal port
+        nohup uvicorn main:app --host 0.0.0.0 --port $TARGET_PORT > /tmp/argo-${TARGET_COLOR}-test.log 2>&1 &
+        echo \$! > /tmp/argo-${TARGET_COLOR}-test.pid
+        
+        sleep 5
+        echo '✅ Test service started on port $TARGET_PORT'
+      "
+    fi
 else
     echo "⏭️  Skipping service start"
 fi

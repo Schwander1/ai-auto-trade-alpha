@@ -75,27 +75,47 @@ ssh ${ARGO_USER}@${ARGO_SERVER} "
 # Start rollback service
 echo ""
 echo "🚀 Starting rollback service..."
-ssh ${ARGO_USER}@${ARGO_SERVER} "
-    cd ${ROLLBACK_PATH}
-    
-    if [ ! -d venv ]; then
-        echo '❌ Virtual environment not found in rollback target'
-        exit 1
+
+# Check if startup wrapper exists on production server
+USE_WRAPPER=$(ssh ${ARGO_USER}@${ARGO_SERVER} "
+    if [ -f /root/argo-alpine-workspace/scripts/lib/start-argo-service.sh ]; then
+        chmod +x /root/argo-alpine-workspace/scripts/lib/start-argo-service.sh
+        echo 'true'
+    else
+        echo 'false'
     fi
-    
-    source venv/bin/activate
-    nohup uvicorn main:app --host 0.0.0.0 --port 8000 > /tmp/argo-${ROLLBACK_COLOR}.log 2>&1 &
-    echo \$! > /tmp/argo-${ROLLBACK_COLOR}.pid
-    touch ${ROLLBACK_PATH}/.current
-    
-    sleep 3
-    echo '✅ Rollback service started'
-"
+" 2>/dev/null || echo "false")
+
+if [ "$USE_WRAPPER" = "true" ]; then
+    # Use startup wrapper with dependency checking
+    ssh ${ARGO_USER}@${ARGO_SERVER} "
+        /root/argo-alpine-workspace/scripts/lib/start-argo-service.sh ${ROLLBACK_PATH} 8000 ${ROLLBACK_COLOR} /tmp/argo-${ROLLBACK_COLOR}.log
+        touch ${ROLLBACK_PATH}/.current
+    "
+else
+    # Fallback to direct startup
+    ssh ${ARGO_USER}@${ARGO_SERVER} "
+        cd ${ROLLBACK_PATH}
+        
+        if [ ! -d venv ]; then
+            echo '❌ Virtual environment not found in rollback target'
+            exit 1
+        fi
+        
+        source venv/bin/activate
+        nohup uvicorn main:app --host 0.0.0.0 --port 8000 > /tmp/argo-${ROLLBACK_COLOR}.log 2>&1 &
+        echo \$! > /tmp/argo-${ROLLBACK_COLOR}.pid
+        touch ${ROLLBACK_PATH}/.current
+        
+        sleep 3
+        echo '✅ Rollback service started'
+    "
+fi
 
 # Verify rollback
 echo ""
 echo "🔍 Verifying rollback..."
-MAX_RETRIES=10
+MAX_RETRIES=30
 RETRY_COUNT=0
 
 while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
@@ -105,12 +125,15 @@ while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
     fi
     
     RETRY_COUNT=$((RETRY_COUNT + 1))
-    echo "⏳ Waiting for service... ($RETRY_COUNT/$MAX_RETRIES)"
-    sleep 2
+    if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+        echo "⏳ Waiting for service... ($RETRY_COUNT/$MAX_RETRIES)"
+        sleep 2
+    fi
 done
 
 if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
-    echo "❌ Rollback verification failed - service not responding"
+    echo "❌ Rollback verification failed - service not responding after $MAX_RETRIES attempts"
+    echo "   Check logs: ssh ${ARGO_USER}@${ARGO_SERVER} 'tail -f /tmp/argo-${ROLLBACK_COLOR}.log'"
     exit 1
 fi
 

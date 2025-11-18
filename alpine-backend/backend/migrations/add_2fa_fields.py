@@ -1,11 +1,14 @@
 """Database migration to add 2FA fields to users table"""
 from sqlalchemy import text
 from backend.core.database import engine
+import logging
+
+logger = logging.getLogger(__name__)
 
 def add_2fa_fields():
     """Add 2FA fields to users table"""
     with engine.connect() as conn:
-        print("Adding 2FA fields to users table...")
+        logger.info("Adding 2FA fields to users table...")
         try:
             # Add totp_secret column
             conn.execute(text("""
@@ -32,9 +35,9 @@ def add_2fa_fields():
             """))
             
             conn.commit()
-            print("✅ 2FA fields added successfully")
+            logger.info("✅ 2FA fields added successfully")
         except Exception as e:
-            print(f"⚠️ Error adding 2FA fields: {e}")
+            logger.error(f"⚠️ Error adding 2FA fields: {e}")
             conn.rollback()
             raise
 

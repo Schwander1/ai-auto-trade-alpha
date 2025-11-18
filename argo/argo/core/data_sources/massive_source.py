@@ -91,7 +91,10 @@ class MassiveDataSource:
                     logger.debug(f"✅ Using Redis cached Massive.com data for {symbol}")
                     return cached
             except Exception as e:
-                logger.debug(f"Redis cache get error: {e}")
+                # Only log specific errors, not all cache misses
+                if "UnpicklingError" in str(type(e).__name__) or "TypeError" in str(type(e).__name__):
+                    logger.debug(f"Redis cache unpickle error for {symbol}: {e}")
+                # Silently fall through to in-memory cache
         
         # Fallback to in-memory cache
         if symbol not in self._price_cache:

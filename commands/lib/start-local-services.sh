@@ -8,9 +8,24 @@ WORKSPACE_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 cd "$WORKSPACE_DIR"
 
+# Source dependency checking utilities
+if [ -f "$WORKSPACE_DIR/scripts/lib/wait-for-dependencies.sh" ]; then
+    source "$WORKSPACE_DIR/scripts/lib/wait-for-dependencies.sh"
+fi
+
 if [ "$PROJECT" = "all" ] || [ "$PROJECT" = "alpine" ]; then
     echo "  Starting Alpine databases..."
     docker-compose -f alpine-backend/docker-compose.local.yml up -d 2>/dev/null || true
+    
+    # Wait for databases to be ready
+    if command -v wait_for_postgres &> /dev/null; then
+        echo "  Waiting for PostgreSQL to be ready..."
+        export POSTGRES_HOST=localhost
+        export POSTGRES_PORT=5433
+        export POSTGRES_USER=alpine_user
+        export POSTGRES_DB=alpine_analytics
+        wait_for_postgres "PostgreSQL" || echo "  ⚠️  PostgreSQL may not be ready yet"
+    fi
 fi
 
 if [ "$PROJECT" = "all" ] || [ "$PROJECT" = "argo" ]; then
@@ -25,6 +40,14 @@ if [ "$PROJECT" = "all" ] || [ "$PROJECT" = "argo" ]; then
     ARGO_PID=$!
     echo "  ✅ Argo started (PID: $ARGO_PID, logs: /tmp/argo-local.log)"
     echo "  🌐 Argo: http://localhost:8000"
+    
+    # Wait for Argo to be ready
+    if command -v wait_for_service &> /dev/null; then
+        echo "  Waiting for Argo to be ready..."
+        wait_for_service "http://localhost:8000/health" "Argo" 10
+    else
+        sleep 3
+    fi
     cd ..
 fi
 
@@ -40,6 +63,14 @@ if [ "$PROJECT" = "all" ] || [ "$PROJECT" = "alpine" ]; then
     ALPINE_BACKEND_PID=$!
     echo "  ✅ Alpine Backend started (PID: $ALPINE_BACKEND_PID, logs: /tmp/alpine-backend-local.log)"
     echo "  🌐 Alpine Backend: http://localhost:9001"
+    
+    # Wait for backend to be ready
+    if command -v wait_for_service &> /dev/null; then
+        echo "  Waiting for Alpine Backend to be ready..."
+        wait_for_service "http://localhost:9001/health" "Alpine Backend" 10
+    else
+        sleep 3
+    fi
     cd ..
     
     echo "  Starting Alpine Frontend..."

@@ -1,5 +1,5 @@
 """Authentication utilities - Production grade with argon2"""
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from jose import JWTError, jwt
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
@@ -24,7 +24,7 @@ def get_password_hash(password: str) -> str:
 
 def create_access_token(data: dict) -> str:
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(hours=settings.JWT_EXPIRATION_HOURS)
+    expire = datetime.now(timezone.utc) + timedelta(hours=settings.JWT_EXPIRATION_HOURS)
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
 

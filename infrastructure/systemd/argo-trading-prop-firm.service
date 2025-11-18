@@ -1,7 +1,10 @@
 [Unit]
 Description=Argo Prop Firm Trading Service
-After=network.target redis.service
-Wants=redis.service
+After=network-online.target
+Wants=network-online.target
+# Optional: Wait for Redis if it's a systemd service
+# After=redis.service
+# Wants=redis.service
 
 [Service]
 Type=simple
@@ -16,11 +19,27 @@ Environment="ARGO_API_SECRET=988807abc6a05772fd1900bcbfd35b6037f4f3ba4656e99e78f
 Environment="USE_AWS_SECRETS=true"
 Environment="REDIS_HOST=localhost"
 Environment="REDIS_PORT=6379"
+Environment="REDIS_PASSWORD="
+
+# Wait for dependencies before starting
+ExecStartPre=/bin/bash /root/argo-alpine-workspace/infrastructure/systemd/wait-for-dependencies.sh argo-trading-prop-firm
+
+# Start the service
 ExecStart=/root/argo-production-prop-firm/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8001 --workers 1 --timeout-keep-alive 30
+
+# Verify service health after startup (non-blocking)
+ExecStartPost=/bin/bash /root/argo-alpine-workspace/infrastructure/systemd/verify-service-health.sh argo-trading-prop-firm 8001
+
+# Restart policy - increased delay to allow proper initialization
 Restart=always
-RestartSec=10
+RestartSec=30
+StartLimitInterval=300
+StartLimitBurst=5
+
+# Logging
 StandardOutput=append:/tmp/argo-prop-firm.log
 StandardError=append:/tmp/argo-prop-firm.log
+SyslogIdentifier=argo-trading-prop-firm
 
 # Security
 NoNewPrivileges=true
@@ -39,6 +58,7 @@ CPUQuota=200%
 KillMode=mixed
 KillSignal=SIGTERM
 TimeoutStopSec=60
+TimeoutStartSec=120
 # Increased timeout to allow signal generation cycles to complete
 
 [Install]

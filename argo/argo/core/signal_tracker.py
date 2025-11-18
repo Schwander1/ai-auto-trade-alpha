@@ -73,7 +73,9 @@ class SignalTracker:
             self._batch_lock = threading.Lock()
             self._batch_size = 50  # Optimal batch size (increased from 10)
             self._batch_timeout = 5.0  # Or after 5 seconds (increased from 0.5s)
+            self._periodic_flush_interval = 10.0  # Periodic flush every 10 seconds
             self._last_flush = datetime.now(timezone.utc)
+            self._periodic_flush_task = None  # Background periodic flush task
             
             # OPTIMIZATION: Query result caching
             self._query_cache: Dict[str, tuple] = {}  # {cache_key: (timestamp, result)}
@@ -252,10 +254,13 @@ class SignalTracker:
         
         signal = self._prepare_signal(signal, start_time)
         
+        # Start periodic flush task if not already running
+        self._ensure_periodic_flush()
+        
         with self._batch_lock:
             self._pending_signals.append((signal, start_time))
             
-            # Flush if batch is full
+            # Flush immediately if batch is full
             if len(self._pending_signals) >= self._batch_size:
                 await self._flush_batch_async()
             elif not hasattr(self, '_flush_task') or (hasattr(self, '_flush_task') and (self._flush_task is None or self._flush_task.done())):
@@ -271,8 +276,113 @@ class SignalTracker:
     async def _flush_after_timeout(self):
         """Flush batch after timeout (5 seconds)"""
         import asyncio
-        await asyncio.sleep(self._batch_timeout)  # Use configured timeout
-        await self._flush_batch_async()
+        try:
+            await asyncio.sleep(self._batch_timeout)  # Use configured timeout
+            await self._flush_batch_async()
+        except asyncio.CancelledError:
+            # Task was cancelled, flush immediately before exit
+            await self._flush_batch_async()
+            raise
+        except Exception as e:
+            logger.error(f"Error in timeout flush: {e}")
+            # Try sync flush as fallback
+            try:
+                self._flush_batch()
+            except Exception as e2:
+                logger.error(f"Error in sync fallback flush: {e2}")
+    
+    def _ensure_periodic_flush(self):
+        """Ensure periodic flush task is running"""
+        if self._periodic_flush_task is None or self._periodic_flush_task.done():
+            import asyncio
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    self._periodic_flush_task = asyncio.create_task(self._periodic_flush_loop())
+            except RuntimeError:
+                # No event loop, periodic flush won't work
+                pass
+    
+    async def _periodic_flush_loop(self):
+        """Periodic flush loop to ensure signals are persisted regularly"""
+        import asyncio
+        try:
+            while True:
+                await asyncio.sleep(self._periodic_flush_interval)
+                
+                # Check if there are pending signals to flush
+                with self._batch_lock:
+                    if self._pending_signals:
+                        # Flush pending signals
+                        signals_to_flush = self._pending_signals.copy()
+                        self._pending_signals.clear()
+                        
+                        # Flush in background
+                        if signals_to_flush:
+                            try:
+                                await self._flush_batch_async_with_signals(signals_to_flush)
+                                logger.debug(f"✅ Periodic flush: {len(signals_to_flush)} signals")
+                            except Exception as e:
+                                logger.error(f"Error in periodic flush: {e}")
+                                # Re-add signals to queue if flush failed
+                                self._pending_signals.extend(signals_to_flush)
+        except asyncio.CancelledError:
+            # Task was cancelled, flush any remaining signals
+            with self._batch_lock:
+                if self._pending_signals:
+                    try:
+                        await self._flush_batch_async()
+                    except Exception as e:
+                        logger.error(f"Error flushing on periodic task cancellation: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Error in periodic flush loop: {e}")
+    
+    async def _flush_batch_async_with_signals(self, signals_to_insert):
+        """Flush specific signals (used by periodic flush)"""
+        if not signals_to_insert:
+            return
+        
+        try:
+            # Use sync connection in async context (SQLite doesn't have native async)
+            # But we can run it in executor to avoid blocking
+            import asyncio
+            loop = asyncio.get_event_loop()
+            
+            def sync_flush():
+                with self._get_connection() as conn:
+                    cursor = conn.cursor()
+                    
+                    insert_data = []
+                    for signal, start_time in signals_to_insert:
+                        insert_data.append((
+                            signal['signal_id'], signal['symbol'], signal['action'],
+                            signal['entry_price'], signal['target_price'], signal['stop_price'],
+                            signal['confidence'], signal['strategy'],
+                            signal.get('asset_type', 'unknown'),
+                            signal.get('data_source', 'weighted_consensus'),
+                            signal['timestamp'], signal['sha256'],
+                            signal.get('order_id')
+                        ))
+                    
+                    cursor.executemany('''INSERT INTO signals (
+                        signal_id, symbol, action, entry_price, target_price, stop_price,
+                        confidence, strategy, asset_type, data_source, timestamp, sha256, order_id
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', insert_data)
+                    
+                    conn.commit()
+                    
+                    # Record metrics
+                    for signal, start_time in signals_to_insert:
+                        self._record_metrics(start_time)
+            
+            # Run in executor to avoid blocking
+            await loop.run_in_executor(None, sync_flush)
+            
+            logger.info(f"✅ Periodic batch inserted {len(signals_to_insert)} signals")
+        except Exception as e:
+            logger.error(f"Periodic batch insert error: {e}")
+            raise
     
     async def _flush_batch_async(self):
         """Async batch insert (non-blocking)"""
@@ -385,9 +495,37 @@ class SignalTracker:
     
     def flush_pending(self):
         """Manually flush pending signals (call before shutdown)"""
+        # Cancel periodic flush task if running
+        if self._periodic_flush_task and not self._periodic_flush_task.done():
+            try:
+                self._periodic_flush_task.cancel()
+            except Exception as e:
+                logger.debug(f"Error cancelling periodic flush task: {e}")
+        
+        # Flush any pending signals
         with self._batch_lock:
             if self._pending_signals:
+                logger.info(f"🔄 Flushing {len(self._pending_signals)} pending signals before shutdown")
                 self._flush_batch()
+    
+    async def flush_pending_async(self):
+        """Async version of flush_pending"""
+        # Cancel periodic flush task if running
+        if self._periodic_flush_task and not self._periodic_flush_task.done():
+            try:
+                self._periodic_flush_task.cancel()
+                try:
+                    await self._periodic_flush_task
+                except asyncio.CancelledError:
+                    pass
+            except Exception as e:
+                logger.debug(f"Error cancelling periodic flush task: {e}")
+        
+        # Flush any pending signals
+        with self._batch_lock:
+            if self._pending_signals:
+                logger.info(f"🔄 Flushing {len(self._pending_signals)} pending signals before shutdown")
+                await self._flush_batch_async()
     
     def _prepare_signal(self, signal, start_time):
         """Prepare signal with ID, timestamp, hash, and latency tracking"""

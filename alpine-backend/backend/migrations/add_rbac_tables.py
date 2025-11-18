@@ -12,7 +12,8 @@ def upgrade():
     # Use get_engine if available, otherwise create from settings
     try:
         engine = get_engine()
-    except:
+    except (ImportError, AttributeError, Exception) as e:
+        logger.warning(f"Could not get engine from get_engine(), creating new engine: {e}")
         engine = create_engine(settings.DATABASE_URL)
     
     with engine.connect() as conn:
@@ -73,7 +74,8 @@ def downgrade():
     # Use get_engine if available, otherwise create from settings
     try:
         engine = get_engine()
-    except:
+    except (ImportError, AttributeError, Exception) as e:
+        logger.warning(f"Could not get engine from get_engine(), creating new engine: {e}")
         engine = create_engine(settings.DATABASE_URL)
     
     with engine.connect() as conn:

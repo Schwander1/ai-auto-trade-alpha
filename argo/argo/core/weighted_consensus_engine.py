@@ -247,6 +247,16 @@ class WeightedConsensusEngine:
                 long_votes[source] = vote
             elif direction == "SHORT":
                 short_votes[source] = vote
+            elif direction == "NEUTRAL":
+                # Handle NEUTRAL signals: split vote based on confidence
+                # If confidence is high enough, treat as weak directional signal
+                if confidence > 0.6:  # 60% confidence threshold for NEUTRAL
+                    # Split NEUTRAL vote proportionally (slight bias to LONG for neutral markets)
+                    # This allows consensus to work even when sources return NEUTRAL
+                    neutral_long = vote * 0.55  # Slight bias to LONG
+                    neutral_short = vote * 0.45
+                    long_votes[source] = neutral_long
+                    short_votes[source] = neutral_short
 
         total_long = sum(long_votes.values())
         total_short = sum(short_votes.values())
@@ -267,6 +277,8 @@ class WeightedConsensusEngine:
             # Divide by active weights sum, not all weights (fixes bug when sources fail)
             consensus_confidence = total_short / active_weights_sum * 100
         else:
+            # If we have NEUTRAL signals but no clear direction, return None
+            # This maintains the original behavior for truly neutral markets
             return None
 
         consensus = {

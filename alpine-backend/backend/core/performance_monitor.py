@@ -7,7 +7,7 @@ import logging
 from typing import Optional, Dict, Any, Callable
 from functools import wraps
 from contextlib import contextmanager
-from datetime import datetime
+from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ class PerformanceMonitor:
             "cache_operation": 0.1,  # 100ms
         }
 
-    def record_metric(self, operation: str, duration: float, metadata: Optional[Dict[str, Any]] = None):
+    def record_metric(self, operation: str, duration: float, metadata: Optional[Dict[str, Any]] = None) -> None:
         """
         Record a performance metric.
 
@@ -37,7 +37,7 @@ class PerformanceMonitor:
 
         metric = {
             "duration": duration,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "metadata": metadata or {}
         }
 
@@ -81,7 +81,7 @@ class PerformanceMonitor:
             "p99": sorted(durations)[int(len(durations) * 0.99)]
         }
 
-    def reset(self, operation: Optional[str] = None):
+    def reset(self, operation: Optional[str] = None) -> None:
         """Reset metrics for operation or all operations"""
         if operation:
             self.metrics[operation] = []

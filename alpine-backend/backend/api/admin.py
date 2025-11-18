@@ -9,25 +9,26 @@ Optimizations:
 - Cache headers for client-side caching
 - Better error handling
 """
-from fastapi import APIRouter, HTTPException, Depends, Query, Header, Request, Response
-from sqlalchemy.orm import Session
-from sqlalchemy import func, Integer
-from pydantic import BaseModel
-from typing import Optional, List, Dict, Any
-from datetime import datetime, timedelta
+import logging
 import time
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional
 
-from backend.core.database import get_db
-from backend.core.rate_limit import check_rate_limit, get_rate_limit_status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, Response
+from pydantic import BaseModel
+from sqlalchemy import Integer, func
+from sqlalchemy.orm import Session
+
+from backend.api.auth import get_current_user
 from backend.core.cache import cache_response
 from backend.core.cache_constants import CACHE_TTL_ANALYTICS, CACHE_TTL_USER_LIST
-from backend.core.response_formatter import add_rate_limit_headers, add_cache_headers
+from backend.core.database import get_db
 from backend.core.error_responses import create_rate_limit_error
-from backend.core.security_logging import log_security_event, SecurityEvent
 from backend.core.input_sanitizer import sanitize_tier
+from backend.core.rate_limit import check_rate_limit, get_rate_limit_status
+from backend.core.response_formatter import add_cache_headers, add_rate_limit_headers
+from backend.core.security_logging import SecurityEvent, log_security_event
 from backend.models.user import User, UserTier
-from backend.api.auth import get_current_user
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +42,8 @@ RATE_LIMIT_MAX = 100
 ADMIN_EMAILS = ["admin@alpineanalytics.ai"]  # Add your admin email
 
 # SECURITY: Use RBAC for admin checks
-from backend.core.rbac import is_admin as rbac_is_admin, require_role, has_permission, PermissionEnum
+from backend.core.rbac import PermissionEnum, has_permission, require_role
+from backend.core.rbac import is_admin as rbac_is_admin
 
 
 def is_admin(user: User) -> bool:
@@ -49,13 +51,13 @@ def is_admin(user: User) -> bool:
     return rbac_is_admin(user)
 
 
-async def require_admin(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> User:
+def require_admin(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> User:
     """Require admin access (uses RBAC)"""
     # Refresh roles from database
     db.refresh(current_user, ['roles'])
 
     if not is_admin(current_user):
-        from backend.core.error_responses import create_error_response, ErrorCodes
+        from backend.core.error_responses import ErrorCodes, create_error_response
         raise create_error_response(
             ErrorCodes.AUTHZ_002,
             "Admin access required",
@@ -178,91 +180,75 @@ async def get_analytics(
 
     # OPTIMIZATION: Use dependency injection for database session
     # Get analytics from database - OPTIMIZED: Single query with aggregation (N+1 fix)
-    from backend.core.database import get_db
-    from contextlib import contextmanager
+    # Use the provided db session from dependency injection
+    # Single query to get all user statistics
+    today = datetime.now(timezone.utc).date()
+    week_ago = today - timedelta(days=7)
+    month_ago = today - timedelta(days=30)
+    today_start = datetime.combine(today, datetime.min.time(), tzinfo=timezone.utc)
+    week_start = datetime.combine(week_ago, datetime.min.time(), tzinfo=timezone.utc)
+    month_start = datetime.combine(month_ago, datetime.min.time(), tzinfo=timezone.utc)
 
-    # Use dependency injection - get fresh session for admin queries
-    @contextmanager
-    def get_db_context():
-        db_gen = get_db()
-        db = next(db_gen)
-        try:
-            yield db
-        finally:
-            try:
-                next(db_gen, None)
-            except StopIteration:
-                pass
+    # Aggregate all statistics in one query
+    stats = db.query(
+        func.count(User.id).label('total_users'),
+        func.sum(func.cast(User.is_active, Integer)).label('active_users'),
+        func.sum(func.cast(User.created_at >= today_start, Integer)).label('new_today'),
+        func.sum(func.cast(User.created_at >= week_start, Integer)).label('new_week'),
+        func.sum(func.cast(User.created_at >= month_start, Integer)).label('new_month'),
+        func.sum(func.cast(User.tier == UserTier.STARTER, Integer)).label('starter_count'),
+        func.sum(func.cast(User.tier == UserTier.PRO, Integer)).label('pro_count'),
+        func.sum(func.cast(User.tier == UserTier.ELITE, Integer)).label('elite_count')
+    ).first()
 
-    with get_db_context() as db:
-        # Single query to get all user statistics
-        today = datetime.utcnow().date()
-        week_ago = today - timedelta(days=7)
-        month_ago = today - timedelta(days=30)
-        today_start = datetime.combine(today, datetime.min.time())
-        week_start = datetime.combine(week_ago, datetime.min.time())
-        month_start = datetime.combine(month_ago, datetime.min.time())
+    total_users = stats.total_users or 0
+    active_users = stats.active_users or 0
+    new_users_today = stats.new_today or 0
+    new_users_this_week = stats.new_week or 0
+    new_users_this_month = stats.new_month or 0
 
-        # Aggregate all statistics in one query
-        stats = db.query(
-            func.count(User.id).label('total_users'),
-            func.sum(func.cast(User.is_active, Integer)).label('active_users'),
-            func.sum(func.cast(User.created_at >= today_start, Integer)).label('new_today'),
-            func.sum(func.cast(User.created_at >= week_start, Integer)).label('new_week'),
-            func.sum(func.cast(User.created_at >= month_start, Integer)).label('new_month'),
-            func.sum(func.cast(User.tier == UserTier.STARTER, Integer)).label('starter_count'),
-            func.sum(func.cast(User.tier == UserTier.PRO, Integer)).label('pro_count'),
-            func.sum(func.cast(User.tier == UserTier.ELITE, Integer)).label('elite_count')
-        ).first()
+    # Users by tier
+    users_by_tier = {
+        "starter": stats.starter_count or 0,
+        "pro": stats.pro_count or 0,
+        "elite": stats.elite_count or 0
+    }
 
-        total_users = stats.total_users or 0
-        active_users = stats.active_users or 0
-        new_users_today = stats.new_today or 0
-        new_users_this_week = stats.new_week or 0
-        new_users_this_month = stats.new_month or 0
+    # OPTIMIZATION: Get signal statistics in single aggregated query (N+1 fix)
+    from backend.core.query_optimizer import aggregate_count_by_condition
+    from backend.models.signal import Signal
 
-        # Users by tier
-        users_by_tier = {
-            "starter": stats.starter_count or 0,
-            "pro": stats.pro_count or 0,
-            "elite": stats.elite_count or 0
-        }
+    signal_counts = aggregate_count_by_condition(
+        db,
+        Signal,
+        [
+            (Signal.created_at >= today_start, 'today'),
+            (Signal.created_at >= week_start, 'week'),
+            (Signal.created_at >= month_start, 'month')
+        ],
+        label_prefix='signals'
+    )
 
-        # OPTIMIZATION: Get signal statistics in single aggregated query (N+1 fix)
-        from backend.models.signal import Signal
-        from backend.core.query_optimizer import aggregate_count_by_condition
+    signals_today = int(signal_counts.get('signals_today', 0) or 0)
+    signals_this_week = int(signal_counts.get('signals_week', 0) or 0)
+    signals_this_month = int(signal_counts.get('signals_month', 0) or 0)
 
-        signal_counts = aggregate_count_by_condition(
-            db,
-            Signal,
-            [
-                (Signal.created_at >= today_start, 'today'),
-                (Signal.created_at >= week_start, 'week'),
-                (Signal.created_at >= month_start, 'month')
-            ],
-            label_prefix='signals'
-        )
-
-        signals_today = int(signal_counts.get('signals_today', 0) or 0)
-        signals_this_week = int(signal_counts.get('signals_week', 0) or 0)
-        signals_this_month = int(signal_counts.get('signals_month', 0) or 0)
-
-        # API requests from metrics (if available)
-        # Try to get from Prometheus metrics or use fallback
-        try:
-            from backend.core.metrics import get_metrics
-            metrics = get_metrics()
-            # Parse metrics for API request counts
-            # This is a simplified version - adjust based on your metrics format
-            api_requests_today = 0  # Extract from metrics if available
-            api_requests_this_week = 0
-            error_rate = 0.0
-        except (ImportError, AttributeError, Exception) as e:
-            # Fallback if metrics not available
-            logger.debug(f"Metrics not available: {e}")
-            api_requests_today = 0
-            api_requests_this_week = 0
-            error_rate = 0.0
+    # API requests from metrics (if available)
+    # Try to get from Prometheus metrics or use fallback
+    try:
+        from backend.core.metrics import get_metrics
+        _ = get_metrics()  # Check if metrics are available
+        # Parse metrics for API request counts
+        # This is a simplified version - adjust based on your metrics format
+        api_requests_today = 0  # Extract from metrics if available
+        api_requests_this_week = 0
+        error_rate = 0.0
+    except (ImportError, AttributeError) as e:
+        # Fallback if metrics not available
+        logger.debug(f"Metrics not available: {e}")
+        api_requests_today = 0
+        api_requests_this_week = 0
+        error_rate = 0.0
 
     return AnalyticsResponse(
         total_users=total_users,
@@ -384,14 +370,14 @@ async def get_users(
                 tier=user.tier.value,
                 is_active=user.is_active,
                 is_verified=user.is_verified,
-                created_at=user.created_at.isoformat() if user.created_at else datetime.utcnow().isoformat() + "Z",
+                created_at=user.created_at.isoformat() if user.created_at else datetime.now(timezone.utc).isoformat(),
                 last_login=None  # Add last_login tracking in production
             )
             for user in users
         ]
     except HTTPException:
         raise
-    except Exception as e:
+    except (ValueError, AttributeError, TypeError) as e:
         logger.error(f"Error fetching users: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
@@ -503,7 +489,7 @@ async def get_revenue(
 
         total_revenue = sum(revenue_by_tier.values())
         mrr = total_revenue  # Monthly Recurring Revenue
-    except Exception as e:
+    except (ValueError, AttributeError, TypeError) as e:
         logger.error(f"Error fetching revenue statistics: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,

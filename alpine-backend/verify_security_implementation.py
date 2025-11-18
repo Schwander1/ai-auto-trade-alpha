@@ -15,7 +15,7 @@ def check_module_exists(module_name):
     try:
         spec = importlib.util.find_spec(module_name)
         return spec is not None
-    except:
+    except (ImportError, AttributeError, Exception):
         return False
 
 def check_file_exists(file_path):

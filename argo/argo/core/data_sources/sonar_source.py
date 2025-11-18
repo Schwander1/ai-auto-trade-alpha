@@ -228,13 +228,27 @@ class SonarDataSource:
     
     def _handle_api_error(self, response) -> Optional:
         """Handle API error responses"""
-        if response.status_code == 400:
-            error_detail = response.text
+        status_code = response.status_code
+        
+        if status_code == 401:
+            # Authentication error - API key invalid or expired
+            # Only log once per session to reduce spam
+            if not hasattr(self, '_auth_error_logged'):
+                logger.warning(f"⚠️  Sonar API authentication failed (401) - API key may be invalid or expired")
+                logger.warning("   Sonar AI will be disabled for this session. Check API key in config.json")
+                self._auth_error_logged = True
+                self.enabled = False  # Disable to prevent repeated errors
+            return None
+        elif status_code == 400:
+            error_detail = response.text if hasattr(response, 'text') else str(response)
             logger.error(f"Sonar API error 400 (Bad Request): {error_detail[:200]}")
             logger.error("   Check: Request parameters, API key format, or model name")
+        elif status_code == 429:
+            # Rate limit - reduce log level
+            logger.debug(f"Sonar API rate limit (429) - will retry later")
         else:
-            error_detail = response.text
-            logger.error(f"Sonar API error {response.status_code}: {error_detail[:200]}")
+            error_detail = response.text if hasattr(response, 'text') else str(response)
+            logger.error(f"Sonar API error {status_code}: {error_detail[:200]}")
         return None
     
     def generate_signal(self, analysis, symbol):

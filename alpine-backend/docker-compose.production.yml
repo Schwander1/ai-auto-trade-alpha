@@ -34,16 +34,18 @@ services:
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
     restart: unless-stopped
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - alpine-network
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import urllib.request; r = urllib.request.urlopen('http://localhost:8000/health'); exit(0 if r.getcode() == 200 else 1)\""]
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 60s
 
   backend-2:
     build: ./backend
@@ -80,16 +82,18 @@ services:
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
     restart: unless-stopped
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - alpine-network
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import urllib.request; r = urllib.request.urlopen('http://localhost:8000/health'); exit(0 if r.getcode() == 200 else 1)\""]
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 60s
 
   backend-3:
     build: ./backend
@@ -126,16 +130,18 @@ services:
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
     restart: unless-stopped
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - alpine-network
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import urllib.request; r = urllib.request.urlopen('http://localhost:8000/health'); exit(0 if r.getcode() == 200 else 1)\""]
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 60s
 
   frontend-1:
     build: ./frontend
@@ -146,13 +152,17 @@ services:
       - NEXT_PUBLIC_API_URL=http://91.98.153.49/api
       - NODE_ENV=production
     restart: unless-stopped
+    depends_on:
+      backend-1:
+        condition: service_healthy
     networks:
       - alpine-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000 || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
 
   frontend-2:
     build: ./frontend
@@ -163,13 +173,17 @@ services:
       - NEXT_PUBLIC_API_URL=http://91.98.153.49/api
       - NODE_ENV=production
     restart: unless-stopped
+    depends_on:
+      backend-2:
+        condition: service_healthy
     networks:
       - alpine-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000 || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
 
   postgres:
     image: postgres:15
@@ -187,10 +201,11 @@ services:
     networks:
       - alpine-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U alpine_user"]
+      test: ["CMD-SHELL", "pg_isready -U alpine_user -d alpine_prod"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
 
   redis:
     image: redis:7-alpine
@@ -204,10 +219,11 @@ services:
     networks:
       - alpine-network
     healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      test: ["CMD-SHELL", "redis-cli -a AlpineRedis2025! ping | grep -q PONG || exit 1"]
       interval: 10s
       timeout: 3s
       retries: 5
+      start_period: 20s
 
   prometheus:
     image: prom/prometheus:latest
@@ -224,10 +240,11 @@ services:
     networks:
       - alpine-network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:9090/-/healthy || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 30s
 
   grafana:
     image: grafana/grafana:latest
@@ -242,15 +259,17 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
     depends_on:
-      - prometheus
+      prometheus:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - alpine-network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:3000/api/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
 
   node-exporter:
     image: prom/node-exporter:latest
@@ -278,7 +297,8 @@ services:
     networks:
       - alpine-network
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
   redis-exporter:
     image: oliver006/redis_exporter:latest
@@ -292,7 +312,8 @@ services:
     networks:
       - alpine-network
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
 
 volumes:
   postgres_data:

@@ -138,17 +138,18 @@ class SignalGenerationService:
             else:
                 self.confidence_threshold = self.trading_config.get("min_confidence", 75.0)
 
-            # Adaptive threshold by regime
+            # Adaptive threshold by regime - lowered to allow more signals
+            base_threshold = self.confidence_threshold
             self.regime_thresholds = {
-                "TRENDING": 85.0,  # Lower in trending markets
-                "CONSOLIDATION": 90.0,  # Higher in choppy markets
-                "VOLATILE": 88.0,  # Standard
-                "UNKNOWN": 88.0,
+                "TRENDING": max(65.0, base_threshold - 10.0),  # Lower in trending markets
+                "CONSOLIDATION": max(65.0, base_threshold - 10.0),  # Lowered to match TRENDING
+                "VOLATILE": max(65.0, base_threshold - 10.0),  # Lower in volatile markets
+                "UNKNOWN": max(60.0, base_threshold - 15.0),  # Lowest for unknown markets
                 # Legacy regime mappings
-                "BULL": 85.0,
-                "BEAR": 85.0,
-                "CHOP": 90.0,
-                "CRISIS": 88.0,
+                "BULL": max(65.0, base_threshold - 10.0),
+                "BEAR": max(65.0, base_threshold - 10.0),
+                "CHOP": max(65.0, base_threshold - 10.0),  # Lowered to match CONSOLIDATION
+                "CRISIS": max(65.0, base_threshold - 10.0),
             }
         except Exception as e:
             logger.warning(f"⚠️  Could not load feature flags for confidence threshold: {e}")
@@ -2440,12 +2441,28 @@ class SignalGenerationService:
         self._track_signal_generated(signal, signal_id, symbol)
 
         # Execute trade if enabled
-        if self.auto_execute and self.trading_engine and account and not self._paused:
+        # Enhanced logging for execution debugging
+        execution_conditions = {
+            'auto_execute': self.auto_execute,
+            'trading_engine': self.trading_engine is not None,
+            'account': account is not None,
+            'not_paused': not self._paused,
+        }
+        
+        # Always log execution conditions for debugging
+        logger.info(f"🔍 Execution check for {symbol}: auto_execute={self.auto_execute}, trading_engine={self.trading_engine is not None}, account={account is not None}, not_paused={not self._paused}")
+        
+        if all(execution_conditions.values()):
+            logger.info(f"✅ All conditions met for {symbol}, attempting execution")
             executed = await self._execute_trade_if_valid(
                 signal, account, existing_positions, symbol
             )
             self._track_trade_execution(signal, signal_id, executed)
+            if not executed:
+                logger.warning(f"⚠️  Trade execution returned False for {symbol} - check risk validation logs")
         else:
+            failed_conditions = [k for k, v in execution_conditions.items() if not v]
+            logger.warning(f"⏭️  Skipping {symbol} - Failed conditions: {', '.join(failed_conditions)}")
             self._track_signal_skipped(signal_id)
 
         return signal
@@ -2453,14 +2470,27 @@ class SignalGenerationService:
     def _sync_signal_to_alpine(self, signal: Dict):
         """Sync signal to Alpine backend (async, non-blocking)"""
         if not self.alpine_sync:
+            logger.debug("Alpine sync service not available, skipping sync")
+            return
+
+        # Check if sync is enabled
+        if not hasattr(self.alpine_sync, '_sync_enabled') or not self.alpine_sync._sync_enabled:
+            logger.debug("Alpine sync disabled, skipping sync")
             return
 
         try:
             # Try to get the current event loop
             try:
                 loop = asyncio.get_running_loop()
-                # Event loop is running, schedule the sync task
-                asyncio.create_task(self.alpine_sync.sync_signal(signal))
+                # Event loop is running, schedule the sync task (fire and forget)
+                task = asyncio.create_task(self.alpine_sync.sync_signal(signal))
+                # Add error callback to log failures
+                def log_sync_error(task):
+                    try:
+                        task.result()  # This will raise if task failed
+                    except Exception as e:
+                        logger.warning(f"⚠️  Alpine sync failed for signal {signal.get('signal_id', 'unknown')}: {e}")
+                task.add_done_callback(log_sync_error)
             except RuntimeError:
                 # No running event loop - try to get or create one
                 try:
@@ -2470,13 +2500,23 @@ class SignalGenerationService:
                         loop = asyncio.new_event_loop()
                         asyncio.set_event_loop(loop)
                     # Schedule the sync task
-                    asyncio.create_task(self.alpine_sync.sync_signal(signal))
+                    task = asyncio.create_task(self.alpine_sync.sync_signal(signal))
+                    def log_sync_error(task):
+                        try:
+                            task.result()
+                        except Exception as e:
+                            logger.warning(f"⚠️  Alpine sync failed for signal {signal.get('signal_id', 'unknown')}: {e}")
+                    task.add_done_callback(log_sync_error)
                 except RuntimeError:
                     # No event loop available - create a new one and run the sync
                     loop = asyncio.new_event_loop()
                     asyncio.set_event_loop(loop)
-                    loop.run_until_complete(self.alpine_sync.sync_signal(signal))
-                    loop.close()
+                    try:
+                        loop.run_until_complete(self.alpine_sync.sync_signal(signal))
+                    except Exception as e:
+                        logger.warning(f"⚠️  Alpine sync failed for signal {signal.get('signal_id', 'unknown')}: {e}")
+                    finally:
+                        loop.close()
         except Exception as e:
             logger.warning(f"⚠️  Failed to queue Alpine sync: {e}", exc_info=True)
 
@@ -2537,8 +2577,11 @@ class SignalGenerationService:
         # Only run gc.collect() periodically to avoid overhead
         import gc
         import time
-        import psutil
         import os
+        try:
+            import psutil
+        except ImportError:
+            psutil = None
 
         current_time = time.time()
         if not hasattr(self, "_last_gc_time"):
@@ -2548,33 +2591,31 @@ class SignalGenerationService:
 
         # Check memory usage every minute
         if (current_time - self._last_memory_check) > 60:  # 1 minute
-            try:
-                process = psutil.Process(os.getpid())
-                memory_info = process.memory_info()
-                memory_mb = memory_info.rss / 1024 / 1024
-                memory_percent = process.memory_percent()
-                
-                # Log memory usage
-                if memory_percent > 80:
-                    logger.warning(f"⚠️  High memory usage: {memory_mb:.1f}MB ({memory_percent:.1f}%)")
-                
-                # Force GC if memory usage is high
-                if memory_percent > 85 or memory_mb > 1500:  # > 1.5GB or > 85%
-                    logger.warning(f"🧹 Forcing GC due to high memory: {memory_mb:.1f}MB ({memory_percent:.1f}%)")
-                    gc.collect()
-                    self._last_gc_time = current_time
+            if psutil:
+                try:
+                    process = psutil.Process(os.getpid())
+                    memory_info = process.memory_info()
+                    memory_mb = memory_info.rss / 1024 / 1024
+                    memory_percent = process.memory_percent()
                     
-                    # Cleanup caches
-                    self._cleanup_consensus_cache()
-                    self._cleanup_regime_cache()
-                    self._cleanup_reasoning_cache()
-                
-                self._last_memory_check = current_time
-            except ImportError:
-                # psutil not available, skip memory monitoring
-                pass
-            except Exception as e:
-                logger.debug(f"Memory check error: {e}")
+                    # Log memory usage
+                    if memory_percent > 80:
+                        logger.warning(f"⚠️  High memory usage: {memory_mb:.1f}MB ({memory_percent:.1f}%)")
+                    
+                    # Force GC if memory usage is high
+                    if memory_percent > 85 or memory_mb > 1500:  # > 1.5GB or > 85%
+                        logger.warning(f"🧹 Forcing GC due to high memory: {memory_mb:.1f}MB ({memory_percent:.1f}%)")
+                        gc.collect()
+                        self._last_gc_time = current_time
+                        
+                        # Cleanup caches
+                        self._cleanup_consensus_cache()
+                        self._cleanup_regime_cache()
+                        self._cleanup_reasoning_cache()
+                    
+                    self._last_memory_check = current_time
+                except Exception as e:
+                    logger.debug(f"Memory check error: {e}")
 
         # Run GC every 5 minutes or if memory usage is high
         if (current_time - self._last_gc_time) > 300:  # 5 minutes
@@ -2697,7 +2738,8 @@ class SignalGenerationService:
             can_trade, reason = self._validate_trade(signal, account)
             if not can_trade:
                 logger.warning(f"⏭️  Skipping {symbol} - {reason}")
-                return
+                logger.debug(f"   Signal: {signal.get('action')} @ ${signal.get('entry_price', 0):.2f} ({signal.get('confidence', 0):.1f}% confidence)")
+                return False
 
             # FIX: Check existing position with side awareness
             # Allow closing existing positions (LONG->SELL, SHORT->BUY)
@@ -2733,7 +2775,7 @@ class SignalGenerationService:
                         f"⏭️  Skipping {symbol} - Already have {existing_side} position, "
                         f"signal is {signal_action} (would duplicate)"
                     )
-                    return
+                    return False
                 else:
                     # Opening opposite position (flip) - allow it
                     logger.info(
@@ -2743,19 +2785,26 @@ class SignalGenerationService:
 
             # Check correlation limits (only for new positions, not closing)
             if not existing_position and not self._check_correlation_groups(symbol, existing_positions):
-                return
+                logger.warning(f"⏭️  Skipping {symbol} - Correlation limit exceeded")
+                return False
 
             # FIX: Pass existing_positions to avoid race condition
+            logger.info(f"🚀 Executing trade for {symbol}: {signal.get('action')} @ ${signal.get('entry_price', 0):.2f} ({signal.get('confidence', 0):.1f}% confidence)")
             order_id = self.trading_engine.execute_signal(
                 signal, existing_positions=existing_positions
             )
             if order_id:
                 await self._handle_successful_trade(signal, order_id, existing_positions, symbol)
+                return True
             else:
                 logger.warning(f"⚠️  Trade execution returned no order ID for {symbol}")
+                return False
 
         except Exception as e:
             logger.error(f"❌ Error executing trade for {symbol}: {e}")
+            import traceback
+            logger.debug(f"   Traceback: {traceback.format_exc()}")
+            return False
 
     async def _handle_successful_trade(
         self, signal: Dict, order_id: str, existing_positions: List[Dict], symbol: str
@@ -3314,7 +3363,18 @@ class SignalGenerationService:
 
         # OPTIMIZATION: Flush any pending batch inserts before stopping
         try:
-            self.tracker.flush_pending()
+            # Try async flush first
+            import asyncio
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    # Schedule async flush
+                    asyncio.create_task(self.tracker.flush_pending_async())
+                else:
+                    loop.run_until_complete(self.tracker.flush_pending_async())
+            except RuntimeError:
+                # No event loop, use sync flush
+                self.tracker.flush_pending()
         except Exception as e:
             logger.warning(f"Error flushing pending signals: {e}")
 
@@ -3363,7 +3423,7 @@ class SignalGenerationService:
 
         # OPTIMIZATION: Flush any pending batch inserts before stopping
         try:
-            self.tracker.flush_pending()
+            await self.tracker.flush_pending_async()
         except Exception as e:
             logger.warning(f"Error flushing pending signals: {e}")
 

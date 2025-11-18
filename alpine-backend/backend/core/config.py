@@ -167,7 +167,6 @@ class Settings(BaseSettings):
 settings = Settings()
 
 # SECURITY: Validate settings on import (all environments, fail fast on critical issues)
-import os
 # Validate secrets in all environments, but fail fast only in production
 env = os.getenv("ENVIRONMENT", "development")
 try:

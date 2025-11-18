@@ -1,0 +1,469 @@
+services:
+  backend-1:
+    build: ./backend
+    container_name: alpine-backend-1
+    ports:
+      - "127.0.0.1:8001:8000"
+    environment:
+      - EXTERNAL_SIGNAL_API_URL=http://178.156.194.174:8000
+      - ENVIRONMENT=production
+      - INSTANCE=1
+      # Security Alerting
+      - SECURITY_ALERTS_ENABLED=true
+      - PAGERDUTY_ENABLED=${PAGERDUTY_ENABLED:-false}
+      - PAGERDUTY_API_KEY=${PAGERDUTY_API_KEY:-}
+      - SLACK_ENABLED=${SLACK_ENABLED:-false}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}
+      - EMAIL_ALERTS_ENABLED=${EMAIL_ALERTS_ENABLED:-false}
+      - ALERT_EMAIL=${ALERT_EMAIL:-}
+      # Database
+      - DATABASE_URL=postgresql://alpine_user:AlpineSecure2025!@postgres:5432/alpine_prod
+      # Redis
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=AlpineRedis2025!
+      - REDIS_DB=0
+      # Required Secrets (set via environment variables or AWS Secrets Manager)
+      - USE_AWS_SECRETS=${USE_AWS_SECRETS:-false}
+      - JWT_SECRET=${JWT_SECRET:-AlpineJWTKey2025MustBeReplacedWithSecureRandomValueAtLeast32Chars}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-sk_test_placeholder_replace_with_real_key}
+      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY:-pk_test_placeholder_replace_with_real_key}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-whsec_placeholder_replace_with_real_secret}
+      - EXTERNAL_SIGNAL_API_KEY=${EXTERNAL_SIGNAL_API_KEY:-988807abc6a05772fd1900bcbfd35b6037f4f3ba4656e99e78f67b1242041736}
+      - DOMAIN=${DOMAIN:-localhost}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+    restart: unless-stopped
+    restart_policy:
+      condition: on-failure
+      delay: 5s
+      max_attempts: 3
+      window: 120s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - alpine-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  backend-2:
+    build: ./backend
+    container_name: alpine-backend-2
+    ports:
+      - "127.0.0.1:8002:8000"
+    environment:
+      - EXTERNAL_SIGNAL_API_URL=http://178.156.194.174:8000
+      - ENVIRONMENT=production
+      - INSTANCE=2
+      # Security Alerting
+      - SECURITY_ALERTS_ENABLED=true
+      - PAGERDUTY_ENABLED=${PAGERDUTY_ENABLED:-false}
+      - PAGERDUTY_API_KEY=${PAGERDUTY_API_KEY:-}
+      - SLACK_ENABLED=${SLACK_ENABLED:-false}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}
+      - EMAIL_ALERTS_ENABLED=${EMAIL_ALERTS_ENABLED:-false}
+      - ALERT_EMAIL=${ALERT_EMAIL:-}
+      # Database
+      - DATABASE_URL=postgresql://alpine_user:AlpineSecure2025!@postgres:5432/alpine_prod
+      # Redis
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=AlpineRedis2025!
+      - REDIS_DB=0
+      # Required Secrets (set via environment variables or AWS Secrets Manager)
+      - USE_AWS_SECRETS=${USE_AWS_SECRETS:-false}
+      - JWT_SECRET=${JWT_SECRET:-AlpineJWTKey2025MustBeReplacedWithSecureRandomValueAtLeast32Chars}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-sk_test_placeholder_replace_with_real_key}
+      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY:-pk_test_placeholder_replace_with_real_key}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-whsec_placeholder_replace_with_real_secret}
+      - EXTERNAL_SIGNAL_API_KEY=${EXTERNAL_SIGNAL_API_KEY:-988807abc6a05772fd1900bcbfd35b6037f4f3ba4656e99e78f67b1242041736}
+      - DOMAIN=${DOMAIN:-localhost}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+    restart: unless-stopped
+    restart_policy:
+      condition: on-failure
+      delay: 5s
+      max_attempts: 3
+      window: 120s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - alpine-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  backend-3:
+    build: ./backend
+    container_name: alpine-backend-3
+    ports:
+      - "127.0.0.1:8003:8000"
+    environment:
+      - EXTERNAL_SIGNAL_API_URL=http://178.156.194.174:8000
+      - ENVIRONMENT=production
+      - INSTANCE=3
+      # Security Alerting
+      - SECURITY_ALERTS_ENABLED=true
+      - PAGERDUTY_ENABLED=${PAGERDUTY_ENABLED:-false}
+      - PAGERDUTY_API_KEY=${PAGERDUTY_API_KEY:-}
+      - SLACK_ENABLED=${SLACK_ENABLED:-false}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}
+      - EMAIL_ALERTS_ENABLED=${EMAIL_ALERTS_ENABLED:-false}
+      - ALERT_EMAIL=${ALERT_EMAIL:-}
+      # Database
+      - DATABASE_URL=postgresql://alpine_user:AlpineSecure2025!@postgres:5432/alpine_prod
+      # Redis
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=AlpineRedis2025!
+      - REDIS_DB=0
+      # Required Secrets (set via environment variables or AWS Secrets Manager)
+      - USE_AWS_SECRETS=${USE_AWS_SECRETS:-false}
+      - JWT_SECRET=${JWT_SECRET:-AlpineJWTKey2025MustBeReplacedWithSecureRandomValueAtLeast32Chars}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-sk_test_placeholder_replace_with_real_key}
+      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY:-pk_test_placeholder_replace_with_real_key}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-whsec_placeholder_replace_with_real_secret}
+      - EXTERNAL_SIGNAL_API_KEY=${EXTERNAL_SIGNAL_API_KEY:-988807abc6a05772fd1900bcbfd35b6037f4f3ba4656e99e78f67b1242041736}
+      - DOMAIN=${DOMAIN:-localhost}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+    restart: unless-stopped
+    restart_policy:
+      condition: on-failure
+      delay: 5s
+      max_attempts: 3
+      window: 120s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - alpine-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  frontend-1:
+    build: ./frontend
+    container_name: alpine-frontend-1
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://91.98.153.49/api
+      - NODE_ENV=production
+    restart: unless-stopped
+    restart_policy:
+      condition: on-failure
+      delay: 5s
+      max_attempts: 3
+      window: 120s
+    depends_on:
+      backend-1:
+        condition: service_healthy
+    networks:
+      - alpine-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend-2:
+    build: ./frontend
+    container_name: alpine-frontend-2
+    ports:
+      - "127.0.0.1:3002:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://91.98.153.49/api
+      - NODE_ENV=production
+    restart: unless-stopped
+    restart_policy:
+      condition: on-failure
+      delay: 5s
+      max_attempts: 3
+      window: 120s
+    depends_on:
+      backend-2:
+        condition: service_healthy
+    networks:
+      - alpine-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  postgres:
+    image: postgres:15
+    container_name: alpine-postgres
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_USER=alpine_user
+      - POSTGRES_PASSWORD=AlpineSecure2025!
+      - POSTGRES_DB=alpine_prod
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/migrations:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+    restart_policy:
+      condition: on-failure
+      delay: 5s
+      max_attempts: 3
+      window: 120s
+    networks:
+      - alpine-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U alpine_user -d alpine_prod"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: alpine-redis
+    ports:
+      - "6380:6379"
+    command: redis-server --requirepass AlpineRedis2025! --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    restart_policy:
+      condition: on-failure
+      delay: 5s
+      max_attempts: 3
+      window: 120s
+    networks:
+      - alpine-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a AlpineRedis2025! ping | grep -q PONG || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: alpine-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=30d'
+    restart: unless-stopped
+    restart_policy:
+      condition: on-failure
+      delay: 5s
+      max_attempts: 3
+      window: 120s
+    networks:
+      - alpine-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:9090/-/healthy || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: alpine-grafana
+    ports:
+      - "3100:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=AlpineGrafana2025!
+      - GF_SERVER_ROOT_URL=http://91.98.153.49/grafana
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    restart: unless-stopped
+    restart_policy:
+      condition: on-failure
+      delay: 5s
+      max_attempts: 3
+      window: 120s
+    networks:
+      - alpine-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: alpine-node-exporter
+    ports:
+      - "9100:9100"
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+    restart: unless-stopped
+    networks:
+      - alpine-network
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: alpine-postgres-exporter
+    ports:
+      - "9187:9187"
+    environment:
+      DATA_SOURCE_NAME: "postgresql://alpine_user:AlpineSecure2025!@postgres:5432/alpine_prod?sslmode=disable"
+    restart: unless-stopped
+    restart_policy:
+      condition: on-failure
+      delay: 5s
+      max_attempts: 3
+      window: 120s
+    networks:
+      - alpine-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: alpine-redis-exporter
+    ports:
+      - "9121:9121"
+    environment:
+      - REDIS_ADDR=redis://redis:6379
+      - REDIS_PASSWORD=AlpineRedis2025!
+    restart: unless-stopped
+    restart_policy:
+      condition: on-failure
+      delay: 5s
+      max_attempts: 3
+      window: 120s
+    networks:
+      - alpine-network
+    depends_on:
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+
+volumes:
+  postgres_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  alpine-network:
+    driver: bridge

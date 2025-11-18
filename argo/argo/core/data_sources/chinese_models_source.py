@@ -307,7 +307,14 @@ class ChineseModelsDataSource:
             for task in tasks:
                 task.cancel()
         
-        logger.error(f"❌ All Chinese models failed for {symbol}")
+        # Only log error once per symbol per session to reduce spam
+        if not hasattr(self, '_failed_symbols'):
+            self._failed_symbols = set()
+        
+        if symbol not in self._failed_symbols:
+            logger.warning(f"⚠️  All Chinese models failed for {symbol} - models may be disabled or rate limited")
+            logger.debug("   This is expected if Chinese model API keys are not configured")
+            self._failed_symbols.add(symbol)
         return None
         
     async def _query_qwen(self, symbol: str, market_data: dict) -> Optional[Dict]:

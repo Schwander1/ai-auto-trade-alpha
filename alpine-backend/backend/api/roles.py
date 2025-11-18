@@ -7,7 +7,7 @@ from fastapi import APIRouter, HTTPException, Depends, status, Header, Request, 
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 import time
 import logging
 
@@ -101,7 +101,7 @@ async def get_roles(
             description=role.description,
             is_system=role.is_system,
             permissions=[perm.name for perm in role.permissions],
-            created_at=role.created_at.isoformat() if role.created_at else datetime.utcnow().isoformat() + "Z"
+            created_at=role.created_at.isoformat() if role.created_at else datetime.now(timezone.utc).isoformat()
         )
         for role in roles
     ]

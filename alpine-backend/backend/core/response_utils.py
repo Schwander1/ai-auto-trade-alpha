@@ -4,7 +4,7 @@ Provides utilities for creating standardized API responses.
 """
 from typing import Optional, Dict, Any, List
 from fastapi.responses import JSONResponse
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 
 
@@ -38,7 +38,7 @@ def create_success_response(
     response_data = {
         "success": True,
         "data": data,
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }
 
     if message:
@@ -95,7 +95,7 @@ def create_paginated_response(
                 "total_pages": (total + limit - 1) // limit if limit > 0 else 1
             }
         },
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }
 
     if metadata:
@@ -139,7 +139,7 @@ def create_error_response(
         "error": {
             "code": error_code,
             "message": message,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
     }
 

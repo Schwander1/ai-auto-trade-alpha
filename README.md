@@ -2,6 +2,10 @@
 
 Intelligent, self-optimizing trading signal platform with automated CI/CD, monitoring, and continuous improvement.
 
+**📊 Current System Status:** See [SYSTEM_STATUS.md](SYSTEM_STATUS.md) for the single source of truth on current system state, capabilities, and operational status.
+
+**Version:** 6.0 | **Last Updated:** January 17, 2025
+
 ## 🚀 Quick Start
 
 ```bash
@@ -20,11 +24,20 @@ pnpm test
 ./commands/deploy alpine to production # Deploy Alpine only
 ```
 
-## 📦 Packages
+## 📦 System Structure
 
-- **packages/argo-trading/** - Trading engine (Python/FastAPI)
-- **packages/alpine-backend/** - User/subscription API (Python/FastAPI)
-- **packages/alpine-frontend/** - Web dashboard (Next.js)
+**CRITICAL:** This workspace contains **TWO COMPLETELY SEPARATE AND INDEPENDENT ENTITIES**:
+- **Argo Capital** (`argo/`) - Independent Trading Company (Signal Generation & Trading)
+- **Alpine Analytics LLC** (`alpine-backend/` + `alpine-frontend/`) - Independent Analytics Company (Signal Distribution Platform)
+
+These entities share **NO code, NO dependencies, and NO relationships**. They exist in the same workspace for development convenience only.
+
+### Components
+
+- **argo/** - Argo Capital trading engine (Python/FastAPI)
+- **alpine-backend/** - Alpine Analytics backend API (Python/FastAPI)
+- **alpine-frontend/** - Alpine Analytics frontend dashboard (Next.js)
+
 **✅ REMOVED:** `packages/shared/` has been removed per Rule 10 (Entity Separation). Each entity now has its own utilities.
 
 ## 🛠️ Development
@@ -201,7 +214,22 @@ The `.cursorrules` file enables Cursor to:
 
 **See:** [docs/CURSOR_PROFILES_STRATEGY.md](docs/CURSOR_PROFILES_STRATEGY.md) for optimal profile configurations
 
+## 📚 Documentation
+
+### Essential Documentation
+
+- **[SYSTEM_STATUS.md](SYSTEM_STATUS.md)** - **Single source of truth** for current system state
+- **[docs/SystemDocs/COMPLETE_SYSTEM_ARCHITECTURE.md](docs/SystemDocs/COMPLETE_SYSTEM_ARCHITECTURE.md)** - Complete system architecture
+- **[Rules/README.md](Rules/README.md)** - Development rules index (36 rules)
+- **[docs/SystemDocs/v6.0/](docs/SystemDocs/v6.0/)** - v6.0 system documentation
+
+### Quick References
+
+- **System Status:** [SYSTEM_STATUS.md](SYSTEM_STATUS.md)
+- **Architecture:** [docs/SystemDocs/COMPLETE_SYSTEM_ARCHITECTURE.md](docs/SystemDocs/COMPLETE_SYSTEM_ARCHITECTURE.md)
+- **Rules:** [Rules/README.md](Rules/README.md)
+- **Cursor Setup:** [CURSOR_README.md](CURSOR_README.md)
+
 ## 📄 License
 
 Private & Confidential
-test

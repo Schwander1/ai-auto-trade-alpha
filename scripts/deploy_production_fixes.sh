@@ -123,11 +123,25 @@ set -e
 
 if systemctl list-units --type=service | grep -q argo-trading.service; then
     systemctl restart argo-trading.service
-    sleep 3
-    if systemctl is-active --quiet argo-trading.service; then
-        echo "✅ Service restarted successfully"
-    else
-        echo "❌ Service failed to start"
+    echo "⏳ Waiting for service to restart..."
+    
+    # Wait for service to be active with retry logic
+    MAX_RETRIES=30
+    RETRY_COUNT=0
+    while [ \$RETRY_COUNT -lt \$MAX_RETRIES ]; do
+        if systemctl is-active --quiet argo-trading.service; then
+            echo "✅ Service restarted successfully"
+            break
+        fi
+        RETRY_COUNT=\$((RETRY_COUNT + 1))
+        if [ \$RETRY_COUNT -lt \$MAX_RETRIES ]; then
+            echo "  Waiting... (\$RETRY_COUNT/\$MAX_RETRIES)"
+            sleep 2
+        fi
+    done
+    
+    if [ \$RETRY_COUNT -eq \$MAX_RETRIES ]; then
+        echo "❌ Service failed to start after \$MAX_RETRIES attempts"
         systemctl status argo-trading.service --no-pager -l | head -20
         exit 1
     fi
@@ -141,11 +155,26 @@ ENDSSH
 print_step "STEP 5: VERIFY DEPLOYMENT"
 
 print_info "Running health checks..."
-sleep 5
 
-# Check health endpoint
-if curl -s -f http://${PRODUCTION_SERVER}:8000/health > /dev/null 2>&1; then
-    print_success "Health endpoint responding"
+# Wait for service health with retry logic
+MAX_RETRIES=30
+RETRY_COUNT=0
+
+while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+    if curl -s -f --max-time 5 http://${PRODUCTION_SERVER}:8000/health > /dev/null 2>&1; then
+        print_success "Health endpoint responding"
+        break
+    fi
+    
+    RETRY_COUNT=$((RETRY_COUNT + 1))
+    if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+        echo "  Waiting for health endpoint... ($RETRY_COUNT/$MAX_RETRIES)"
+        sleep 2
+    fi
+done
+
+if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
+    print_error "Health endpoint not responding after $MAX_RETRIES attempts"
 else
     print_warning "Health endpoint not responding (may need more time)"
 fi

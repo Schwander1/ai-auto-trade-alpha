@@ -18,7 +18,7 @@ See: docs/SystemDocs/PATENT_PENDING_TECHNOLOGY.md for patent details
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, Query, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Dict, Set, Any, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 import asyncio
 import logging
@@ -57,7 +57,7 @@ class ConnectionManager:
         
         logger.info(f"WebSocket connected: {connection_id} for user {user.id} ({user.email}, tier: {user.tier.value})")
         
-    def disconnect(self, connection_id: str):
+    def disconnect(self, connection_id: str) -> None:
         """Remove WebSocket connection"""
         if connection_id in self.active_connections:
             del self.active_connections[connection_id]
@@ -76,7 +76,7 @@ class ConnectionManager:
             
         logger.info(f"WebSocket disconnected: {connection_id}")
         
-    async def send_personal_message(self, message: dict, connection_id: str):
+    async def send_personal_message(self, message: dict, connection_id: str) -> None:
         """Send message to specific connection"""
         if connection_id in self.active_connections:
             try:
@@ -85,7 +85,7 @@ class ConnectionManager:
                 logger.error(f"Error sending message to {connection_id}: {e}")
                 self.disconnect(connection_id)
                 
-    async def broadcast_to_user(self, message: dict, user_id: int):
+    async def broadcast_to_user(self, message: dict, user_id: int) -> None:
         """Broadcast message to all connections for a user"""
         if user_id in self.user_connections:
             disconnected = []
@@ -100,7 +100,7 @@ class ConnectionManager:
             for connection_id in disconnected:
                 self.disconnect(connection_id)
                 
-    async def broadcast_new_signal(self, signal: Signal, db: Optional[Session] = None):
+    async def broadcast_new_signal(self, signal: Signal, db: Optional[Session] = None) -> None:
         """Broadcast new signal to all users who can access it"""
         # Check if signal is premium (confidence >= 85% or 0.85)
         confidence_pct = signal.confidence * 100 if signal.confidence <= 1 else signal.confidence
@@ -120,16 +120,16 @@ class ConnectionManager:
                 "take_profit": float(signal.target_price) if signal.target_price else None,
                 "confidence": confidence_pct,  # Convert to 0-100 range for API
                 "type": "PREMIUM" if is_premium else "STANDARD",
-                "timestamp": signal.created_at.isoformat() if signal.created_at else datetime.utcnow().isoformat(),
+                "timestamp": signal.created_at.isoformat() if signal.created_at else datetime.now(timezone.utc).isoformat(),
                 "hash": signal.verification_hash if signal.verification_hash else None,
                 "reasoning": signal.rationale if signal.rationale else None,
-                "server_timestamp": datetime.utcnow().timestamp(),
+                "server_timestamp": datetime.now(timezone.utc).timestamp(),
             }
         }
         
         # Refresh user tiers for users not in cache (new connections)
         missing_user_ids = [
-            user_id for user_id in self.user_connections.keys() 
+            user_id for user_id in self.user_connections
             if user_id not in self.user_tiers
         ]
         
@@ -243,7 +243,7 @@ async def websocket_signals_endpoint(
             "type": "connected",
             "message": "WebSocket connected successfully",
             "user_tier": user.tier.value,
-            "server_timestamp": datetime.utcnow().timestamp()
+            "server_timestamp": datetime.now(timezone.utc).timestamp()
         })
         
         # Keep connection alive and handle messages
@@ -257,7 +257,7 @@ async def websocket_signals_endpoint(
                     if message.get("type") == "ping":
                         await websocket.send_json({
                             "type": "pong",
-                            "server_timestamp": datetime.utcnow().timestamp()
+                            "server_timestamp": datetime.now(timezone.utc).timestamp()
                         })
                 except json.JSONDecodeError:
                     logger.warning(f"Invalid JSON from client {connection_id}: {data}")
@@ -267,7 +267,7 @@ async def websocket_signals_endpoint(
                 try:
                     await websocket.send_json({
                         "type": "ping",
-                        "server_timestamp": datetime.utcnow().timestamp()
+                        "server_timestamp": datetime.now(timezone.utc).timestamp()
                     })
                 except Exception:
                     # Connection likely closed
@@ -298,7 +298,7 @@ async def websocket_signals_endpoint(
 
 
 # Function to broadcast new signal (called from signal sync endpoint)
-async def broadcast_signal_to_websockets(signal: Signal, db: Session):
+async def broadcast_signal_to_websockets(signal: Signal, db: Session) -> None:
     """Broadcast a new signal to all connected WebSocket clients"""
     try:
         await manager.broadcast_new_signal(signal, db)
@@ -308,13 +308,13 @@ async def broadcast_signal_to_websockets(signal: Signal, db: Session):
 
 
 @router.get("/ws/stats")
-async def websocket_stats():
+async def websocket_stats() -> Dict[str, Any]:
     """Get WebSocket connection statistics"""
     return {
         "total_connections": manager.get_connection_count(),
         "active_users": len(manager.user_connections),
         "users_by_tier": {
-            tier.value: sum(1 for uid in manager.user_connections.keys() 
+            tier.value: sum(1 for uid in manager.user_connections 
                           if manager.user_tiers.get(uid) == tier)
             for tier in UserTier
         }

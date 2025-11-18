@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional, List, Dict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import json
 import os
 import logging
@@ -68,7 +68,7 @@ async def get_security_metrics(
     }
 
     if os.path.exists(security_log_path):
-        cutoff_time = datetime.utcnow() - timedelta(hours=24)
+        cutoff_time = datetime.now(timezone.utc) - timedelta(hours=24)
 
         with open(security_log_path, 'r') as f:
             for line in f:

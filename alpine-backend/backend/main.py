@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from sqlalchemy.orm import Session
 from typing import List
-from datetime import datetime
+from datetime import datetime, timezone
 import stripe
 import logging
 from pydantic import BaseModel
@@ -29,21 +29,31 @@ from backend.auth.security import verify_password, get_password_hash, create_acc
 # Initialize Stripe
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
-# Create database tables
-# Create tables (lazy initialization - engine will be created on first use)
-try:
-    engine = get_engine()
-    Base.metadata.create_all(bind=engine)
-except Exception as e:
-    import logging
-    logging.warning(f"Could not create database tables on startup: {e}. Tables will be created on first use.")
-
-# Configure logging
+# Configure logging first
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Create database tables with retry logic
+# Create tables (lazy initialization - engine will be created on first use)
+# The entrypoint script ensures database is ready, but we add retry logic here as well
+import time
+_max_db_init_retries = 5
+_db_init_retry_delay = 2
+for attempt in range(_max_db_init_retries):
+    try:
+        engine = get_engine()
+        Base.metadata.create_all(bind=engine)
+        logger.info("Database tables initialized successfully")
+        break
+    except Exception as e:
+        if attempt < _max_db_init_retries - 1:
+            logger.warning(f"Could not create database tables on startup (attempt {attempt + 1}/{_max_db_init_retries}): {e}. Retrying...")
+            time.sleep(_db_init_retry_delay)
+        else:
+            logger.warning(f"Could not create database tables on startup after {_max_db_init_retries} attempts: {e}. Tables will be created on first use.")
 
 # FastAPI app
 app = FastAPI(
@@ -145,7 +155,7 @@ def get_startup_time():
     """Get or initialize startup time"""
     global _STARTUP_TIME
     if _STARTUP_TIME is None:
-        _STARTUP_TIME = datetime.utcnow()
+        _STARTUP_TIME = datetime.now(timezone.utc)
     return _STARTUP_TIME
 
 # Health check cache (short TTL for near-real-time monitoring)
@@ -169,7 +179,7 @@ async def health_check():
     if _health_check_cache and (current_time - _health_check_cache_time) < HEALTH_CHECK_CACHE_TTL:
         # Return cached result with updated timestamp
         cached_result = _health_check_cache.copy()
-        cached_result["timestamp"] = datetime.utcnow().isoformat() + "Z"
+        cached_result["timestamp"] = datetime.now(timezone.utc).isoformat()
         cached_result["cached"] = True
         health_check_cache_hits_total.labels(endpoint='health').inc()
         health_check_total.labels(endpoint='health', status=cached_result.get('status', 'unknown')).inc()
@@ -177,7 +187,7 @@ async def health_check():
     
     start_time = time.time()
     startup_time = get_startup_time()
-    uptime_delta = datetime.utcnow() - startup_time
+    uptime_delta = datetime.now(timezone.utc) - startup_time
     uptime_seconds = int(uptime_delta.total_seconds())
     days = uptime_seconds // 86400
     hours = (uptime_seconds % 86400) // 3600
@@ -189,7 +199,7 @@ async def health_check():
         "service": "Alpine Analytics API",
         "version": "1.0.0",
         "domain": settings.DOMAIN,
-        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "uptime_seconds": uptime_seconds,
         "uptime_formatted": uptime_formatted,
         "checks": {},
@@ -399,7 +409,7 @@ async def health_readiness():
         # Service is ready - return 200 even if database is unavailable
         return {
             "status": "ready",
-            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "database": db_status,
             "note": "Service ready to handle traffic" if db_status == "connected" else "Service ready but database not available"
         }
@@ -408,7 +418,7 @@ async def health_readiness():
         # Return ready even if check fails - service can still handle basic requests
         return {
             "status": "ready",
-            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "database": "error",
             "note": f"Service ready but database check failed: {str(e)}"
         }
@@ -418,10 +428,10 @@ async def health_readiness():
 async def health_liveness():
     """Kubernetes liveness probe - returns 200 if service is alive"""
     startup_time = get_startup_time()
-    uptime_seconds = int((datetime.utcnow() - startup_time).total_seconds())
+    uptime_seconds = int((datetime.now(timezone.utc) - startup_time).total_seconds())
     return {
         "status": "alive",
-        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "uptime_seconds": uptime_seconds
     }
 

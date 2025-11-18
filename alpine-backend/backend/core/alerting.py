@@ -2,7 +2,7 @@
 import logging
 import os
 from typing import Optional, Dict, Any
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from collections import defaultdict
 from backend.core.config import settings
 
@@ -41,7 +41,7 @@ def _should_alert(event_type: str, identifier: str) -> bool:
         return False
     
     key = f"{event_type}:{identifier}"
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     window_start = now - timedelta(seconds=threshold["window"])
     
     # Filter events within window
@@ -99,10 +99,10 @@ def _send_slack_alert(event_type: str, message: str, details: Dict[str, Any]):
                 "color": color,
                 "fields": [
                     {"title": "Event Type", "value": event_type, "short": True},
-                    {"title": "Time", "value": datetime.utcnow().isoformat(), "short": True},
+                    {"title": "Time", "value": datetime.now(timezone.utc).isoformat(), "short": True},
                 ],
                 "footer": "Alpine Backend Security",
-                "ts": int(datetime.utcnow().timestamp())
+                "ts": int(datetime.now(timezone.utc).timestamp())
             }]
         }
         
@@ -153,7 +153,7 @@ def send_security_alert(
         return
     
     # Track event
-    _event_tracking[f"{event_type}:{identifier}"].append(datetime.utcnow())
+    _event_tracking[f"{event_type}:{identifier}"].append(datetime.now(timezone.utc))
     
     # Check if alert should be sent
     if not _should_alert(event_type, identifier):
@@ -164,7 +164,7 @@ def send_security_alert(
     alert_details.update({
         "event_type": event_type,
         "identifier": identifier,
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     })
     
     # Send alerts via all configured channels

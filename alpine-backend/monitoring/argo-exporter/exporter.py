@@ -46,7 +46,8 @@ def fetch_argo_metrics():
         try:
             signals_response = requests.get(f"{EXTERNAL_SIGNAL_API_URL}/api/v1/signals/summary", timeout=5)
             signals_data = signals_response.json()
-        except:
+        except (requests.RequestException, ValueError, KeyError) as e:
+            logging.debug(f"Signals endpoint not available or invalid response: {e}")
             signals_data = {}
         
         return health_data, stats_data, signals_data

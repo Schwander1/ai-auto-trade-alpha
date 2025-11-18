@@ -1,6 +1,6 @@
 # Vision, Mission & Goals
 
-**Last Updated:** January 15, 2025  
+**Last Updated:** January 17, 2025  
 **Version:** 1.0  
 **Applies To:** All strategic decisions, development priorities, and system evolution
 
@@ -90,12 +90,14 @@ Become the **world's most trusted and highest-performing** trading signal platfo
 
 **Target:** Improve win rate and risk-adjusted returns through continuous optimization
 
-**Metrics (Based on Latest Backtest Results - November 2025):**
-- Win rate: Current ~49.4% | Target: ≥55% (Year 1), ≥60% (Year 3)
-- Average total return: Current ~13.2% | Target: ≥20% (Year 1), ≥30% (Year 3)
-- Sharpe ratio: Current ~0.80 | Target: ≥1.0 (Year 1), ≥1.5 (Year 3)
-- Maximum drawdown: Current ~-21.9% | Target: ≤15% (Year 1), ≤10% (Year 3)
+**Metrics (Based on Latest Backtest Results - January 2025):**
+- Win rate: Current ~47-50% (varies by symbol) | Target: ≥55% (Year 1), ≥60% (Year 3)
+- Average total return: Current ~30-50% (varies by symbol) | Target: ≥20% (Year 1), ≥30% (Year 3)
+- Sharpe ratio: Current ~1.0-1.2 (varies by symbol) | Target: ≥1.0 (Year 1), ≥1.5 (Year 3)
+- Maximum drawdown: Current ~-23% to -30% (varies by symbol) | Target: ≤15% (Year 1), ≤10% (Year 3)
 - Profit factor: Current ~1.50 | Target: ≥1.8 (Year 1), ≥2.0 (Year 3)
+
+**Note:** Metrics are from comprehensive backtest results. See `argo/reports/comprehensive_backtest_results.json` for detailed per-symbol performance.
 
 **Timeline:**
 - **Year 1:** Improve win rate to 55%+, reduce drawdown to <15%, increase Sharpe to >1.0
@@ -457,10 +459,10 @@ Become the **world's most trusted and highest-performing** trading signal platfo
 ### Key Performance Indicators (KPIs)
 
 **Signal Quality:**
-- Win rate: Current ~49.4% | Target: ≥55% (Year 1), ≥60% (Year 3)
-- Average return: Current ~13.2% | Target: ≥20% (Year 1), ≥30% (Year 3)
-- Sharpe ratio: Current ~0.80 | Target: ≥1.0 (Year 1), ≥1.5 (Year 3)
-- Maximum drawdown: Current ~-21.9% | Target: ≤15% (Year 1), ≤10% (Year 3)
+- Win rate: Current ~47-50% (varies by symbol) | Target: ≥55% (Year 1), ≥60% (Year 3)
+- Average return: Current ~30-50% (varies by symbol) | Target: ≥20% (Year 1), ≥30% (Year 3)
+- Sharpe ratio: Current ~1.0-1.2 (varies by symbol) | Target: ≥1.0 (Year 1), ≥1.5 (Year 3)
+- Maximum drawdown: Current ~-23% to -30% (varies by symbol) | Target: ≤15% (Year 1), ≤10% (Year 3)
 
 **System Performance:**
 - Uptime: ≥99.9% (current: 99.9%) ✅

@@ -4,12 +4,15 @@ Run this after deploying the updated models
 """
 from sqlalchemy import text
 from backend.core.database import engine
+import logging
+
+logger = logging.getLogger(__name__)
 
 def add_indexes():
     """Add all performance indexes"""
     with engine.connect() as conn:
         # Signal indexes
-        print("Adding signal indexes...")
+        logger.info("Adding signal indexes...")
         try:
             conn.execute(text("""
                 CREATE INDEX IF NOT EXISTS idx_signal_active_confidence_created 
@@ -28,13 +31,13 @@ def add_indexes():
                 ON signals(is_active)
             """))
             conn.commit()
-            print("✅ Signal indexes added")
+            logger.info("✅ Signal indexes added")
         except Exception as e:
-            print(f"⚠️ Signal indexes error: {e}")
+            logger.error(f"⚠️ Signal indexes error: {e}")
             conn.rollback()
         
         # User indexes
-        print("Adding user indexes...")
+        logger.info("Adding user indexes...")
         try:
             conn.execute(text("""
                 CREATE INDEX IF NOT EXISTS idx_user_tier_active 
@@ -61,25 +64,25 @@ def add_indexes():
                 ON users(stripe_subscription_id)
             """))
             conn.commit()
-            print("✅ User indexes added")
+            logger.info("✅ User indexes added")
         except Exception as e:
-            print(f"⚠️ User indexes error: {e}")
+            logger.error(f"⚠️ User indexes error: {e}")
             conn.rollback()
         
         # Notification indexes
-        print("Adding notification indexes...")
+        logger.info("Adding notification indexes...")
         try:
             conn.execute(text("""
                 CREATE INDEX IF NOT EXISTS idx_notif_user_read_created 
                 ON notifications(user_id, is_read, created_at DESC)
             """))
             conn.commit()
-            print("✅ Notification indexes added")
+            logger.info("✅ Notification indexes added")
         except Exception as e:
-            print(f"⚠️ Notification indexes error: {e}")
+            logger.error(f"⚠️ Notification indexes error: {e}")
             conn.rollback()
         
-        print("\n✅ All indexes migration complete!")
+        logger.info("✅ All indexes migration complete!")
 
 if __name__ == "__main__":
     add_indexes()

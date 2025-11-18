@@ -8,22 +8,27 @@ Optimizations:
 - Cache headers for client-side caching
 - Better error handling
 """
-from fastapi import APIRouter, HTTPException, Depends, Query, Header, Request, Response
-from sqlalchemy.orm import Session
-from sqlalchemy import func
-from pydantic import BaseModel, Field, field_validator
-from typing import Optional, List, Dict
-from datetime import datetime
-import time
+import logging
 import re
+import time
+from datetime import datetime, timezone
+from typing import Dict, List, Optional
 
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, Response
+from pydantic import BaseModel, Field, field_validator
+from sqlalchemy import func
+from sqlalchemy.orm import Session
+
+from backend.api.auth import get_current_user
 from backend.core.database import get_db
 from backend.core.input_sanitizer import sanitize_string
-from backend.core.response_formatter import add_rate_limit_headers, add_cache_headers, format_datetime_iso
-from backend.models.user import User
 from backend.core.rate_limit import check_rate_limit, get_rate_limit_status
-from backend.api.auth import get_current_user
-import logging
+from backend.core.response_formatter import (
+    add_cache_headers,
+    add_rate_limit_headers,
+    format_datetime_iso,
+)
+from backend.models.user import User
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +37,10 @@ router = APIRouter(prefix="/api/v1/notifications", tags=["notifications"])
 # Rate limiting
 RATE_LIMIT_WINDOW = 60
 RATE_LIMIT_MAX = 100
+
+# Error message constants
+INVALID_NOTIFICATION_ID_FORMAT = "Invalid notification ID format"
+RATE_LIMIT_EXCEEDED = "Rate limit exceeded"
 
 
 class NotificationResponse(BaseModel):
@@ -64,7 +73,7 @@ class MarkReadRequest(BaseModel):
     @classmethod
     def validate_notification_ids(cls, v: List[str]) -> List[str]:
         """Validate notification IDs"""
-        if not v or len(v) == 0:
+        if not v:
             raise ValueError("At least one notification ID is required")
         if len(v) > 100:
             raise ValueError("Maximum 100 notification IDs allowed")
@@ -72,10 +81,10 @@ class MarkReadRequest(BaseModel):
         sanitized = []
         for nid in v:
             if not isinstance(nid, str) or len(nid) > 100:
-                raise ValueError("Invalid notification ID format")
+                raise ValueError(INVALID_NOTIFICATION_ID_FORMAT)
             # Only allow alphanumeric, hyphens, underscores
             if not re.match(r'^[A-Za-z0-9_-]+$', nid):
-                raise ValueError("Invalid notification ID format")
+                raise ValueError(INVALID_NOTIFICATION_ID_FORMAT)
             sanitized.append(nid)
         return sanitized
 
@@ -154,7 +163,7 @@ async def get_unread_notifications(
     # Rate limiting
     client_id = current_user.email
     if not check_rate_limit(client_id):
-        raise HTTPException(status_code=429, detail="Rate limit exceeded")
+        raise HTTPException(status_code=429, detail=RATE_LIMIT_EXCEEDED)
 
     # Add rate limit headers
     rate_limit_status = get_rate_limit_status(client_id)
@@ -260,7 +269,7 @@ async def mark_notifications_read(
     # Rate limiting
     client_id = current_user.email
     if not check_rate_limit(client_id):
-        raise HTTPException(status_code=429, detail="Rate limit exceeded")
+        raise HTTPException(status_code=429, detail=RATE_LIMIT_EXCEEDED)
 
     # Add rate limit headers
     rate_limit_status = get_rate_limit_status(client_id)
@@ -284,10 +293,10 @@ async def mark_notifications_read(
                     continue
 
         if not numeric_ids:
-            raise HTTPException(status_code=400, detail="Invalid notification ID format")
+            raise HTTPException(status_code=400, detail=INVALID_NOTIFICATION_ID_FORMAT)
 
         # Update notifications in database
-        read_at = datetime.utcnow()
+        read_at = datetime.now(timezone.utc)
         count = db.query(Notification).filter(
             Notification.id.in_(numeric_ids),
             Notification.user_id == current_user.id,
@@ -345,7 +354,7 @@ async def delete_notification(
     # Rate limiting
     client_id = current_user.email
     if not check_rate_limit(client_id):
-        raise HTTPException(status_code=429, detail="Rate limit exceeded")
+        raise HTTPException(status_code=429, detail=RATE_LIMIT_EXCEEDED)
 
     # Add rate limit headers
     rate_limit_status = get_rate_limit_status(client_id)
@@ -357,11 +366,11 @@ async def delete_notification(
 
     # Input sanitization - validate notification_id format
     if not notification_id or len(notification_id) > 100:
-        raise HTTPException(status_code=400, detail="Invalid notification ID format")
+        raise HTTPException(status_code=400, detail=INVALID_NOTIFICATION_ID_FORMAT)
 
     # Sanitize notification_id (alphanumeric, hyphens, underscores only)
     if not re.match(r'^[A-Za-z0-9_-]+$', notification_id):
-        raise HTTPException(status_code=400, detail="Invalid notification ID format")
+        raise HTTPException(status_code=400, detail=INVALID_NOTIFICATION_ID_FORMAT)
 
     # OPTIMIZATION: Delete notification from database
     from backend.models.notification import Notification
@@ -369,12 +378,12 @@ async def delete_notification(
     try:
         # Extract numeric ID from "notif-{id}" format
         if not notification_id.startswith("notif-"):
-            raise HTTPException(status_code=400, detail="Invalid notification ID format")
+            raise HTTPException(status_code=400, detail=INVALID_NOTIFICATION_ID_FORMAT)
 
         try:
             numeric_id = int(notification_id.replace("notif-", ""))
         except ValueError:
-            raise HTTPException(status_code=400, detail="Invalid notification ID format")
+            raise HTTPException(status_code=400, detail=INVALID_NOTIFICATION_ID_FORMAT)
 
         # Delete notification (only if it belongs to the user)
         notification = db.query(Notification).filter(

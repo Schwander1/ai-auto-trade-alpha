@@ -1,6 +1,6 @@
 {
   "massive": {
-    "api_key": "F1B4WG0e1ypIVONoqtdIlFaTjBCgBh7N",
+    "api_key": "KceSpyz5qE4TO_VPQ7Yh7_EXURQcZqOb",
     "s3_access_key": "",
     "s3_secret_key": "",
     "s3_endpoint": "https://files.massive.com",
@@ -110,7 +110,8 @@
     "retry_delay_seconds": 1,
     "enable_position_monitoring": true,
     "enable_performance_tracking": true,
-    "min_position_size_pct": 5
+    "min_position_size_pct": 5,
+    "force_24_7_mode": true
   },
   "backtest": {
     "data_source": "yfinance",
@@ -196,7 +197,7 @@
     "risk_monitoring": true
   },
   "prop_firm": {
-    "enabled": false,
+    "enabled": true,
     "account": "prop_firm_test",
     "risk_limits": {
       "max_drawdown_pct": 2.0,

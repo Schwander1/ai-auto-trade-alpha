@@ -1,7 +1,7 @@
 """Security event logging"""
 import logging
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, Dict, Any
 from fastapi import Request
 import traceback
@@ -88,7 +88,7 @@ def log_security_event(
         user_agent = user_agent or request.headers.get("User-Agent")
     
     event_data = {
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "event_type": event_type,
         "user_id": user_id,
         "email": email,

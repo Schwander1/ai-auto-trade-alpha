@@ -1,8 +1,10 @@
 # Complete System Architecture Documentation
 
-**Date:** November 17, 2025  
+**Date:** January 17, 2025  
 **Version:** 6.0  
 **Status:** Complete System Overview with All v6.0 Optimizations
+
+**Note:** For current system status, see [SYSTEM_STATUS.md](../../SYSTEM_STATUS.md) (single source of truth)
 
 ---
 

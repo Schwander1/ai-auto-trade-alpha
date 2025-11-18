@@ -4,7 +4,7 @@ Tests the /api/v1/signals/history endpoint with real database queries
 """
 import pytest
 import hashlib
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from fastapi.testclient import TestClient
 from backend.models.signal import Signal, SignalAction
 
@@ -28,7 +28,7 @@ class TestSignalHistoryEndpoint:
     def test_signal_history_returns_signals(self, client, auth_headers, db):
         """Test that signal history returns signals from database"""
         # Create test signals
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         signals = [
             Signal(
                 symbol="AAPL",
@@ -59,7 +59,7 @@ class TestSignalHistoryEndpoint:
     def test_signal_history_respects_limit(self, client, auth_headers, db):
         """Test that signal history respects the limit parameter"""
         # Create 10 test signals
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         signals = [
             Signal(
                 symbol="AAPL",
@@ -85,7 +85,7 @@ class TestSignalHistoryEndpoint:
 
     def test_signal_history_respects_days_parameter(self, client, auth_headers, db):
         """Test that signal history respects the days parameter"""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         # Create signals: 2 within 7 days, 2 older than 7 days
         recent_signals = [
@@ -129,7 +129,7 @@ class TestSignalHistoryEndpoint:
 
     def test_signal_history_orders_by_newest_first(self, client, auth_headers, db):
         """Test that signal history orders signals by newest first"""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         signals = [
             Signal(
                 symbol="AAPL",
@@ -159,7 +159,7 @@ class TestSignalHistoryEndpoint:
 
     def test_signal_history_includes_status(self, client, auth_headers, db):
         """Test that signal history includes correct status based on is_active"""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         active_signal = Signal(
             symbol="AAPL",
@@ -208,7 +208,7 @@ class TestSignalHistoryEndpoint:
             rationale="Test signal rationale for AAPL buy signal with sufficient length",
             verification_hash="test_hash",
             is_active=True,
-            created_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc)
         )
         db.add(signal)
         db.commit()
@@ -234,7 +234,7 @@ class TestSignalHistoryEndpoint:
             rationale="Test signal rationale for AAPL buy signal with sufficient length",
             verification_hash="test_hash",
             is_active=True,
-            created_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc)
         )
         db.add(signal)
         db.commit()
@@ -258,7 +258,7 @@ class TestSignalHistoryEndpoint:
             rationale="Test signal rationale for AAPL buy signal with sufficient length",
             verification_hash="test_hash",
             is_active=True,
-            created_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc)
         )
         db.add(signal)
         db.commit()
@@ -278,7 +278,7 @@ class TestSignalHistoryEndpoint:
             rationale="Test signal rationale for AAPL buy signal with sufficient length",
             verification_hash="test_hash",
             is_active=True,
-            created_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc)
         )
         db.add(signal)
         db.commit()
@@ -310,7 +310,7 @@ class TestSignalHistoryEndpoint:
 
     def test_signal_history_handles_different_actions(self, client, auth_headers, db):
         """Test that signal history handles different action types"""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         actions_list = [SignalAction.BUY, SignalAction.SELL, SignalAction.BUY, SignalAction.SELL]
         signals = [
             Signal(
@@ -340,7 +340,7 @@ class TestSignalHistoryEndpoint:
 
     def test_signal_history_handles_multiple_symbols(self, client, auth_headers, db):
         """Test that signal history handles multiple symbols"""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         symbols = ["AAPL", "NVDA", "BTC-USD", "ETH-USD"]
         signals = [
             Signal(

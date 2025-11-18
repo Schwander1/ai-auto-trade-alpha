@@ -13,7 +13,7 @@ Optimizations:
 from fastapi import APIRouter, HTTPException, Depends, Query, Header, Response, Request
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 import time
@@ -157,7 +157,7 @@ async def fetch_signals_from_external_provider(
                 "entry_price": 175.50,
                 "confidence": 97.2,
                 "type": "PREMIUM",
-                "timestamp": format_datetime_iso(datetime.utcnow()),
+                "timestamp": format_datetime_iso(datetime.now(timezone.utc)),
                 "hash": "abc123"
             }
             for i in range(limit)
@@ -288,7 +288,7 @@ async def get_subscribed_signals(
         user_tier=current_user.tier.value
     )
 
-def _apply_rate_limiting(request: Request, response: Response, client_id: str):
+def _apply_rate_limiting(request: Request, response: Response, client_id: str) -> None:
     """Apply rate limiting and add headers (uses centralized utility)"""
     from backend.core.api_utils import apply_rate_limiting
     apply_rate_limiting(request, response, client_id)
@@ -390,7 +390,7 @@ async def get_signal_history(
 
     try:
         # Calculate date range and query signals
-        start_date = datetime.utcnow() - timedelta(days=days)
+        start_date = datetime.now(timezone.utc) - timedelta(days=days)
         signals = _query_signal_history(db, start_date, limit)
 
         # Map to response format
@@ -551,7 +551,7 @@ async def export_signals(
             set_cache(cache_key, cached_export, ttl=CACHE_TTL_SIGNAL_EXPORT)
 
     # Create response with appropriate content type
-    filename = f"signals_{datetime.utcnow().strftime('%Y%m%d')}.{export_format}"
+    filename = f"signals_{datetime.now(timezone.utc).strftime('%Y%m%d')}.{export_format}"
     media_type = "text/csv" if export_format == "csv" else "application/json"
 
     export_response = Response(

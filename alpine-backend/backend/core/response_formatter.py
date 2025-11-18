@@ -1,7 +1,7 @@
 """Standardized response formatting"""
 from fastapi import Response
 from typing import Optional, Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone
 from backend.core.request_tracking import get_request_id
 from fastapi import Request
 
@@ -18,7 +18,7 @@ def format_datetime_iso(dt: Optional[datetime], default: Optional[datetime] = No
         ISO formatted string with 'Z' suffix
     """
     if dt is None:
-        dt = default or datetime.utcnow()
+        dt = default or datetime.now(timezone.utc)
 
     iso_str = dt.isoformat()
     # Ensure 'Z' suffix for UTC (if not already present)
@@ -68,7 +68,7 @@ def format_error_response(
         "error": {
             "code": status_code,
             "message": message,
-            "timestamp": format_datetime_iso(datetime.utcnow())
+            "timestamp": format_datetime_iso(datetime.now(timezone.utc))
         }
     }
 
@@ -134,7 +134,7 @@ def format_paginated_response(
             "page": (offset // limit) + 1 if limit > 0 else 1,
             "total_pages": (total + limit - 1) // limit if limit > 0 else 1
         },
-        "timestamp": format_datetime_iso(datetime.utcnow())
+        "timestamp": format_datetime_iso(datetime.now(timezone.utc))
     }
 
     if request:

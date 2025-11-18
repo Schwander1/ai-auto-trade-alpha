@@ -6,8 +6,29 @@ set -e
 
 cd "$(dirname "$0")/.."
 
+# Source dependency checking utilities
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "$SCRIPT_DIR/lib/wait-for-dependencies.sh" ]; then
+    source "$SCRIPT_DIR/lib/wait-for-dependencies.sh"
+else
+    echo "⚠️  Warning: Dependency checking utilities not found"
+fi
+
 echo "🚀 Starting Argo Signal Generation Service"
 echo "==========================================="
+
+# Wait for dependencies before starting
+if command -v wait_for_redis &> /dev/null; then
+    wait_for_redis "Redis" || {
+        echo "⚠️  Warning: Redis not available, continuing anyway..."
+    }
+fi
+
+if command -v wait_for_database &> /dev/null; then
+    wait_for_database "" "Database" || {
+        echo "⚠️  Warning: Database not available, continuing anyway..."
+    }
+fi
 
 # Set PYTHONPATH
 export PYTHONPATH="$(pwd)/argo"

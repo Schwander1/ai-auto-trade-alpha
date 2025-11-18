@@ -6,7 +6,7 @@ import hmac
 import hashlib
 import logging
 from typing import Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from backend.core.database import get_db
 from backend.core.config import settings
@@ -76,7 +76,7 @@ def check_webhook_idempotency(event_id: str) -> bool:
         return False
 
 
-def mark_webhook_processed(event_id: str):
+def mark_webhook_processed(event_id: str) -> None:
     """
     Mark webhook event as processed (idempotency)
 
@@ -108,7 +108,7 @@ def validate_webhook_timestamp(event_created: int) -> bool:
         True if event is recent enough, False if too old
     """
     event_time = datetime.fromtimestamp(event_created)
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     age = (now - event_time).total_seconds()
 
     if age > WEBHOOK_EVENT_TTL:
@@ -178,7 +178,7 @@ async def stripe_webhook(
     if event_created and not validate_webhook_timestamp(event_created):
         log_security_event(
             SecurityEvent.SUSPICIOUS_ACTIVITY,
-            details={"type": "stripe_webhook_replay_attempt", "event_id": event_id, "age_seconds": (datetime.utcnow() - datetime.fromtimestamp(event_created)).total_seconds()},
+            details={"type": "stripe_webhook_replay_attempt", "event_id": event_id, "age_seconds": (datetime.now(timezone.utc) - datetime.fromtimestamp(event_created, tz=timezone.utc)).total_seconds()},
             request=request
         )
         raise HTTPException(

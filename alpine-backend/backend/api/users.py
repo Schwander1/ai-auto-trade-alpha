@@ -12,7 +12,7 @@ from fastapi import APIRouter, HTTPException, Depends, status, Header, Request, 
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import time
 
 from backend.core.database import get_db
@@ -131,7 +131,7 @@ async def get_profile(
         tier=current_user.tier.value,
         is_active=current_user.is_active,
         is_verified=current_user.is_verified,
-        created_at=current_user.created_at.isoformat() if current_user.created_at else datetime.utcnow().isoformat() + "Z",
+        created_at=current_user.created_at.isoformat() if current_user.created_at else datetime.now(timezone.utc).isoformat(),
         updated_at=format_datetime_iso(current_user.updated_at) if current_user.updated_at else None
     )
 
@@ -228,7 +228,7 @@ async def update_profile(
 
     if updated:
         try:
-            current_user.updated_at = datetime.utcnow()
+            current_user.updated_at = datetime.now(timezone.utc)
             db.commit()
             db.refresh(current_user)
         except Exception as e:
@@ -250,7 +250,7 @@ async def update_profile(
         tier=current_user.tier.value,
         is_active=current_user.is_active,
         is_verified=current_user.is_verified,
-        created_at=current_user.created_at.isoformat() if current_user.created_at else datetime.utcnow().isoformat() + "Z",
+        created_at=current_user.created_at.isoformat() if current_user.created_at else datetime.now(timezone.utc).isoformat(),
         updated_at=format_datetime_iso(current_user.updated_at) if current_user.updated_at else None
     )
 
@@ -324,7 +324,7 @@ async def delete_account(
     # Delete user (soft delete by setting is_active=False)
     try:
         current_user.is_active = False
-        current_user.updated_at = datetime.utcnow()
+        current_user.updated_at = datetime.now(timezone.utc)
         db.commit()
     except Exception as e:
         db.rollback()
