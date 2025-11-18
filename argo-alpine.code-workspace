@@ -87,8 +87,10 @@
       "**/htmlcov/**": true
     },
 
-    // Editor settings
+    // Editor settings - Auto features
     "editor.formatOnSave": true,
+    "editor.formatOnPaste": true,
+    "editor.formatOnType": false,
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.codeActionsOnSave": {
       "source.fixAll.eslint": "explicit",
@@ -98,14 +100,37 @@
     "editor.tabSize": 2,
     "editor.insertSpaces": true,
     "editor.trimAutoWhitespace": true,
+    "editor.autoClosingBrackets": "always",
+    "editor.autoClosingQuotes": "always",
+    "editor.autoClosingDelete": "always",
+    "editor.autoSurround": "languageDefined",
+    "editor.autoIndent": "full",
+    "editor.suggestOnTriggerCharacters": true,
+    "editor.acceptSuggestionOnCommitCharacter": true,
+    "editor.acceptSuggestionOnEnter": "on",
+    "editor.tabCompletion": "on",
+    "editor.quickSuggestions": {
+      "other": true,
+      "comments": false,
+      "strings": true
+    },
+    "editor.quickSuggestionsDelay": 10,
+    "editor.suggest.localityBonus": true,
+    "editor.suggest.shareSuggestSelections": true,
     "files.trimTrailingWhitespace": true,
     "files.insertFinalNewline": true,
     "files.trimFinalNewlines": true,
+    "files.autoSave": "afterDelay",
+    "files.autoSaveDelay": 1000,
 
     // Python settings
     "python.defaultInterpreterPath": "${workspaceFolder}/argo/venv/bin/python",
     "python.analysis.typeCheckingMode": "basic",
     "python.analysis.autoImportCompletions": true,
+    "python.analysis.autoSearchPaths": true,
+    "python.analysis.completeFunctionParens": true,
+    "python.analysis.inlayHints.functionReturnTypes": true,
+    "python.analysis.inlayHints.variableTypes": true,
     "python.analysis.diagnosticMode": "workspace",
     "python.analysis.stubPath": "${workspaceFolder}/.vscode/typings",
     "python.analysis.extraPaths": [
