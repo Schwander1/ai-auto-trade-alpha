@@ -770,6 +770,13 @@ class SignalGenerationService:
                         self.risk_monitor = PropFirmRiskMonitor(risk_monitor_config)
                         self.prop_firm_mode = True
                         self.prop_firm_config = prop_firm_config
+                        
+                        # Update confidence threshold for prop firm mode
+                        prop_min_confidence = risk_limits.get("min_confidence", 82.0)
+                        if prop_min_confidence > self.confidence_threshold:
+                            self.confidence_threshold = prop_min_confidence
+                            logger.info(f"✅ Updated confidence threshold to {prop_min_confidence}% for prop firm mode")
+                        
                         logger.info("✅ Prop Firm Risk Monitor initialized (PROP FIRM MODE)")
                     else:
                         # Use standard risk monitoring
