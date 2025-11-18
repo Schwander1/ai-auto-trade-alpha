@@ -69,6 +69,11 @@ class FeatureFlags:
         except Exception as e:
             logger.error(f"Error saving feature flags: {e}")
     
+    def enable_regime_based_weights(self):
+        """Enable regime-based weights feature"""
+        self.flags["regime_based_weights"] = True
+        logger.info("✅ Regime-based weights enabled")
+    
     def is_enabled(self, flag_name: str) -> bool:
         """Check if feature flag is enabled"""
         return self.flags.get(flag_name, False)
