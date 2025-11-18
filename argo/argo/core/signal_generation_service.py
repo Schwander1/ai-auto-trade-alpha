@@ -2676,8 +2676,8 @@ class SignalGenerationService:
                                 if (
                                     equity_change_pct < 2.0
                                 ):  # Equity reset to similar value (new day)
-                        self._daily_start_equity = equity
-                        self._trading_paused = False
+                                    self._daily_start_equity = equity
+                                    self._trading_paused = False
                                     logger.info(
                                         f"🔄 Daily tracking reset - new trading day (equity: ${equity:,.2f})"
                                     )
