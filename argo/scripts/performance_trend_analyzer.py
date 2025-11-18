@@ -6,12 +6,20 @@ Analyzes performance trends over time by comparing multiple evaluation reports
 import sys
 import json
 import argparse
+import logging
 from pathlib import Path
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 from collections import defaultdict
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
+
+# Configure logging
+logging.basicConfig(
+    level=logging.WARNING,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 class PerformanceTrendAnalyzer:
     """Analyze performance trends across multiple evaluation reports"""
@@ -20,40 +28,59 @@ class PerformanceTrendAnalyzer:
         self.reports = []
 
     def load_reports(self, reports_dir: str, days: int = 30) -> List[Dict]:
-        """Load all reports from directory within time period"""
-        reports_path = Path(reports_dir)
-        if not reports_path.exists():
+        """Load all reports from directory within time period with improved error handling"""
+        try:
+            reports_path = Path(reports_dir)
+            if not reports_path.exists():
+                logger.warning(f"Reports directory does not exist: {reports_dir}")
+                return []
+
+            cutoff_date = datetime.now() - timedelta(days=days)
+            reports = []
+
+            # Find all evaluation reports (both daily and enhanced)
+            report_patterns = [
+                "daily_evaluation_*.json",
+                "performance_evaluation*.json"
+            ]
+            
+            report_files = []
+            for pattern in report_patterns:
+                report_files.extend(reports_path.glob(pattern))
+
+            for report_file in report_files:
+                try:
+                    # Try to parse date from filename
+                    with open(report_file, 'r') as f:
+                        report = json.load(f)
+
+                    # Get evaluation date
+                    eval_date = None
+                    if 'signal_generator' in report:
+                        eval_date_str = report['signal_generator'].get('evaluation_date')
+                        if eval_date_str:
+                            eval_date = datetime.fromisoformat(eval_date_str.replace('Z', '+00:00'))
+
+                    if eval_date and eval_date >= cutoff_date:
+                        reports.append({
+                            'file': str(report_file),
+                            'date': eval_date,
+                            'data': report
+                        })
+                except json.JSONDecodeError as e:
+                    logger.debug(f"Invalid JSON in {report_file}: {e}")
+                    continue
+                except Exception as e:
+                    logger.debug(f"Error loading report {report_file}: {e}")
+                    continue
+
+            # Sort by date
+            reports.sort(key=lambda x: x['date'])
+            logger.debug(f"Loaded {len(reports)} reports from {reports_dir}")
+            return reports
+        except Exception as e:
+            logger.error(f"Error loading reports from {reports_dir}: {e}", exc_info=True)
             return []
-
-        cutoff_date = datetime.now() - timedelta(days=days)
-        reports = []
-
-        # Find all evaluation reports
-        for report_file in reports_path.glob("performance_evaluation*.json"):
-            try:
-                # Try to parse date from filename
-                with open(report_file, 'r') as f:
-                    report = json.load(f)
-
-                # Get evaluation date
-                eval_date = None
-                if 'signal_generator' in report:
-                    eval_date_str = report['signal_generator'].get('evaluation_date')
-                    if eval_date_str:
-                        eval_date = datetime.fromisoformat(eval_date_str.replace('Z', '+00:00'))
-
-                if eval_date and eval_date >= cutoff_date:
-                    reports.append({
-                        'file': str(report_file),
-                        'date': eval_date,
-                        'data': report
-                    })
-            except Exception as e:
-                print(f"⚠️  Could not load {report_file}: {e}")
-
-        # Sort by date
-        reports.sort(key=lambda x: x['date'])
-        return reports
 
     def analyze_trends(self, reports: List[Dict], component: str = 'all') -> Dict:
         """Analyze trends across reports"""
@@ -311,32 +338,51 @@ def main():
                        default='all', help='Component to analyze')
     parser.add_argument('--output', '-o', help='Output file for trend report')
     parser.add_argument('--json', action='store_true', help='Output as JSON')
+    parser.add_argument('--verbose', '-v', action='store_true', help='Verbose output')
 
     args = parser.parse_args()
+    
+    if args.verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
 
-    analyzer = PerformanceTrendAnalyzer()
+    try:
+        analyzer = PerformanceTrendAnalyzer()
 
-    # Load reports
-    print(f"📂 Loading reports from {args.reports_dir}...")
-    reports = analyzer.load_reports(args.reports_dir, args.days)
+        # Load reports
+        if not args.json:
+            print(f"📂 Loading reports from {args.reports_dir}...")
+        reports = analyzer.load_reports(args.reports_dir, args.days)
 
-    if not reports:
-        print(f"❌ No reports found in {args.reports_dir}")
-        return
+        if not reports:
+            print(f"⚠️  No reports found in {args.reports_dir} for the last {args.days} days")
+            sys.exit(1)
 
-    print(f"✅ Loaded {len(reports)} reports")
+        if not args.json:
+            print(f"✅ Loaded {len(reports)} reports")
 
-    # Analyze trends
-    print(f"📊 Analyzing trends...")
-    trends = analyzer.analyze_trends(reports, args.component)
+        # Analyze trends
+        if not args.json:
+            print(f"📊 Analyzing trends...")
+        trends = analyzer.analyze_trends(reports, args.component)
+        
+        if 'error' in trends:
+            print(f"❌ Error: {trends['error']}", file=sys.stderr)
+            sys.exit(1)
 
-    if args.json:
-        print(json.dumps(trends, indent=2, default=str))
-    else:
-        report = analyzer.generate_trend_report(trends, args.output)
-        print(report)
-        if args.output:
-            print(f"\n💾 Trend report saved to: {args.output}")
+        if args.json:
+            print(json.dumps(trends, indent=2, default=str))
+        else:
+            report = analyzer.generate_trend_report(trends, args.component)
+            print(report)
+            if args.output:
+                print(f"\n💾 Trend report saved to: {args.output}")
+    except KeyboardInterrupt:
+        print("\n⚠️  Operation interrupted by user", file=sys.stderr)
+        sys.exit(130)
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}", exc_info=True)
+        print(f"❌ Unexpected error: {e}", file=sys.stderr)
+        sys.exit(1)
 
 if __name__ == '__main__':
     main()

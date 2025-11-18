@@ -5,11 +5,19 @@ Provides optimization recommendations and automated fixes for performance issues
 """
 import sys
 import json
+import logging
 from pathlib import Path
 from typing import Dict, List, Optional
 from datetime import datetime
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
+
+# Configure logging
+logging.basicConfig(
+    level=logging.WARNING,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 class PerformanceOptimizer:
     """Provides performance optimization recommendations and fixes"""
@@ -18,12 +26,28 @@ class PerformanceOptimizer:
         self.optimizations = []
 
     def analyze_performance_report(self, report_path: str) -> Dict:
-        """Analyze a performance evaluation report and provide optimizations"""
+        """Analyze a performance evaluation report and provide optimizations with improved error handling"""
         try:
-            with open(report_path, 'r') as f:
+            report_file = Path(report_path)
+            if not report_file.exists():
+                error_msg = f"Report file does not exist: {report_path}"
+                logger.error(error_msg)
+                return {'error': error_msg}
+            
+            with open(report_file, 'r') as f:
                 report = json.load(f)
+        except json.JSONDecodeError as e:
+            error_msg = f"Invalid JSON in report: {e}"
+            logger.error(f"{error_msg} - File: {report_path}")
+            return {'error': error_msg}
+        except PermissionError as e:
+            error_msg = f"Permission denied reading report: {e}"
+            logger.error(f"{error_msg} - File: {report_path}")
+            return {'error': error_msg}
         except Exception as e:
-            return {'error': f"Could not load report: {e}"}
+            error_msg = f"Could not load report: {e}"
+            logger.error(f"{error_msg} - File: {report_path}", exc_info=True)
+            return {'error': error_msg}
 
         optimizations = []
 
@@ -311,19 +335,37 @@ def main():
     parser.add_argument('report', help='Path to performance evaluation report JSON')
     parser.add_argument('--output', '-o', help='Output file for optimization report')
     parser.add_argument('--json', action='store_true', help='Output as JSON')
+    parser.add_argument('--verbose', '-v', action='store_true', help='Verbose output')
 
     args = parser.parse_args()
+    
+    if args.verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
 
-    optimizer = PerformanceOptimizer()
+    try:
+        optimizer = PerformanceOptimizer()
 
-    if args.json:
-        analysis = optimizer.analyze_performance_report(args.report)
-        print(json.dumps(analysis, indent=2))
-    else:
-        report = optimizer.generate_optimization_report(args.report, args.output)
-        print(report)
-        if args.output:
-            print(f"\n💾 Optimization report saved to: {args.output}")
+        if args.json:
+            analysis = optimizer.analyze_performance_report(args.report)
+            if 'error' in analysis:
+                print(f"❌ Error: {analysis['error']}", file=sys.stderr)
+                sys.exit(1)
+            print(json.dumps(analysis, indent=2))
+        else:
+            report = optimizer.generate_optimization_report(args.report, args.output)
+            if report.startswith("Error:"):
+                print(f"❌ {report}", file=sys.stderr)
+                sys.exit(1)
+            print(report)
+            if args.output:
+                print(f"\n💾 Optimization report saved to: {args.output}")
+    except KeyboardInterrupt:
+        print("\n⚠️  Operation interrupted by user", file=sys.stderr)
+        sys.exit(130)
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}", exc_info=True)
+        print(f"❌ Unexpected error: {e}", file=sys.stderr)
+        sys.exit(1)
 
 if __name__ == '__main__':
     main()

@@ -6,24 +6,55 @@ Compares two performance evaluation reports to identify changes
 import sys
 import json
 import argparse
+import logging
 from pathlib import Path
 from typing import Dict, List, Optional
 from datetime import datetime
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+# Configure logging
+logging.basicConfig(
+    level=logging.WARNING,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 class PerformanceComparator:
     """Compare two performance evaluation reports"""
 
     def compare_reports(self, report1_path: str, report2_path: str) -> Dict:
-        """Compare two reports"""
+        """Compare two reports with improved error handling"""
         try:
-            with open(report1_path, 'r') as f:
+            report1_file = Path(report1_path)
+            report2_file = Path(report2_path)
+            
+            if not report1_file.exists():
+                error_msg = f"Report 1 does not exist: {report1_path}"
+                logger.error(error_msg)
+                return {'error': error_msg}
+            
+            if not report2_file.exists():
+                error_msg = f"Report 2 does not exist: {report2_path}"
+                logger.error(error_msg)
+                return {'error': error_msg}
+            
+            with open(report1_file, 'r') as f:
                 report1 = json.load(f)
-            with open(report2_path, 'r') as f:
+            with open(report2_file, 'r') as f:
                 report2 = json.load(f)
+        except json.JSONDecodeError as e:
+            error_msg = f"Invalid JSON in report: {e}"
+            logger.error(error_msg)
+            return {'error': error_msg}
+        except PermissionError as e:
+            error_msg = f"Permission denied reading report: {e}"
+            logger.error(error_msg)
+            return {'error': error_msg}
         except Exception as e:
-            return {'error': f"Could not load reports: {e}"}
+            error_msg = f"Could not load reports: {e}"
+            logger.error(error_msg, exc_info=True)
+            return {'error': error_msg}
 
         comparison = {
             'report1': report1_path,
@@ -239,21 +270,38 @@ def main():
     parser.add_argument('report2', help='Second performance report (after)')
     parser.add_argument('--output', '-o', help='Output file for comparison report')
     parser.add_argument('--json', action='store_true', help='Output as JSON')
+    parser.add_argument('--verbose', '-v', action='store_true', help='Verbose output')
 
     args = parser.parse_args()
+    
+    if args.verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
 
-    comparator = PerformanceComparator()
+    try:
+        comparator = PerformanceComparator()
 
-    print(f"📊 Comparing reports...")
-    comparison = comparator.compare_reports(args.report1, args.report2)
+        if not args.json:
+            print(f"📊 Comparing reports...")
+        comparison = comparator.compare_reports(args.report1, args.report2)
 
-    if args.json:
-        print(json.dumps(comparison, indent=2, default=str))
-    else:
-        report = comparator.generate_comparison_report(comparison, args.output)
-        print(report)
-        if args.output:
-            print(f"\n💾 Comparison report saved to: {args.output}")
+        if 'error' in comparison:
+            print(f"❌ {comparison['error']}", file=sys.stderr)
+            sys.exit(1)
+
+        if args.json:
+            print(json.dumps(comparison, indent=2, default=str))
+        else:
+            report = comparator.generate_comparison_report(comparison, args.output)
+            print(report)
+            if args.output:
+                print(f"\n💾 Comparison report saved to: {args.output}")
+    except KeyboardInterrupt:
+        print("\n⚠️  Operation interrupted by user", file=sys.stderr)
+        sys.exit(130)
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}", exc_info=True)
+        print(f"❌ Unexpected error: {e}", file=sys.stderr)
+        sys.exit(1)
 
 if __name__ == '__main__':
     main()
