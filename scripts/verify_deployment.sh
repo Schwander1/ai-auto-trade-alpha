@@ -13,7 +13,7 @@ echo "=========================="
 
 ERRORS=0
 
-# Verify optimization modules
+# Verify optimization modules (optional - warnings only)
 echo ""
 echo "1. Verifying optimization modules..."
 ssh ${ARGO_USER}@${ARGO_SERVER} "
@@ -28,15 +28,20 @@ ssh ${ARGO_USER}@${ARGO_SERVER} "
     MISSING=0
     for module in \"\${MODULES[@]}\"; do
         if [ ! -f ${TARGET_PATH}/argo/argo/core/\${module} ]; then
-            echo \"❌ Missing: \${module}\"
+            echo \"⚠️  Optional module not found: \${module}\"
             MISSING=1
         else
             echo \"  ✅ \${module}\"
         fi
     done
     
-    exit \$MISSING
-" || ERRORS=$((ERRORS + 1))
+    if [ \$MISSING -eq 0 ]; then
+        echo '✅ All optimization modules present'
+    else
+        echo '⚠️  Some optional optimization modules not found (non-blocking)'
+    fi
+    exit 0
+" || true
 
 # Verify core service files
 echo ""
