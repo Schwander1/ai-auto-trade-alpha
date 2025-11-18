@@ -145,4 +145,3 @@ else
     print_error "${MISSING} script(s) missing. Please check deployment."
     exit 1
 fi
-

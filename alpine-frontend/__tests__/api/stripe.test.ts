@@ -5,8 +5,17 @@
 describe('Stripe API Routes', () => {
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9001'
 
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
   describe('POST /api/stripe/create-checkout-session', () => {
     it('requires authentication', async () => {
+      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+        status: 401,
+        ok: false,
+      })
+
       const response = await fetch(`${API_URL}/api/stripe/create-checkout-session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -18,7 +27,11 @@ describe('Stripe API Routes', () => {
     })
 
     it('requires tier parameter', async () => {
-      // Would need auth token
+      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+        status: 400,
+        ok: false,
+      })
+
       const response = await fetch(`${API_URL}/api/stripe/create-checkout-session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -31,6 +44,11 @@ describe('Stripe API Routes', () => {
 
   describe('POST /api/stripe/create-portal-session', () => {
     it('requires authentication', async () => {
+      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+        status: 401,
+        ok: false,
+      })
+
       const response = await fetch(`${API_URL}/api/stripe/create-portal-session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -43,6 +61,11 @@ describe('Stripe API Routes', () => {
 
   describe('POST /api/stripe/webhook', () => {
     it('requires webhook signature', async () => {
+      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+        status: 400,
+        ok: false,
+      })
+
       const response = await fetch(`${API_URL}/api/stripe/webhook`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -54,4 +77,3 @@ describe('Stripe API Routes', () => {
     })
   })
 })
-

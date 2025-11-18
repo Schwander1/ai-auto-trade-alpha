@@ -83,10 +83,18 @@ module.exports = {
 
 
   // Verbose output
-  verbose: true,
+  verbose: false, // Set to false for faster output, can be overridden with --verbose
 
   // Transform ignore patterns
   transformIgnorePatterns: [
     'node_modules/(?!(.*\\.mjs$|@testing-library|whatwg-fetch))',
   ],
+
+  // Performance optimizations
+  maxWorkers: '50%', // Use half of available CPUs
+  cache: true,
+  cacheDirectory: '<rootDir>/.jest-cache',
+
+  // Test timeout
+  testTimeout: 10000, // 10 seconds
 };

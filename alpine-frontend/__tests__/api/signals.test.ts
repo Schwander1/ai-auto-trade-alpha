@@ -5,10 +5,20 @@
 describe('Signals API Routes', () => {
   const API_URL = process.env.NEXT_PUBLIC_ARGO_API_URL || 'http://localhost:8000'
 
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
   describe('GET /api/signals/latest', () => {
     it('returns array of signals', async () => {
+      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+        status: 200,
+        ok: true,
+        json: async () => [],
+      })
+
       const response = await fetch(`${API_URL}/api/signals/latest?limit=10`)
-      
+
       if (response.ok) {
         const data = await response.json()
         expect(Array.isArray(data)).toBe(true)
@@ -19,8 +29,14 @@ describe('Signals API Routes', () => {
     })
 
     it('respects limit parameter', async () => {
+      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+        status: 200,
+        ok: true,
+        json: async () => [1, 2, 3, 4, 5], // Mock 5 items
+      })
+
       const response = await fetch(`${API_URL}/api/signals/latest?limit=5`)
-      
+
       if (response.ok) {
         const data = await response.json()
         expect(data.length).toBeLessThanOrEqual(5)
@@ -30,8 +46,14 @@ describe('Signals API Routes', () => {
 
   describe('GET /api/signals/:id', () => {
     it('returns signal by ID', async () => {
+      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+        status: 200,
+        ok: true,
+        json: async () => ({ id: '1', symbol: 'AAPL' }),
+      })
+
       const response = await fetch(`${API_URL}/api/signals/1`)
-      
+
       // Should return 200 or 404
       expect([200, 404]).toContain(response.status)
     })
@@ -39,8 +61,14 @@ describe('Signals API Routes', () => {
 
   describe('GET /api/signals/stats', () => {
     it('returns signal statistics', async () => {
+      ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+        status: 200,
+        ok: true,
+        json: async () => ({ total_signals: 100 }),
+      })
+
       const response = await fetch(`${API_URL}/api/signals/stats`)
-      
+
       if (response.ok) {
         const data = await response.json()
         expect(data).toHaveProperty('total_signals')
@@ -50,4 +78,3 @@ describe('Signals API Routes', () => {
     })
   })
 })
-

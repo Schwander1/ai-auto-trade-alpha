@@ -245,4 +245,3 @@ print_info "To view reports:"
 print_info "  ssh ${PRODUCTION_USER}@${PRODUCTION_SERVER} 'ls -lh ${REGULAR_DIR}/reports/daily_*'"
 print_info ""
 print_success "Deployment complete!"
-

@@ -124,4 +124,3 @@ ssh root@178.156.194.174 'cat /root/argo-production/reports/weekly_trends_*.txt'
 ---
 
 *Ready to deploy!*
-
