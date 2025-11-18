@@ -10,6 +10,7 @@ WorkingDirectory=/root/argo-production-prop-firm
 Environment="PATH=/root/argo-production-prop-firm/venv/bin:/usr/local/bin:/usr/bin:/bin"
 Environment="PYTHONPATH=/root/argo-production-prop-firm"
 Environment="ARGO_ENVIRONMENT=production"
+Environment="ARGO_24_7_MODE=true"
 Environment="ARGO_API_SECRET=988807abc6a05772fd1900bcbfd35b6037f4f3ba4656e99e78f67b1242041736"
 # Signal generation optimizations
 Environment="USE_AWS_SECRETS=true"
