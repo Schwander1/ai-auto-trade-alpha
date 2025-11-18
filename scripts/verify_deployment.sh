@@ -27,11 +27,14 @@ ssh ${ARGO_USER}@${ARGO_SERVER} "
     
     MISSING=0
     for module in \"\${MODULES[@]}\"; do
-        if [ ! -f ${TARGET_PATH}/argo/argo/core/\${module} ]; then
+        # Check actual deployment path structure
+        if [ -f ${TARGET_PATH}/argo/core/\${module} ]; then
+            echo \"  ✅ \${module}\"
+        elif [ -f ${TARGET_PATH}/argo/argo/core/\${module} ]; then
+            echo \"  ✅ \${module}\"
+        else
             echo \"⚠️  Optional module not found: \${module}\"
             MISSING=1
-        else
-            echo \"  ✅ \${module}\"
         fi
     done
     
@@ -55,15 +58,16 @@ ssh ${ARGO_USER}@${ARGO_SERVER} "
     
     MISSING=0
     for file in \"\${FILES[@]}\"; do
-        # Check both possible paths
-        if [ -f ${TARGET_PATH}/argo/argo/core/\${file} ]; then
+        # Check actual deployment path structure
+        if [ -f ${TARGET_PATH}/argo/core/\${file} ]; then
             echo \"  ✅ \${file}\"
+        elif [ -f ${TARGET_PATH}/argo/argo/core/\${file} ]; then
+            echo \"  ✅ \${file} (found in alternative location)\"
         elif [ -f ${TARGET_PATH}/core/\${file} ]; then
             echo \"  ✅ \${file} (found in alternative location)\"
         else
             echo \"❌ Missing: \${file}\"
-            echo \"   Checked: ${TARGET_PATH}/argo/argo/core/\${file}\"
-            echo \"   Checked: ${TARGET_PATH}/core/\${file}\"
+            echo \"   Checked: ${TARGET_PATH}/argo/core/\${file}\"
             MISSING=1
         fi
     done
@@ -82,15 +86,16 @@ ssh ${ARGO_USER}@${ARGO_SERVER} "
     
     MISSING=0
     for file in \"\${FILES[@]}\"; do
-        # Check both possible paths
-        if [ -f ${TARGET_PATH}/argo/argo/core/data_sources/\${file} ]; then
+        # Check actual deployment path structure
+        if [ -f ${TARGET_PATH}/argo/core/data_sources/\${file} ]; then
             echo \"  ✅ \${file}\"
+        elif [ -f ${TARGET_PATH}/argo/argo/core/data_sources/\${file} ]; then
+            echo \"  ✅ \${file} (found in alternative location)\"
         elif [ -f ${TARGET_PATH}/core/data_sources/\${file} ]; then
             echo \"  ✅ \${file} (found in alternative location)\"
         else
             echo \"❌ Missing: \${file}\"
-            echo \"   Checked: ${TARGET_PATH}/argo/argo/core/data_sources/\${file}\"
-            echo \"   Checked: ${TARGET_PATH}/core/data_sources/\${file}\"
+            echo \"   Checked: ${TARGET_PATH}/argo/core/data_sources/\${file}\"
             MISSING=1
         fi
     done
@@ -108,15 +113,16 @@ ssh ${ARGO_USER}@${ARGO_SERVER} "
     
     MISSING=0
     for file in \"\${FILES[@]}\"; do
-        # Check both possible paths
-        if [ -f ${TARGET_PATH}/argo/argo/api/\${file} ]; then
+        # Check actual deployment path structure
+        if [ -f ${TARGET_PATH}/argo/api/\${file} ]; then
             echo \"  ✅ \${file}\"
+        elif [ -f ${TARGET_PATH}/argo/argo/api/\${file} ]; then
+            echo \"  ✅ \${file} (found in alternative location)\"
         elif [ -f ${TARGET_PATH}/api/\${file} ]; then
             echo \"  ✅ \${file} (found in alternative location)\"
         else
             echo \"❌ Missing: \${file}\"
-            echo \"   Checked: ${TARGET_PATH}/argo/argo/api/\${file}\"
-            echo \"   Checked: ${TARGET_PATH}/api/\${file}\"
+            echo \"   Checked: ${TARGET_PATH}/argo/api/\${file}\"
             MISSING=1
         fi
     done
