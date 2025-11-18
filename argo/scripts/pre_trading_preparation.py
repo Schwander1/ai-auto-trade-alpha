@@ -12,15 +12,44 @@ from datetime import datetime, timezone
 from typing import Dict, List, Tuple, Optional
 from dataclasses import dataclass, field, asdict
 
-# Add paths
-argo_path = Path(__file__).parent.parent
+# Add paths - handle both local and production environments
+script_dir = Path(__file__).parent
+argo_path = script_dir.parent
+
+# Add argo directory to path
 if str(argo_path) not in sys.path:
     sys.path.insert(0, str(argo_path))
+
+# Also add workspace root for shared packages (if exists)
 workspace_root = argo_path.parent
 if str(workspace_root) not in sys.path:
     sys.path.insert(0, str(workspace_root))
 
-from argo.core.environment import detect_environment, get_environment_info
+# Change to argo directory for imports to work correctly
+import os
+original_cwd = os.getcwd()
+try:
+    os.chdir(str(argo_path))
+except:
+    pass  # If we can't change directory, continue anyway
+
+try:
+    from argo.core.environment import detect_environment, get_environment_info
+except ImportError:
+    # Try alternative import path for production
+    try:
+        import argo.core.environment as env_module
+        detect_environment = env_module.detect_environment
+        get_environment_info = env_module.get_environment_info
+    except ImportError:
+        # Fallback: define minimal functions
+        def detect_environment():
+            if Path('/root/argo-production/config.json').exists():
+                return 'production'
+            return 'development'
+        
+        def get_environment_info():
+            return {"environment": detect_environment()}
 from argo.core.paper_trading_engine import PaperTradingEngine
 from argo.core.signal_generation_service import SignalGenerationService
 from argo.core.config_loader import ConfigLoader
