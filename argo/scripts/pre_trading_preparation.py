@@ -33,9 +33,10 @@ try:
 except:
     pass  # If we can't change directory, continue anyway
 
+# Import with error handling for production
 try:
     from argo.core.environment import detect_environment, get_environment_info
-except ImportError:
+except ImportError as e:
     # Try alternative import path for production
     try:
         import argo.core.environment as env_module
@@ -44,16 +45,32 @@ except ImportError:
     except ImportError:
         # Fallback: define minimal functions
         def detect_environment():
-            if Path('/root/argo-production/config.json').exists():
+            if Path('/root/argo-production/config.json').exists() or Path('/root/argo-production-blue/config.json').exists() or Path('/root/argo-production-green/config.json').exists():
                 return 'production'
             return 'development'
         
         def get_environment_info():
             return {"environment": detect_environment()}
-from argo.core.paper_trading_engine import PaperTradingEngine
-from argo.core.signal_generation_service import SignalGenerationService
-from argo.core.config_loader import ConfigLoader
-from argo.core.config_validator import ConfigValidator
+
+try:
+    from argo.core.paper_trading_engine import PaperTradingEngine
+except ImportError:
+    PaperTradingEngine = None
+
+try:
+    from argo.core.signal_generation_service import SignalGenerationService
+except ImportError:
+    SignalGenerationService = None
+
+try:
+    from argo.core.config_loader import ConfigLoader
+except ImportError:
+    ConfigLoader = None
+
+try:
+    from argo.core.config_validator import ConfigValidator
+except ImportError:
+    ConfigValidator = None
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -104,6 +121,15 @@ class PreTradingPreparation:
         """Check configuration file validity"""
         try:
             # Use ConfigLoader to find and load config (same way the system does)
+            if ConfigLoader is None:
+                return PreparationCheck(
+                    "Configuration",
+                    "Config Loading",
+                    "warning",
+                    "ConfigLoader not available - using fallback",
+                    {}
+                )
+            
             config, config_path = ConfigLoader.load_config()
             self.config = config
             
@@ -183,6 +209,15 @@ class PreTradingPreparation:
     def check_trading_engine(self) -> PreparationCheck:
         """Check trading engine connectivity and status"""
         try:
+            if PaperTradingEngine is None:
+                return PreparationCheck(
+                    "Trading Engine",
+                    "Engine Initialization",
+                    "warning",
+                    "PaperTradingEngine not available - cannot check trading engine",
+                    {}
+                )
+            
             engine = PaperTradingEngine()
             
             if not engine.alpaca_enabled:
@@ -264,6 +299,15 @@ class PreTradingPreparation:
     def check_signal_service(self) -> PreparationCheck:
         """Check signal generation service"""
         try:
+            if SignalGenerationService is None:
+                return PreparationCheck(
+                    "Signal Service",
+                    "Service Initialization",
+                    "warning",
+                    "SignalGenerationService not available - cannot check signal service",
+                    {}
+                )
+            
             service = SignalGenerationService()
             
             # Check auto-execute status
@@ -390,6 +434,15 @@ class PreTradingPreparation:
     def check_data_sources(self) -> PreparationCheck:
         """Check data sources availability"""
         try:
+            if SignalGenerationService is None:
+                return PreparationCheck(
+                    "Data Sources",
+                    "Data Check",
+                    "warning",
+                    "SignalGenerationService not available - cannot check data sources",
+                    {}
+                )
+            
             service = SignalGenerationService()
             
             if not hasattr(service, 'data_sources'):
@@ -444,6 +497,14 @@ class PreTradingPreparation:
     def check_market_hours(self) -> PreparationCheck:
         """Check market hours and trading availability"""
         try:
+            if PaperTradingEngine is None:
+                return PreparationCheck(
+                    "Market Hours",
+                    "Market Status",
+                    "skip",
+                    "PaperTradingEngine not available - cannot check market hours"
+                )
+            
             engine = PaperTradingEngine()
             
             if not engine.alpaca_enabled:
@@ -494,6 +555,14 @@ class PreTradingPreparation:
     def check_positions(self) -> PreparationCheck:
         """Check current positions"""
         try:
+            if PaperTradingEngine is None:
+                return PreparationCheck(
+                    "Positions",
+                    "Position Check",
+                    "skip",
+                    "PaperTradingEngine not available - cannot check positions"
+                )
+            
             engine = PaperTradingEngine()
             
             if not engine.alpaca_enabled:
@@ -972,6 +1041,14 @@ class PreTradingPreparation:
     def check_data_source_connectivity(self) -> PreparationCheck:
         """Test actual connectivity to data sources"""
         try:
+            if SignalGenerationService is None:
+                return PreparationCheck(
+                    "Data Source Connectivity",
+                    "Connectivity Test",
+                    "skip",
+                    "SignalGenerationService not available"
+                )
+            
             service = SignalGenerationService()
             
             if not hasattr(service, 'data_sources'):
@@ -1039,6 +1116,14 @@ class PreTradingPreparation:
     def check_performance(self) -> PreparationCheck:
         """Check system performance metrics"""
         try:
+            if SignalGenerationService is None:
+                return PreparationCheck(
+                    "Performance",
+                    "Performance Check",
+                    "skip",
+                    "SignalGenerationService not available"
+                )
+            
             import time
             
             # Test signal generation performance
@@ -1204,6 +1289,14 @@ class PreTradingPreparation:
     def check_integration(self) -> PreparationCheck:
         """Check integration between components"""
         try:
+            if SignalGenerationService is None:
+                return PreparationCheck(
+                    "Integration",
+                    "Integration Check",
+                    "skip",
+                    "SignalGenerationService not available - cannot check integration"
+                )
+            
             checks = []
             issues = []
             
