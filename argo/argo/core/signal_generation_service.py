@@ -1779,9 +1779,11 @@ class SignalGenerationService:
         signal_hash = hashlib.md5(json.dumps(signal_data, sort_keys=True).encode()).hexdigest()
         return f"reasoning:{signal_hash}"
 
-    def _get_cached_reasoning(self, signal: Dict, consensus: Dict) -> Optional[str]:
+    def _get_cached_reasoning(self, signal: Dict, consensus: Dict, cache_key: Optional[str] = None) -> Optional[str]:
         """Get cached AI reasoning for signal (OPTIMIZATION 12)"""
-        cache_key = self._create_reasoning_cache_key(signal, consensus)
+        # OPTIMIZATION: Reuse cache key if provided to avoid duplicate creation
+        if cache_key is None:
+            cache_key = self._create_reasoning_cache_key(signal, consensus)
 
         # Check Redis cache first
         if self.redis_cache:
@@ -1793,39 +1795,50 @@ class SignalGenerationService:
         # Check in-memory cache
         if cache_key in self._reasoning_cache:
             cached_reasoning, cache_time = self._reasoning_cache[cache_key]
-            age = (datetime.now(timezone.utc) - cache_time).total_seconds()
+            # OPTIMIZATION: Cache current time to avoid multiple datetime.now() calls
+            current_time = datetime.now(timezone.utc)
+            age = (current_time - cache_time).total_seconds()
             if age < 3600:  # 1 hour cache
                 logger.debug("✅ Using cached AI reasoning")
                 return cached_reasoning
 
         return None
 
-    def _cache_reasoning(self, signal: Dict, consensus: Dict, reasoning: str):
+    def _cache_reasoning(self, signal: Dict, consensus: Dict, reasoning: str, current_time: Optional[datetime] = None, cache_key: Optional[str] = None):
         """Cache AI reasoning (OPTIMIZATION 12)"""
-        cache_key = self._create_reasoning_cache_key(signal, consensus)
+        # OPTIMIZATION: Reuse cache key if provided to avoid duplicate creation
+        if cache_key is None:
+            cache_key = self._create_reasoning_cache_key(signal, consensus)
         ttl = 3600  # 1 hour cache (reasoning is expensive)
+        
+        # OPTIMIZATION: Use provided time or get current time
+        if current_time is None:
+            current_time = datetime.now(timezone.utc)
 
         # Cache in Redis
         if self.redis_cache:
             self.redis_cache.set(cache_key, reasoning, ttl=ttl)
 
         # Cache in-memory
-        self._reasoning_cache[cache_key] = (reasoning, datetime.now(timezone.utc))
+        self._reasoning_cache[cache_key] = (reasoning, current_time)
 
     def _generate_reasoning(self, signal: Dict, consensus: Dict) -> str:
         """Generate AI reasoning for signal (OPTIMIZATION 12: with caching)"""
-        # OPTIMIZATION 12: Check cache first
-        cached_reasoning = self._get_cached_reasoning(signal, consensus)
+        # OPTIMIZATION: Create cache key once and reuse
+        cache_key = self._create_reasoning_cache_key(signal, consensus)
+        
+        # OPTIMIZATION 12: Check cache first (pass cache_key to avoid recreating it)
+        cached_reasoning = self._get_cached_reasoning(signal, consensus, cache_key)
         if cached_reasoning:
             return cached_reasoning
 
-        # OPTIMIZATION: Create cache key from signal characteristics
-        cache_key = self._create_reasoning_cache_key(signal, consensus)
-
+        # OPTIMIZATION: Cache current time for age calculation
+        current_time = datetime.now(timezone.utc)
+        
         # Check cache first (legacy check)
         if cache_key in self._reasoning_cache:
             cached_reasoning, cache_time = self._reasoning_cache[cache_key]
-            age = (datetime.now(timezone.utc) - cache_time).total_seconds()
+            age = (current_time - cache_time).total_seconds()
             if age < self._reasoning_cache_ttl:
                 logger.debug(f"✅ Using cached reasoning for {signal['symbol']}")
                 return cached_reasoning
@@ -1843,8 +1856,8 @@ class SignalGenerationService:
                 }
             )
 
-            # OPTIMIZATION 12: Cache the result
-            self._cache_reasoning(signal, consensus, reasoning)
+            # OPTIMIZATION 12: Cache the result (reuse cached current_time and cache_key)
+            self._cache_reasoning(signal, consensus, reasoning, current_time, cache_key)
             self._cleanup_reasoning_cache()
 
             return reasoning
@@ -2123,8 +2136,16 @@ class SignalGenerationService:
                         f"Max drawdown exceeded: {drawdown_pct:.2f}% > {max_drawdown_pct}%",
                     )
 
-        # Check buying power
+        # FIX: Check buying power using actual calculated position size (not just base percentage)
         buying_power = account.get("buying_power", 0) or 0
+
+        if buying_power <= 0:
+            return False, "Invalid buying power"
+
+        # Calculate actual position size that would be used (same logic as trading engine)
+        entry_price = signal.get("entry_price", 0)
+        if entry_price <= 0:
+            return False, "Invalid entry price"
 
         # PROP FIRM: Use prop firm position size limit if enabled
         if hasattr(self, "prop_firm_mode") and self.prop_firm_mode:
@@ -2132,14 +2153,26 @@ class SignalGenerationService:
                 "max_position_size_pct", 3.0
             )
         else:
-            position_size_pct = self.trading_config.get("position_size_pct", 10)
+            # Use max position size to be conservative in validation
+            position_size_pct = self.trading_config.get("max_position_size_pct", 15)
+            # Could also calculate actual position size here, but max is safer for validation
 
+        # Calculate required capital using max position size (conservative check)
         required_capital = buying_power * (position_size_pct / 100)
+
+        # Also check if we can afford at least 1 share
+        min_required = entry_price * 1  # Minimum 1 share
 
         if required_capital > buying_power * 0.95:  # Leave 5% buffer
             return (
                 False,
                 f"Insufficient buying power: need ${required_capital:,.2f}, have ${buying_power:,.2f}",
+            )
+
+        if min_required > buying_power:
+            return (
+                False,
+                f"Cannot afford minimum position: need ${min_required:,.2f} for 1 share, have ${buying_power:,.2f}",
             )
 
         return True, "OK"
@@ -2446,8 +2479,10 @@ class SignalGenerationService:
             if not self._check_correlation_groups(symbol, existing_positions):
                 return
 
-            # Execute trade
-            order_id = self.trading_engine.execute_signal(signal)
+            # FIX: Pass existing_positions to avoid race condition
+            order_id = self.trading_engine.execute_signal(
+                signal, existing_positions=existing_positions
+            )
             if order_id:
                 await self._handle_successful_trade(signal, order_id, existing_positions, symbol)
             else:
@@ -2535,9 +2570,11 @@ class SignalGenerationService:
 
     def _update_position_cache(self, signal: Dict, existing_positions: List[Dict]):
         """Update position cache after successful trade"""
+        # FIX: Invalidate cache immediately to force refresh on next call
         self._positions_cache = None
         self._positions_cache_time = None
 
+        # Update local positions list for immediate use
         existing_positions.append(
             {
                 "symbol": signal["symbol"],
@@ -2618,14 +2655,42 @@ class SignalGenerationService:
                             )
                             self._close_position(symbol, "take_profit")
 
-                # Reset daily tracking at start of new trading day
+                # FIX: Reset daily tracking at start of new trading day
                 if account:
                     equity = account.get("equity", 0)
-                    # Simple check: if equity increased significantly, might be new day
-                    if self._daily_start_equity and equity > self._daily_start_equity * 1.1:
+                    # Check if it's a new trading day by checking market status and time
+                    # Reset if market just opened (first check after market open)
+                    if self.trading_engine and self.trading_engine.is_market_open():
+                        # Check if we haven't reset today (simple heuristic: if equity changed significantly or it's been > 12 hours)
+                        from datetime import datetime
+
+                        current_hour = datetime.now().hour
+                        # If it's early morning (before 10 AM) and we have daily equity set, reset it
+                        if current_hour < 10 and self._daily_start_equity is not None:
+                            # Check if equity is close to last equity (within 2%) - likely new day
+                            if equity > 0 and self._daily_start_equity > 0:
+                                equity_change_pct = (
+                                    abs(
+                                        (equity - self._daily_start_equity)
+                                        / self._daily_start_equity
+                                    )
+                                    * 100
+                                )
+                                if (
+                                    equity_change_pct < 2.0
+                                ):  # Equity reset to similar value (new day)
+                                    self._daily_start_equity = equity
+                                    self._trading_paused = False
+                                    logger.info(
+                                        f"🔄 Daily tracking reset - new trading day (equity: ${equity:,.2f})"
+                                    )
+                    # Fallback: if equity increased significantly, might be new day (deposit/transfer)
+                    elif self._daily_start_equity and equity > self._daily_start_equity * 1.1:
                         self._daily_start_equity = equity
                         self._trading_paused = False
-                        logger.info("🔄 Daily tracking reset - new trading day")
+                        logger.info(
+                            f"🔄 Daily tracking reset - equity increased significantly (${equity:,.2f})"
+                        )
 
                 await asyncio.sleep(5)  # Check every 5 seconds
             except Exception as e:
@@ -2663,7 +2728,9 @@ class SignalGenerationService:
                 "trade_id": position.get("trade_id"),  # Preserve trade_id for exit tracking
             }
 
-            order_id = self.trading_engine.execute_signal(signal)
+            # FIX: Pass existing positions to avoid race condition
+            positions = self._get_cached_positions()
+            order_id = self.trading_engine.execute_signal(signal, existing_positions=positions)
             if order_id:
                 logger.info(
                     f"✅ Position closed: {symbol} - Reason: {reason} - Order ID: {order_id}"
