@@ -246,7 +246,7 @@ class SignalGenerationService:
             logger.info("🚀 24/7 mode enabled: Signal generation will run continuously")
         else:
             self._cursor_aware = self.environment == "development"
-            if self._cursor_aware:
+        if self._cursor_aware:
                 logger.info(
                     "💡 Development mode: Trading will pause when Cursor is closed or computer is asleep"
                 )
@@ -1449,7 +1449,7 @@ class SignalGenerationService:
                 (s, sig.get("direction"), f"{sig.get('confidence')}%")
                 for s, sig in source_signals.items()
             ]
-            logger.info(f"📊 Source signals for {symbol}: {signal_summary}")
+        logger.info(f"📊 Source signals for {symbol}: {signal_summary}")
 
         consensus_input = {
             source: {
@@ -1783,7 +1783,7 @@ class SignalGenerationService:
         """Get cached AI reasoning for signal (OPTIMIZATION 12)"""
         # OPTIMIZATION: Reuse cache key if provided to avoid duplicate creation
         if cache_key is None:
-            cache_key = self._create_reasoning_cache_key(signal, consensus)
+        cache_key = self._create_reasoning_cache_key(signal, consensus)
 
         # Check Redis cache first
         if self.redis_cache:
@@ -1832,7 +1832,7 @@ class SignalGenerationService:
 
         # OPTIMIZATION: Cache current time for age calculation
         current_time = datetime.now(timezone.utc)
-        
+
         # Check cache first (legacy check)
         if cache_key in self._reasoning_cache:
             cached_reasoning, cache_time = self._reasoning_cache[cache_key]
@@ -2345,12 +2345,12 @@ class SignalGenerationService:
 
         # Run GC every 5 minutes or if memory usage is high
         if (current_time - self._last_gc_time) > 300:  # 5 minutes
-            gc.collect()
+        gc.collect()
             self._last_gc_time = current_time
 
         # Flush any pending batch inserts
         try:
-            self.tracker.flush_pending()
+        self.tracker.flush_pending()
         except Exception as e:
             logger.debug(f"Error flushing pending signals: {e}")
 
@@ -2382,9 +2382,9 @@ class SignalGenerationService:
                 # Update outcomes if we have prices
                 if current_prices:
                     try:
-                        updated = self._outcome_tracker.track_open_signals(current_prices)
-                        if updated > 0:
-                            logger.debug(f"📊 Updated {updated} signal outcomes")
+                    updated = self._outcome_tracker.track_open_signals(current_prices)
+                    if updated > 0:
+                        logger.debug(f"📊 Updated {updated} signal outcomes")
                     except Exception as e:
                         logger.debug(f"Error tracking outcomes: {e}")
 
@@ -2475,9 +2475,13 @@ class SignalGenerationService:
             if not self._check_correlation_groups(symbol, existing_positions):
                 return
 
-            # FIX: Pass existing_positions to avoid race condition
-            order_id = self.trading_engine.execute_signal(
-                signal, existing_positions=existing_positions
+            # OPTIMIZATION: Use async execution to avoid blocking event loop
+            # Run synchronous Alpaca API calls in thread pool
+            import asyncio
+            order_id = await asyncio.to_thread(
+                self.trading_engine.execute_signal,
+                signal,
+                existing_positions=existing_positions
             )
             if order_id:
                 await self._handle_successful_trade(signal, order_id, existing_positions, symbol)
@@ -2675,8 +2679,8 @@ class SignalGenerationService:
                                 if (
                                     equity_change_pct < 2.0
                                 ):  # Equity reset to similar value (new day)
-                                    self._daily_start_equity = equity
-                                    self._trading_paused = False
+                        self._daily_start_equity = equity
+                        self._trading_paused = False
                                     logger.info(
                                         f"🔄 Daily tracking reset - new trading day (equity: ${equity:,.2f})"
                                     )
@@ -2969,7 +2973,7 @@ class SignalGenerationService:
                 loop = asyncio.get_event_loop()
                 if loop.is_running():
                     # Schedule async cleanup if loop is running
-                    asyncio.create_task(self.risk_monitor.stop_monitoring())
+                asyncio.create_task(self.risk_monitor.stop_monitoring())
                 else:
                     # Run synchronously if no loop is running
                     loop.run_until_complete(self.risk_monitor.stop_monitoring())
@@ -2987,7 +2991,7 @@ class SignalGenerationService:
 
         # OPTIMIZATION: Flush any pending batch inserts before stopping
         try:
-            self.tracker.flush_pending()
+        self.tracker.flush_pending()
         except Exception as e:
             logger.warning(f"Error flushing pending signals: {e}")
 

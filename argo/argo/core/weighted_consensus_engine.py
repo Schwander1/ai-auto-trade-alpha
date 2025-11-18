@@ -34,14 +34,14 @@ def _get_config_path():
     config_path = os.getenv('ARGO_CONFIG_PATH')
     if config_path and os.path.exists(config_path):
         return config_path
-    
+
     # Check current working directory (for services running from their deployment directory)
     # This ensures prop firm service loads its own config
     cwd = Path.cwd()
     cwd_config = cwd / 'config.json'
     if cwd_config.exists():
         return str(cwd_config)
-    
+
     # Check production paths (in order of preference)
     # Only check these if we're not in a deployment directory
     prod_paths = [
@@ -50,16 +50,16 @@ def _get_config_path():
         '/root/argo-production-blue/config.json',       # Regular trading (blue)
         '/root/argo-production/config.json',            # Legacy
     ]
-    
+
     for prod_path in prod_paths:
         if os.path.exists(prod_path):
             return prod_path
-    
+
     # Check dev path (argo/config.json)
     dev_path = Path(__file__).parent.parent.parent / 'config.json'
     if dev_path.exists():
         return str(dev_path)
-    
+
     # Fallback to production path (will fail gracefully if not exists)
     return '/root/argo-production/config.json'
 
@@ -71,11 +71,11 @@ class WeightedConsensusEngine:
     - X Sentiment (20%): Social sentiment
     - Sonar AI (15%): AI analysis
     """
-    
+
     def __init__(self, config_path=None):
         if config_path is None:
             config_path = _get_config_path()
-        
+
         try:
             with open(config_path) as f:
                 self.config = json.load(f)
@@ -94,12 +94,12 @@ class WeightedConsensusEngine:
                     'stop_loss': 0.03
                 }
             }
-        
+
         # Check feature flag for optimized weights
         try:
             from argo.core.feature_flags import get_feature_flags
             feature_flags = get_feature_flags()
-            
+
             if feature_flags.is_enabled('optimized_weights'):
                 # Use optimized weights (from Perplexity analysis)
                 optimized_weights = {
@@ -137,47 +137,48 @@ class WeightedConsensusEngine:
                 'sonar': self.config['strategy']['weight_sonar'],
                 'chinese_models': self.config['strategy'].get('weight_chinese_models', 0.10)
             }
-        
+
         # OPTIMIZATION 6: Consensus calculation caching
         self._consensus_cache: Dict[str, tuple] = {}  # {hash: (consensus, timestamp)}
         self._cache_ttl = 60  # 1 minute cache
         self._max_cache_size = 1000  # Max cache entries
-        
+
         logger.info("✅ Alpine Analytics Consensus Engine initialized")
         logger.info(f"   Weights: {self.weights}")
         logger.info(f"   Performance: +565% (9.94% CAGR)")
-    
+
     def _hash_signals(self, signals: Dict, regime: Optional[str]) -> str:
         """Create hash of signals for cache key (OPTIMIZATION 6)"""
         # Sort signals for consistent hashing
         sorted_signals = json.dumps(signals, sort_keys=True, default=str)
         cache_key = f"{sorted_signals}:{regime}"
         return hashlib.md5(cache_key.encode()).hexdigest()
-    
+
     def _cleanup_cache(self):
         """Clean up old cache entries (OPTIMIZATION 6)"""
+        # OPTIMIZATION: Single datetime call, use dict comprehension for cleanup
         now = datetime.now(timezone.utc)
-        expired_keys = [
-            key for key, (_, timestamp) in self._consensus_cache.items()
-            if (now - timestamp).total_seconds() >= self._cache_ttl
-        ]
-        for key in expired_keys:
-            del self._consensus_cache[key]
         
-        # Also limit cache size
+        # Remove expired entries using dict comprehension (more efficient)
+        self._consensus_cache = {
+            key: value for key, (consensus, timestamp) in self._consensus_cache.items()
+            if (now - timestamp).total_seconds() < self._cache_ttl
+        }
+
+        # Also limit cache size (optimized: use dict comprehension instead of list slicing)
         if len(self._consensus_cache) > self._max_cache_size:
-            # Remove oldest entries (simple FIFO)
-            keys_to_remove = list(self._consensus_cache.keys())[:len(self._consensus_cache) - self._max_cache_size]
-            for key in keys_to_remove:
-                del self._consensus_cache[key]
-    
+            # Remove oldest entries (simple FIFO) - convert to list once, slice once
+            all_keys = list(self._consensus_cache.keys())
+            keys_to_keep = all_keys[-(self._max_cache_size):]  # Keep last N entries
+            self._consensus_cache = {key: self._consensus_cache[key] for key in keys_to_keep}
+
     def calculate_consensus(self, signals: Dict, regime: Optional[str] = None) -> Optional[Dict]:
         """
         Weighted consensus algorithm with optional regime-based weights and caching:
         weighted_vote = confidence × source_weight
-        
+
         OPTIMIZATION 6: Caches consensus calculations for identical inputs
-        
+
         Args:
             signals: Dict of source signals
             regime: Optional market regime for regime-based weight adaptation
@@ -189,20 +190,20 @@ class WeightedConsensusEngine:
             if (datetime.now(timezone.utc) - timestamp).total_seconds() < self._cache_ttl:
                 logger.debug("✅ Using cached consensus")
                 return cached_consensus
-        
+
         # Check for regime-based weights if enabled
         try:
             from argo.core.feature_flags import get_feature_flags
             from argo.core.regime_detector import get_regime_weights, map_legacy_regime_to_enhanced
-            
+
             feature_flags = get_feature_flags()
-            
+
             # Use regime-based weights if enabled
             if feature_flags.is_enabled('regime_based_weights') and regime:
                 # Map legacy regime to enhanced if needed
                 enhanced_regime = map_legacy_regime_to_enhanced(regime)
                 regime_weights = get_regime_weights(enhanced_regime)
-                
+
                 # Map to actual source names
                 active_weights = {
                     'massive': regime_weights.get('massive', 0.50),
@@ -219,36 +220,36 @@ class WeightedConsensusEngine:
         except Exception as e:
             logger.debug(f"Could not load regime-based weights: {e}, using default weights")
             active_weights = self.weights
-        
+
         valid = {k: v for k, v in signals.items() if v and k in active_weights}
-        
+
         if not valid:
             return None
-        
+
         long_votes = {}
         short_votes = {}
-        
+
         for source, signal in valid.items():
             direction = signal.get('direction')
             confidence = signal.get('confidence', 0)
             weight = active_weights[source]
             vote = confidence * weight
-            
+
             if direction == 'LONG':
                 long_votes[source] = vote
             elif direction == 'SHORT':
                 short_votes[source] = vote
-        
+
         total_long = sum(long_votes.values())
         total_short = sum(short_votes.values())
-        
+
         # Calculate sum of weights for sources that actually provided signals
         # This allows consensus to work even when some sources fail
         active_weights_sum = sum(active_weights[source] for source in valid.keys())
-        
+
         if active_weights_sum == 0:
             return None
-        
+
         if total_long > total_short and total_long > 0:
             consensus_direction = 'LONG'
             # Divide by active weights sum, not all weights (fixes bug when sources fail)
@@ -259,7 +260,7 @@ class WeightedConsensusEngine:
             consensus_confidence = total_short / active_weights_sum * 100
         else:
             return None
-        
+
         consensus = {
             'direction': consensus_direction,
             'confidence': round(consensus_confidence, 2),
@@ -268,19 +269,19 @@ class WeightedConsensusEngine:
             'sources': len(valid),
             'agreement': round(max(total_long, total_short) / active_weights_sum * 100, 2)
         }
-        
+
         # OPTIMIZATION 6: Cache result
         if consensus:
             self._consensus_cache[cache_key] = (consensus, datetime.now(timezone.utc))
             # Cleanup old cache entries periodically
             if len(self._consensus_cache) % 100 == 0:  # Cleanup every 100 entries
                 self._cleanup_cache()
-        
+
         return consensus
 
 if __name__ == "__main__":
     engine = WeightedConsensusEngine()
-    
+
     # Test with mock signals
     test_signals = {
         'massive': {'direction': 'LONG', 'confidence': 85},
@@ -288,6 +289,6 @@ if __name__ == "__main__":
         'x_sentiment': {'direction': 'LONG', 'confidence': 75},
         'sonar': {'direction': 'LONG', 'confidence': 90}
     }
-    
+
     consensus = engine.calculate_consensus(test_signals)
     print(json.dumps(consensus, indent=2))

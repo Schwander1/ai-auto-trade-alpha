@@ -522,7 +522,7 @@ except Exception as e:
 # Zapier webhooks
 
 # Include all API routers
-from backend.api import auth, auth_2fa, users, subscriptions, signals as signals_api, notifications, admin, webhooks, two_factor, security_dashboard, external_signal_sync, roles, trading
+from backend.api import auth, auth_2fa, users, subscriptions, signals as signals_api, notifications, admin, webhooks, two_factor, security_dashboard, external_signal_sync, roles, trading, websocket_signals
 app.include_router(auth.router)
 app.include_router(auth_2fa.router)
 app.include_router(users.router)
@@ -536,3 +536,4 @@ app.include_router(two_factor.router)
 app.include_router(security_dashboard.router)
 app.include_router(roles.router)  # RBAC role management
 app.include_router(trading.router)  # Trading environment status
+app.include_router(websocket_signals.router)  # WebSocket real-time signal streaming

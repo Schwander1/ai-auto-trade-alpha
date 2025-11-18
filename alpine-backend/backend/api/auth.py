@@ -480,3 +480,36 @@ async def get_current_user_info(
         created_at=format_datetime_iso(current_user.created_at),
         updated_at=format_datetime_iso(current_user.updated_at) if current_user.updated_at else None
     )
+
+
+@router.get("/token")
+async def get_token(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get JWT token for WebSocket authentication
+    
+    Returns a fresh JWT token that can be used for WebSocket connections.
+    
+    **Example Request:**
+    ```bash
+    curl -X GET "http://localhost:9001/api/v1/auth/token" \
+         -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    ```
+
+    **Example Response:**
+    ```json
+    {
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "expires_in": 86400
+    }
+    ```
+    """
+    # Create a new token for the user
+    access_token = create_access_token(data={"sub": current_user.id})
+    expires_in = settings.JWT_EXPIRATION_HOURS * 3600
+    
+    return {
+        "token": access_token,
+        "expires_in": expires_in
+    }

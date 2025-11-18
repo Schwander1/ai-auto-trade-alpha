@@ -119,6 +119,14 @@ async def receive_external_signal(
 
         logger.info(f"✅ Signal synced from external provider: {signal_data.symbol} {signal_data.action} ({signal.id})")
 
+        # Broadcast to WebSocket clients
+        try:
+            from backend.api.websocket_signals import broadcast_signal_to_websockets
+            await broadcast_signal_to_websockets(signal, db)
+        except Exception as e:
+            logger.warning(f"Failed to broadcast signal to WebSocket clients: {e}")
+            # Don't fail the request if WebSocket broadcast fails
+
         return {
             "status": "success",
             "message": "Signal stored successfully",
