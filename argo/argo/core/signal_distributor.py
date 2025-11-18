@@ -19,7 +19,8 @@ class TradingExecutorClient:
         self.executor_id = executor_id
         self.base_url = f"http://{host}:{port}"
         self.config = config or {}
-        self.client = httpx.AsyncClient(timeout=30.0)
+        # OPTIMIZATION: Reduced timeout for faster failure detection
+        self.client = httpx.AsyncClient(timeout=10.0)  # Reduced from 30.0s
         self._enabled = True
     
     async def execute_signal(self, signal: Dict) -> Dict:
@@ -120,14 +121,14 @@ class SignalDistributor:
     
     async def distribute_signal(self, signal: Dict) -> List[Dict]:
         """
-        Distribute signal to appropriate executors
+        Distribute signal to appropriate executors - OPTIMIZED with parallel execution
         Returns list of execution results
         """
-        results = []
-        
         # Determine which executors should receive this signal
         service_type = signal.get('service_type', 'both')
         
+        # OPTIMIZATION: Collect eligible executors first, then execute in parallel
+        eligible_executors = []
         for executor_id, executor in self.executors.items():
             if not executor._enabled:
                 continue
@@ -155,19 +156,43 @@ class SignalDistributor:
                 if signal.get('confidence', 0) < 82.0:
                     continue
             
-            # Distribute to executor (non-blocking)
+            eligible_executors.append((executor_id, executor))
+        
+        if not eligible_executors:
+            return []
+        
+        # OPTIMIZATION: Execute all eligible executors in parallel
+        async def send_to_executor(executor_id: str, executor: TradingExecutorClient) -> Dict:
             try:
                 result = await executor.execute_signal(signal)
-                results.append(result)
+                return result
             except Exception as e:
                 logger.error(f"Error distributing to {executor_id}: {e}")
-                results.append({
+                return {
                     'executor_id': executor_id,
                     'success': False,
                     'error': str(e)
-                })
+                }
         
-        return results
+        # Execute all in parallel
+        tasks = [send_to_executor(executor_id, executor) for executor_id, executor in eligible_executors]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        # Handle any exceptions
+        final_results = []
+        for i, result in enumerate(results):
+            if isinstance(result, Exception):
+                executor_id = eligible_executors[i][0]
+                logger.error(f"Exception distributing to {executor_id}: {result}")
+                final_results.append({
+                    'executor_id': executor_id,
+                    'success': False,
+                    'error': str(result)
+                })
+            else:
+                final_results.append(result)
+        
+        return final_results
     
     async def check_executor_health(self) -> Dict[str, Dict]:
         """Check health of all executors"""
