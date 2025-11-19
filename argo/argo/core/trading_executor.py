@@ -59,6 +59,11 @@ class TradingExecutor:
         if signal.get('confidence', 0) < min_confidence:
             return False, f"Confidence {signal.get('confidence')} below threshold {min_confidence}"
         
+        # FIX: Alpaca does not support shorting crypto - reject SHORT crypto signals
+        is_crypto = '-USD' in signal.get('symbol', '')
+        if is_crypto and signal.get('action') == 'SELL':
+            return False, "Alpaca does not support shorting cryptocurrency - only LONG (BUY) positions allowed"
+        
         # Prop firm specific checks
         if self.prop_firm_enabled:
             # Skip crisis signals

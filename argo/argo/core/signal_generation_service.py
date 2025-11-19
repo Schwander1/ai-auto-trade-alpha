@@ -2383,16 +2383,26 @@ class SignalGenerationService:
                         f"Max drawdown exceeded: {drawdown_pct:.2f}% > {max_drawdown_pct}%",
                     )
 
-        # FIX: Check buying power using actual calculated position size (not just base percentage)
-        buying_power = account.get("buying_power", 0) or 0
-
-        if buying_power <= 0:
-            return False, "Invalid buying power"
-
         # Calculate actual position size that would be used (same logic as trading engine)
         entry_price = signal.get("entry_price", 0)
         if entry_price <= 0:
             return False, "Invalid entry price"
+
+        # FIX: Crypto uses non_marginable_buying_power (settled cash only), stocks use regular buying_power
+        is_crypto = '-USD' in signal.get('symbol', '')
+        if is_crypto:
+            # FIX: Alpaca does not support shorting crypto - reject SHORT crypto signals early
+            if signal.get('action') == 'SELL':
+                return False, "Alpaca does not support shorting cryptocurrency - only LONG (BUY) positions allowed"
+            
+            # For crypto, use non_marginable_buying_power (settled cash only)
+            buying_power = account.get("non_marginable_buying_power", 0) or 0
+            if buying_power <= 0:
+                return False, f"No non-marginable buying power available for crypto: ${buying_power:,.2f} (need settled cash)"
+        else:
+            buying_power = account.get("buying_power", 0) or 0
+            if buying_power <= 0:
+                return False, "Invalid buying power"
 
         # PROP FIRM: Use prop firm position size limit if enabled
         # OPTIMIZATION: prop_firm_mode is initialized in __init__, no need for hasattr
@@ -2409,7 +2419,6 @@ class SignalGenerationService:
         required_capital = buying_power * (position_size_pct / 100)
 
         # Check if we can afford minimum position (crypto allows fractional, stocks need whole shares)
-        is_crypto = '-USD' in signal.get('symbol', '')
         if is_crypto:
             min_required = entry_price * 0.000001  # Minimum crypto qty (0.000001)
         else:

@@ -529,6 +529,25 @@ class PaperTradingEngine:
             if not account:
                 logger.warning(f"⚠️  Account not available for {symbol}, falling back to simulation mode")
                 return self._execute_sim(signal)
+            
+            # FIX: Check crypto status for crypto orders
+            is_crypto = '-USD' in symbol
+            if is_crypto:
+                crypto_status = getattr(account, 'crypto_status', None)
+                if crypto_status != 'ACTIVE':
+                    logger.warning(f"⚠️  Crypto trading not active for {symbol}: crypto_status={crypto_status}, falling back to simulation mode")
+                    return self._execute_sim(signal)
+                
+                # FIX: Alpaca does not support shorting crypto - skip SHORT (SELL) crypto signals
+                if action == "SELL":
+                    logger.info(f"⏭️  Skipping SHORT crypto signal for {symbol}: Alpaca does not support shorting cryptocurrency (only LONG/BUY allowed)")
+                    return self._execute_sim(signal)
+                
+                # Check non_marginable_buying_power for crypto (settled cash only)
+                non_marginable_bp = float(getattr(account, 'non_marginable_buying_power', 0))
+                if non_marginable_bp <= 0:
+                    logger.warning(f"⚠️  No non-marginable buying power available for crypto {symbol}: ${non_marginable_bp:,.2f} (need settled cash), falling back to simulation mode")
+                    return self._execute_sim(signal)
 
             order_details = self._prepare_order_details(signal, account, action, existing_positions)
             if not order_details:
@@ -536,6 +555,8 @@ class PaperTradingEngine:
                 return self._execute_sim(signal)
 
             # FIX: Update symbol in order_details to use Alpaca format
+            # Store original symbol for crypto detection (before conversion)
+            order_details["original_symbol"] = symbol
             order_details["symbol"] = alpaca_symbol
             if symbol != alpaca_symbol:
                 logger.debug(f"🔄 Converted symbol {symbol} -> {alpaca_symbol} for Alpaca API")
@@ -836,7 +857,14 @@ class PaperTradingEngine:
             else:
                 position_size_pct = base_position_size_pct * 0.75 * volatility_multiplier
 
-        buying_power = float(account.buying_power)
+        # FIX: Crypto uses non_marginable_buying_power (settled cash only), stocks use regular buying_power
+        is_crypto = '-USD' in signal.get('symbol', '')
+        if is_crypto:
+            # Crypto requires non_marginable_buying_power (settled cash only)
+            buying_power = float(getattr(account, 'non_marginable_buying_power', account.buying_power))
+            logger.debug(f"🔍 Crypto detected: Using non_marginable_buying_power=${buying_power:,.2f} for {signal['symbol']}")
+        else:
+            buying_power = float(account.buying_power)
         
         # FIX: Validate buying power is positive
         if buying_power <= 0:
@@ -844,7 +872,8 @@ class PaperTradingEngine:
             return 0, OrderSide.BUY
         
         # OPTIMIZATION: Log position sizing details for debugging
-        logger.debug(f"🔍 Position sizing for {signal['symbol']}: buying_power=${buying_power:,.2f}, entry_price=${entry_price:.2f}, position_size_pct={position_size_pct:.3f}%")
+        bp_type = "non_marginable_buying_power" if is_crypto else "buying_power"
+        logger.debug(f"🔍 Position sizing for {signal['symbol']}: {bp_type}=${buying_power:,.2f}, entry_price=${entry_price:.2f}, position_size_pct={position_size_pct:.3f}%")
 
         # FIX: Validate entry price is positive
         if entry_price <= 0:
@@ -1020,7 +1049,9 @@ class PaperTradingEngine:
                     order_details.get("symbol")  # Pass symbol for validation
                 )
                 # FIX: Crypto requires GTC time_in_force, stocks use DAY
-                is_crypto = '-USD' in order_details["symbol"] or 'USD' in order_details["symbol"]
+                # Check original symbol (before Alpaca conversion) for crypto detection
+                original_symbol = order_details.get("original_symbol", order_details["symbol"])
+                is_crypto = '-USD' in original_symbol or (original_symbol.endswith('USD') and len(original_symbol) <= 7)
                 time_in_force = TimeInForce.GTC if is_crypto else TimeInForce.DAY
                 
                 order_request = LimitOrderRequest(
@@ -1033,7 +1064,9 @@ class PaperTradingEngine:
             else:
                 # FIX: For crypto, qty can be float; for stocks, must be int
                 qty = order_details["qty"]
-                is_crypto = '-USD' in order_details["symbol"] or 'USD' in order_details["symbol"]
+                # Check original symbol (before Alpaca conversion) for crypto detection
+                original_symbol = order_details.get("original_symbol", order_details["symbol"])
+                is_crypto = '-USD' in original_symbol or (original_symbol.endswith('USD') and len(original_symbol) <= 7)
                 if not is_crypto:
                     # Ensure stocks use integer quantity
                     qty = int(qty)
@@ -1576,6 +1609,8 @@ class PaperTradingEngine:
                 "status": account.status,
                 "currency": account.currency,
                 "buying_power": float(account.buying_power),
+                "non_marginable_buying_power": float(getattr(account, 'non_marginable_buying_power', 0)),  # For crypto trading
+                "crypto_status": getattr(account, 'crypto_status', 'UNKNOWN'),  # ACTIVE, INACTIVE, etc.
                 "cash": float(account.cash),
                 "portfolio_value": float(account.portfolio_value),
                 "equity": float(account.equity),
