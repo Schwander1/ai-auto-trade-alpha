@@ -207,6 +207,16 @@ def evaluate_signal_generator_enhanced(days: int = 30) -> Dict:
     # Query historical signal data
     signal_history = query_signal_history(days)
     signal_quality = calculate_signal_quality_metrics(signal_history)
+    
+    # IMPROVEMENT: Add quality distribution metrics
+    if signal_history:
+        quality_distribution = {
+            'high_confidence': len([s for s in signal_history if s.get('confidence', 0) >= 90]),
+            'medium_confidence': len([s for s in signal_history if s.get('confidence', 0) >= 75 and s.get('confidence', 0) < 90]),
+            'low_confidence': len([s for s in signal_history if s.get('confidence', 0) < 75]),
+            'avg_confidence': sum(s.get('confidence', 0) for s in signal_history) / len(signal_history) if signal_history else 0,
+        }
+        signal_quality['quality_distribution'] = quality_distribution
 
     # Calculate metrics
     cache_hit_rate = summary.get('cache_hit_rate', 0) if summary else 0

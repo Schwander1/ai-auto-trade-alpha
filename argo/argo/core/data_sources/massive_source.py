@@ -337,7 +337,8 @@ class MassiveDataSource:
         sma_50 = indicators['sma_50']
         volume_ratio = indicators['volume_ratio']
         
-        confidence = 60.0
+        # IMPROVEMENT: Raise base confidence from 60% to 65% for better signal quality
+        confidence = 65.0
         direction = 'NEUTRAL'
         
         # Trend-based

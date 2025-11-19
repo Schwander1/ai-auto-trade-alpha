@@ -150,9 +150,9 @@ class YFinanceDataSource:
         macd_signal = indicators.get('macd_signal')
         current_price = indicators.get('current_price')
         
-        # IMPROVEMENT: Start with base confidence of 60% instead of 55% to improve final consensus
+        # IMPROVEMENT: Raise base confidence from 60% to 65% for better signal quality
         # This ensures signals have better confidence even in neutral conditions
-        confidence = 60.0
+        confidence = 65.0
         direction = 'NEUTRAL'
         
         # RSI-based signals

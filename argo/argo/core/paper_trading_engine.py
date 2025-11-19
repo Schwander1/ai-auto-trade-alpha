@@ -434,7 +434,7 @@ class PaperTradingEngine:
                     # OPTIMIZATION: Exponential backoff with longer delay for rate limits
                     if is_rate_limit:
                         # Rate limits: longer backoff (2^retry_count seconds, max 30s)
-                        delay = min(2 ** retry_count, 30)
+                        delay = min(2**retry_count, 30)
                         logger.warning(
                             f"Rate limit hit for {signal.get('symbol')}, waiting {delay}s before retry {retry_count + 1}/{self._retry_attempts}"
                         )
@@ -503,9 +503,9 @@ class PaperTradingEngine:
         - Crypto: BTC-USD -> BTCUSD, ETH-USD -> ETHUSD
         - Stocks: No conversion needed
         """
-        if '-USD' in symbol:
+        if "-USD" in symbol:
             # Convert crypto format: BTC-USD -> BTCUSD
-            return symbol.replace('-USD', 'USD')
+            return symbol.replace("-USD", "USD")
         return symbol
 
     def _execute_live(self, signal, existing_positions: Optional[List[Dict]] = None):
@@ -517,41 +517,73 @@ class PaperTradingEngine:
 
             # FIX: Check connection health before proceeding
             if not self._check_connection_health():
-                logger.warning(f"⚠️  Connection health check failed for {symbol}, falling back to simulation mode")
+                logger.warning(
+                    f"⚠️  Connection health check failed for {symbol}, falling back to simulation mode"
+                )
                 return self._execute_sim(signal)
 
             if not self._is_trade_allowed(symbol):
-                logger.warning(f"⚠️  Trade not allowed for {symbol} (market hours check), falling back to simulation mode")
+                logger.warning(
+                    f"⚠️  Trade not allowed for {symbol} (market hours check), falling back to simulation mode"
+                )
                 return self._execute_sim(signal)
 
             # OPTIMIZATION: Use cached account data to avoid multiple API calls
             account = self._get_cached_account()
             if not account:
-                logger.warning(f"⚠️  Account not available for {symbol}, falling back to simulation mode")
+                logger.warning(
+                    f"⚠️  Account not available for {symbol}, falling back to simulation mode"
+                )
                 return self._execute_sim(signal)
-            
+
             # FIX: Check crypto status for crypto orders
-            is_crypto = '-USD' in symbol
+            is_crypto = "-USD" in symbol
             if is_crypto:
-                crypto_status = getattr(account, 'crypto_status', None)
-                if crypto_status != 'ACTIVE':
-                    logger.warning(f"⚠️  Crypto trading not active for {symbol}: crypto_status={crypto_status}, falling back to simulation mode")
+                crypto_status = getattr(account, "crypto_status", None)
+                if crypto_status != "ACTIVE":
+                    logger.warning(
+                        f"⚠️  Crypto trading not active for {symbol}: crypto_status={crypto_status}, falling back to simulation mode"
+                    )
                     return self._execute_sim(signal)
-                
+
                 # FIX: Alpaca does not support shorting crypto - skip SHORT (SELL) crypto signals
+                # BUT allow closing existing LONG positions
                 if action == "SELL":
-                    logger.info(f"⏭️  Skipping SHORT crypto signal for {symbol}: Alpaca does not support shorting cryptocurrency (only LONG/BUY allowed)")
-                    return self._execute_sim(signal)
-                
+                    # Check if we have an existing LONG position to close
+                    if existing_positions is not None:
+                        positions = existing_positions
+                    else:
+                        positions = self.get_positions()
+                    existing_position = next(
+                        (p for p in positions if p.get("symbol") == symbol), None
+                    )
+
+                    # Allow SELL if closing an existing LONG position
+                    if existing_position and existing_position.get("side") == "LONG":
+                        logger.info(
+                            f"✅ Allowing SELL crypto signal for {symbol}: Closing existing LONG position"
+                        )
+                    else:
+                        # Reject SELL if trying to open a new SHORT position
+                        logger.info(
+                            f"⏭️  Skipping SHORT crypto signal for {symbol}: Alpaca does not support shorting cryptocurrency (only LONG/BUY allowed)"
+                        )
+                        return self._execute_sim(signal)
+
                 # Check non_marginable_buying_power for crypto (settled cash only)
-                non_marginable_bp = float(getattr(account, 'non_marginable_buying_power', 0))
+                # FIX: Handle None case - getattr can return None if attribute exists but is None
+                non_marginable_bp = float(getattr(account, "non_marginable_buying_power", 0) or 0)
                 if non_marginable_bp <= 0:
-                    logger.warning(f"⚠️  No non-marginable buying power available for crypto {symbol}: ${non_marginable_bp:,.2f} (need settled cash), falling back to simulation mode")
+                    logger.warning(
+                        f"⚠️  No non-marginable buying power available for crypto {symbol}: ${non_marginable_bp:,.2f} (need settled cash), falling back to simulation mode"
+                    )
                     return self._execute_sim(signal)
 
             order_details = self._prepare_order_details(signal, account, action, existing_positions)
             if not order_details:
-                logger.warning(f"⚠️  Could not prepare order details for {symbol}, falling back to simulation mode")
+                logger.warning(
+                    f"⚠️  Could not prepare order details for {symbol}, falling back to simulation mode"
+                )
                 return self._execute_sim(signal)
 
             # FIX: Update symbol in order_details to use Alpaca format
@@ -562,7 +594,7 @@ class PaperTradingEngine:
                 logger.debug(f"🔄 Converted symbol {symbol} -> {alpaca_symbol} for Alpaca API")
 
             # FIX: Validate minimum order size (crypto allows fractional, stocks need whole shares)
-            is_crypto = '-USD' in symbol
+            is_crypto = "-USD" in symbol
             if is_crypto:
                 min_qty = 0.000001  # Crypto minimum
                 if order_details["qty"] < min_qty:
@@ -651,12 +683,12 @@ class PaperTradingEngine:
         if account is None:
             logger.debug("Account is None in _prepare_order_details - will fall back to simulation")
             return None
-        
+
         # FIX: Check if account has required attributes
-        if not hasattr(account, 'buying_power') or account.buying_power is None:
+        if not hasattr(account, "buying_power") or account.buying_power is None:
             logger.debug("Account missing buying_power attribute - will fall back to simulation")
             return None
-        
+
         entry_price = signal.get("entry_price", 100)
         confidence = signal.get("confidence", 75)
         stop_price = signal.get("stop_price")
@@ -689,7 +721,13 @@ class PaperTradingEngine:
             )
         else:
             return self._prepare_buy_order_details(
-                signal, account, entry_price, confidence, stop_price, target_price, existing_positions
+                signal,
+                account,
+                entry_price,
+                confidence,
+                stop_price,
+                target_price,
+                existing_positions,
             )
 
     def _prepare_sell_order_details(
@@ -729,9 +767,13 @@ class PaperTradingEngine:
             # Opening new SHORT position
             qty, side = self._calculate_position_size(signal, account, entry_price)
             position_value = qty * entry_price
-            logger.info(f"📉 Opening NEW SHORT position: SELL {qty} {symbol} @ ${entry_price:.2f} (${position_value:,.2f})")
+            logger.info(
+                f"📉 Opening NEW SHORT position: SELL {qty} {symbol} @ ${entry_price:.2f} (${position_value:,.2f})"
+            )
             logger.info(f"   🛡️  Stop Loss: ${stop_price:.2f} | 🎯 Take Profit: ${target_price:.2f}")
-            logger.info(f"   📊 Confidence: {signal.get('confidence', 0):.1f}% | Risk: {((stop_price - entry_price) / entry_price * 100) if stop_price else 0:.2f}%")
+            logger.info(
+                f"   📊 Confidence: {signal.get('confidence', 0):.1f}% | Risk: {((stop_price - entry_price) / entry_price * 100) if stop_price else 0:.2f}%"
+            )
             return {
                 "symbol": symbol,
                 "qty": qty,
@@ -769,7 +811,9 @@ class PaperTradingEngine:
             current_price_short = existing_position.get("current_price", entry_price)
             pnl_pct = existing_position.get("pnl_pct", 0)
             logger.info(f"🔄 Closing SHORT position: {qty} {symbol}")
-            logger.info(f"   📉 SHORT Entry: ${entry_price_short:.2f} | Current: ${current_price_short:.2f} | P&L: {pnl_pct:+.2f}%")
+            logger.info(
+                f"   📉 SHORT Entry: ${entry_price_short:.2f} | Current: ${current_price_short:.2f} | P&L: {pnl_pct:+.2f}%"
+            )
             logger.info(f"   💰 BUY {qty} {symbol} @ ${entry_price:.2f} to cover SHORT position")
             return {
                 "symbol": symbol,
@@ -796,9 +840,13 @@ class PaperTradingEngine:
         # Calculate position size for new LONG position
         qty, side = self._calculate_position_size(signal, account, entry_price)
         position_value = qty * entry_price
-        logger.info(f"📈 Opening NEW LONG position: BUY {qty} {signal['symbol']} @ ${entry_price:.2f} (${position_value:,.2f})")
+        logger.info(
+            f"📈 Opening NEW LONG position: BUY {qty} {signal['symbol']} @ ${entry_price:.2f} (${position_value:,.2f})"
+        )
         logger.info(f"   🛡️  Stop Loss: ${stop_price:.2f} | 🎯 Take Profit: ${target_price:.2f}")
-        logger.info(f"   📊 Confidence: {confidence:.1f}% | Risk: {((entry_price - stop_price) / entry_price * 100) if stop_price else 0:.2f}%")
+        logger.info(
+            f"   📊 Confidence: {confidence:.1f}% | Risk: {((entry_price - stop_price) / entry_price * 100) if stop_price else 0:.2f}%"
+        )
         return {
             "symbol": signal["symbol"],
             "qty": qty,
@@ -858,22 +906,32 @@ class PaperTradingEngine:
                 position_size_pct = base_position_size_pct * 0.75 * volatility_multiplier
 
         # FIX: Crypto uses non_marginable_buying_power (settled cash only), stocks use regular buying_power
-        is_crypto = '-USD' in signal.get('symbol', '')
+        is_crypto = "-USD" in signal.get("symbol", "")
         if is_crypto:
             # Crypto requires non_marginable_buying_power (settled cash only)
-            buying_power = float(getattr(account, 'non_marginable_buying_power', account.buying_power))
-            logger.debug(f"🔍 Crypto detected: Using non_marginable_buying_power=${buying_power:,.2f} for {signal['symbol']}")
+            # FIX: Handle None case - getattr can return None if attribute exists but is None
+            non_marginable_bp = getattr(account, "non_marginable_buying_power", None)
+            if non_marginable_bp is None:
+                # Fallback to regular buying_power if non_marginable_buying_power is not available
+                buying_power = float(account.buying_power)
+            else:
+                buying_power = float(non_marginable_bp or 0)
+            logger.debug(
+                f"🔍 Crypto detected: Using non_marginable_buying_power=${buying_power:,.2f} for {signal['symbol']}"
+            )
         else:
             buying_power = float(account.buying_power)
-        
+
         # FIX: Validate buying power is positive
         if buying_power <= 0:
             logger.warning(f"⚠️  Invalid buying power: ${buying_power:,.2f} for {signal['symbol']}")
             return 0, OrderSide.BUY
-        
+
         # OPTIMIZATION: Log position sizing details for debugging
         bp_type = "non_marginable_buying_power" if is_crypto else "buying_power"
-        logger.debug(f"🔍 Position sizing for {signal['symbol']}: {bp_type}=${buying_power:,.2f}, entry_price=${entry_price:.2f}, position_size_pct={position_size_pct:.3f}%")
+        logger.debug(
+            f"🔍 Position sizing for {signal['symbol']}: {bp_type}=${buying_power:,.2f}, entry_price=${entry_price:.2f}, position_size_pct={position_size_pct:.3f}%"
+        )
 
         # FIX: Validate entry price is positive
         if entry_price <= 0:
@@ -881,20 +939,22 @@ class PaperTradingEngine:
             return 0, OrderSide.BUY
 
         # FIX: For crypto (especially expensive ones like BTC), use smaller position size
-        is_crypto = '-USD' in signal['symbol']
+        is_crypto = "-USD" in signal["symbol"]
         if is_crypto and entry_price > 10000:
             # For expensive crypto (BTC, etc.), ensure we can afford at least minimum quantity
             # Calculate minimum position value needed for minimum qty
             min_qty_value = 0.000001 * entry_price  # Minimum crypto qty * price
             min_position_pct_needed = (min_qty_value / buying_power) * 100
-            
+
             # Use the larger of: calculated position size or minimum needed
             if position_size_pct < min_position_pct_needed:
                 position_size_pct = min(min_position_pct_needed, 1.0)  # Cap at 1% for safety
-                logger.debug(f"🔧 Adjusted position size to {position_size_pct:.3f}% for expensive crypto {signal['symbol']} (min needed: {min_position_pct_needed:.3f}%)")
-        
+                logger.debug(
+                    f"🔧 Adjusted position size to {position_size_pct:.3f}% for expensive crypto {signal['symbol']} (min needed: {min_position_pct_needed:.3f}%)"
+                )
+
         position_value = buying_power * (position_size_pct / 100)
-        
+
         # OPTIMIZATION: For very expensive assets, ensure minimum position value
         if is_crypto and entry_price > 10000:
             min_qty_value = 0.000001 * entry_price
@@ -902,10 +962,14 @@ class PaperTradingEngine:
                 # Ensure we can afford minimum qty
                 if min_qty_value <= buying_power * 0.95:
                     position_value = min_qty_value
-                    logger.debug(f"🔧 Adjusted position value to ${position_value:.2f} to meet minimum qty requirement for {signal['symbol']}")
+                    logger.debug(
+                        f"🔧 Adjusted position value to ${position_value:.2f} to meet minimum qty requirement for {signal['symbol']}"
+                    )
                 else:
                     # Cannot afford minimum - will return 0 later
-                    logger.debug(f"⚠️  Cannot afford minimum position value ${min_qty_value:.2f} for {signal['symbol']} with buying power ${buying_power:.2f}")
+                    logger.debug(
+                        f"⚠️  Cannot afford minimum position value ${min_qty_value:.2f} for {signal['symbol']} with buying power ${buying_power:.2f}"
+                    )
 
         # FIX: Ensure position value doesn't exceed available buying power (with 5% buffer)
         max_position_value = buying_power * 0.95  # Leave 5% buffer for fees/margin
@@ -915,20 +979,26 @@ class PaperTradingEngine:
                 f"${max_position_value:,.2f}, capping to available funds"
             )
             position_value = max_position_value
-        
+
         # FIX: Ensure position_value is never zero if we have buying power (for crypto, use minimum qty value)
         if position_value <= 0 and buying_power > 0:
             if is_crypto:
                 min_qty_value = 0.000001 * entry_price
                 if min_qty_value <= buying_power * 0.95:
                     position_value = min_qty_value
-                    logger.debug(f"🔧 Position value was 0, using minimum qty value ${position_value:.2f} for {signal['symbol']}")
+                    logger.debug(
+                        f"🔧 Position value was 0, using minimum qty value ${position_value:.2f} for {signal['symbol']}"
+                    )
                 else:
-                    logger.warning(f"⚠️  Position value is 0 and cannot afford minimum for {signal['symbol']}")
+                    logger.warning(
+                        f"⚠️  Position value is 0 and cannot afford minimum for {signal['symbol']}"
+                    )
                     return 0, OrderSide.BUY
             else:
                 # For stocks, if position_value is 0, we can't afford even 1 share
-                logger.warning(f"⚠️  Position value is 0 for {signal['symbol']} - insufficient buying power")
+                logger.warning(
+                    f"⚠️  Position value is 0 for {signal['symbol']} - insufficient buying power"
+                )
                 return 0, OrderSide.BUY
 
         # FIX: For crypto, calculate quantity with decimal precision (crypto allows fractional shares)
@@ -981,7 +1051,7 @@ class PaperTradingEngine:
                 # For crypto, use 95% of buying power and ensure minimum qty
                 max_affordable_qty = round((buying_power * 0.95) / entry_price, 6)
                 min_qty = 0.000001
-                
+
                 # If we can afford at least minimum qty, use it
                 if max_affordable_qty >= min_qty:
                     qty = max_affordable_qty
@@ -1008,7 +1078,7 @@ class PaperTradingEngine:
             else:
                 qty = int(buying_power * 0.95 / entry_price)  # Use 95% to leave buffer
                 min_qty = 1
-                
+
                 if qty < min_qty:
                     logger.warning(
                         f"⚠️  Cannot afford minimum qty ({min_qty}) of {signal['symbol']} "
@@ -1023,9 +1093,13 @@ class PaperTradingEngine:
 
         # OPTIMIZATION: Log final calculated quantity for debugging
         if qty > 0:
-            logger.debug(f"✅ Position size calculated for {signal['symbol']}: qty={qty}, side={side.value}, cost=${qty * entry_price:.2f}")
+            logger.debug(
+                f"✅ Position size calculated for {signal['symbol']}: qty={qty}, side={side.value}, cost=${qty * entry_price:.2f}"
+            )
         else:
-            logger.warning(f"⚠️  Position size calculation returned 0 for {signal['symbol']}: buying_power=${buying_power:,.2f}, entry_price=${entry_price:.2f}, position_size_pct={position_size_pct:.3f}%")
+            logger.warning(
+                f"⚠️  Position size calculation returned 0 for {signal['symbol']}: buying_power=${buying_power:,.2f}, entry_price=${entry_price:.2f}, position_size_pct={position_size_pct:.3f}%"
+            )
 
         return qty, side
 
@@ -1046,14 +1120,16 @@ class PaperTradingEngine:
                     order_details["entry_price"],
                     order_details["side"],
                     limit_offset_pct,
-                    order_details.get("symbol")  # Pass symbol for validation
+                    order_details.get("symbol"),  # Pass symbol for validation
                 )
                 # FIX: Crypto requires GTC time_in_force, stocks use DAY
                 # Check original symbol (before Alpaca conversion) for crypto detection
                 original_symbol = order_details.get("original_symbol", order_details["symbol"])
-                is_crypto = '-USD' in original_symbol or (original_symbol.endswith('USD') and len(original_symbol) <= 7)
+                is_crypto = "-USD" in original_symbol or (
+                    original_symbol.endswith("USD") and len(original_symbol) <= 7
+                )
                 time_in_force = TimeInForce.GTC if is_crypto else TimeInForce.DAY
-                
+
                 order_request = LimitOrderRequest(
                     symbol=order_details["symbol"],
                     qty=order_details["qty"],
@@ -1066,7 +1142,9 @@ class PaperTradingEngine:
                 qty = order_details["qty"]
                 # Check original symbol (before Alpaca conversion) for crypto detection
                 original_symbol = order_details.get("original_symbol", order_details["symbol"])
-                is_crypto = '-USD' in original_symbol or (original_symbol.endswith('USD') and len(original_symbol) <= 7)
+                is_crypto = "-USD" in original_symbol or (
+                    original_symbol.endswith("USD") and len(original_symbol) <= 7
+                )
                 if not is_crypto:
                     # Ensure stocks use integer quantity
                     qty = int(qty)
@@ -1089,9 +1167,7 @@ class PaperTradingEngine:
 
             # Handle specific Alpaca API errors
             if "insufficient" in error_msg or "buying power" in error_msg:
-                logger.error(
-                    f"❌ Insufficient buying power for {order_details['symbol']}: {e}"
-                )
+                logger.error(f"❌ Insufficient buying power for {order_details['symbol']}: {e}")
                 # Invalidate account cache to get fresh data
                 self._invalidate_account_cache()
             elif "not found" in error_msg or "422" in error_msg or "asset" in error_msg:
@@ -1106,7 +1182,9 @@ class PaperTradingEngine:
                 # OPTIMIZATION: Rate limit backoff handled by retry logic in execute_signal
                 # The retry mechanism will automatically back off with exponential delay
             elif "connection" in error_msg or "timeout" in error_msg:
-                logger.error(f"❌ Connection error submitting order for {order_details['symbol']}: {e}")
+                logger.error(
+                    f"❌ Connection error submitting order for {order_details['symbol']}: {e}"
+                )
                 # Invalidate caches on connection error
                 self._invalidate_account_cache()
                 self._invalidate_positions_cache()
@@ -1163,7 +1241,12 @@ class PaperTradingEngine:
         return limit_price
 
     def _validate_bracket_prices(
-        self, symbol: str, entry_price: float, stop_price: float, target_price: float, side: OrderSide
+        self,
+        symbol: str,
+        entry_price: float,
+        stop_price: float,
+        target_price: float,
+        side: OrderSide,
     ) -> Tuple[bool, Optional[str]]:
         """Validate stop loss and take profit prices
 
@@ -1174,25 +1257,43 @@ class PaperTradingEngine:
         if side == OrderSide.BUY:
             # For LONG: stop should be below entry, target above entry
             if stop_price >= entry_price:
-                return False, f"Stop loss ${stop_price:.2f} must be below entry ${entry_price:.2f} for LONG"
+                return (
+                    False,
+                    f"Stop loss ${stop_price:.2f} must be below entry ${entry_price:.2f} for LONG",
+                )
             if target_price <= entry_price:
-                return False, f"Take profit ${target_price:.2f} must be above entry ${entry_price:.2f} for LONG"
+                return (
+                    False,
+                    f"Take profit ${target_price:.2f} must be above entry ${entry_price:.2f} for LONG",
+                )
 
             # Check stop loss isn't too far (more than 20% below entry)
             stop_loss_pct = ((entry_price - stop_price) / entry_price) * 100
             if stop_loss_pct > 20:
-                return False, f"Stop loss ${stop_price:.2f} is {stop_loss_pct:.1f}% below entry, exceeds 20% limit"
+                return (
+                    False,
+                    f"Stop loss ${stop_price:.2f} is {stop_loss_pct:.1f}% below entry, exceeds 20% limit",
+                )
         else:  # SELL/SHORT
             # For SHORT: stop should be above entry, target below entry
             if stop_price <= entry_price:
-                return False, f"Stop loss ${stop_price:.2f} must be above entry ${entry_price:.2f} for SHORT"
+                return (
+                    False,
+                    f"Stop loss ${stop_price:.2f} must be above entry ${entry_price:.2f} for SHORT",
+                )
             if target_price >= entry_price:
-                return False, f"Take profit ${target_price:.2f} must be below entry ${entry_price:.2f} for SHORT"
+                return (
+                    False,
+                    f"Take profit ${target_price:.2f} must be below entry ${entry_price:.2f} for SHORT",
+                )
 
             # Check stop loss isn't too far (more than 20% above entry)
             stop_loss_pct = ((stop_price - entry_price) / entry_price) * 100
             if stop_loss_pct > 20:
-                return False, f"Stop loss ${stop_price:.2f} is {stop_loss_pct:.1f}% above entry, exceeds 20% limit"
+                return (
+                    False,
+                    f"Stop loss ${stop_price:.2f} is {stop_loss_pct:.1f}% above entry, exceeds 20% limit",
+                )
 
         # Validate target price is reasonable (not more than 50% away)
         if side == OrderSide.BUY:
@@ -1201,7 +1302,10 @@ class PaperTradingEngine:
             target_pct = ((entry_price - target_price) / entry_price) * 100
 
         if target_pct > 50:
-            return False, f"Take profit ${target_price:.2f} is {target_pct:.1f}% away, exceeds 50% limit"
+            return (
+                False,
+                f"Take profit ${target_price:.2f} is {target_pct:.1f}% away, exceeds 50% limit",
+            )
 
         return True, None
 
@@ -1250,37 +1354,56 @@ class PaperTradingEngine:
                     stop_order_id = stop_order_result.id
                     stop_order_success = True
                     position_type = "LONG" if side == OrderSide.BUY else "SHORT"
-                    logger.info(f"🛡️  Stop loss order placed for {position_type}: {stop_order_id} @ ${stop_price:.2f}")
+                    logger.info(
+                        f"🛡️  Stop loss order placed for {position_type}: {stop_order_id} @ ${stop_price:.2f}"
+                    )
                     if position_type == "SHORT":
-                        logger.info(f"   📉 SHORT stop loss: Price rises to ${stop_price:.2f} = loss limit")
+                        logger.info(
+                            f"   📉 SHORT stop loss: Price rises to ${stop_price:.2f} = loss limit"
+                        )
                     break  # Success, exit retry loop
                 except Exception as stop_error:
                     if attempt < max_retries - 1:
-                        logger.warning(f"⚠️  Stop loss order attempt {attempt + 1}/{max_retries} failed for {symbol}, retrying: {stop_error}")
+                        logger.warning(
+                            f"⚠️  Stop loss order attempt {attempt + 1}/{max_retries} failed for {symbol}, retrying: {stop_error}"
+                        )
                         time.sleep(retry_delay)
                     else:
-                        logger.error(f"❌ Failed to place stop loss for {symbol} after {max_retries} attempts: {stop_error}")
+                        logger.error(
+                            f"❌ Failed to place stop loss for {symbol} after {max_retries} attempts: {stop_error}"
+                        )
 
             # OPTIMIZATION: Place take profit order with retry logic
             for attempt in range(max_retries):
                 try:
                     profit_order = TakeProfitRequest(
-                        symbol=symbol, qty=qty, limit_price=target_price, time_in_force=TimeInForce.GTC
+                        symbol=symbol,
+                        qty=qty,
+                        limit_price=target_price,
+                        time_in_force=TimeInForce.GTC,
                     )
                     profit_order_result = self.alpaca.submit_order(profit_order)
                     profit_order_id = profit_order_result.id
                     profit_order_success = True
                     position_type = "LONG" if side == OrderSide.BUY else "SHORT"
-                    logger.info(f"🎯 Take profit order placed for {position_type}: {profit_order_id} @ ${target_price:.2f}")
+                    logger.info(
+                        f"🎯 Take profit order placed for {position_type}: {profit_order_id} @ ${target_price:.2f}"
+                    )
                     if position_type == "SHORT":
-                        logger.info(f"   📉 SHORT take profit: Price falls to ${target_price:.2f} = profit target")
+                        logger.info(
+                            f"   📉 SHORT take profit: Price falls to ${target_price:.2f} = profit target"
+                        )
                     break  # Success, exit retry loop
                 except Exception as profit_error:
                     if attempt < max_retries - 1:
-                        logger.warning(f"⚠️  Take profit order attempt {attempt + 1}/{max_retries} failed for {symbol}, retrying: {profit_error}")
+                        logger.warning(
+                            f"⚠️  Take profit order attempt {attempt + 1}/{max_retries} failed for {symbol}, retrying: {profit_error}"
+                        )
                         time.sleep(retry_delay)
                     else:
-                        logger.error(f"❌ Failed to place take profit for {symbol} after {max_retries} attempts: {profit_error}")
+                        logger.error(
+                            f"❌ Failed to place take profit for {symbol} after {max_retries} attempts: {profit_error}"
+                        )
 
             # Track bracket orders (even if only one succeeded)
             if main_order_id in self._order_tracker:
@@ -1371,7 +1494,8 @@ class PaperTradingEngine:
             order_id
             for order_id, order_data in self._order_tracker.items()
             if order_data.get("order_timestamp", 0) > 0
-            and (current_time - order_data.get("order_timestamp", 0)) > self._order_tracker_cleanup_age
+            and (current_time - order_data.get("order_timestamp", 0))
+            > self._order_tracker_cleanup_age
         ]
 
         for order_id in to_remove:
@@ -1389,7 +1513,9 @@ class PaperTradingEngine:
 
         if order_details.get("is_closing"):
             position_type = "LONG" if side == OrderSide.BUY and action == "SELL" else "SHORT"
-            logger.info(f"✅ {side.value} {qty} {symbol} @ ${entry_price:.2f} (closing {position_type} position)")
+            logger.info(
+                f"✅ {side.value} {qty} {symbol} @ ${entry_price:.2f} (closing {position_type} position)"
+            )
         else:
             position_value = qty * entry_price
             position_size_pct = (
@@ -1609,8 +1735,12 @@ class PaperTradingEngine:
                 "status": account.status,
                 "currency": account.currency,
                 "buying_power": float(account.buying_power),
-                "non_marginable_buying_power": float(getattr(account, 'non_marginable_buying_power', 0)),  # For crypto trading
-                "crypto_status": getattr(account, 'crypto_status', 'UNKNOWN'),  # ACTIVE, INACTIVE, etc.
+                "non_marginable_buying_power": float(
+                    getattr(account, "non_marginable_buying_power", 0) or 0
+                ),  # For crypto trading - handle None case
+                "crypto_status": getattr(
+                    account, "crypto_status", "UNKNOWN"
+                ),  # ACTIVE, INACTIVE, etc.
                 "cash": float(account.cash),
                 "portfolio_value": float(account.portfolio_value),
                 "equity": float(account.equity),

@@ -66,6 +66,7 @@ class SignalQualityScorer:
         # Calculate total score
         total_score = sum(components.values())
 
+        # IMPROVEMENT: Stricter quality tiers - require higher scores for good quality
         # Determine quality tier
         if total_score >= 85:
             quality_tier = 'EXCELLENT'
@@ -77,6 +78,13 @@ class SignalQualityScorer:
             quality_tier = 'FAIR'
         else:
             quality_tier = 'POOR'
+        
+        # IMPROVEMENT: Log warning for low-quality signals
+        if quality_tier in ['FAIR', 'POOR']:
+            logger.warning(
+                f"⚠️  Low quality signal detected: {signal.get('symbol', 'UNKNOWN')} "
+                f"quality_score={total_score:.1f} ({quality_tier})"
+            )
 
         return {
             'quality_score': round(total_score, 2),

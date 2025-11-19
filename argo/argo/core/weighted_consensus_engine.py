@@ -319,12 +319,14 @@ class WeightedConsensusEngine:
                             neutral_short = vote * 0.50
                         long_votes[source] = neutral_long
                         short_votes[source] = neutral_short
-                    elif neutral_confidence >= 0.55:
-                        # Lower confidence NEUTRAL - split proportionally
+                    elif neutral_confidence >= 0.65:
+                        # IMPROVEMENT: Only split medium-confidence NEUTRAL (65-70%) if we have directional signals
+                        # Lower confidence NEUTRAL (<65%) should not dilute directional signals
                         neutral_long = vote * 0.55
                         neutral_short = vote * 0.45
                         long_votes[source] = neutral_long
                         short_votes[source] = neutral_short
+                    # IMPROVEMENT: Skip low-confidence NEUTRAL signals (<65%) to avoid dilution
 
         total_long = sum(long_votes.values())
         total_short = sum(short_votes.values())

@@ -17,17 +17,18 @@ This code implements patent-pending technology.
 Unauthorized use may infringe on pending patent rights.
 """
 import asyncio
+import hashlib
 import json
 import logging
 import os
 import platform
 import subprocess
 import sys
-import hashlib
-import pandas as pd
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import List, Dict, Optional, Tuple, Any
+from typing import Any, Dict, List, Optional, Tuple
+
+import pandas as pd
 
 # Add paths for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -37,24 +38,24 @@ try:
     from argo.core.signal_tracker import SignalTracker
 except ImportError:
     from core.signal_tracker import SignalTracker
-from argo.core.weighted_consensus_engine import WeightedConsensusEngine
-from argo.core.regime_detector import detect_regime, adjust_confidence
 from argo.ai.explainer import SignalExplainer
+from argo.core.adaptive_weight_manager import AdaptiveWeightManager
+from argo.core.data_sources.alpaca_pro_source import AlpacaProDataSource
+from argo.core.data_sources.alpha_vantage_source import AlphaVantageDataSource
+from argo.core.data_sources.chinese_models_source import ChineseModelsDataSource
 
 # Data sources
 from argo.core.data_sources.massive_source import MassiveDataSource
-from argo.core.data_sources.alpha_vantage_source import AlphaVantageDataSource
-from argo.core.data_sources.xai_grok_source import XAIGrokDataSource
 from argo.core.data_sources.sonar_source import SonarDataSource
-from argo.core.data_sources.alpaca_pro_source import AlpacaProDataSource
+from argo.core.data_sources.xai_grok_source import XAIGrokDataSource
 from argo.core.data_sources.yfinance_source import YFinanceDataSource
-from argo.core.data_sources.chinese_models_source import ChineseModelsDataSource
+from argo.core.performance_budget_monitor import get_performance_monitor
+from argo.core.regime_detector import adjust_confidence, detect_regime
+from argo.core.weighted_consensus_engine import WeightedConsensusEngine
+from argo.risk.prop_firm_risk_monitor import PropFirmRiskMonitor
 
 # Enhancements
 from argo.validation.data_quality import DataQualityMonitor
-from argo.risk.prop_firm_risk_monitor import PropFirmRiskMonitor
-from argo.core.adaptive_weight_manager import AdaptiveWeightManager
-from argo.core.performance_budget_monitor import get_performance_monitor
 
 # Enhanced Tradervue integration
 try:
@@ -87,6 +88,7 @@ class SignalGenerationService:
         if use_unified_tracker:
             try:
                 from argo.core.unified_signal_tracker import UnifiedSignalTracker
+
                 self.tracker = UnifiedSignalTracker()
                 self._use_unified = True
                 logger.info("✅ Using Unified Signal Tracker")
@@ -97,16 +99,19 @@ class SignalGenerationService:
         else:
             self.tracker = SignalTracker()
             self._use_unified = False
-        
+
         # Initialize signal distributor for multi-executor architecture
         self.distributor = None
         try:
             from argo.core.signal_distributor import SignalDistributor
-            self.distributor = SignalDistributor(self.trading_config if hasattr(self, 'trading_config') else {})
+
+            self.distributor = SignalDistributor(
+                self.trading_config if hasattr(self, "trading_config") else {}
+            )
             logger.info("✅ Signal Distributor initialized")
         except ImportError:
             logger.warning("⚠️  Signal distributor not available, using direct execution")
-        
+
         # Initialize risk_monitor attribute early to avoid AttributeError
         self.risk_monitor = None
         self.prop_firm_mode = False
@@ -159,30 +164,39 @@ class SignalGenerationService:
                 self.confidence_threshold = 88.0
                 logger.info("✅ Using 88% confidence threshold (feature flag enabled)")
             else:
-                self.confidence_threshold = self.trading_config.get("min_confidence", 75.0)
+                # IMPROVEMENT: Raise default threshold from 75% to 80% for better signal quality
+                self.confidence_threshold = self.trading_config.get("min_confidence", 80.0)
 
-            # Adaptive threshold by regime - lowered to allow more signals
+            # IMPROVEMENT: Adaptive threshold by regime - keep closer to base for quality
+            # Only allow 3-5 point reduction, not 10-15 points
             base_threshold = self.confidence_threshold
             self.regime_thresholds = {
-                "TRENDING": max(65.0, base_threshold - 10.0),  # Lower in trending markets
-                "CONSOLIDATION": max(65.0, base_threshold - 10.0),  # Lowered to match TRENDING
-                "VOLATILE": max(65.0, base_threshold - 10.0),  # Lower in volatile markets
-                "UNKNOWN": max(60.0, base_threshold - 15.0),  # Lowest for unknown markets
+                "TRENDING": max(75.0, base_threshold - 5.0),  # Slight reduction in trending markets
+                "CONSOLIDATION": max(75.0, base_threshold - 5.0),  # Slight reduction
+                "VOLATILE": max(75.0, base_threshold - 5.0),  # Slight reduction in volatile markets
+                "UNKNOWN": max(75.0, base_threshold - 5.0),  # Minimum 75% even for unknown
                 # Legacy regime mappings
-                "BULL": max(65.0, base_threshold - 10.0),
-                "BEAR": max(65.0, base_threshold - 10.0),
-                "CHOP": max(65.0, base_threshold - 10.0),  # Lowered to match CONSOLIDATION
-                "CRISIS": max(65.0, base_threshold - 10.0),
+                "BULL": max(75.0, base_threshold - 5.0),
+                "BEAR": max(75.0, base_threshold - 5.0),
+                "CHOP": max(75.0, base_threshold - 5.0),
+                "CRISIS": max(75.0, base_threshold - 5.0),
             }
+            logger.info(
+                f"✅ Confidence thresholds set: base={base_threshold:.1f}%, regimes={min(self.regime_thresholds.values()):.1f}%-{max(self.regime_thresholds.values()):.1f}%"
+            )
         except Exception as e:
             logger.warning(f"⚠️  Could not load feature flags for confidence threshold: {e}")
-            self.confidence_threshold = self.trading_config.get("min_confidence", 75.0)
+            # IMPROVEMENT: Raise default threshold from 75% to 80%
+            self.confidence_threshold = self.trading_config.get("min_confidence", 80.0)
             self.regime_thresholds = {
                 "TRENDING": 75.0,
                 "CONSOLIDATION": 75.0,
                 "VOLATILE": 75.0,
                 "UNKNOWN": 75.0,
             }
+            logger.info(
+                f"✅ Confidence thresholds set (fallback): base={self.confidence_threshold:.1f}%, regimes=75.0%"
+            )
 
         # OPTIMIZATION: Redis cache for distributed caching
         try:
@@ -251,8 +265,9 @@ class SignalGenerationService:
 
     def _init_environment(self):
         """Initialize environment detection and cursor awareness"""
-        from argo.core.environment import detect_environment, get_environment_info
         import os
+
+        from argo.core.environment import detect_environment, get_environment_info
 
         self.environment = detect_environment()
         env_info = get_environment_info()
@@ -274,12 +289,12 @@ class SignalGenerationService:
         else:
             self._cursor_aware = self.environment == "development"
         if self._cursor_aware:
-                logger.info(
-                    "💡 Development mode: Trading will pause when Cursor is closed or computer is asleep"
-                )
-                logger.info(
-                    "   Set ARGO_24_7_MODE=true or config.trading.force_24_7_mode=true to enable 24/7 signal generation"
-                )
+            logger.info(
+                "💡 Development mode: Trading will pause when Cursor is closed or computer is asleep"
+            )
+            logger.info(
+                "   Set ARGO_24_7_MODE=true or config.trading.force_24_7_mode=true to enable 24/7 signal generation"
+            )
 
     def _init_trading_engine(self):
         """Initialize trading engine if auto-execution is enabled"""
@@ -327,7 +342,9 @@ class SignalGenerationService:
             )
             # FIX: Don't disable auto_execute in simulation mode - allow distributor to handle execution
             # The execute endpoint will handle simulation mode appropriately
-            logger.info("   Auto-execute remains enabled - execution will be handled by distributor/executor endpoints")
+            logger.info(
+                "   Auto-execute remains enabled - execution will be handled by distributor/executor endpoints"
+            )
 
     def _init_performance_tracking(self):
         """Initialize performance tracking"""
@@ -907,7 +924,7 @@ class SignalGenerationService:
         """
         # Performance monitoring
         perf_context = self._start_performance_monitoring()
-        
+
         # Detect if symbol is crypto for 24/7 logging
         is_crypto = self._is_crypto_symbol(symbol)
         if is_crypto:
@@ -925,7 +942,9 @@ class SignalGenerationService:
             source_signals, market_data_df = await self._fetch_and_validate_market_data(symbol)
             if not source_signals:
                 if is_crypto:
-                    logger.warning(f"⚠️  No market data signals for crypto {symbol} - check data sources")
+                    logger.warning(
+                        f"⚠️  No market data signals for crypto {symbol} - check data sources"
+                    )
                 return None
 
             # Early exit: Check price change threshold
@@ -955,24 +974,33 @@ class SignalGenerationService:
             signal = await self._build_and_finalize_signal(
                 symbol, consensus, source_signals, market_data_df
             )
-            
+
             # Log crypto signal generation success
             if is_crypto and signal:
-                logger.info(f"🪙 Crypto signal generated for {symbol}: {signal.get('action')} @ ${signal.get('entry_price', 0):.2f} ({signal.get('confidence', 0):.1f}% confidence)")
+                logger.info(
+                    f"🪙 Crypto signal generated for {symbol}: {signal.get('action')} @ ${signal.get('entry_price', 0):.2f} ({signal.get('confidence', 0):.1f}% confidence)"
+                )
 
             return signal
 
         except Exception as e:
             logger.error(f"❌ Error generating signal for {symbol}: {e}")
             if is_crypto:
-                logger.error(f"   Crypto symbol {symbol} signal generation failed - check 24/7 data sources")
+                logger.error(
+                    f"   Crypto symbol {symbol} signal generation failed - check 24/7 data sources"
+                )
             return None
         finally:
             self._stop_performance_monitoring(perf_context)
-    
+
     def _is_crypto_symbol(self, symbol: str) -> bool:
         """Check if symbol is a cryptocurrency"""
-        return '-USD' in symbol or symbol.startswith('BTC') or symbol.startswith('ETH') or symbol.startswith('SOL')
+        return (
+            "-USD" in symbol
+            or symbol.startswith("BTC")
+            or symbol.startswith("ETH")
+            or symbol.startswith("SOL")
+        )
 
     def _start_performance_monitoring(self):
         """Start performance monitoring context"""
@@ -1019,9 +1047,11 @@ class SignalGenerationService:
                     f"⚠️  Early exit: No source signals generated for {symbol} (market data fetch may have failed)"
                 )
             return {}, None
-        
+
         if is_crypto:
-            logger.debug(f"✅ Market data fetched for crypto {symbol}: {list(source_signals.keys())}")
+            logger.debug(
+                f"✅ Market data fetched for crypto {symbol}: {list(source_signals.keys())}"
+            )
 
         return source_signals, market_data_df
 
@@ -1040,14 +1070,14 @@ class SignalGenerationService:
                     # If consensus confidence has improved significantly, recalculate
                     cached_signal = self._last_signals[symbol]
                     cached_confidence = cached_signal.get("confidence", 0)
-                    
+
                     # If cached confidence is low (< 70%), always recalculate to allow improvements
                     if cached_confidence < 70.0:
                         logger.info(
                             f"🔄 Recalculating {symbol} despite small price change - cached confidence {cached_confidence}% < 70%"
                         )
                         return None
-                    
+
                     logger.debug(
                         f"⏭️  Skipping {symbol} - price change {price_change*100:.2f}% < {self._price_change_threshold*100}%"
                     )
@@ -1063,19 +1093,28 @@ class SignalGenerationService:
 
             feature_flags = get_feature_flags()
 
-            if feature_flags.is_enabled("incremental_confidence"):
-                # Early exit check after primary sources (80% weight: Massive + Alpha)
-                partial_consensus = self._calculate_partial_consensus(source_signals, symbol)
-                if partial_consensus:
-                    max_possible = self._calculate_max_possible_confidence(
-                        source_signals, remaining_weight=0.20  # xAI + Sonar remaining
+            # OPTIMIZATION: Always enable early exit (not just when feature flag is on)
+            # Early exit check after primary sources (80% weight: Massive + Alpha)
+            partial_consensus = self._calculate_partial_consensus(source_signals, symbol)
+            if partial_consensus:
+                max_possible = self._calculate_max_possible_confidence(
+                    source_signals, remaining_weight=0.20  # xAI + Sonar remaining
+                )
+                threshold = self.confidence_threshold
+                # OPTIMIZATION: More aggressive early exit - exit if max possible is below threshold
+                # Also exit if partial confidence is very low (< 50%) even if feature flag is off
+                if max_possible < threshold:
+                    logger.debug(
+                        f"⏭️  Early exit: Max possible confidence ({max_possible:.1f}%) < {threshold}% threshold for {symbol}"
                     )
-                    threshold = self.confidence_threshold
-                    if max_possible < threshold:
-                        logger.debug(
-                            f"⏭️  Early exit: Max possible confidence ({max_possible:.1f}%) < {threshold}% threshold for {symbol}"
-                        )
-                        return True
+                    return True
+                # Additional check: if partial confidence is very low, exit early
+                partial_conf = partial_consensus.get("confidence", 0)
+                if partial_conf < 50.0 and len(source_signals) >= 2:
+                    logger.debug(
+                        f"⏭️  Early exit: Partial confidence ({partial_conf:.1f}%) too low for {symbol}"
+                    )
+                    return True
         except Exception as e:
             logger.debug(f"Could not check incremental confidence: {e}")
         return False
@@ -1125,30 +1164,33 @@ class SignalGenerationService:
         # IMPROVEMENT: Use adaptive threshold based on number of sources and signal types
         num_sources = len(source_signals)
         base_threshold = self.regime_thresholds.get(regime, self.confidence_threshold)
-        
+
         # Check if we have mixed signal types (NEUTRAL + directional)
         has_neutral = any(s.get("direction") == "NEUTRAL" for s in source_signals.values())
-        has_directional = any(s.get("direction") in ["LONG", "SHORT"] for s in source_signals.values())
+        has_directional = any(
+            s.get("direction") in ["LONG", "SHORT"] for s in source_signals.values()
+        )
         mixed_signals = has_neutral and has_directional
-        
+
         # Adjust threshold based on number of sources and signal types
         if num_sources == 1:
-            # Single source: require higher confidence (70% for NEUTRAL, 65% for directional)
-            threshold = max(base_threshold, 70.0 if consensus.get("direction") == "NEUTRAL" else 65.0)
+            # IMPROVEMENT: Single source requires higher confidence (80% minimum)
+            # Single source signals need extra confidence since there's no consensus
+            threshold = max(base_threshold, 80.0)
         elif num_sources == 2:
             # Two sources: adjust based on signal type mix
             if mixed_signals:
-                # Mixed signals (NEUTRAL + directional): lower threshold to 51.5% to allow consensus
-                # NEUTRAL signals split votes, so consensus confidence is naturally lower
-                # 51.9% consensus is valid (51.875% rounded)
-                threshold = max(base_threshold - 13.5, 51.5)
+                # IMPROVEMENT: Raise threshold for mixed signals from 51.5% to 70%
+                # Mixed signals (NEUTRAL + directional) should still meet quality standards
+                # NEUTRAL signals split votes, but we still need reasonable confidence
+                threshold = max(base_threshold - 10.0, 70.0)
             else:
-                # Both same type: slightly lower threshold
-                threshold = max(base_threshold - 5.0, 60.0)
+                # IMPROVEMENT: Both same type - still need good confidence (75% minimum)
+                threshold = max(base_threshold - 5.0, 75.0)
         else:
             # Three or more sources: use base threshold
             threshold = base_threshold
-        
+
         if consensus["confidence"] < threshold:
             logger.warning(
                 f"⚠️  Consensus confidence {consensus['confidence']:.1f}% below {threshold}% threshold for {symbol} ({regime}, {num_sources} sources) - source signals: {list(source_signals.keys())}"
@@ -1166,7 +1208,9 @@ class SignalGenerationService:
         consensus = await self._apply_regime_adjustment(consensus, symbol, market_data_df)
         adjusted_confidence = consensus.get("confidence", 0)
         if abs(original_confidence - adjusted_confidence) > 0.01:
-            logger.info(f"📊 Regime adjustment for {symbol}: {original_confidence}% → {adjusted_confidence}% (regime: {consensus.get('regime', 'UNKNOWN')})")
+            logger.info(
+                f"📊 Regime adjustment for {symbol}: {original_confidence}% → {adjusted_confidence}% (regime: {consensus.get('regime', 'UNKNOWN')})"
+            )
 
         # Build final signal
         signal = self._build_signal(symbol, consensus, source_signals)
@@ -1272,10 +1316,10 @@ class SignalGenerationService:
 
         # IMPROVEMENT: Collect signals from ALL sources, not just first
         # This provides more data for consensus calculation
-        # OPTIMIZATION: Reduced timeout for faster failure detection
+        # OPTIMIZATION: Reduced timeout for faster failure detection (8s max per symbol)
         try:
             done, pending = await asyncio.wait(
-                tasks, return_when=asyncio.ALL_COMPLETED, timeout=20.0  # Reduced from 30.0s
+                tasks, return_when=asyncio.ALL_COMPLETED, timeout=8.0  # Reduced from 20.0s to 8.0s
             )
 
             # Collect signals from ALL successful sources
@@ -1287,25 +1331,26 @@ class SignalGenerationService:
                         # Check if it's a DataFrame and has data
                         if hasattr(result, "empty") and not result.empty:
                             source_name = task_metadata[id(task)]
-                            
+
                             # Use first successful DataFrame for market_data_df
                             if market_data_df is None:
                                 market_data_df = result
 
                             # Generate signal from this source
-                            signal = self.data_sources[source_name].generate_signal(
-                                result, symbol
-                            )
+                            signal = self.data_sources[source_name].generate_signal(result, symbol)
                             if signal:
                                 # Ensure signal has required fields for validation
-                                signal['symbol'] = symbol
-                                if 'timestamp' not in signal:
+                                signal["symbol"] = symbol
+                                if "timestamp" not in signal:
                                     from datetime import datetime, timezone
-                                    signal['timestamp'] = datetime.now(timezone.utc).isoformat()
+
+                                    signal["timestamp"] = datetime.now(timezone.utc).isoformat()
                                 source_signals[source_name] = signal
                                 is_crypto = self._is_crypto_symbol(symbol)
                                 if is_crypto:
-                                    logger.debug(f"✅ {source_name} signal generated for crypto {symbol}: {signal.get('direction', 'N/A')} @ {signal.get('confidence', 0):.1f}%")
+                                    logger.debug(
+                                        f"✅ {source_name} signal generated for crypto {symbol}: {signal.get('direction', 'N/A')} @ {signal.get('confidence', 0):.1f}%"
+                                    )
                                 logger.info(
                                     f"✅ {source_name} signal for {symbol}: {signal.get('direction')} @ {signal.get('confidence')}%"
                                 )
@@ -1329,7 +1374,9 @@ class SignalGenerationService:
                 try:
                     # OPTIMIZATION: Wait for remaining tasks with shorter timeout
                     remaining_done, remaining_pending = await asyncio.wait(
-                        pending, return_when=asyncio.ALL_COMPLETED, timeout=10.0  # Reduced from 20.0s
+                        pending,
+                        return_when=asyncio.ALL_COMPLETED,
+                        timeout=5.0,  # Reduced from 10.0s to 5.0s
                     )
 
                     # Check remaining tasks
@@ -1345,10 +1392,13 @@ class SignalGenerationService:
                                     )
                                     if signal:
                                         # Ensure signal has required fields for validation
-                                        signal['symbol'] = symbol
-                                        if 'timestamp' not in signal:
+                                        signal["symbol"] = symbol
+                                        if "timestamp" not in signal:
                                             from datetime import datetime, timezone
-                                            signal['timestamp'] = datetime.now(timezone.utc).isoformat()
+
+                                            signal["timestamp"] = datetime.now(
+                                                timezone.utc
+                                            ).isoformat()
                                         source_signals[source_name] = signal
                                         logger.info(
                                             f"✅ {source_name} signal for {symbol}: {signal.get('direction')} @ {signal.get('confidence')}%"
@@ -1388,7 +1438,7 @@ class SignalGenerationService:
                         pass
 
         except asyncio.TimeoutError:
-            logger.warning(f"⚠️  Market data fetch timeout for {symbol} (20s timeout exceeded)")
+            logger.warning(f"⚠️  Market data fetch timeout for {symbol} (8s timeout exceeded)")
             # Cancel all tasks
             for task in tasks:
                 task.cancel()
@@ -1409,7 +1459,7 @@ class SignalGenerationService:
         is_crypto = self._is_crypto_symbol(symbol)
         independent_tasks = []
         task_metadata = {}
-        
+
         if is_crypto:
             logger.debug(f"🪙 Fetching independent sources for crypto {symbol} (24/7 mode)")
 
@@ -1469,11 +1519,36 @@ class SignalGenerationService:
             independent_tasks.append(task)
             task_metadata[id(task)] = ("chinese_models", "ai_analysis")
 
-        # Wait for all tasks and process results
+        # Wait for all tasks and process results with timeout
         if independent_tasks:
-            logger.info(f"🔄 Waiting for {len(independent_tasks)} independent source tasks for {symbol}")
-            results = await asyncio.gather(*independent_tasks, return_exceptions=True)
-            logger.info(f"✅ Received {len(results)} results from independent sources for {symbol}")
+            logger.info(
+                f"🔄 Waiting for {len(independent_tasks)} independent source tasks for {symbol}"
+            )
+            try:
+                # OPTIMIZATION: Add timeout to independent source fetching (5s max)
+                results = await asyncio.wait_for(
+                    asyncio.gather(*independent_tasks, return_exceptions=True), timeout=5.0
+                )
+                logger.info(
+                    f"✅ Received {len(results)} results from independent sources for {symbol}"
+                )
+            except asyncio.TimeoutError:
+                logger.warning(f"⚠️  Independent source fetch timeout for {symbol} (5s exceeded)")
+                # Cancel remaining tasks and use partial results
+                for task in independent_tasks:
+                    if not task.done():
+                        task.cancel()
+                # Get partial results from completed tasks
+                results = []
+                for task in independent_tasks:
+                    if task.done():
+                        try:
+                            results.append(await task)
+                        except Exception as e:
+                            results.append(e)
+                    else:
+                        results.append(asyncio.TimeoutError("Task cancelled due to timeout"))
+
             self._process_independent_results(
                 symbol, independent_tasks, results, task_metadata, source_signals
             )
@@ -1503,10 +1578,11 @@ class SignalGenerationService:
                     signal = self.data_sources["yfinance"].generate_signal(result, symbol)
                     if signal:
                         # Ensure signal has required fields for validation
-                        signal['symbol'] = symbol
-                        if 'timestamp' not in signal:
+                        signal["symbol"] = symbol
+                        if "timestamp" not in signal:
                             from datetime import datetime, timezone
-                            signal['timestamp'] = datetime.now(timezone.utc).isoformat()
+
+                            signal["timestamp"] = datetime.now(timezone.utc).isoformat()
                         source_signals["yfinance"] = signal
                         logger.info(
                             f"✅ yfinance signal for {symbol}: {signal.get('direction')} @ {signal.get('confidence')}%"
@@ -1526,7 +1602,9 @@ class SignalGenerationService:
                             symbol, signal, source_signals, yfinance_attempted, yfinance_exception
                         )
                     else:
-                        logger.info(f"⏭️  alpha_vantage returned no signal for {symbol} (confidence < 50% or invalid)")
+                        logger.info(
+                            f"⏭️  alpha_vantage returned no signal for {symbol} (confidence < 50% or invalid)"
+                        )
                 else:
                     logger.info(f"⏭️  alpha_vantage returned no indicators for {symbol}")
 
@@ -1535,10 +1613,11 @@ class SignalGenerationService:
                     signal = self.data_sources["x_sentiment"].generate_signal(result, symbol)
                     if signal:
                         # Ensure signal has required fields for validation
-                        signal['symbol'] = symbol
-                        if 'timestamp' not in signal:
+                        signal["symbol"] = symbol
+                        if "timestamp" not in signal:
                             from datetime import datetime, timezone
-                            signal['timestamp'] = datetime.now(timezone.utc).isoformat()
+
+                            signal["timestamp"] = datetime.now(timezone.utc).isoformat()
                         source_signals["x_sentiment"] = signal
                         logger.info(
                             f"✅ xAI Grok signal for {symbol}: {signal.get('direction')} @ {signal.get('confidence')}%"
@@ -1553,10 +1632,11 @@ class SignalGenerationService:
                     signal = self.data_sources["sonar"].generate_signal(result, symbol)
                     if signal:
                         # Ensure signal has required fields for validation
-                        signal['symbol'] = symbol
-                        if 'timestamp' not in signal:
+                        signal["symbol"] = symbol
+                        if "timestamp" not in signal:
                             from datetime import datetime, timezone
-                            signal['timestamp'] = datetime.now(timezone.utc).isoformat()
+
+                            signal["timestamp"] = datetime.now(timezone.utc).isoformat()
                         source_signals["sonar"] = signal
                         logger.info(
                             f"✅ Sonar AI signal for {symbol}: {signal.get('direction')} @ {signal.get('confidence')}%"
@@ -1571,10 +1651,11 @@ class SignalGenerationService:
                 # They frequently fail due to rate limits, so don't log as errors
                 if result:
                     # Ensure signal has required fields for validation
-                    result['symbol'] = symbol
-                    if 'timestamp' not in result:
+                    result["symbol"] = symbol
+                    if "timestamp" not in result:
                         from datetime import datetime, timezone
-                        result['timestamp'] = datetime.now(timezone.utc).isoformat()
+
+                        result["timestamp"] = datetime.now(timezone.utc).isoformat()
                     source_signals["chinese_models"] = result
                     logger.info(
                         f"✅ Chinese Models signal for {symbol}: {result.get('direction')} @ {result.get('confidence')}%"
@@ -1591,20 +1672,22 @@ class SignalGenerationService:
         """Handle Alpha Vantage signal with yfinance fallback logic"""
         if not yfinance_attempted:
             # Ensure signal has required fields for validation
-            signal['symbol'] = symbol
-            if 'timestamp' not in signal:
+            signal["symbol"] = symbol
+            if "timestamp" not in signal:
                 from datetime import datetime, timezone
-                signal['timestamp'] = datetime.now(timezone.utc).isoformat()
+
+                signal["timestamp"] = datetime.now(timezone.utc).isoformat()
             source_signals["alpha_vantage"] = signal
             logger.info(
                 f"✅ Alpha Vantage signal for {symbol}: {signal.get('direction')} @ {signal.get('confidence')}%"
             )
         elif yfinance_exception:
             # Ensure signal has required fields for validation
-            signal['symbol'] = symbol
-            if 'timestamp' not in signal:
+            signal["symbol"] = symbol
+            if "timestamp" not in signal:
                 from datetime import datetime, timezone
-                signal['timestamp'] = datetime.now(timezone.utc).isoformat()
+
+                signal["timestamp"] = datetime.now(timezone.utc).isoformat()
             source_signals["alpha_vantage"] = signal
             logger.info(
                 f"✅ Alpha Vantage signal (yfinance exception fallback) for {symbol}: {signal.get('direction')} @ {signal.get('confidence')}%"
@@ -1614,10 +1697,11 @@ class SignalGenerationService:
             if signal.get("confidence", 0) > yf_signal.get("confidence", 0):
                 source_signals.pop("yfinance", None)
                 # Ensure signal has required fields for validation
-                signal['symbol'] = symbol
-                if 'timestamp' not in signal:
+                signal["symbol"] = symbol
+                if "timestamp" not in signal:
                     from datetime import datetime, timezone
-                    signal['timestamp'] = datetime.now(timezone.utc).isoformat()
+
+                    signal["timestamp"] = datetime.now(timezone.utc).isoformat()
                 source_signals["alpha_vantage"] = signal
                 logger.info(
                     f"✅ Alpha Vantage signal (higher confidence) for {symbol}: {signal.get('direction')} @ {signal.get('confidence')}%"
@@ -1642,6 +1726,7 @@ class SignalGenerationService:
                 # OPTIMIZATION: Use shallow copy for dict (faster than deep copy)
                 # Only copy if we need to modify, otherwise return reference
                 import copy
+
                 return copy.copy(cached_consensus)  # Shallow copy is sufficient for dict
 
         # OPTIMIZATION: Only create signal summary if logging is enabled (avoid unnecessary work)
@@ -1694,6 +1779,7 @@ class SignalGenerationService:
         # Cache the result (use cached current_time)
         # OPTIMIZATION: Use shallow copy for dict (faster than deep copy)
         import copy
+
         self._consensus_cache[cache_key] = (copy.copy(consensus), current_time)
         self._cleanup_consensus_cache()
 
@@ -1715,28 +1801,31 @@ class SignalGenerationService:
         """Remove old regime cache entries to prevent memory growth"""
         if len(self._regime_cache) < self._regime_cache_max_size:
             return
-        
+
         now = datetime.now(timezone.utc)
         expired_keys = []
         for key, (regime, cache_time) in self._regime_cache.items():
             if (now - cache_time).total_seconds() >= self._regime_cache_ttl:
                 expired_keys.append(key)
-        
+
         # Remove expired entries
         for key in expired_keys:
             del self._regime_cache[key]
-        
+
         # If still too large, remove oldest entries
         if len(self._regime_cache) >= self._regime_cache_max_size:
-            entries_to_remove = len(self._regime_cache) - int(self._regime_cache_max_size * 0.8)  # Keep 80%
+            entries_to_remove = len(self._regime_cache) - int(
+                self._regime_cache_max_size * 0.8
+            )  # Keep 80%
             sorted_entries = sorted(
-                self._regime_cache.items(),
-                key=lambda x: x[1][1]  # Sort by timestamp
+                self._regime_cache.items(), key=lambda x: x[1][1]  # Sort by timestamp
             )
-            for key, _ in sorted_entries[:int(entries_to_remove)]:
+            for key, _ in sorted_entries[: int(entries_to_remove)]:
                 del self._regime_cache[key]
-        
-        logger.debug(f"🧹 Cleaned regime cache: {len(expired_keys)} expired, {len(self._regime_cache)} remaining")
+
+        logger.debug(
+            f"🧹 Cleaned regime cache: {len(expired_keys)} expired, {len(self._regime_cache)} remaining"
+        )
 
     def _cleanup_consensus_cache(self):
         """Remove old cache entries to prevent memory growth (OPTIMIZED: efficient cleanup)"""
@@ -1872,7 +1961,7 @@ class SignalGenerationService:
                 # Cleanup old entries if cache is too large
                 if len(self._regime_cache) >= self._regime_cache_max_size:
                     self._cleanup_regime_cache()
-                
+
                 self._regime_cache[cache_key] = (regime, datetime.now(timezone.utc))
 
                 return regime
@@ -1893,7 +1982,7 @@ class SignalGenerationService:
         if regime == "UNKNOWN" and market_data_df is not None and len(market_data_df) >= 200:
             regime = await self._get_cached_regime(market_data_df, symbol)
             try:
-                from argo.core.regime_detector import detect_regime, adjust_confidence
+                from argo.core.regime_detector import adjust_confidence, detect_regime
 
                 # Get legacy regime for adjustment
                 legacy_regime = detect_regime(market_data_df)
@@ -1903,9 +1992,9 @@ class SignalGenerationService:
         elif regime == "UNKNOWN" and "massive" in self.data_sources and market_data_df is None:
             try:
                 from argo.core.regime_detector import (
+                    adjust_confidence,
                     detect_regime,
                     map_legacy_regime_to_enhanced,
-                    adjust_confidence,
                 )
 
                 df = await self.data_sources["massive"].fetch_price_data(symbol, days=200)
@@ -2017,7 +2106,9 @@ class SignalGenerationService:
         signal_hash = hashlib.md5(json.dumps(signal_data, sort_keys=True).encode()).hexdigest()
         return f"reasoning:{signal_hash}"
 
-    def _get_cached_reasoning(self, signal: Dict, consensus: Dict, cache_key: Optional[str] = None) -> Optional[str]:
+    def _get_cached_reasoning(
+        self, signal: Dict, consensus: Dict, cache_key: Optional[str] = None
+    ) -> Optional[str]:
         """Get cached AI reasoning for signal (OPTIMIZATION 12)"""
         # OPTIMIZATION: Reuse cache key if provided to avoid duplicate creation
         if cache_key is None:
@@ -2042,11 +2133,13 @@ class SignalGenerationService:
 
         return None
 
-    def _cache_reasoning(self, signal: Dict, consensus: Dict, reasoning: str, current_time: Optional[datetime] = None):
+    def _cache_reasoning(
+        self, signal: Dict, consensus: Dict, reasoning: str, current_time: Optional[datetime] = None
+    ):
         """Cache AI reasoning (OPTIMIZATION 12)"""
         cache_key = self._create_reasoning_cache_key(signal, consensus)
         ttl = 3600  # 1 hour cache (reasoning is expensive)
-        
+
         # OPTIMIZATION: Use provided time or get current time
         if current_time is None:
             current_time = datetime.now(timezone.utc)
@@ -2062,7 +2155,7 @@ class SignalGenerationService:
         """Generate AI reasoning for signal (OPTIMIZATION 12: with caching)"""
         # OPTIMIZATION: Create cache key once and reuse
         cache_key = self._create_reasoning_cache_key(signal, consensus)
-        
+
         # OPTIMIZATION 12: Check cache first (pass cache_key to avoid recreating it)
         cached_reasoning = self._get_cached_reasoning(signal, consensus, cache_key)
         if cached_reasoning:
@@ -2125,9 +2218,14 @@ class SignalGenerationService:
                 if col in df.columns and df[col].dtype != "float32":
                     needs_optimization = True
                     break
-            if "Volume" in df.columns and df["Volume"].dtype not in ["int32", "int64", "int16", "int8"]:
+            if "Volume" in df.columns and df["Volume"].dtype not in [
+                "int32",
+                "int64",
+                "int16",
+                "int8",
+            ]:
                 needs_optimization = True
-            
+
             if not needs_optimization:
                 return df  # Already optimized, no copy needed
 
@@ -2314,7 +2412,9 @@ class SignalGenerationService:
 
         return True, "OK"
 
-    def _validate_trade(self, signal: Dict, account: Dict) -> Tuple[bool, str]:
+    def _validate_trade(
+        self, signal: Dict, account: Dict, existing_positions: Optional[List[Dict]] = None
+    ) -> Tuple[bool, str]:
         """Validate trade against risk management rules"""
         # Check if trading is paused (daily loss limit)
         if self._trading_paused:
@@ -2388,53 +2488,93 @@ class SignalGenerationService:
         if entry_price <= 0:
             return False, "Invalid entry price"
 
-        # FIX: Crypto uses non_marginable_buying_power (settled cash only), stocks use regular buying_power
-        is_crypto = '-USD' in signal.get('symbol', '')
-        if is_crypto:
-            # FIX: Alpaca does not support shorting crypto - reject SHORT crypto signals early
-            if signal.get('action') == 'SELL':
-                return False, "Alpaca does not support shorting cryptocurrency - only LONG (BUY) positions allowed"
-            
-            # For crypto, use non_marginable_buying_power (settled cash only)
-            buying_power = account.get("non_marginable_buying_power", 0) or 0
-            if buying_power <= 0:
-                return False, f"No non-marginable buying power available for crypto: ${buying_power:,.2f} (need settled cash)"
-        else:
-            buying_power = account.get("buying_power", 0) or 0
-            if buying_power <= 0:
-                return False, "Invalid buying power"
+        # FIX: Only check buying power for BUY orders - SELL orders (closing positions) don't require buying power
+        signal_action = signal.get("action", "").upper()
+        is_crypto = "-USD" in signal.get("symbol", "")
 
-        # PROP FIRM: Use prop firm position size limit if enabled
-        # OPTIMIZATION: prop_firm_mode is initialized in __init__, no need for hasattr
-        if self.prop_firm_mode:
-            position_size_pct = self.prop_firm_config.get("risk_limits", {}).get(
-                "max_position_size_pct", 3.0
-            )
-        else:
-            # Use max position size to be conservative in validation
-            position_size_pct = self.trading_config.get("max_position_size_pct", 15)
-            # Could also calculate actual position size here, but max is safer for validation
+        # For SELL orders, check if we have a position to close (no buying power needed)
+        if signal_action == "SELL":
+            if existing_positions:
+                existing_position = next(
+                    (p for p in existing_positions if p.get("symbol") == signal.get("symbol")),
+                    None,
+                )
+                if existing_position:
+                    # We have a position to close - no buying power check needed
+                    # For crypto, ensure we're closing a LONG position (can't short crypto)
+                    if is_crypto and existing_position.get("side") != "LONG":
+                        return (
+                            False,
+                            "Alpaca does not support shorting cryptocurrency - can only close LONG positions",
+                        )
+                    # SELL order with existing position - skip buying power validation, continue to other validations
+                else:
+                    # SELL order but no existing position - this would open a short position
+                    if is_crypto:
+                        return (
+                            False,
+                            "Alpaca does not support shorting cryptocurrency - only LONG (BUY) positions allowed",
+                        )
+                    # For stocks, shorting requires buying power (margin), but we'll let execution layer handle it
+                    # Skip buying power check here as shorting has different requirements
+            else:
+                # SELL order but no positions available - this would open a short position
+                if is_crypto:
+                    return (
+                        False,
+                        "Alpaca does not support shorting cryptocurrency - only LONG (BUY) positions allowed",
+                    )
+                # For stocks, shorting requires buying power, but we'll let execution layer handle it
 
-        # Calculate required capital using max position size (conservative check)
-        required_capital = buying_power * (position_size_pct / 100)
+        # Only validate buying power for BUY orders
+        if signal_action == "BUY":
+            if is_crypto:
+                # For crypto, use non_marginable_buying_power (settled cash only)
+                buying_power = account.get("non_marginable_buying_power", 0) or 0
+                if buying_power <= 0:
+                    return (
+                        False,
+                        f"No non-marginable buying power available for crypto: ${buying_power:,.2f} (need settled cash)",
+                    )
+            else:
+                # For stocks, use regular buying_power
+                buying_power = account.get("buying_power", 0) or 0
+                if buying_power <= 0:
+                    return False, "Invalid buying power"
 
-        # Check if we can afford minimum position (crypto allows fractional, stocks need whole shares)
-        if is_crypto:
-            min_required = entry_price * 0.000001  # Minimum crypto qty (0.000001)
-        else:
-            min_required = entry_price * 1  # Minimum 1 share for stocks
+        # Only validate position size and buying power requirements for BUY orders
+        if signal_action == "BUY":
+            # PROP FIRM: Use prop firm position size limit if enabled
+            # OPTIMIZATION: prop_firm_mode is initialized in __init__, no need for hasattr
+            if self.prop_firm_mode:
+                position_size_pct = self.prop_firm_config.get("risk_limits", {}).get(
+                    "max_position_size_pct", 3.0
+                )
+            else:
+                # Use max position size to be conservative in validation
+                position_size_pct = self.trading_config.get("max_position_size_pct", 15)
+                # Could also calculate actual position size here, but max is safer for validation
 
-        if required_capital > buying_power * 0.95:  # Leave 5% buffer
-            return (
-                False,
-                f"Insufficient buying power: need ${required_capital:,.2f}, have ${buying_power:,.2f}",
-            )
+            # Calculate required capital using max position size (conservative check)
+            required_capital = buying_power * (position_size_pct / 100)
 
-        if min_required > buying_power * 0.95:  # Check against 95% to leave buffer
-            return (
-                False,
-                f"Cannot afford minimum position: need ${min_required:,.2f} for minimum qty, have ${buying_power * 0.95:,.2f} available",
-            )
+            # Check if we can afford minimum position (crypto allows fractional, stocks need whole shares)
+            if is_crypto:
+                min_required = entry_price * 0.000001  # Minimum crypto qty (0.000001)
+            else:
+                min_required = entry_price * 1  # Minimum 1 share for stocks
+
+            if required_capital > buying_power * 0.95:  # Leave 5% buffer
+                return (
+                    False,
+                    f"Insufficient buying power: need ${required_capital:,.2f}, have ${buying_power:,.2f}",
+                )
+
+            if min_required > buying_power * 0.95:  # Check against 95% to leave buffer
+                return (
+                    False,
+                    f"Cannot afford minimum position: need ${min_required:,.2f} for minimum qty, have ${buying_power * 0.95:,.2f} available",
+                )
 
         return True, "OK"
 
@@ -2442,7 +2582,7 @@ class SignalGenerationService:
         """
         Generate signals for all symbols with error recovery and performance tracking
         Supports 24/7 crypto trading - crypto symbols generate signals continuously
-        
+
         Returns:
             List of generated signals
         """
@@ -2452,7 +2592,9 @@ class SignalGenerationService:
         # Log crypto symbols in cycle
         crypto_symbols = [s for s in symbols if self._is_crypto_symbol(s)]
         if crypto_symbols:
-            logger.debug(f"🪙 Signal generation cycle includes crypto symbols: {crypto_symbols} (24/7 mode)")
+            logger.debug(
+                f"🪙 Signal generation cycle includes crypto symbols: {crypto_symbols} (24/7 mode)"
+            )
 
         generated_signals = []
         account, existing_positions = self._get_trading_context()
@@ -2462,17 +2604,36 @@ class SignalGenerationService:
 
         # Process in adaptive batches with early exit
         batch_size = min(6, len(sorted_symbols))
-        
+
         # Performance tracking
         import time
+
         cycle_start_time = time.time()
 
         for i in range(0, len(sorted_symbols), batch_size):
             batch = sorted_symbols[i : i + batch_size]
 
-            # Process batch in parallel
+            # Process batch in parallel with timeout (8s per symbol max)
             symbol_tasks = [self.generate_signal_for_symbol(symbol) for symbol in batch]
-            results = await asyncio.gather(*symbol_tasks, return_exceptions=True)
+            try:
+                # OPTIMIZATION: Add timeout to batch processing (8s per symbol)
+                results = await asyncio.wait_for(
+                    asyncio.gather(*symbol_tasks, return_exceptions=True),
+                    timeout=8.0 * len(batch),  # 8s per symbol
+                )
+            except asyncio.TimeoutError:
+                logger.warning(f"⚠️  Batch processing timeout for {batch} (8s per symbol exceeded)")
+                # Get partial results and mark remaining as timeout
+                results = []
+                for task in symbol_tasks:
+                    if task.done():
+                        try:
+                            results.append(await task)
+                        except Exception as e:
+                            results.append(e)
+                    else:
+                        task.cancel()
+                        results.append(asyncio.TimeoutError("Symbol processing timeout"))
 
             # Process results with early exit tracking
             batch_successes = 0
@@ -2483,7 +2644,9 @@ class SignalGenerationService:
                         self._track_symbol_success(symbol, False)
                         # Track error in performance metrics
                         if self.performance_metrics:
-                            self.performance_metrics.record_error("signal_generation", str(type(result).__name__))
+                            self.performance_metrics.record_error(
+                                "signal_generation", str(type(result).__name__)
+                            )
                         continue
 
                     signal = result
@@ -2510,21 +2673,28 @@ class SignalGenerationService:
 
         # Cleanup and finalize
         self._finalize_signal_cycle(symbols)
-        
+
         # Track performance metrics
         if cycle_start_time and self.performance_metrics:
             import time
+
             cycle_duration = time.time() - cycle_start_time
             self.performance_metrics.record_signal_generation_time(cycle_duration)
             for _ in symbols:
                 self.performance_metrics.record_symbol_processed()
-            
+
             # Log crypto signal generation summary
-            crypto_signals = [s for s in generated_signals if self._is_crypto_symbol(s.get('symbol', ''))]
+            crypto_signals = [
+                s for s in generated_signals if self._is_crypto_symbol(s.get("symbol", ""))
+            ]
             if crypto_signals:
-                logger.info(f"🪙 Crypto signals generated: {len(crypto_signals)}/{len(crypto_symbols)} crypto symbols in {cycle_duration:.2f}s")
-            
-            logger.debug(f"📊 Signal cycle completed in {cycle_duration:.2f}s for {len(symbols)} symbols ({len(generated_signals)} signals)")
+                logger.info(
+                    f"🪙 Crypto signals generated: {len(crypto_signals)}/{len(crypto_symbols)} crypto symbols in {cycle_duration:.2f}s"
+                )
+
+            logger.debug(
+                f"📊 Signal cycle completed in {cycle_duration:.2f}s for {len(symbols)} symbols ({len(generated_signals)} signals)"
+            )
 
         return generated_signals
 
@@ -2532,11 +2702,21 @@ class SignalGenerationService:
         self, signal: Dict, symbol: str, account: Optional[Dict], existing_positions: List[Dict]
     ) -> Optional[Dict]:
         """Process, store, and distribute signal (OPTIMIZED: async non-blocking database insert)"""
+        # IMPROVEMENT: Final quality check before storage - reject signals below 75% confidence
+        signal_confidence = signal.get("confidence", 0)
+        min_quality_threshold = 75.0
+        if signal_confidence < min_quality_threshold:
+            logger.warning(
+                f"⏭️  Rejecting low-quality signal for {symbol}: "
+                f"confidence {signal_confidence:.1f}% < {min_quality_threshold}% minimum quality threshold"
+            )
+            return None
+
         # OPTIMIZATION: Use async signal logging to avoid blocking the pipeline
         # Add service tagging for unified architecture
-        signal['service_type'] = 'both'  # Can be executed by both Argo and Prop Firm
-        signal['generated_by'] = 'signal_generator'
-        
+        signal["service_type"] = "both"  # Can be executed by both Argo and Prop Firm
+        signal["generated_by"] = "signal_generator"
+
         # Store signal in database (non-blocking async batch insert)
         signal_id = await self.tracker.log_signal_async(signal)
         signal["signal_id"] = signal_id
@@ -2558,14 +2738,16 @@ class SignalGenerationService:
         else:
             # Fallback to direct execution (legacy mode)
             execution_conditions = {
-                'auto_execute': self.auto_execute,
-                'trading_engine': self.trading_engine is not None,
-                'account': account is not None,
-                'not_paused': not self._paused,
+                "auto_execute": self.auto_execute,
+                "trading_engine": self.trading_engine is not None,
+                "account": account is not None,
+                "not_paused": not self._paused,
             }
-            
-            logger.info(f"🔍 Execution check for {symbol}: auto_execute={self.auto_execute}, trading_engine={self.trading_engine is not None}, account={account is not None}, not_paused={not self._paused}")
-            
+
+            logger.info(
+                f"🔍 Execution check for {symbol}: auto_execute={self.auto_execute}, trading_engine={self.trading_engine is not None}, account={account is not None}, not_paused={not self._paused}"
+            )
+
             if all(execution_conditions.values()):
                 logger.info(f"✅ All conditions met for {symbol}, attempting execution")
                 executed = await self._execute_trade_if_valid(
@@ -2573,31 +2755,35 @@ class SignalGenerationService:
                 )
                 self._track_trade_execution(signal, signal_id, executed)
                 if not executed:
-                    logger.warning(f"⚠️  Trade execution returned False for {symbol} - check risk validation logs")
+                    logger.warning(
+                        f"⚠️  Trade execution returned False for {symbol} - check risk validation logs"
+                    )
             else:
                 failed_conditions = [k for k, v in execution_conditions.items() if not v]
-                logger.warning(f"⏭️  Skipping {symbol} - Failed conditions: {', '.join(failed_conditions)}")
+                logger.warning(
+                    f"⏭️  Skipping {symbol} - Failed conditions: {', '.join(failed_conditions)}"
+                )
                 self._track_signal_skipped(signal_id)
 
         return signal
-    
+
     async def _distribute_signal_to_executors(self, signal: Dict):
         """Distribute signal to trading executors (non-blocking)"""
         if not self.distributor:
             return
-        
+
         try:
             results = await self.distributor.distribute_signal(signal)
             for result in results:
-                if result.get('success'):
+                if result.get("success"):
                     logger.info(
                         f"✅ Signal distributed to {result.get('executor_id')}: "
                         f"Order ID: {result.get('order_id', 'N/A')}"
                     )
                     # Update signal with executor info
-                    if result.get('order_id'):
-                        signal['order_id'] = result.get('order_id')
-                        signal['executor_id'] = result.get('executor_id')
+                    if result.get("order_id"):
+                        signal["order_id"] = result.get("order_id")
+                        signal["executor_id"] = result.get("executor_id")
                 else:
                     logger.warning(
                         f"⚠️  Failed to distribute to {result.get('executor_id')}: "
@@ -2613,7 +2799,7 @@ class SignalGenerationService:
             return
 
         # Check if sync is enabled
-        if not hasattr(self.alpine_sync, '_sync_enabled') or not self.alpine_sync._sync_enabled:
+        if not hasattr(self.alpine_sync, "_sync_enabled") or not self.alpine_sync._sync_enabled:
             logger.debug("Alpine sync disabled, skipping sync")
             return
 
@@ -2623,12 +2809,16 @@ class SignalGenerationService:
                 loop = asyncio.get_running_loop()
                 # Event loop is running, schedule the sync task (fire and forget)
                 task = asyncio.create_task(self.alpine_sync.sync_signal(signal))
+
                 # Add error callback to log failures
                 def log_sync_error(task):
                     try:
                         task.result()  # This will raise if task failed
                     except Exception as e:
-                        logger.warning(f"⚠️  Alpine sync failed for signal {signal.get('signal_id', 'unknown')}: {e}")
+                        logger.warning(
+                            f"⚠️  Alpine sync failed for signal {signal.get('signal_id', 'unknown')}: {e}"
+                        )
+
                 task.add_done_callback(log_sync_error)
             except RuntimeError:
                 # No running event loop - try to get or create one
@@ -2640,11 +2830,15 @@ class SignalGenerationService:
                         asyncio.set_event_loop(loop)
                     # Schedule the sync task
                     task = asyncio.create_task(self.alpine_sync.sync_signal(signal))
+
                     def log_sync_error(task):
                         try:
                             task.result()
                         except Exception as e:
-                            logger.warning(f"⚠️  Alpine sync failed for signal {signal.get('signal_id', 'unknown')}: {e}")
+                            logger.warning(
+                                f"⚠️  Alpine sync failed for signal {signal.get('signal_id', 'unknown')}: {e}"
+                            )
+
                     task.add_done_callback(log_sync_error)
                 except RuntimeError:
                     # No event loop available - create a new one and run the sync
@@ -2653,7 +2847,9 @@ class SignalGenerationService:
                     try:
                         loop.run_until_complete(self.alpine_sync.sync_signal(signal))
                     except Exception as e:
-                        logger.warning(f"⚠️  Alpine sync failed for signal {signal.get('signal_id', 'unknown')}: {e}")
+                        logger.warning(
+                            f"⚠️  Alpine sync failed for signal {signal.get('signal_id', 'unknown')}: {e}"
+                        )
                     finally:
                         loop.close()
         except Exception as e:
@@ -2715,8 +2911,9 @@ class SignalGenerationService:
         # OPTIMIZATION: Conditional memory cleanup (only if memory pressure detected)
         # Only run gc.collect() periodically to avoid overhead
         import gc
-        import time
         import os
+        import time
+
         try:
             import psutil
         except ImportError:
@@ -2736,22 +2933,26 @@ class SignalGenerationService:
                     memory_info = process.memory_info()
                     memory_mb = memory_info.rss / 1024 / 1024
                     memory_percent = process.memory_percent()
-                    
+
                     # Log memory usage
                     if memory_percent > 80:
-                        logger.warning(f"⚠️  High memory usage: {memory_mb:.1f}MB ({memory_percent:.1f}%)")
-                    
+                        logger.warning(
+                            f"⚠️  High memory usage: {memory_mb:.1f}MB ({memory_percent:.1f}%)"
+                        )
+
                     # Force GC if memory usage is high
                     if memory_percent > 85 or memory_mb > 1500:  # > 1.5GB or > 85%
-                        logger.warning(f"🧹 Forcing GC due to high memory: {memory_mb:.1f}MB ({memory_percent:.1f}%)")
+                        logger.warning(
+                            f"🧹 Forcing GC due to high memory: {memory_mb:.1f}MB ({memory_percent:.1f}%)"
+                        )
                         gc.collect()
                         self._last_gc_time = current_time
-                        
+
                         # Cleanup caches
                         self._cleanup_consensus_cache()
                         self._cleanup_regime_cache()
                         self._cleanup_reasoning_cache()
-                    
+
                     self._last_memory_check = current_time
                 except Exception as e:
                     logger.debug(f"Memory check error: {e}")
@@ -2873,11 +3074,13 @@ class SignalGenerationService:
     ):
         """Execute trade if all validations pass"""
         try:
-            # Risk validation
-            can_trade, reason = self._validate_trade(signal, account)
+            # Risk validation (pass existing_positions to allow closing LONG crypto positions)
+            can_trade, reason = self._validate_trade(signal, account, existing_positions)
             if not can_trade:
                 logger.warning(f"⏭️  Skipping {symbol} - {reason}")
-                logger.debug(f"   Signal: {signal.get('action')} @ ${signal.get('entry_price', 0):.2f} ({signal.get('confidence', 0):.1f}% confidence)")
+                logger.debug(
+                    f"   Signal: {signal.get('action')} @ ${signal.get('entry_price', 0):.2f} ({signal.get('confidence', 0):.1f}% confidence)"
+                )
                 return False
 
             # FIX: Check existing position with side awareness
@@ -2888,22 +3091,20 @@ class SignalGenerationService:
             existing_position = next(
                 (p for p in existing_positions if p.get("symbol") == symbol), None
             )
-            
+
             if existing_position:
                 existing_side = existing_position.get("side", "LONG").upper()
-                
+
                 # Check if this trade would close the existing position
-                would_close = (
-                    (existing_side == "LONG" and signal_action == "SELL") or
-                    (existing_side == "SHORT" and signal_action == "BUY")
+                would_close = (existing_side == "LONG" and signal_action == "SELL") or (
+                    existing_side == "SHORT" and signal_action == "BUY"
                 )
-                
+
                 # Check if this trade would open the same position type
-                would_duplicate = (
-                    (existing_side == "LONG" and signal_action == "BUY") or
-                    (existing_side == "SHORT" and signal_action == "SELL")
+                would_duplicate = (existing_side == "LONG" and signal_action == "BUY") or (
+                    existing_side == "SHORT" and signal_action == "SELL"
                 )
-                
+
                 if would_close:
                     logger.info(
                         f"🔄 {symbol} - Closing existing {existing_side} position with {signal_action} signal"
@@ -2923,12 +3124,16 @@ class SignalGenerationService:
                     )
 
             # Check correlation limits (only for new positions, not closing)
-            if not existing_position and not self._check_correlation_groups(symbol, existing_positions):
+            if not existing_position and not self._check_correlation_groups(
+                symbol, existing_positions
+            ):
                 logger.warning(f"⏭️  Skipping {symbol} - Correlation limit exceeded")
                 return False
 
             # FIX: Pass existing_positions to avoid race condition
-            logger.info(f"🚀 Executing trade for {symbol}: {signal.get('action')} @ ${signal.get('entry_price', 0):.2f} ({signal.get('confidence', 0):.1f}% confidence)")
+            logger.info(
+                f"🚀 Executing trade for {symbol}: {signal.get('action')} @ ${signal.get('entry_price', 0):.2f} ({signal.get('confidence', 0):.1f}% confidence)"
+            )
             order_id = self.trading_engine.execute_signal(
                 signal, existing_positions=existing_positions
             )
@@ -2942,6 +3147,7 @@ class SignalGenerationService:
         except Exception as e:
             logger.error(f"❌ Error executing trade for {symbol}: {e}")
             import traceback
+
             logger.debug(f"   Traceback: {traceback.format_exc()}")
             return False
 
@@ -3156,7 +3362,7 @@ class SignalGenerationService:
         try:
             # OPTIMIZATION: Get positions once and reuse
             positions = self._get_cached_positions()
-            
+
             # OPTIMIZATION: Use dict lookup instead of linear search for O(1) access
             position_dict = {p.get("symbol"): p for p in positions if p.get("symbol")}
             position = position_dict.get(symbol)
@@ -3291,7 +3497,7 @@ class SignalGenerationService:
 
         # Start risk monitoring if enabled
         # Check if risk_monitor exists and is initialized
-        if hasattr(self, 'risk_monitor') and self.risk_monitor:
+        if hasattr(self, "risk_monitor") and self.risk_monitor:
             try:
                 await self.risk_monitor.start_monitoring()
                 logger.info("🚨 Risk monitoring started")
@@ -3306,7 +3512,7 @@ class SignalGenerationService:
 
         consecutive_errors = 0
         max_consecutive_errors = 10
-        
+
         while self.running:
             try:
                 # Check and update pause state (only in development mode)
@@ -3325,10 +3531,12 @@ class SignalGenerationService:
 
                 # Generate signals
                 await self._run_signal_generation_cycle(interval_seconds)
-                
+
                 # Reset error counter on successful cycle
                 if consecutive_errors > 0:
-                    logger.info(f"✅ Signal generation cycle recovered after {consecutive_errors} errors")
+                    logger.info(
+                        f"✅ Signal generation cycle recovered after {consecutive_errors} errors"
+                    )
                     consecutive_errors = 0
 
             except KeyboardInterrupt:
@@ -3338,13 +3546,18 @@ class SignalGenerationService:
                 break
             except Exception as e:
                 consecutive_errors += 1
-                logger.error(f"❌ Error in background generation cycle (error #{consecutive_errors}): {e}", exc_info=True)
-                
+                logger.error(
+                    f"❌ Error in background generation cycle (error #{consecutive_errors}): {e}",
+                    exc_info=True,
+                )
+
                 # If too many consecutive errors, log warning but continue
                 if consecutive_errors >= max_consecutive_errors:
-                    logger.error(f"⚠️ {max_consecutive_errors} consecutive errors - signal generation may be unstable")
+                    logger.error(
+                        f"⚠️ {max_consecutive_errors} consecutive errors - signal generation may be unstable"
+                    )
                     consecutive_errors = 0  # Reset to prevent log spam
-                
+
                 # Always continue running - never stop the loop
                 await asyncio.sleep(interval_seconds)
 
@@ -3360,16 +3573,26 @@ class SignalGenerationService:
         """Run one signal generation cycle with robust error handling"""
         start_time = datetime.now(timezone.utc)
         try:
-            signals = await self.generate_signals_cycle()
+            # OPTIMIZATION: Add global timeout to entire cycle (30s max)
+            signals = await asyncio.wait_for(self.generate_signals_cycle(), timeout=30.0)
             elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
-            
+
             if signals:
                 logger.info(f"📊 Generated {len(signals)} signals in {elapsed:.2f}s")
                 # Log signal details for monitoring
                 for signal in signals[:3]:  # Log first 3 signals
-                    logger.info(f"  → {signal.get('symbol')} {signal.get('action')} @ {signal.get('confidence', 0):.1f}%")
+                    logger.info(
+                        f"  → {signal.get('symbol')} {signal.get('action')} @ {signal.get('confidence', 0):.1f}%"
+                    )
             else:
-                logger.debug(f"📊 Signal generation cycle completed in {elapsed:.2f}s (0 signals generated)")
+                if elapsed > 10.0:
+                    logger.warning(
+                        f"⚠️  Signal generation cycle took {elapsed:.2f}s with 0 signals (performance issue)"
+                    )
+                else:
+                    logger.debug(
+                        f"📊 Signal generation cycle completed in {elapsed:.2f}s (0 signals generated)"
+                    )
 
             # OPTIMIZATION: Record performance metrics
             if self.performance_metrics:
@@ -3377,12 +3600,21 @@ class SignalGenerationService:
                     self.performance_metrics.record_signal_generation_time(elapsed)
                 except Exception as e:
                     logger.debug(f"Could not record performance metrics: {e}")
+        except asyncio.TimeoutError:
+            elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
+            logger.error(
+                f"❌ Signal generation cycle timeout after {elapsed:.2f}s (30s limit exceeded)"
+            )
+            signals = []  # Return empty list on timeout
         except KeyboardInterrupt:
             # Re-raise keyboard interrupt to allow graceful shutdown
             raise
         except Exception as e:
             elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
-            logger.error(f"❌ Error in signal generation cycle after {elapsed:.2f}s: {e}", exc_info=True)
+            logger.error(
+                f"❌ Error in signal generation cycle after {elapsed:.2f}s: {e}", exc_info=True
+            )
+            signals = []  # Return empty list on error
             # Don't re-raise - let the outer loop handle it and continue
 
         # Sleep before next cycle (only if not interrupted)
@@ -3504,6 +3736,7 @@ class SignalGenerationService:
         try:
             # Try async flush first
             import asyncio
+
             try:
                 loop = asyncio.get_event_loop()
                 if loop.is_running():

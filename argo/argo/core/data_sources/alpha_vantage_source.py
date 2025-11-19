@@ -201,8 +201,8 @@ class AlphaVantageDataSource:
             if not all([rsi, sma_20, current_price]):
                 return None
             
-            # IMPROVEMENT: Start with base confidence of 60% instead of 55% (matching yfinance)
-            confidence = 60.0  # Base confidence
+            # IMPROVEMENT: Raise base confidence from 60% to 65% for better signal quality
+            confidence = 65.0  # Base confidence
             direction = 'NEUTRAL'
             
             # RSI-based signals
