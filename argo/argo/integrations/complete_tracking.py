@@ -142,22 +142,22 @@ class LiveTracker:
     def _track_tradervue_basic(self, signal):
         """Basic Tradervue tracking (backward compatible)"""
         try:
-                requests.post(
-                    "https://www.tradervue.com/api/v1/trades",
+            requests.post(
+                "https://www.tradervue.com/api/v1/trades",
                 auth=(self.tradervue_user, self.tradervue_password),
-                    json={
-                        "symbol": signal['symbol'],
-                        "quantity": signal.get('quantity', 10),
-                        "date": datetime.now().strftime("%Y-%m-%d"),
-                        "price": signal['entry_price'],
-                        "side": "B" if signal['type'] == 'long' else "SS",
-                        "notes": f"Alpine Analytics | {signal['confidence']}% | SHA256: {signal.get('hash', 'N/A')[:8]}"
-                    },
-                    timeout=5
-                )
-                print(f"✅ Tradervue: {signal['symbol']} synced live")
-            except Exception as e:
-                print(f"Tradervue error: {e}")
+                json={
+                    "symbol": signal['symbol'],
+                    "quantity": signal.get('quantity', 10),
+                    "date": datetime.now().strftime("%Y-%m-%d"),
+                    "price": signal['entry_price'],
+                    "side": "B" if signal['type'] == 'long' else "SS",
+                    "notes": f"Alpine Analytics | {signal['confidence']}% | SHA256: {signal.get('hash', 'N/A')[:8]}"
+                },
+                timeout=5
+            )
+            print(f"✅ Tradervue: {signal['symbol']} synced live")
+        except Exception as e:
+            print(f"Tradervue error: {e}")
         
         # Stream to Power BI (live dashboard updates)
         if self.powerbi_enabled:
