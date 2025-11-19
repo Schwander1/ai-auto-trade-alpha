@@ -111,6 +111,11 @@ services:
     environment:
       - ARGO_API_URL=http://178.156.194.174:8000
       - ENVIRONMENT=production
+      - DATABASE_URL=postgresql://alpine_user:AlpineSecure2025!@postgres:5432/alpine_prod
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=AlpineRedis2025!
+      - REDIS_DB=0
     depends_on:
       - postgres
       - redis
