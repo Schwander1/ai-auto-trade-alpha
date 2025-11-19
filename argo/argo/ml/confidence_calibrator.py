@@ -29,12 +29,22 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("ConfidenceCalibrator")
 
 # Use relative path that works in both dev and production
-if os.path.exists("/root/argo-production"):
+# Check for unified production path first
+if os.path.exists("/root/argo-production-unified"):
+    BASE_DIR = Path("/root/argo-production-unified")
+elif os.path.exists("/root/argo-production-prop-firm"):
+    BASE_DIR = Path("/root/argo-production-prop-firm")
+elif os.path.exists("/root/argo-production-green"):
+    BASE_DIR = Path("/root/argo-production-green")
+elif os.path.exists("/root/argo-production"):
     BASE_DIR = Path("/root/argo-production")
 else:
     BASE_DIR = Path(__file__).parent.parent.parent.parent
 
-DB_FILE = BASE_DIR / "data" / "signals.db"
+# Use unified database if it exists, otherwise fall back to old database
+UNIFIED_DB = BASE_DIR / "data" / "signals_unified.db"
+OLD_DB = BASE_DIR / "data" / "signals.db"
+DB_FILE = UNIFIED_DB if UNIFIED_DB.exists() else OLD_DB
 
 
 class ConfidenceCalibrator:
@@ -86,10 +96,18 @@ class ConfidenceCalibrator:
             
             cutoff_date = (datetime.utcnow() - timedelta(days=days)).isoformat()
             
-            cursor.execute("""
+            # Check if using unified database (has 'created_at' column) or old database (has 'timestamp' column)
+            try:
+                cursor.execute("PRAGMA table_info(signals)")
+                columns = [row[1] for row in cursor.fetchall()]
+                time_column = "created_at" if "created_at" in columns else "timestamp"
+            except:
+                time_column = "timestamp"
+            
+            cursor.execute(f"""
                 SELECT confidence, outcome
                 FROM signals
-                WHERE timestamp >= ?
+                WHERE {time_column} >= ?
                 AND outcome IS NOT NULL
                 AND confidence IS NOT NULL
             """, (cutoff_date,))
@@ -156,7 +174,15 @@ class ConfidenceCalibrator:
             conf_min = max(0, raw_confidence - 5)
             conf_max = min(100, raw_confidence + 5)
             
-            query = """
+            # Check if using unified database (has 'created_at' column) or old database (has 'timestamp' column)
+            try:
+                cursor.execute("PRAGMA table_info(signals)")
+                columns = [row[1] for row in cursor.fetchall()]
+                time_column = "created_at" if "created_at" in columns else "timestamp"
+            except:
+                time_column = "timestamp"
+            
+            query = f"""
                 SELECT 
                     COUNT(*) as total,
                     SUM(CASE WHEN outcome = 'win' THEN 1 ELSE 0 END) as wins
@@ -180,13 +206,25 @@ class ConfidenceCalibrator:
                 wins = result['wins'] or 0
                 actual_win_rate = (wins / total) * 100 if total > 0 else 0
                 
-                # Adjust confidence based on actual win rate
-                # If actual win rate is lower than confidence, reduce confidence
-                adjustment_factor = actual_win_rate / raw_confidence if raw_confidence > 0 else 1.0
-                calibrated = raw_confidence * adjustment_factor
-                
-                logger.debug(f"Calibrated {raw_confidence}% → {calibrated:.2f}% (actual win rate: {actual_win_rate:.2f}%)")
-                return round(max(0.0, min(100.0, calibrated)), 2)
+                # IMPROVEMENT: Only calibrate DOWN if actual win rate is significantly lower
+                # Don't reduce confidence if it would go below 70% (preserve improved consensus)
+                # Only apply calibration if we have strong evidence (>= 20 samples) and significant difference
+                if total >= 20 and actual_win_rate < raw_confidence - 5:
+                    adjustment_factor = actual_win_rate / raw_confidence if raw_confidence > 0 else 1.0
+                    calibrated = raw_confidence * adjustment_factor
+                    
+                    # IMPROVEMENT: Don't reduce below 70% if raw confidence is >= 70%
+                    # This preserves our improved consensus confidence
+                    if raw_confidence >= 70.0 and calibrated < 70.0:
+                        logger.debug(f"Skipping calibration that would reduce {raw_confidence}% below 70% (would be {calibrated:.2f}%)")
+                        return raw_confidence
+                    
+                    logger.debug(f"Calibrated {raw_confidence}% → {calibrated:.2f}% (actual win rate: {actual_win_rate:.2f}%)")
+                    return round(max(0.0, min(100.0, calibrated)), 2)
+                else:
+                    # Not enough evidence or difference is small, return raw
+                    logger.debug(f"Insufficient evidence for calibration ({total} samples, {actual_win_rate:.2f}% win rate vs {raw_confidence}% confidence)")
+                    return raw_confidence
             
             return raw_confidence
             
