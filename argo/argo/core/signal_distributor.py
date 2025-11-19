@@ -88,7 +88,7 @@ class SignalDistributor:
             executor_id='argo',
             port=8000,
             config={
-                'min_confidence': 75.0,
+                'min_confidence': 60.0,  # Lowered to match config
                 'service_type': 'argo',
             }
         )
@@ -102,6 +102,8 @@ class SignalDistributor:
                 'service_type': 'prop_firm',
             }
         )
+        
+        logger.info(f"✅ Initialized {len(self.executors)} executors: {list(self.executors.keys())}")
     
     def add_executor(self, executor_id: str, port: int, config: Optional[Dict] = None):
         """Add a new executor"""
@@ -126,23 +128,29 @@ class SignalDistributor:
         """
         # Determine which executors should receive this signal
         service_type = signal.get('service_type', 'both')
+        signal_symbol = signal.get('symbol', 'UNKNOWN')
+        signal_confidence = signal.get('confidence', 0)
+        
+        logger.debug(f"📤 Distributing signal: {signal_symbol} {signal.get('action')} @ {signal_confidence:.1f}% (service_type: {service_type})")
         
         # OPTIMIZATION: Collect eligible executors first, then execute in parallel
         eligible_executors = []
         for executor_id, executor in self.executors.items():
             if not executor._enabled:
+                logger.debug(f"Skipping {executor_id}: executor disabled")
                 continue
             
             executor_config = executor.config
             
             # Check service type match
             if service_type not in ['both', executor_config.get('service_type', executor_id)]:
+                logger.debug(f"Skipping {executor_id}: service_type mismatch ({service_type} vs {executor_config.get('service_type', executor_id)})")
                 continue
             
             # Check confidence threshold
             min_confidence = executor_config.get('min_confidence', 0.0)
-            if signal.get('confidence', 0) < min_confidence:
-                logger.debug(f"Skipping {executor_id}: confidence {signal.get('confidence')} < {min_confidence}")
+            if signal_confidence < min_confidence:
+                logger.debug(f"Skipping {executor_id}: confidence {signal_confidence:.1f} < {min_confidence}")
                 continue
             
             # Prop firm specific checks
@@ -153,21 +161,31 @@ class SignalDistributor:
                     continue
                 
                 # Additional prop firm filters can go here
-                if signal.get('confidence', 0) < 82.0:
+                if signal_confidence < 82.0:
+                    logger.debug(f"Skipping {executor_id}: confidence {signal_confidence:.1f} < 82.0 (prop firm threshold)")
                     continue
             
+            logger.debug(f"✅ {executor_id} is eligible for signal {signal_symbol}")
             eligible_executors.append((executor_id, executor))
         
         if not eligible_executors:
+            logger.debug(f"⚠️  No eligible executors for signal {signal_symbol} (confidence: {signal_confidence:.1f}%, service_type: {service_type})")
             return []
+        
+        logger.info(f"📤 Distributing signal {signal_symbol} to {len(eligible_executors)} executor(s): {[e[0] for e in eligible_executors]}")
         
         # OPTIMIZATION: Execute all eligible executors in parallel
         async def send_to_executor(executor_id: str, executor: TradingExecutorClient) -> Dict:
             try:
+                logger.debug(f"📤 Sending signal {signal_symbol} to {executor_id}...")
                 result = await executor.execute_signal(signal)
+                if result.get('success'):
+                    logger.info(f"✅ {executor_id} executed signal {signal_symbol}: Order ID {result.get('order_id', 'N/A')}")
+                else:
+                    logger.warning(f"⚠️  {executor_id} failed to execute signal {signal_symbol}: {result.get('error', 'Unknown error')}")
                 return result
             except Exception as e:
-                logger.error(f"Error distributing to {executor_id}: {e}")
+                logger.error(f"❌ Error distributing to {executor_id}: {e}", exc_info=True)
                 return {
                     'executor_id': executor_id,
                     'success': False,

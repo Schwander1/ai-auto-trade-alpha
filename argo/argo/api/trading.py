@@ -205,17 +205,11 @@ async def execute_signal(signal: Dict[str, Any]):
             )
         
         # Get account and positions for execution
+        # FIX: Allow execution even if account is not available (simulation mode)
         account = signal_service.trading_engine.get_account_details()
         if not account:
-            logger.error("Failed to get account details")
-            return JSONResponse(
-                status_code=503,
-                content={
-                    "success": False,
-                    "error": "Failed to get account details",
-                    "executor_id": "argo"
-                }
-            )
+            logger.warning("Account not available - attempting execution in simulation mode")
+            # Continue with execution - trading engine will handle simulation mode
         
         # Get existing positions
         positions = signal_service.trading_engine.get_positions()

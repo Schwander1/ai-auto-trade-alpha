@@ -517,8 +517,8 @@ class PaperTradingEngine:
 
             # FIX: Check connection health before proceeding
             if not self._check_connection_health():
-                logger.error(f"❌ Connection health check failed, cannot execute trade for {symbol}")
-                return None
+                logger.warning(f"⚠️  Connection health check failed for {symbol}, falling back to simulation mode")
+                return self._execute_sim(signal)
 
             if not self._is_trade_allowed(symbol):
                 return None
@@ -526,12 +526,13 @@ class PaperTradingEngine:
             # OPTIMIZATION: Use cached account data to avoid multiple API calls
             account = self._get_cached_account()
             if not account:
-                logger.error(f"❌ Failed to get account data for {symbol}")
-                return None
+                logger.warning(f"⚠️  Account not available for {symbol}, falling back to simulation mode")
+                return self._execute_sim(signal)
 
             order_details = self._prepare_order_details(signal, account, action, existing_positions)
             if not order_details:
-                return None
+                logger.warning(f"⚠️  Could not prepare order details for {symbol}, falling back to simulation mode")
+                return self._execute_sim(signal)
 
             # FIX: Update symbol in order_details to use Alpaca format
             order_details["symbol"] = alpaca_symbol
