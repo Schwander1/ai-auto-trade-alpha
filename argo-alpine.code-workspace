@@ -3,32 +3,32 @@
   "folders": [
     {
       "name": "Workspace Root",
-      "path": "."
+      "path": ".",
     },
     {
       "name": "Argo Trading Engine",
-      "path": "./argo"
+      "path": "./argo",
     },
     {
       "name": "Alpine Backend",
-      "path": "./alpine-backend"
+      "path": "./alpine-backend",
     },
     {
       "name": "Alpine Frontend",
-      "path": "./alpine-frontend"
+      "path": "./alpine-frontend",
     },
     {
       "name": "Shared Packages",
-      "path": "./packages/shared"
+      "path": "./packages/shared",
     },
     {
       "name": "Documentation",
-      "path": "./docs"
+      "path": "./docs",
     },
     {
       "name": "Rules",
-      "path": "./Rules"
-    }
+      "path": "./Rules",
+    },
   ],
   "settings": {
     // File exclusions
@@ -49,7 +49,7 @@
       "**/conversation_logs": true,
       "**/pdfs": true,
       "**/.DS_Store": true,
-      "**/htmlcov": true
+      "**/htmlcov": true,
     },
     "search.exclude": {
       "**/node_modules": true,
@@ -68,7 +68,7 @@
       "**/pdfs": true,
       "**/pnpm-lock.yaml": true,
       "**/package-lock.json": true,
-      "**/yarn.lock": true
+      "**/yarn.lock": true,
     },
     "files.watcherExclude": {
       "**/node_modules/**": true,
@@ -84,7 +84,7 @@
       "**/.turbo/**": true,
       "**/logs/**": true,
       "**/*.log": true,
-      "**/htmlcov/**": true
+      "**/htmlcov/**": true,
     },
 
     // Editor settings - Auto features
@@ -94,7 +94,7 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.codeActionsOnSave": {
       "source.fixAll.eslint": "explicit",
-      "source.organizeImports": "explicit"
+      "source.organizeImports": "explicit",
     },
     "editor.rulers": [100],
     "editor.tabSize": 2,
@@ -112,7 +112,7 @@
     "editor.quickSuggestions": {
       "other": true,
       "comments": false,
-      "strings": true
+      "strings": true,
     },
     "editor.quickSuggestionsDelay": 10,
     "editor.suggest.localityBonus": true,
@@ -133,10 +133,7 @@
     "python.analysis.inlayHints.variableTypes": true,
     "python.analysis.diagnosticMode": "workspace",
     "python.analysis.stubPath": "${workspaceFolder}/.vscode/typings",
-    "python.analysis.extraPaths": [
-      "${workspaceFolder}/argo",
-      "${workspaceFolder}/alpine-backend"
-    ],
+    "python.analysis.extraPaths": ["${workspaceFolder}/argo", "${workspaceFolder}/alpine-backend"],
     "python.linting.enabled": true,
     "python.linting.pylintEnabled": false,
     "python.linting.flake8Enabled": true,
@@ -148,9 +145,9 @@
       "editor.formatOnSave": true,
       "editor.formatOnPaste": true,
       "editor.codeActionsOnSave": {
-        "source.organizeImports": "explicit"
+        "source.organizeImports": "explicit",
       },
-      "editor.rulers": [100]
+      "editor.rulers": [100],
     },
 
     // TypeScript/JavaScript settings
@@ -176,8 +173,8 @@
       "editor.formatOnPaste": true,
       "editor.codeActionsOnSave": {
         "source.fixAll.eslint": "explicit",
-        "source.organizeImports": "explicit"
-      }
+        "source.organizeImports": "explicit",
+      },
     },
     "[typescriptreact]": {
       "editor.defaultFormatter": "esbenp.prettier-vscode",
@@ -185,8 +182,8 @@
       "editor.formatOnPaste": true,
       "editor.codeActionsOnSave": {
         "source.fixAll.eslint": "explicit",
-        "source.organizeImports": "explicit"
-      }
+        "source.organizeImports": "explicit",
+      },
     },
     "[javascript]": {
       "editor.defaultFormatter": "esbenp.prettier-vscode",
@@ -194,8 +191,8 @@
       "editor.formatOnPaste": true,
       "editor.codeActionsOnSave": {
         "source.fixAll.eslint": "explicit",
-        "source.organizeImports": "explicit"
-      }
+        "source.organizeImports": "explicit",
+      },
     },
     "[javascriptreact]": {
       "editor.defaultFormatter": "esbenp.prettier-vscode",
@@ -203,54 +200,48 @@
       "editor.formatOnPaste": true,
       "editor.codeActionsOnSave": {
         "source.fixAll.eslint": "explicit",
-        "source.organizeImports": "explicit"
-      }
+        "source.organizeImports": "explicit",
+      },
     },
     "[json]": {
       "editor.defaultFormatter": "esbenp.prettier-vscode",
-      "editor.formatOnSave": true
+      "editor.formatOnSave": true,
     },
     "[jsonc]": {
       "editor.defaultFormatter": "esbenp.prettier-vscode",
-      "editor.formatOnSave": true
+      "editor.formatOnSave": true,
     },
     "[css]": {
       "editor.defaultFormatter": "esbenp.prettier-vscode",
-      "editor.formatOnSave": true
+      "editor.formatOnSave": true,
     },
     "[scss]": {
       "editor.defaultFormatter": "esbenp.prettier-vscode",
-      "editor.formatOnSave": true
+      "editor.formatOnSave": true,
     },
     "[html]": {
       "editor.defaultFormatter": "esbenp.prettier-vscode",
       "editor.formatOnSave": true,
       "editor.codeActionsOnSave": {
-        "source.fixAll.eslint": "explicit"
-      }
+        "source.fixAll.eslint": "explicit",
+      },
     },
     "[shellscript]": {
       "editor.formatOnSave": true,
       "editor.tabSize": 2,
-      "editor.insertSpaces": true
+      "editor.insertSpaces": true,
     },
     "[sql]": {
       "editor.formatOnSave": false,
-      "editor.tabSize": 2
+      "editor.tabSize": 2,
     },
 
     // ESLint settings - Auto-fix
     "eslint.enable": true,
-    "eslint.validate": [
-      "javascript",
-      "javascriptreact",
-      "typescript",
-      "typescriptreact",
-      "html"
-    ],
+    "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact", "html"],
     "eslint.workingDirectories": [
       { "pattern": "./alpine-frontend" },
-      { "pattern": "./packages/*" }
+      { "pattern": "./packages/*" },
     ],
     "eslint.format.enable": true,
     "eslint.lintTask.enable": true,
@@ -264,11 +255,11 @@
     // Tailwind CSS settings
     "tailwindCSS.experimental.classRegex": [
       ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
-      ["cn\\(([^)]*)\\)", "(?:'|\"|`)([^\"'`]*)(?:'|\"|`)"]
+      ["cn\\(([^)]*)\\)", "(?:'|\"|`)([^\"'`]*)(?:'|\"|`)"],
     ],
     "tailwindCSS.includeLanguages": {
       "typescript": "javascript",
-      "typescriptreact": "javascript"
+      "typescriptreact": "javascript",
     },
 
     // Docker settings
@@ -292,18 +283,13 @@
       "*.toml": "toml",
       "*.jinja": "jinja",
       "*.jinja2": "jinja",
-      "*.j2": "jinja"
+      "*.j2": "jinja",
     },
 
     // Testing settings
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestArgs": [
-      "--verbose",
-      "--tb=short",
-      "--cov",
-      "--cov-report=term-missing"
-    ],
+    "python.testing.pytestArgs": ["--verbose", "--tb=short", "--cov", "--cov-report=term-missing"],
 
     // Terminal settings
     "terminal.integrated.defaultProfile.osx": "zsh",
@@ -333,23 +319,23 @@
       "**/htmlcov/**": true,
       "**/.git/**": true,
       "**/data/**": true,
-      "**/reports/**": true
+      "**/reports/**": true,
     },
     "typescript.tsserver.maxTsServerMemory": 4096,
     "typescript.tsserver.watchOptions": {
-      "excludeDirectories": ["**/node_modules", "**/venv", "**/.next", "**/dist"]
+      "excludeDirectories": ["**/node_modules", "**/venv", "**/.next", "**/dist"],
     },
     "python.analysis.indexing": true,
     "python.analysis.packageIndexDepths": [
       {
         "name": "",
-        "depth": 2
-      }
+        "depth": 2,
+      },
     ],
     "python.analysis.autoSearchPaths": true,
     "python.analysis.diagnosticSeverityOverrides": {
       "reportMissingImports": "none",
-      "reportMissingTypeStubs": "none"
+      "reportMissingTypeStubs": "none",
     },
     "editor.semanticHighlighting.enabled": true,
     "editor.bracketPairColorization.enabled": true,
@@ -361,7 +347,7 @@
     "editor.quickSuggestions": {
       "other": true,
       "comments": false,
-      "strings": true
+      "strings": true,
     },
     "editor.suggest.localityBonus": true,
     "editor.suggest.shareSuggestSelections": true,
@@ -383,7 +369,10 @@
     "terminal.integrated.scrollback": 10000,
     "terminal.integrated.copyOnSelection": true,
     "terminal.integrated.cursorBlinking": true,
-    "terminal.integrated.cursorStyle": "line"
+    "terminal.integrated.cursorStyle": "line",
+    "cursorpyright.analysis.autoImportCompletions": true,
+    "cursorpyright.analysis.autoSearchPaths": true,
+    "cursorpyright.analysis.diagnosticMode": "workspace",
   },
   "extensions": {
     "recommendations": [
@@ -436,9 +425,9 @@
 
       // Code quality
       "sonarsource.sonarlint-vscode",
-      
+
       // Shell formatting
-      "mkhl.shfmt"
-    ]
-  }
+      "mkhl.shfmt",
+    ],
+  },
 }

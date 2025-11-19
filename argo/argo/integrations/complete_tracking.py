@@ -141,7 +141,7 @@ class LiveTracker:
     
     def _track_tradervue_basic(self, signal):
         """Basic Tradervue tracking (backward compatible)"""
-            try:
+        try:
                 requests.post(
                     "https://www.tradervue.com/api/v1/trades",
                 auth=(self.tradervue_user, self.tradervue_password),
