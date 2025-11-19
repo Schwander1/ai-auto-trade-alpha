@@ -22,61 +22,61 @@ class YFinanceDataSource:
     Supplements Alpha Vantage with additional indicators
     Supports crypto symbols (BTC-USD, ETH-USD, etc.) - works 24/7
     """
-    
+
     def __init__(self):
         self.enabled = YFINANCE_AVAILABLE
         if not self.enabled:
             logger.warning("⚠️  yfinance not available")
         else:
             logger.info("✅ yfinance data source initialized")
-    
+
     def fetch_technical_indicators(self, symbol: str) -> Optional[Dict]:
         """Fetch technical indicators using yfinance (synchronous - wrapped in async)"""
         if not self.enabled:
             return None
-        
+
         try:
             hist = self._get_historical_data(symbol)
             if hist is None:
                 return None
-            
+
             # Calculate all indicators
             indicators = self._calculate_all_indicators(hist)
-            
+
             logger.info(f"✅ yfinance: {symbol} indicators retrieved")
             return indicators
-            
+
         except Exception as e:
             logger.error(f"yfinance error for {symbol}: {e}")
             return None
-    
+
     def _get_historical_data(self, symbol: str) -> Optional:
         """Get historical data from yfinance"""
         ticker = yf.Ticker(symbol)
         hist = ticker.history(period="6mo", interval="1d")
-        
+
         if hist.empty or len(hist) < 50:
             logger.warning(f"⚠️  yfinance: Insufficient data for {symbol}")
             return None
-        
+
         return hist
-    
+
     def _calculate_all_indicators(self, hist) -> Dict:
         """Calculate all technical indicators"""
         close = hist['Close']
-        
+
         # Calculate RSI
         rsi = self._calculate_rsi(close)
-        
+
         # Calculate SMAs
         sma_20, sma_50 = self._calculate_smas(close)
-        
+
         # Calculate MACD
         macd, macd_signal = self._calculate_macd(close)
-        
+
         # Extract current values
         return self._extract_current_values(close, rsi, sma_20, sma_50, macd, macd_signal)
-    
+
     def _calculate_rsi(self, close) -> pd.Series:
         """Calculate RSI indicator"""
         delta = close.diff()
@@ -84,13 +84,13 @@ class YFinanceDataSource:
         loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
         rs = gain / loss
         return 100 - (100 / (1 + rs))
-    
+
     def _calculate_smas(self, close) -> Tuple[pd.Series, pd.Series]:
         """Calculate SMA indicators"""
         sma_20 = close.rolling(window=20).mean()
         sma_50 = close.rolling(window=50).mean()
         return sma_20, sma_50
-    
+
     def _calculate_macd(self, close) -> Tuple[pd.Series, pd.Series]:
         """Calculate MACD indicator"""
         ema_12 = close.ewm(span=12, adjust=False).mean()
@@ -98,7 +98,7 @@ class YFinanceDataSource:
         macd = ema_12 - ema_26
         macd_signal = macd.ewm(span=9, adjust=False).mean()
         return macd, macd_signal
-    
+
     def _extract_current_values(self, close, rsi, sma_20, sma_50, macd, macd_signal) -> Dict:
         """Extract current indicator values"""
         return {
@@ -109,38 +109,44 @@ class YFinanceDataSource:
             'macd_signal': float(macd_signal.iloc[-1]) if not pd.isna(macd_signal.iloc[-1]) else None,
             'current_price': float(close.iloc[-1])
         }
-    
+
     def generate_signal(self, indicators: Dict, symbol: str) -> Optional[dict]:
         """Generate signal from yfinance technical indicators"""
         if not indicators:
+            logger.debug(f"⚠️  yfinance: No indicators for {symbol}")
             return None
-        
+
         try:
             # Validate required indicators
             if not self._validate_indicators(indicators):
+                logger.debug(f"⚠️  yfinance: Missing required indicators for {symbol}")
                 return None
-            
+
             # Determine signal direction and confidence
             direction, confidence = self._determine_signal(indicators)
-            
-            # Allow signals even with lower confidence - consensus will filter them
-            # Only filter out completely invalid signals (confidence < 50)
+
+            # IMPROVEMENT: Lower minimum threshold to 50% to allow more signals
+            # Consensus engine will filter based on final thresholds
+            # This ensures yfinance contributes signals even when confidence is moderate
             if confidence < 50:
+                logger.debug(f"⚠️  yfinance: Signal confidence {confidence:.1f}% below 50% for {symbol}")
                 return None
-            
-            return self._build_signal_dict(direction, confidence, indicators)
-            
+
+            signal = self._build_signal_dict(direction, confidence, indicators)
+            logger.info(f"✅ yfinance signal for {symbol}: {direction} @ {confidence:.1f}%")
+            return signal
+
         except Exception as e:
-            logger.error(f"Signal generation error: {e}")
+            logger.error(f"❌ yfinance signal generation error for {symbol}: {e}", exc_info=True)
             return None
-    
+
     def _validate_indicators(self, indicators: Dict) -> bool:
         """Validate that required indicators are present"""
         rsi = indicators.get('rsi')
         sma_20 = indicators.get('sma_20')
         current_price = indicators.get('current_price')
         return all([rsi, sma_20, current_price])
-    
+
     def _determine_signal(self, indicators: Dict) -> Tuple[str, float]:
         """Determine signal direction and confidence"""
         rsi = indicators.get('rsi')
@@ -149,36 +155,54 @@ class YFinanceDataSource:
         macd = indicators.get('macd')
         macd_signal = indicators.get('macd_signal')
         current_price = indicators.get('current_price')
-        
+
         # IMPROVEMENT: Raise base confidence from 60% to 65% for better signal quality
         # This ensures signals have better confidence even in neutral conditions
         confidence = 65.0
         direction = 'NEUTRAL'
-        
+
         # RSI-based signals
         direction, confidence = self._apply_rsi_signals(rsi, direction, confidence)
-        
+
         # MACD confirmation
         confidence = self._apply_macd_confirmation(macd, macd_signal, direction, confidence)
-        
+
         # Price vs SMA trend
         confidence = self._apply_sma_trend(current_price, sma_20, direction, confidence)
-        
+
         # SMA trend confirmation
         confidence = self._apply_sma_trend_confirmation(sma_20, sma_50, direction, confidence)
-        
-        # IMPROVEMENT: If still NEUTRAL but confidence is reasonable, use trend-based direction
-        if direction == 'NEUTRAL' and confidence >= 60.0 and sma_20 and sma_50:
-            if current_price > sma_20 > sma_50:
-                direction = 'LONG'
-                confidence += 5.0  # Add small boost for trend alignment
-            elif current_price < sma_20 < sma_50:
-                direction = 'SHORT'
-                confidence += 5.0
-        
+
+        # FIX: If still NEUTRAL but confidence is reasonable, use trend-based direction
+        # This ensures we generate directional signals instead of NEUTRAL when possible
+        if direction == 'NEUTRAL' and confidence >= 55.0 and sma_20:
+            # If we have SMA50, use it for stronger trend confirmation first
+            if sma_50:
+                if current_price > sma_20 > sma_50:
+                    direction = 'LONG'
+                    confidence += 10.0  # Strong uptrend confirmation
+                elif current_price < sma_20 < sma_50:
+                    direction = 'SHORT'
+                    confidence += 10.0  # Strong downtrend confirmation
+                # Fall back to simple price vs SMA20 if no strong trend
+                elif current_price > sma_20:
+                    direction = 'LONG'
+                    confidence += 8.0  # Boost for trend alignment
+                elif current_price < sma_20:
+                    direction = 'SHORT'
+                    confidence += 8.0
+            else:
+                # No SMA50 available, use simple price vs SMA20 comparison
+                if current_price > sma_20:
+                    direction = 'LONG'
+                    confidence += 8.0  # Boost for trend alignment
+                elif current_price < sma_20:
+                    direction = 'SHORT'
+                    confidence += 8.0
+
         confidence = min(confidence, 95.0)
         return direction, confidence
-    
+
     def _apply_rsi_signals(self, rsi: float, direction: str, confidence: float) -> Tuple[str, float]:
         """Apply RSI-based signal logic"""
         if rsi < 30:  # Oversold
@@ -194,8 +218,8 @@ class YFinanceDataSource:
             direction = 'SHORT'
             confidence += 10.0
         return direction, confidence
-    
-    def _apply_macd_confirmation(self, macd: Optional[float], macd_signal: Optional[float], 
+
+    def _apply_macd_confirmation(self, macd: Optional[float], macd_signal: Optional[float],
                                  direction: str, confidence: float) -> float:
         """Apply MACD confirmation"""
         if macd and macd_signal:
@@ -208,8 +232,8 @@ class YFinanceDataSource:
             elif macd < macd_signal and direction == 'LONG':
                 confidence -= 5.0
         return confidence
-    
-    def _apply_sma_trend(self, current_price: float, sma_20: float, 
+
+    def _apply_sma_trend(self, current_price: float, sma_20: float,
                         direction: str, confidence: float) -> float:
         """Apply price vs SMA trend logic"""
         if current_price > sma_20:
@@ -223,7 +247,7 @@ class YFinanceDataSource:
             elif direction == 'LONG':
                 confidence -= 10.0
         return confidence
-    
+
     def _apply_sma_trend_confirmation(self, sma_20: float, sma_50: Optional[float],
                                      direction: str, confidence: float) -> float:
         """Apply SMA trend confirmation"""
@@ -233,7 +257,7 @@ class YFinanceDataSource:
             elif sma_20 < sma_50 and direction == 'SHORT':
                 confidence += 5.0
         return confidence
-    
+
     def _build_signal_dict(self, direction: str, confidence: float, indicators: Dict) -> Dict:
         """Build signal dictionary"""
         return {
@@ -249,4 +273,3 @@ class YFinanceDataSource:
                 'current_price': round(indicators['current_price'], 2)
             }
         }
-

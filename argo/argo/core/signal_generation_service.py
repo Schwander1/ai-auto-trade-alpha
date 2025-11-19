@@ -1172,20 +1172,23 @@ class SignalGenerationService:
         )
         mixed_signals = has_neutral and has_directional
 
-        # Adjust threshold based on number of sources and signal types
+        # FIX: Adjust threshold based on number of sources and signal types
+        # Account for single-source signals that are now handled properly by consensus engine
         if num_sources == 1:
-            # IMPROVEMENT: Single source requires higher confidence (80% minimum)
-            # Single source signals need extra confidence since there's no consensus
-            threshold = max(base_threshold, 80.0)
+            # Single source: consensus engine now returns source confidence directly (not split)
+            # For NEUTRAL signals: accept at 65%+ (consensus engine handles them properly)
+            if consensus.get("direction") == "NEUTRAL":
+                threshold = 65.0  # Lowered from 70% to allow more NEUTRAL signals through
+            else:
+                # Single source directional signals: require higher confidence (80% minimum)
+                threshold = max(base_threshold, 80.0)
         elif num_sources == 2:
             # Two sources: adjust based on signal type mix
             if mixed_signals:
-                # IMPROVEMENT: Raise threshold for mixed signals from 51.5% to 70%
-                # Mixed signals (NEUTRAL + directional) should still meet quality standards
-                # NEUTRAL signals split votes, but we still need reasonable confidence
+                # Mixed signals (NEUTRAL + directional): 70% minimum
                 threshold = max(base_threshold - 10.0, 70.0)
             else:
-                # IMPROVEMENT: Both same type - still need good confidence (75% minimum)
+                # Both same type: 75% minimum
                 threshold = max(base_threshold - 5.0, 75.0)
         else:
             # Three or more sources: use base threshold
@@ -2034,6 +2037,7 @@ class SignalGenerationService:
         signal = {
             "symbol": symbol,
             "action": action,
+            "direction": direction,  # FIX: Preserve original direction (LONG/SHORT/NEUTRAL) for quality checks
             "entry_price": round(entry_price, 2),
             "target_price": round(take_profit, 2),
             "stop_price": round(stop_loss, 2),
@@ -2720,13 +2724,30 @@ class SignalGenerationService:
         self, signal: Dict, symbol: str, account: Optional[Dict], existing_positions: List[Dict]
     ) -> Optional[Dict]:
         """Process, store, and distribute signal (OPTIMIZED: async non-blocking database insert)"""
-        # IMPROVEMENT: Final quality check before storage - reject signals below 75% confidence
+        # IMPROVEMENT: Final quality check before storage
+        # Use adaptive threshold based on signal type and sources
         signal_confidence = signal.get("confidence", 0)
-        min_quality_threshold = 75.0
+        sources_count = signal.get("sources_count", 0)
+        # FIX: Use direction instead of action to properly detect NEUTRAL signals
+        # action is "BUY"/"SELL" (NEUTRAL becomes "SELL"), but direction preserves "LONG"/"SHORT"/"NEUTRAL"
+        signal_direction = signal.get("direction", "").upper()
+
+        # Adaptive quality threshold:
+        # - Single source NEUTRAL: 70% minimum (consensus engine handles these properly)
+        # - Single source directional: 80% minimum
+        # - Multiple sources: 75% minimum
+        if sources_count == 1 and signal_direction == "NEUTRAL":
+            min_quality_threshold = 70.0
+        elif sources_count == 1:
+            min_quality_threshold = 80.0
+        else:
+            min_quality_threshold = 75.0
+
         if signal_confidence < min_quality_threshold:
-            logger.warning(
+            logger.debug(
                 f"⏭️  Rejecting low-quality signal for {symbol}: "
-                f"confidence {signal_confidence:.1f}% < {min_quality_threshold}% minimum quality threshold"
+                f"confidence {signal_confidence:.1f}% < {min_quality_threshold}% minimum quality threshold "
+                f"({sources_count} source(s), {signal_direction})"
             )
             return None
 
@@ -2788,24 +2809,40 @@ class SignalGenerationService:
     async def _distribute_signal_to_executors(self, signal: Dict):
         """Distribute signal to trading executors (non-blocking)"""
         if not self.distributor:
+            logger.debug("⚠️  Signal distributor not available, skipping distribution")
             return
 
         try:
+            signal_id = signal.get("signal_id")
+            signal_symbol = signal.get("symbol", "UNKNOWN")
+            signal_confidence = signal.get("confidence", 0)
+
+            logger.debug(f"📤 Distributing signal {signal_symbol} (ID: {signal_id}, confidence: {signal_confidence:.1f}%)")
+
             results = await self.distributor.distribute_signal(signal)
+
+            if not results:
+                logger.debug(f"⚠️  No executors eligible for signal {signal_symbol} (confidence: {signal_confidence:.1f}%)")
+                return
+
+            # Update database with execution results
             for result in results:
+                executor_id = result.get('executor_id', 'unknown')
                 if result.get("success"):
+                    order_id = result.get("order_id")
                     logger.info(
-                        f"✅ Signal distributed to {result.get('executor_id')}: "
-                        f"Order ID: {result.get('order_id', 'N/A')}"
+                        f"✅ Signal {signal_symbol} executed on {executor_id}: Order ID {order_id}"
                     )
                     # Update signal with executor info
-                    if result.get("order_id"):
-                        signal["order_id"] = result.get("order_id")
-                        signal["executor_id"] = result.get("executor_id")
+                    if order_id:
+                        signal["order_id"] = order_id
+                        signal["executor_id"] = executor_id
+                        # Update database with order_id
+                        await self._update_signal_with_order_id(signal_id, order_id, executor_id)
                 else:
-                    logger.warning(
-                        f"⚠️  Failed to distribute to {result.get('executor_id')}: "
-                        f"{result.get('error', 'Unknown error')}"
+                    error = result.get('error', 'Unknown error')
+                    logger.debug(
+                        f"⚠️  {executor_id} did not execute signal {signal_symbol}: {error}"
                     )
         except Exception as e:
             logger.error(f"❌ Error distributing signal: {e}", exc_info=True)
@@ -3192,6 +3229,56 @@ class SignalGenerationService:
         self._update_position_cache(signal, existing_positions)
 
         logger.info(f"✅ Trade executed: {symbol} {signal['action']} - Order ID: {order_id}")
+
+    async def _update_signal_with_order_id(self, signal_id: str, order_id: str, executor_id: str):
+        """Update signal in database with order_id"""
+        if not signal_id:
+            return
+
+        try:
+            # Update in unified tracker if available
+            if hasattr(self.tracker, 'update_signal_order_id'):
+                await self.tracker.update_signal_order_id(signal_id, order_id, executor_id)
+            else:
+                # Fallback: direct database update
+                import sqlite3
+                from pathlib import Path
+
+                db_paths = [
+                    Path("/root/argo-production") / "data" / "signals_unified.db",
+                    Path(__file__).parent.parent.parent / "data" / "signals_unified.db",
+                    Path(__file__).parent.parent.parent.parent / "data" / "signals_unified.db",
+                ]
+
+                for db_path in db_paths:
+                    if db_path.exists():
+                        try:
+                            conn = sqlite3.connect(str(db_path), timeout=5.0)
+                            cursor = conn.cursor()
+
+                            # Check if order_id column exists
+                            cursor.execute("PRAGMA table_info(signals)")
+                            columns = [col[1] for col in cursor.fetchall()]
+
+                            if 'order_id' in columns:
+                                cursor.execute(
+                                    "UPDATE signals SET order_id = ?, executor_id = ? WHERE signal_id = ?",
+                                    (str(order_id), executor_id, signal_id)
+                                )
+                                conn.commit()
+                                logger.debug(f"✅ Updated signal {signal_id} with order_id {order_id} in database")
+
+                            conn.close()
+                            break
+                        except Exception as e:
+                            logger.debug(f"Could not update signal in database: {e}")
+                            if 'conn' in locals():
+                                try:
+                                    conn.close()
+                                except:
+                                    pass
+        except Exception as e:
+            logger.debug(f"Error updating signal with order_id: {e}")
 
     def _record_trade_in_tracker(self, signal: Dict, order_id: str, symbol: str):
         """Record trade in performance tracker with enhanced fields"""
