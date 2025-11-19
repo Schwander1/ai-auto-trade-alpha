@@ -2018,10 +2018,18 @@ class SignalGenerationService:
     def _build_signal(self, symbol: str, consensus: Dict, source_signals: Dict) -> Dict:
         """Build final signal dictionary with confidence calibration (v5.0)"""
         direction = consensus["direction"]
-        action = "BUY" if direction == "LONG" else "SELL"
 
-        entry_price = self._get_entry_price(source_signals, symbol)
-        stop_loss, take_profit = self._calculate_stop_and_target(entry_price, action)
+        # FIX: Handle NEUTRAL direction properly - NEUTRAL signals have no trading intent
+        # and should not be assigned BUY/SELL action or have stop_loss/take_profit calculated
+        if direction == "NEUTRAL":
+            action = None
+            stop_loss = None
+            take_profit = None
+            entry_price = self._get_entry_price(source_signals, symbol)
+        else:
+            action = "BUY" if direction == "LONG" else "SELL"
+            entry_price = self._get_entry_price(source_signals, symbol)
+            stop_loss, take_profit = self._calculate_stop_and_target(entry_price, action)
 
         # Apply confidence calibration (v5.0 optimization)
         raw_confidence = consensus["confidence"]
@@ -2036,11 +2044,11 @@ class SignalGenerationService:
 
         signal = {
             "symbol": symbol,
-            "action": action,
+            "action": action,  # None for NEUTRAL signals, "BUY" for LONG, "SELL" for SHORT
             "direction": direction,  # FIX: Preserve original direction (LONG/SHORT/NEUTRAL) for quality checks
             "entry_price": round(entry_price, 2),
-            "target_price": round(take_profit, 2),
-            "stop_price": round(stop_loss, 2),
+            "target_price": round(take_profit, 2) if take_profit is not None else None,
+            "stop_price": round(stop_loss, 2) if stop_loss is not None else None,
             "confidence": round(calibrated_confidence, 2),
             "raw_confidence": round(raw_confidence, 2),  # Store raw for comparison
             "strategy": "weighted_consensus_v6",
@@ -2760,8 +2768,9 @@ class SignalGenerationService:
         signal_id = await self.tracker.log_signal_async(signal)
         signal["signal_id"] = signal_id
 
+        action_display = signal.get('action') or signal.get('direction', 'UNKNOWN')
         logger.info(
-            f"✅ Generated signal: {symbol} {signal['action']} @ ${signal['entry_price']} ({signal['confidence']}% confidence)"
+            f"✅ Generated signal: {symbol} {action_display} @ ${signal['entry_price']} ({signal['confidence']}% confidence)"
         )
 
         # Sync to Alpine backend (async, non-blocking)
@@ -2809,7 +2818,7 @@ class SignalGenerationService:
     async def _distribute_signal_to_executors(self, signal: Dict):
         """Distribute signal to trading executors (non-blocking)"""
         if not self.distributor:
-            logger.debug("⚠️  Signal distributor not available, skipping distribution")
+            logger.warning("⚠️  Signal distributor not available, skipping distribution")
             return
 
         try:
@@ -2817,7 +2826,7 @@ class SignalGenerationService:
             signal_symbol = signal.get("symbol", "UNKNOWN")
             signal_confidence = signal.get("confidence", 0)
 
-            logger.debug(f"📤 Distributing signal {signal_symbol} (ID: {signal_id}, confidence: {signal_confidence:.1f}%)")
+            logger.info(f"📤 Distributing signal {signal_symbol} (ID: {signal_id}, confidence: {signal_confidence:.1f}%)")
 
             results = await self.distributor.distribute_signal(signal)
 
@@ -2844,6 +2853,39 @@ class SignalGenerationService:
                     logger.debug(
                         f"⚠️  {executor_id} did not execute signal {signal_symbol}: {error}"
                     )
+                    # Queue signal if it was rejected due to account constraints
+                    queue_keywords = ['buying power', 'position', 'insufficient', 'no position', 'funds', 'balance']
+                    if any(keyword in error.lower() for keyword in queue_keywords):
+                        try:
+                            from argo.core.signal_queue import SignalQueue, ExecutionCondition
+                            queue = SignalQueue()
+
+                            # Determine conditions based on error message
+                            conditions = []
+                            if 'buying power' in error.lower() or 'insufficient' in error.lower() or 'funds' in error.lower():
+                                # Estimate required buying power (entry price * quantity)
+                                entry_price = signal.get('entry_price', signal.get('price', 0))
+                                # Try to extract quantity from signal, default to 1
+                                quantity = signal.get('quantity', signal.get('qty', 1))
+                                estimated_cost = entry_price * quantity
+                                # Add 10% buffer for safety
+                                estimated_cost = estimated_cost * 1.1
+                                conditions.append({
+                                    'type': ExecutionCondition.NEEDS_BUYING_POWER.value,
+                                    'value': estimated_cost
+                                })
+
+                            if 'no position' in error.lower() or ('position' in error.lower() and 'no' in error.lower()):
+                                conditions.append({
+                                    'type': ExecutionCondition.NEEDS_POSITION.value,
+                                    'symbol': signal_symbol
+                                })
+
+                            if conditions:
+                                queue.queue_signal(signal, conditions, executor_id=executor_id, rejection_error=error)
+                                logger.info(f"📥 Queued signal {signal_symbol} for {executor_id} with {len(conditions)} conditions: {error}")
+                        except Exception as queue_error:
+                            logger.warning(f"⚠️  Failed to queue signal: {queue_error}", exc_info=True)
         except Exception as e:
             logger.error(f"❌ Error distributing signal: {e}", exc_info=True)
 
@@ -3129,6 +3171,13 @@ class SignalGenerationService:
     ):
         """Execute trade if all validations pass"""
         try:
+            # FIX: Skip NEUTRAL signals - they have no trading intent and should not be executed
+            signal_direction = signal.get("direction", "").upper()
+            signal_action = signal.get("action")
+            if signal_direction == "NEUTRAL" or signal_action is None:
+                logger.debug(f"⏭️  Skipping {symbol} - NEUTRAL signal has no trading intent")
+                return False
+
             # Risk validation (pass existing_positions to allow closing LONG crypto positions)
             can_trade, reason = self._validate_trade(signal, account, existing_positions)
             if not can_trade:
@@ -3142,7 +3191,8 @@ class SignalGenerationService:
             # Allow closing existing positions (LONG->SELL, SHORT->BUY)
             # Allow opening opposite positions (flip LONG->SHORT or SHORT->LONG)
             # Only skip if trying to open same position type we already have
-            signal_action = signal.get("action", "").upper()
+            # signal_action is guaranteed to be a string here (not None) due to check above
+            signal_action = signal_action.upper()
             existing_position = next(
                 (p for p in existing_positions if p.get("symbol") == symbol), None
             )

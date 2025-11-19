@@ -15,25 +15,25 @@ class AlpacaProDataSource:
     Used to supplement Massive.com with real-time data
     High quality, already paid for with Alpaca Pro subscription
     """
-    
+
     def __init__(self, api_key: str, secret_key: str, base_url: str = "https://data.alpaca.markets"):
         self.api_key = api_key
         self.secret_key = secret_key
         self.base_url = base_url
         self.enabled = bool(api_key and secret_key)
-        
+
         if not self.enabled:
             logger.warning("⚠️  Alpaca Pro credentials not configured")
         else:
             logger.info("✅ Alpaca Pro data source initialized")
-    
+
     def _get_headers(self):
         """Get authentication headers"""
         return {
             'APCA-API-KEY-ID': self.api_key,
             'APCA-API-SECRET-KEY': self.secret_key
         }
-    
+
     async def fetch_price_data(self, symbol: str, days: int = 90) -> Optional[pd.DataFrame]:
         """
         Fetch historical price data from Alpaca Pro
@@ -41,60 +41,60 @@ class AlpacaProDataSource:
         """
         if not self.enabled:
             return None
-        
+
         try:
             is_crypto = self._is_crypto_symbol(symbol)
             alpaca_symbol = self._convert_symbol_format(symbol, is_crypto)
             client = self._create_client(is_crypto)
-            
+
             start, end = self._get_date_range(days)
             request = self._create_request(alpaca_symbol, is_crypto, start, end)
-            
+
             bars = await self._fetch_bars(client, request)
-            
+
             if not bars or alpaca_symbol not in bars:
                 logger.debug(f"⚠️  Alpaca Pro: No data for {symbol}")
                 return None
-            
+
             return self._convert_to_dataframe(bars[alpaca_symbol], symbol)
-            
+
         except ImportError:
             logger.warning("⚠️  Alpaca data library not available - install alpaca-py")
             return None
         except Exception as e:
             logger.debug(f"Alpaca Pro error for {symbol}: {e}")
             return None
-    
+
     def _is_crypto_symbol(self, symbol: str) -> bool:
         """Determine if symbol is crypto"""
         return '-USD' in symbol or symbol.startswith('BTC') or symbol.startswith('ETH')
-    
+
     def _convert_symbol_format(self, symbol: str, is_crypto: bool) -> str:
         """Convert symbol format for Alpaca API"""
         if is_crypto:
             return symbol.replace('-USD', 'USD')
         return symbol
-    
+
     def _create_client(self, is_crypto: bool):
         """Create appropriate Alpaca client"""
         from alpaca.data.historical import StockHistoricalDataClient, CryptoHistoricalDataClient
-        
+
         if is_crypto:
             return CryptoHistoricalDataClient(self.api_key, self.secret_key)
         else:
             return StockHistoricalDataClient(self.api_key, self.secret_key)
-    
+
     def _get_date_range(self, days: int) -> Tuple[datetime, datetime]:
         """Get start and end dates"""
         end = datetime.now()
         start = end - timedelta(days=days)
         return start, end
-    
+
     def _create_request(self, alpaca_symbol: str, is_crypto: bool, start: datetime, end: datetime):
         """Create Alpaca bars request"""
         from alpaca.data.requests import StockBarsRequest, CryptoBarsRequest
         from alpaca.data.timeframe import TimeFrame
-        
+
         if is_crypto:
             return CryptoBarsRequest(
                 symbol_or_symbols=[alpaca_symbol],
@@ -109,7 +109,7 @@ class AlpacaProDataSource:
                 start=start,
                 end=end
             )
-    
+
     async def _fetch_bars(self, client, request):
         """Fetch bars from Alpaca API"""
         try:
@@ -118,7 +118,7 @@ class AlpacaProDataSource:
             # Fallback for Python < 3.9
             loop = asyncio.get_event_loop()
             return await loop.run_in_executor(None, lambda: client.get_bars(request))
-    
+
     def _convert_to_dataframe(self, symbol_bars, symbol: str) -> Optional[pd.DataFrame]:
         """Convert Alpaca bars to DataFrame"""
         data = []
@@ -131,46 +131,51 @@ class AlpacaProDataSource:
                 'Volume': float(bar.volume),
                 'Date': bar.timestamp
             })
-        
+
         if not data:
             return None
-        
+
         df = pd.DataFrame(data)
         df = df.set_index('Date')
         df = df.sort_index()
-        
+
         logger.info(f"✅ Alpaca Pro: {symbol} - {len(df)} bars")
         return df
-    
+
     def generate_signal(self, df: pd.DataFrame, symbol: str) -> Optional[dict]:
         """Generate signal from Alpaca Pro price data"""
         if df is None or len(df) < 50:
+            logger.debug(f"⚠️  Alpaca Pro: Insufficient data for {symbol} (df is None or len < 50)")
             return None
-        
+
         try:
             # Calculate indicators (same logic as Massive.com for consistency)
             indicators = self._calculate_indicators(df)
-            
+
             # Determine signal direction and confidence
             direction, confidence = self._determine_signal(indicators, df)
-            
-            # Allow signals even with lower confidence - consensus will filter them
-            # Only filter out completely invalid signals (confidence < 50)
+
+            # IMPROVEMENT: Lower minimum threshold to 50% to allow more signals
+            # Consensus engine will filter based on final thresholds
+            # This ensures Alpaca Pro contributes signals for stocks
             if confidence < 50:
+                logger.debug(f"⚠️  Alpaca Pro: Signal confidence {confidence:.1f}% below 50% for {symbol}")
                 return None
-            
-            return self._build_signal_dict(direction, confidence, indicators)
-            
+
+            signal = self._build_signal_dict(direction, confidence, indicators)
+            logger.info(f"✅ Alpaca Pro signal for {symbol}: {direction} @ {confidence:.1f}%")
+            return signal
+
         except Exception as e:
-            logger.error(f"Signal generation error: {e}")
+            logger.error(f"❌ Alpaca Pro signal generation error for {symbol}: {e}", exc_info=True)
             return None
-    
+
     def _calculate_indicators(self, df: pd.DataFrame) -> Dict:
         """Calculate technical indicators"""
         df['SMA_20'] = df['Close'].rolling(20).mean()
         df['SMA_50'] = df['Close'].rolling(50).mean()
         df['Volume_SMA'] = df['Volume'].rolling(20).mean()
-        
+
         latest = df.iloc[-1]
         return {
             'current_price': latest['Close'],
@@ -178,38 +183,62 @@ class AlpacaProDataSource:
             'sma_50': latest['SMA_50'],
             'volume_ratio': latest['Volume'] / latest['Volume_SMA']
         }
-    
+
     def _determine_signal(self, indicators: Dict, df: pd.DataFrame) -> Tuple[str, float]:
         """Determine signal direction and confidence"""
         current_price = indicators['current_price']
         sma_20 = indicators['sma_20']
         sma_50 = indicators['sma_50']
         volume_ratio = indicators['volume_ratio']
-        
-        # IMPROVEMENT: Raise base confidence from 60% to 65% for better signal quality
+
+        # IMPROVEMENT: Base confidence 65% for better signal quality
         confidence = 65.0
         direction = 'NEUTRAL'
-        
-        # Trend-based
+
+        # Trend-based signals (strongest indicator)
         if current_price > sma_20 > sma_50:
             direction = 'LONG'
             confidence += 15.0
         elif current_price < sma_20 < sma_50:
             direction = 'SHORT'
             confidence += 15.0
-        
+        elif current_price > sma_20:
+            # Price above SMA20 but not full uptrend
+            if direction == 'NEUTRAL':
+                direction = 'LONG'
+                confidence += 10.0
+        elif current_price < sma_20:
+            # Price below SMA20 but not full downtrend
+            if direction == 'NEUTRAL':
+                direction = 'SHORT'
+                confidence += 10.0
+
         # Volume confirmation
         if volume_ratio > 1.2:
             confidence += 10.0
-        
+        elif volume_ratio > 1.0:
+            confidence += 5.0
+
         # Price momentum
-        price_change_pct = ((current_price - df.iloc[-5]['Close']) / df.iloc[-5]['Close']) * 100
-        if abs(price_change_pct) > 2:
-            confidence += 10.0
-        
+        if len(df) >= 5:
+            price_change_pct = ((current_price - df.iloc[-5]['Close']) / df.iloc[-5]['Close']) * 100
+            if abs(price_change_pct) > 2:
+                confidence += 10.0
+            elif abs(price_change_pct) > 1:
+                confidence += 5.0
+
+        # IMPROVEMENT: If still NEUTRAL but confidence is reasonable, use trend-based direction
+        if direction == 'NEUTRAL' and confidence >= 60.0 and sma_20 and sma_50:
+            if current_price > sma_20:
+                direction = 'LONG'
+                confidence += 5.0
+            elif current_price < sma_20:
+                direction = 'SHORT'
+                confidence += 5.0
+
         confidence = min(confidence, 95.0)
         return direction, confidence
-    
+
     def _build_signal_dict(self, direction: str, confidence: float, indicators: Dict) -> Dict:
         """Build signal dictionary"""
         return {
@@ -224,4 +253,3 @@ class AlpacaProDataSource:
                 'volume_ratio': round(indicators['volume_ratio'], 2)
             }
         }
-

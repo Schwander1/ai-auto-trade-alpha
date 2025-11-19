@@ -81,6 +81,45 @@ async def health_check():
         }
         overall_status = 'unhealthy'
 
+    # Check execution dashboard services
+    async def check_execution_services():
+        try:
+            from argo.core.signal_queue import SignalQueue
+            from argo.core.account_state_monitor import AccountStateMonitor
+
+            queue = SignalQueue()
+            queue_stats = queue.get_queue_stats()
+
+            monitor = AccountStateMonitor()
+            states = monitor.get_current_states()
+
+            return {
+                'queue': {
+                    'status': 'healthy',
+                    'stats': queue_stats
+                },
+                'account_monitor': {
+                    'status': 'healthy',
+                    'executors_monitored': len(states)
+                }
+            }
+        except Exception as e:
+            return {
+                'status': 'degraded',
+                'error': str(e)
+            }
+
+    result = await check_with_timeout(check_execution_services, component_name="execution_services")
+    if result["status"] == "healthy":
+        components['execution_services'] = result["result"]
+    else:
+        components['execution_services'] = {
+            'status': 'degraded',
+            'error': result.get('error', 'unknown error')
+        }
+        if overall_status == 'healthy':
+            overall_status = 'degraded'
+
     # Check database with timeout
     async def check_database():
         from pathlib import Path
@@ -212,6 +251,45 @@ async def health_check():
             'status': 'degraded',
             'error': result.get('error', 'unknown error')
         }
+
+    # Check execution dashboard services
+    async def check_execution_services():
+        try:
+            from argo.core.signal_queue import SignalQueue
+            from argo.core.account_state_monitor import AccountStateMonitor
+
+            queue = SignalQueue()
+            queue_stats = queue.get_queue_stats()
+
+            monitor = AccountStateMonitor()
+            states = monitor.get_current_states()
+
+            return {
+                'queue': {
+                    'status': 'healthy',
+                    'stats': queue_stats
+                },
+                'account_monitor': {
+                    'status': 'healthy',
+                    'executors_monitored': len(states)
+                }
+            }
+        except Exception as e:
+            return {
+                'status': 'degraded',
+                'error': str(e)
+            }
+
+    result = await check_with_timeout(check_execution_services, component_name="execution_services")
+    if result["status"] == "healthy":
+        components['execution_services'] = result["result"]
+    else:
+        components['execution_services'] = {
+            'status': 'degraded',
+            'error': result.get('error', 'unknown error')
+        }
+        if overall_status == 'healthy':
+            overall_status = 'degraded'
 
     # Overall checks
     checks['overall'] = {

@@ -19,6 +19,13 @@ export const authOptions: NextAuthOptions = {
         }
         const user = await db.user.findUnique({
           where: { email: credentials.email },
+          include: {
+            roles: {
+              include: {
+                permissions: true
+              }
+            }
+          }
         })
         if (!user) {
           throw new Error('Invalid email or password')
@@ -27,10 +34,15 @@ export const authOptions: NextAuthOptions = {
         if (!isValid) {
           throw new Error('Invalid email or password')
         }
+
+        // Check if user is admin
+        const isAdmin = user.roles?.some((role: any) => role.name === 'admin') || false
+
         return {
           id: user.id,
           email: user.email,
           tier: user.tier,
+          isAdmin: isAdmin,
         }
       }
     })
@@ -38,7 +50,23 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt"
   },
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.isAdmin = (user as any).isAdmin
+        token.tier = (user as any).tier
+      }
+      return token
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        (session.user as any).isAdmin = token.isAdmin
+        (session.user as any).tier = token.tier
+      }
+      return session
+    }
+  },
   pages: {
-    signIn: '/auth/signin',
+    signIn: '/login',
   }
 }

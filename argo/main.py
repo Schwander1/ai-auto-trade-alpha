@@ -77,13 +77,13 @@ async def lifespan(app: FastAPI):
         except ImportError:
             from core.config import settings
         interval = settings.SIGNAL_GENERATION_INTERVAL
-        
+
         async def start_background_task():
             """Start background task with automatic restart on failure"""
             global _background_task
             max_restart_attempts = 10
             restart_delay = 5  # seconds
-            
+
             for attempt in range(max_restart_attempts):
                 try:
                     if _signal_service:
@@ -91,10 +91,10 @@ async def lifespan(app: FastAPI):
                             _signal_service.start_background_generation(interval_seconds=interval)
                         )
                         logger.info(f"🚀 Background signal generation started (every {interval} seconds) [attempt {attempt + 1}]")
-                        
+
                         # Wait a bit to see if task starts successfully
                         await asyncio.sleep(3)
-                        
+
                         # Check if task is still running
                         if _background_task.done():
                             try:
@@ -121,7 +121,7 @@ async def lifespan(app: FastAPI):
                     else:
                         logger.error(f"❌ Max restart attempts reached. Background task failed to start.")
                         break
-        
+
         async def monitor_background_task(check_interval: int):
             """Monitor background task and restart if it stops"""
             check_count = 0
@@ -129,12 +129,12 @@ async def lifespan(app: FastAPI):
                 try:
                     await asyncio.sleep(check_interval * 2)  # Check every 2 cycles
                     check_count += 1
-                    
+
                     if _background_task is None:
                         logger.warning("⚠️ Background task is None, attempting to restart...")
                         await start_background_task()
                         continue
-                    
+
                     if _background_task.done():
                         try:
                             await _background_task
@@ -149,10 +149,45 @@ async def lifespan(app: FastAPI):
                 except Exception as e:
                     logger.error(f"❌ Error in background task monitor: {e}", exc_info=True)
                     await asyncio.sleep(check_interval)
-        
+
         # Start the background task
         asyncio.create_task(start_background_task())
-        
+
+        # Start execution monitoring services
+        try:
+            from argo.core.signal_queue import SignalQueue
+            from argo.core.account_state_monitor import AccountStateMonitor
+            from argo.core.queue_processor import QueueProcessor
+
+            # Initialize and start queue monitoring
+            signal_queue = SignalQueue()
+            asyncio.create_task(signal_queue.start_monitoring(check_interval=30))
+            logger.info("✅ Signal queue monitoring started")
+
+            # Initialize and start queue processor
+            queue_processor = QueueProcessor(signal_queue, check_interval=30)
+            asyncio.create_task(queue_processor.start_processing())
+            logger.info("✅ Queue processor started")
+
+            # Initialize and start account state monitoring
+            account_monitor = AccountStateMonitor(check_interval=60)
+
+            # Add callback to process queue when account state changes
+            async def on_account_state_change(executor_id: str, state, changes: Dict[str, Any]):
+                """Process queue when account state changes"""
+                try:
+                    ready_signals = signal_queue.get_ready_signals(limit=10)
+                    if ready_signals:
+                        logger.info(f"📊 {len(ready_signals)} signals ready for execution after account state change for {executor_id}")
+                except Exception as e:
+                    logger.error(f"Error processing queue on state change: {e}", exc_info=True)
+
+            account_monitor.add_callback(on_account_state_change)
+            asyncio.create_task(account_monitor.start_monitoring())
+            logger.info("✅ Account state monitoring started")
+        except Exception as e:
+            logger.warning(f"⚠️  Failed to start execution monitoring services: {e}", exc_info=True)
+
     except Exception as e:
         logger.error(f"❌ Failed to start signal generation service: {e}", exc_info=True)
 
@@ -219,13 +254,14 @@ app.add_middleware(
 )
 
 # Include new API routers
-from argo.api import signals, backtest, performance, symbols, health, trading
+from argo.api import signals, backtest, performance, symbols, health, trading, execution_dashboard
 app.include_router(signals.router)
 app.include_router(backtest.router)
 app.include_router(performance.router)
 app.include_router(symbols.router)
 app.include_router(health.router)
 app.include_router(trading.router)
+app.include_router(execution_dashboard.router)
 
 # Price database (simulated real-time prices)
 LIVE_PRICES = {
@@ -244,12 +280,12 @@ async def health() -> Dict[str, Any]:
         signal_status = "unknown"
         background_task_status = "unknown"
         background_task_error = None
-        
+
         if _signal_service:
             signal_status = "running" if _signal_service.running else "stopped"
             if hasattr(_signal_service, "_paused") and _signal_service._paused:
                 signal_status = "paused"
-        
+
         if _background_task is None:
             background_task_status = "not_started"
         elif _background_task.done():
@@ -523,7 +559,7 @@ async def crypto_signal_status() -> Dict[str, Any]:
     """
     try:
         from argo.core.signal_generation_service import get_signal_service
-        
+
         signal_service = get_signal_service()
         if not signal_service:
             return {
@@ -531,14 +567,14 @@ async def crypto_signal_status() -> Dict[str, Any]:
                 "message": "Signal generation service not available",
                 "crypto_24_7_enabled": False
             }
-        
+
         # Check 24/7 mode
         is_24_7 = os.getenv('ARGO_24_7_MODE', '').lower() in ['true', '1', 'yes']
-        
+
         # Check data sources
         data_sources = signal_service.data_sources if hasattr(signal_service, 'data_sources') else {}
         crypto_sources = {}
-        
+
         # Check which sources support crypto
         if "massive" in data_sources:
             crypto_sources["massive"] = {
@@ -547,7 +583,7 @@ async def crypto_signal_status() -> Dict[str, Any]:
                 "24_7": True,
                 "weight": "40%"
             }
-        
+
         if "alpaca_pro" in data_sources:
             crypto_sources["alpaca_pro"] = {
                 "enabled": True,
@@ -555,7 +591,7 @@ async def crypto_signal_status() -> Dict[str, Any]:
                 "24_7": True,
                 "weight": "supplemental"
             }
-        
+
         if "x_sentiment" in data_sources:
             crypto_sources["xai_grok"] = {
                 "enabled": True,
@@ -563,7 +599,7 @@ async def crypto_signal_status() -> Dict[str, Any]:
                 "24_7": True,
                 "weight": "20%"
             }
-        
+
         if "sonar" in data_sources:
             crypto_sources["sonar_ai"] = {
                 "enabled": True,
@@ -571,14 +607,14 @@ async def crypto_signal_status() -> Dict[str, Any]:
                 "24_7": True,
                 "weight": "15%"
             }
-        
+
         # Check default crypto symbols
         from argo.core.signal_generation_service import DEFAULT_SYMBOLS
         crypto_symbols = [s for s in DEFAULT_SYMBOLS if '-USD' in s or s.startswith('BTC') or s.startswith('ETH')]
-        
+
         # Check if service is running
         is_running = hasattr(signal_service, 'running') and signal_service.running
-        
+
         return {
             "status": "operational" if is_running else "stopped",
             "crypto_24_7_enabled": is_24_7,
@@ -994,7 +1030,7 @@ async def get_latest_signals(
             from argo.core.signal_generation_service import get_signal_service
             signal_service = get_signal_service()
             generated_signals = await signal_service.generate_signals_cycle()
-            
+
             # Convert to API format
             api_signals = []
             for sig in generated_signals:
@@ -1011,12 +1047,12 @@ async def get_latest_signals(
                     "strategy": sig.get("strategy", "weighted_consensus"),
                     "sha256": sig.get("sha256", "")
                 })
-            
+
             if premium_only:
                 filtered = [s for s in api_signals if s.get("confidence", 0) >= 95]
             else:
                 filtered = api_signals
-            
+
             logger.info(f"📊 Generated {len(filtered)} signals on-demand")
             return filtered[:limit]
         except Exception as e:
@@ -1038,7 +1074,7 @@ async def get_latest_signals(
             from argo.core.signal_generation_service import get_signal_service
             signal_service = get_signal_service()
             generated_signals = await signal_service.generate_signals_cycle()
-            
+
             # Convert to API format
             api_signals = []
             for sig in generated_signals:
@@ -1055,12 +1091,12 @@ async def get_latest_signals(
                     "strategy": sig.get("strategy", "weighted_consensus"),
                     "sha256": sig.get("sha256", "")
                 })
-            
+
             if premium_only:
                 filtered = [s for s in api_signals if s.get("confidence", 0) >= 95]
             else:
                 filtered = api_signals
-            
+
             return filtered[:limit]
         except Exception as fallback_error:
             logger.error(f"❌ Fallback signal generation also failed: {fallback_error}", exc_info=True)
@@ -1148,7 +1184,7 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
     client_ip = request.client.host if request.client else "unknown"
     user_agent = request.headers.get("user-agent", "unknown")
     query_params = dict(request.query_params) if request.query_params else {}
-    
+
     logger.error(
         f"Unhandled exception: {type(exc).__name__}: {exc}",
         exc_info=True,
@@ -1162,11 +1198,11 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
             "exception_type": type(exc).__name__,
         }
     )
-    
+
     # Don't expose internal error details in production
     from argo.core.config import settings
     error_message = str(exc) if settings.DEBUG else "An error occurred"
-    
+
     return JSONResponse(
         status_code=500,
         content={

@@ -34,14 +34,14 @@ test_endpoint() {
     local expected_status=${3:-200}
     local check_field=${4:-""}
     local check_value=${5:-""}
-    
+
     TOTAL=$((TOTAL + 1))
     echo -n "  Testing $name... "
-    
+
     response=$(curl -s -w "\n%{http_code}" --max-time 10 "$url" 2>&1)
     http_code=$(echo "$response" | tail -n1)
     body=$(echo "$response" | sed '$d')
-    
+
     if [ "$http_code" = "$expected_status" ]; then
         # If check_field is provided, verify the field value
         if [ -n "$check_field" ] && [ -n "$check_value" ]; then
@@ -53,7 +53,7 @@ try:
 except:
     print('')
 " 2>/dev/null || echo "")
-            
+
             if [ "$field_value" = "$check_value" ]; then
                 echo -e "${GREEN}✅ PASS${NC} (HTTP $http_code, $check_field=$check_value)"
                 PASSED=$((PASSED + 1))
@@ -94,6 +94,14 @@ test_endpoint "Metrics" "$ARGO_URL/api/v1/health/metrics" 200
 test_endpoint "Prometheus Metrics" "$ARGO_URL/api/v1/health/prometheus" 200
 test_endpoint "Prometheus (Root)" "$ARGO_URL/metrics" 200
 
+# Test execution dashboard endpoints if admin key is set
+if [ -n "${ADMIN_API_KEY:-}" ]; then
+    ADMIN_HEADER="X-Admin-API-Key: ${ADMIN_API_KEY}"
+    test_endpoint "Execution Metrics" "$ARGO_URL/api/v1/execution/metrics" 200 "$ADMIN_HEADER"
+    test_endpoint "Queue Status" "$ARGO_URL/api/v1/execution/queue" 200 "$ADMIN_HEADER"
+    test_endpoint "Account States" "$ARGO_URL/api/v1/execution/account-states" 200 "$ADMIN_HEADER"
+fi
+
 echo ""
 
 # ===== ALPINE BACKEND SERVICE =====
@@ -132,4 +140,3 @@ else
     echo -e "${RED}❌ SOME TESTS FAILED${NC}"
     exit 1
 fi
-

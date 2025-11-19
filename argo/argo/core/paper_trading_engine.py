@@ -678,8 +678,21 @@ class PaperTradingEngine:
 
     def _is_trade_allowed(self, symbol: str) -> bool:
         """Check if trade is allowed (market hours, etc.)"""
-        if not self.is_market_open() and not symbol.endswith("-USD"):
-            logger.warning(f"⏭️  Market is closed - skipping {symbol}")
+        # FIX: Respect 24/7 mode - allow trading outside market hours if enabled
+        force_24_7 = os.getenv("ARGO_24_7_MODE", "").lower() in ["true", "1", "yes"]
+
+        # Crypto always trades 24/7
+        if symbol.endswith("-USD"):
+            return True
+
+        # If 24/7 mode is enabled, allow trading outside market hours
+        if force_24_7:
+            logger.debug(f"🚀 24/7 mode enabled - allowing {symbol} trade outside market hours")
+            return True
+
+        # Otherwise, check market hours
+        if not self.is_market_open():
+            logger.warning(f"⏭️  Market is closed - skipping {symbol} (set ARGO_24_7_MODE=true to enable 24/7 trading)")
             return False
         return True
 

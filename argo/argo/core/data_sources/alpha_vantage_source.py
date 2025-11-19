@@ -193,6 +193,7 @@ class AlphaVantageDataSource:
     def generate_signal(self, indicators, symbol):
         """Generate LONG/SHORT/NEUTRAL signal from technical indicators"""
         if not indicators:
+            logger.debug(f"⚠️  Alpha Vantage: No indicators for {symbol}")
             return None
 
         try:
@@ -201,6 +202,7 @@ class AlphaVantageDataSource:
             current_price = indicators.get('current_price')
 
             if not all([rsi, sma_20, current_price]):
+                logger.debug(f"⚠️  Alpha Vantage: Missing required indicators for {symbol} (rsi={rsi}, sma_20={sma_20}, price={current_price})")
                 return None
 
             # IMPROVEMENT: Raise base confidence from 60% to 65% for better signal quality
@@ -233,25 +235,26 @@ class AlphaVantageDataSource:
                 elif direction == 'LONG':
                     confidence -= 10.0
 
-            # IMPROVEMENT: If still NEUTRAL but confidence is reasonable, use trend-based direction
-            if direction == 'NEUTRAL' and confidence >= 60.0:
+            # FIX: If still NEUTRAL but confidence is reasonable, use trend-based direction
+            # This ensures we generate directional signals instead of NEUTRAL when possible
+            if direction == 'NEUTRAL' and confidence >= 55.0:
                 if current_price > sma_20:
                     direction = 'LONG'
-                    confidence += 5.0  # Add small boost for trend alignment
+                    confidence += 8.0  # Boost for trend alignment
                 elif current_price < sma_20:
                     direction = 'SHORT'
-                    confidence += 5.0
+                    confidence += 8.0
 
             # Cap confidence at 95
             confidence = min(confidence, 95.0)
 
-            # Only return if confidence >= 60 (matching yfinance improvement)
-            # Allow signals even with lower confidence - consensus will filter them
-            # Only filter out completely invalid signals (confidence < 50)
+            # IMPROVEMENT: Lower minimum threshold to 50% to allow more signals
+            # Consensus engine will filter based on final thresholds
             if confidence < 50:
+                logger.debug(f"⚠️  Alpha Vantage: Signal confidence {confidence:.1f}% below 50% for {symbol}")
                 return None
 
-            return {
+            signal = {
                 'direction': direction,
                 'confidence': round(confidence, 2),
                 'source': 'alpha_vantage',
@@ -262,6 +265,8 @@ class AlphaVantageDataSource:
                     'current_price': round(current_price, 2)
                 }
             }
+            logger.info(f"✅ Alpha Vantage signal for {symbol}: {direction} @ {confidence:.1f}%")
+            return signal
 
         except Exception as e:
             logger.error(f"Signal generation error: {e}")

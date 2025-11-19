@@ -237,30 +237,35 @@ class WeightedConsensusEngine:
         long_votes = {}
         short_votes = {}
 
-        # IMPROVEMENT: Handle single-source NEUTRAL signals specially
-        # If only 1 source with high-confidence NEUTRAL, use it directly
+        # FIX: Handle single-source signals specially
+        # If only 1 source, use it directly without splitting to prevent dilution
+        # This fixes the issue where single NEUTRAL @ 70% was being split to 38.5%
         if len(valid) == 1:
             source, signal = next(iter(valid.items()))
             direction = signal.get("direction")
             confidence = signal.get("confidence", 0)
-            
-            # For single high-confidence NEUTRAL signal, use it directly
+            source_weight = active_weights.get(source, 0.5)
+
+            # For single NEUTRAL signal (>= 65%), use it directly at source confidence
+            # This prevents high-confidence NEUTRAL signals from being diluted
             if direction == "NEUTRAL" and confidence >= 0.65:
+                logger.debug(f"✅ Single-source NEUTRAL signal: using {confidence*100:.1f}% directly (not splitting)")
                 return {
                     "direction": "NEUTRAL",
                     "confidence": round(confidence * 100, 2),
-                    "total_long_vote": confidence * 0.55,
-                    "total_short_vote": confidence * 0.45,
+                    "total_long_vote": confidence * source_weight * 0.55,
+                    "total_short_vote": confidence * source_weight * 0.45,
                     "sources": 1,
                     "agreement": round(confidence * 100, 2),
                 }
             # For single directional signal, use it directly if confidence is reasonable
             elif direction in ["LONG", "SHORT"] and confidence >= 0.60:
+                logger.debug(f"✅ Single-source {direction} signal: using {confidence*100:.1f}% directly")
                 return {
                     "direction": direction,
                     "confidence": round(confidence * 100, 2),
-                    "total_long_vote": confidence if direction == "LONG" else 0,
-                    "total_short_vote": confidence if direction == "SHORT" else 0,
+                    "total_long_vote": confidence * source_weight if direction == "LONG" else 0,
+                    "total_short_vote": confidence * source_weight if direction == "SHORT" else 0,
                     "sources": 1,
                     "agreement": round(confidence * 100, 2),
                 }
@@ -280,14 +285,14 @@ class WeightedConsensusEngine:
             elif direction == "NEUTRAL":
                 # IMPROVEMENT: Store NEUTRAL signals for special handling
                 neutral_signals.append((source, signal, vote, weight))
-        
+
         # IMPROVEMENT: Handle NEUTRAL signals intelligently
         # If we have high-confidence NEUTRAL signals and no clear directional consensus,
         # use NEUTRAL directly instead of splitting
         if neutral_signals:
             # Check if we have high-confidence NEUTRAL signals
             high_confidence_neutral = [n for n in neutral_signals if n[1].get("confidence", 0) >= 0.70]
-            
+
             # If we have high-confidence NEUTRAL and no strong directional signals, use NEUTRAL
             if high_confidence_neutral and not long_votes and not short_votes:
                 # All sources are NEUTRAL with high confidence - use directly
@@ -361,10 +366,10 @@ class WeightedConsensusEngine:
             agreement_bonus = 10.0  # 3 sources: +10%
         elif num_sources >= 2:
             agreement_bonus = 5.0   # 2 sources: +5%
-        
+
         # Calculate agreement percentage
         agreement_pct = max(total_long, total_short) / active_weights_sum * 100
-        
+
         # IMPROVEMENT: Normalize confidence to full weight (1.0) for better scaling
         # This prevents penalizing signals when some sources fail
         # Only normalize if we have at least 2 sources (to avoid inflating single-source signals)
@@ -374,16 +379,16 @@ class WeightedConsensusEngine:
             consensus_confidence = consensus_confidence * normalization_factor
             # Cap at 98% to prevent over-inflation
             consensus_confidence = min(consensus_confidence, 98.0)
-        
+
         # Apply agreement bonus (only if agreement is high enough)
         if agreement_pct >= 50.0:  # Only boost if sources agree at least 50%
             consensus_confidence = min(consensus_confidence + agreement_bonus, 98.0)
-        
+
         # IMPROVEMENT: Add minimum confidence floor for high-agreement signals
         # If sources strongly agree (>= 70% agreement), ensure minimum 60% confidence
         if agreement_pct >= 70.0 and consensus_confidence < 60.0:
             consensus_confidence = 60.0
-        
+
         consensus = {
             "direction": consensus_direction,
             "confidence": round(consensus_confidence, 2),
