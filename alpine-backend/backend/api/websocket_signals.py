@@ -269,8 +269,9 @@ async def websocket_signals_endpoint(
                         "type": "ping",
                         "server_timestamp": datetime.now(timezone.utc).timestamp()
                     })
-                except Exception:
+                except Exception as e:
                     # Connection likely closed
+                    logger.debug(f"WebSocket ping failed for {connection_id}, connection closed: {e}")
                     break
             except WebSocketDisconnect:
                 break
@@ -285,8 +286,8 @@ async def websocket_signals_endpoint(
         if db:
             try:
                 db.rollback()
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Error rolling back database transaction for WebSocket {connection_id}: {e}")
     finally:
         # Close database session if still open
         if db:

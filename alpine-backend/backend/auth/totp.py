@@ -7,6 +7,9 @@ from typing import Optional, Tuple
 from datetime import datetime, timedelta
 import secrets
 import hashlib
+import logging
+
+logger = logging.getLogger(__name__)
 
 # TOTP configuration
 TOTP_ISSUER = "Alpine Analytics"
@@ -60,7 +63,8 @@ class TOTPManager:
         try:
             totp = pyotp.TOTP(secret, interval=TOTP_INTERVAL)
             return totp.verify(token, valid_window=window)
-        except Exception:
+        except Exception as e:
+            logger.warning(f"TOTP verification failed: {e}", exc_info=True)
             return False
     
     @staticmethod

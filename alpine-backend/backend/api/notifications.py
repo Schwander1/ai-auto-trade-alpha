@@ -223,8 +223,12 @@ async def get_unread_notifications(
         for n in paginated:
             try:
                 items.append(NotificationResponse(**n))
-            except Exception:
-                logger.warning(f"Skipping invalid notification: {n.get('id', 'unknown')}")
+            except Exception as e:
+                logger.warning(
+                    f"Skipping invalid notification: {n.get('id', 'unknown')}",
+                    exc_info=True,
+                    extra={"notification_data": n, "error": str(e)}
+                )
 
     return PaginatedNotificationsResponse(
         items=items,

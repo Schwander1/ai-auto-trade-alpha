@@ -550,10 +550,13 @@ class PaperTradingEngine:
                 # BUT allow closing existing LONG positions
                 if action == "SELL":
                     # Check if we have an existing LONG position to close
+                    # Use existing_positions if provided, otherwise fetch from API
                     if existing_positions is not None:
                         positions = existing_positions
                     else:
-                        positions = self.get_positions()
+                        positions = self.get_positions() or []
+
+                    # Find existing position for this symbol
                     existing_position = next(
                         (p for p in positions if p.get("symbol") == symbol), None
                     )
@@ -563,6 +566,7 @@ class PaperTradingEngine:
                         logger.info(
                             f"✅ Allowing SELL crypto signal for {symbol}: Closing existing LONG position"
                         )
+                        # Skip buying power check for SELL orders closing positions
                     else:
                         # Reject SELL if trying to open a new SHORT position
                         logger.info(
@@ -570,14 +574,18 @@ class PaperTradingEngine:
                         )
                         return self._execute_sim(signal)
 
-                # Check non_marginable_buying_power for crypto (settled cash only)
-                # FIX: Handle None case - getattr can return None if attribute exists but is None
-                non_marginable_bp = float(getattr(account, "non_marginable_buying_power", 0) or 0)
-                if non_marginable_bp <= 0:
-                    logger.warning(
-                        f"⚠️  No non-marginable buying power available for crypto {symbol}: ${non_marginable_bp:,.2f} (need settled cash), falling back to simulation mode"
+                # Check non_marginable_buying_power for crypto BUY orders only (settled cash only)
+                # SELL orders closing positions don't need buying power
+                if action == "BUY":
+                    # FIX: Handle None case - Alpaca API can return None if value is not set or available
+                    non_marginable_bp = float(
+                        getattr(account, "non_marginable_buying_power", 0) or 0
                     )
-                    return self._execute_sim(signal)
+                    if non_marginable_bp <= 0:
+                        logger.warning(
+                            f"⚠️  No non-marginable buying power available for crypto {symbol}: ${non_marginable_bp:,.2f} (need settled cash), falling back to simulation mode"
+                        )
+                        return self._execute_sim(signal)
 
             order_details = self._prepare_order_details(signal, account, action, existing_positions)
             if not order_details:
@@ -909,13 +917,13 @@ class PaperTradingEngine:
         is_crypto = "-USD" in signal.get("symbol", "")
         if is_crypto:
             # Crypto requires non_marginable_buying_power (settled cash only)
-            # FIX: Handle None case - getattr can return None if attribute exists but is None
-            non_marginable_bp = getattr(account, "non_marginable_buying_power", None)
-            if non_marginable_bp is None:
-                # Fallback to regular buying_power if non_marginable_buying_power is not available
-                buying_power = float(account.buying_power)
+            # FIX: Handle None case - Alpaca API can return None if value is not set or available
+            non_marginable_bp = float(getattr(account, "non_marginable_buying_power", 0) or 0)
+            if non_marginable_bp > 0:
+                buying_power = non_marginable_bp
             else:
-                buying_power = float(non_marginable_bp or 0)
+                # Fallback to regular buying_power if non_marginable_buying_power is not available
+                buying_power = float(account.buying_power or 0)
             logger.debug(
                 f"🔍 Crypto detected: Using non_marginable_buying_power=${buying_power:,.2f} for {signal['symbol']}"
             )
@@ -1613,8 +1621,8 @@ class PaperTradingEngine:
                 for pos in positions:
                     if pos["symbol"] == symbol:
                         return pos.get("current_price")
-            except:
-                pass
+            except Exception as e:
+                logger.debug(f"Could not get current price from positions for {symbol}: {e}")
 
             # Fallback to yfinance
             import yfinance as yf
@@ -1737,7 +1745,7 @@ class PaperTradingEngine:
                 "buying_power": float(account.buying_power),
                 "non_marginable_buying_power": float(
                     getattr(account, "non_marginable_buying_power", 0) or 0
-                ),  # For crypto trading - handle None case
+                ),  # For crypto trading - handle None case explicitly
                 "crypto_status": getattr(
                     account, "crypto_status", "UNKNOWN"
                 ),  # ACTIVE, INACTIVE, etc.

@@ -3,6 +3,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from backend.core.config import settings
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Lazy initialization - create engine on first access
 _engine = None
@@ -56,8 +59,9 @@ try:
         # Create placeholder that will be initialized on first use
         engine = None
         SessionLocal = None
-except Exception:
+except Exception as e:
     # If settings aren't loaded yet, create placeholders
+    logger.warning(f"Could not initialize database connection on import: {e}. Will initialize on first use.")
     engine = None
     SessionLocal = None
 

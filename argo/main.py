@@ -1119,7 +1119,8 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
     try:
         from argo.core.request_tracking import get_request_id
         request_id = get_request_id(request)
-    except Exception:
+    except Exception as e:
+        logger.debug(f"Could not get request ID: {e}")
         request_id = None
 
     return JSONResponse(
@@ -1139,19 +1140,33 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
     try:
         from argo.core.request_tracking import get_request_id
         request_id = get_request_id(request)
-    except Exception:
+    except Exception as e:
+        logger.debug(f"Could not get request ID: {e}")
         request_id = None
 
-    logger.error(f"Unhandled exception: {exc}", exc_info=True, extra={
-        "path": request.url.path,
-        "method": request.method,
-        "request_id": request_id,
-    })
-
+    # Extract additional context for logging
+    client_ip = request.client.host if request.client else "unknown"
+    user_agent = request.headers.get("user-agent", "unknown")
+    query_params = dict(request.query_params) if request.query_params else {}
+    
+    logger.error(
+        f"Unhandled exception: {type(exc).__name__}: {exc}",
+        exc_info=True,
+        extra={
+            "path": request.url.path,
+            "method": request.method,
+            "request_id": request_id,
+            "client_ip": client_ip,
+            "user_agent": user_agent,
+            "query_params": query_params,
+            "exception_type": type(exc).__name__,
+        }
+    )
+    
     # Don't expose internal error details in production
     from argo.core.config import settings
     error_message = str(exc) if settings.DEBUG else "An error occurred"
-
+    
     return JSONResponse(
         status_code=500,
         content={

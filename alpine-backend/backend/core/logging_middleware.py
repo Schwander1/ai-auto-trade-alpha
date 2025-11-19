@@ -115,20 +115,39 @@ class ErrorLoggingMiddleware(BaseHTTPMiddleware):
 
             # Log error responses
             if response.status_code >= 400:
+                from backend.core.request_tracking import get_request_id
+                request_id = get_request_id(request)
                 logger.warning(
                     f"Error response: {request.method} {request.url.path} | "
                     f"Status: {response.status_code} | "
-                    f"IP: {request.client.host if request.client else 'unknown'}"
+                    f"IP: {request.client.host if request.client else 'unknown'}",
+                    extra={
+                        "path": request.url.path,
+                        "method": request.method,
+                        "status_code": response.status_code,
+                        "client_ip": request.client.host if request.client else "unknown",
+                        "request_id": request_id,
+                    }
                 )
 
             return response
 
         except Exception as e:
+            from backend.core.request_tracking import get_request_id
+            request_id = get_request_id(request)
             logger.error(
                 f"Unhandled exception: {request.method} {request.url.path} | "
                 f"Error: {type(e).__name__}: {str(e)} | "
                 f"IP: {request.client.host if request.client else 'unknown'}",
-                exc_info=True
+                exc_info=True,
+                extra={
+                    "path": request.url.path,
+                    "method": request.method,
+                    "client_ip": request.client.host if request.client else "unknown",
+                    "user_agent": request.headers.get("user-agent", "unknown"),
+                    "request_id": request_id,
+                    "exception_type": type(e).__name__,
+                }
             )
             raise
 

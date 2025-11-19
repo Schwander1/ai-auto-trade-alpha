@@ -113,7 +113,8 @@ def parse_signal_timestamp(timestamp_str: str) -> datetime:
     """
     try:
         return datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
-    except Exception:
+    except Exception as e:
+        logger.warning(f"Failed to parse timestamp '{timestamp_str}', using current time: {e}")
         return datetime.now(timezone.utc)
 
 
