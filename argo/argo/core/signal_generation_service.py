@@ -2640,13 +2640,22 @@ class SignalGenerationService:
             for symbol, result in zip(batch, results):
                 try:
                     if isinstance(result, Exception):
-                        logger.error(f"Error processing {symbol}: {result}")
+                        # Handle timeout/cancellation errors gracefully
+                        if isinstance(result, (asyncio.TimeoutError, asyncio.CancelledError)):
+                            logger.debug(f"⏱️  {symbol} processing timeout/cancelled")
+                        else:
+                            logger.error(f"Error processing {symbol}: {result}")
                         self._track_symbol_success(symbol, False)
                         # Track error in performance metrics
                         if self.performance_metrics:
                             self.performance_metrics.record_error(
                                 "signal_generation", str(type(result).__name__)
                             )
+                        continue
+
+                    # Skip if result is None (no signal generated)
+                    if result is None:
+                        self._track_symbol_success(symbol, False)
                         continue
 
                     signal = result
