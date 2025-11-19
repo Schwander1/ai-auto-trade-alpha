@@ -276,9 +276,9 @@ export default function FAQ() {
               <AccordionItem
                 key={index}
                 value={`item-${index}`}
-                className="border-alpine-black-border
+                className="border-alpine-black-border"
               >
-                <AccordionTrigger className="text-left text-alpine-text-primary font-semiboldhove-r:no-underline hover:text-alpine-neon-cyantransitioncolo-rs">
+                <AccordionTrigger className="text-left text-alpine-text-primary font-semibold hover:no-underline hover:text-alpine-neon-cyan transition-colors">
                   {faq.question}
                 </AccordionTrigger>
                 <AccordionContent className="text-alpine-text-secondary leading-relaxed">

@@ -1,6 +1,6 @@
 """Role-Based Access Control (RBAC) models"""
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Table, ForeignKey, Enum as SQLEnum, Index
-from sqlalchemy.orm import relationship, validates
+from sqlalchemy.orm import relationship, validates, Mapped
 from sqlalchemy.sql import func
 from enum import Enum as PyEnum
 from typing import Optional, List
@@ -29,23 +29,23 @@ class PermissionEnum(str, PyEnum):
     USER_READ = "user:read"
     USER_WRITE = "user:write"
     USER_DELETE = "user:delete"
-    
+
     # Admin permissions
     ADMIN_READ = "admin:read"
     ADMIN_WRITE = "admin:write"
     ADMIN_ANALYTICS = "admin:analytics"
     ADMIN_USERS = "admin:users"
     ADMIN_REVENUE = "admin:revenue"
-    
+
     # Signal permissions
     SIGNAL_READ = "signal:read"
     SIGNAL_WRITE = "signal:write"
     SIGNAL_DELETE = "signal:delete"
-    
+
     # Subscription permissions
     SUBSCRIPTION_READ = "subscription:read"
     SUBSCRIPTION_WRITE = "subscription:write"
-    
+
     # Role management (super admin only)
     ROLE_MANAGE = "role:manage"
 
@@ -53,7 +53,7 @@ class PermissionEnum(str, PyEnum):
 class Role(Base):
     """
     Role model for RBAC
-    
+
     Features:
     - Role-based access control
     - System and custom roles
@@ -61,33 +61,33 @@ class Role(Base):
     - User associations
     """
     __tablename__ = "roles"
-    
+
     __table_args__ = (
         # Index for system role queries
         Index('idx_role_system', 'is_system'),
     )
-    
+
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), unique=True, nullable=False, index=True)
     description = Column(String(500), nullable=True)
     is_system = Column(Boolean, default=False, nullable=False, index=True)  # System roles cannot be deleted
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
-    
+
     # Relationships
-    users: List["User"] = relationship(
-        "User", 
-        secondary=user_roles, 
+    users: Mapped[List["User"]] = relationship(
+        "User",
+        secondary=user_roles,
         back_populates="roles",
         lazy="select"
     )
-    permissions: List["Permission"] = relationship(
-        "Permission", 
-        secondary=role_permissions, 
+    permissions: Mapped[List["Permission"]] = relationship(
+        "Permission",
+        secondary=role_permissions,
         back_populates="roles",
         lazy="select"
     )
-    
+
     @validates('name')
     def validate_name(self, key: str, name: str) -> str:
         """Validate role name"""
@@ -102,7 +102,7 @@ class Role(Base):
         if not all(c.isalnum() or c in ('_', '-') for c in name):
             raise ValueError("Role name can only contain alphanumeric characters, underscores, and hyphens")
         return name
-    
+
     @validates('description')
     def validate_description(self, key: str, description: Optional[str]) -> Optional[str]:
         """Validate role description"""
@@ -113,7 +113,7 @@ class Role(Base):
             if len(description) < 1:
                 return None
         return description
-    
+
     def __repr__(self) -> str:
         """String representation for debugging"""
         return f"<Role(id={self.id}, name='{self.name}', is_system={self.is_system})>"
@@ -122,27 +122,27 @@ class Role(Base):
 class Permission(Base):
     """
     Permission model for RBAC
-    
+
     Features:
     - Fine-grained permission control
     - Role associations
     - Permission enumeration support
     """
     __tablename__ = "permissions"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), unique=True, nullable=False, index=True)
     description = Column(String(500), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    
+
     # Relationships
-    roles: List["Role"] = relationship(
-        "Role", 
-        secondary=role_permissions, 
+    roles: Mapped[List["Role"]] = relationship(
+        "Role",
+        secondary=role_permissions,
         back_populates="permissions",
         lazy="select"
     )
-    
+
     @validates('name')
     def validate_name(self, key: str, name: str) -> str:
         """Validate permission name"""
@@ -157,7 +157,7 @@ class Permission(Base):
         if ':' not in name:
             raise ValueError("Permission name must be in format 'resource:action' (e.g., 'user:read')")
         return name
-    
+
     @validates('description')
     def validate_description(self, key: str, description: Optional[str]) -> Optional[str]:
         """Validate permission description"""
@@ -168,7 +168,7 @@ class Permission(Base):
             if len(description) < 1:
                 return None
         return description
-    
+
     def __repr__(self) -> str:
         """String representation for debugging"""
         return f"<Permission(id={self.id}, name='{self.name}')>"
@@ -221,4 +221,3 @@ DEFAULT_ROLES = {
         ]
     }
 }
-

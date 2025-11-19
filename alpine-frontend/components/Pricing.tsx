@@ -96,7 +96,7 @@ export default function Pricing() {
   return (
     <section
       id="pricing"
-      className="py-24 relative overflow-hidden bg-alpine-black-primary
+      className="py-24 relative overflow-hidden bg-alpine-black-primary"
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Founder Launch Banner */}
@@ -135,7 +135,7 @@ export default function Pricing() {
               className={`relative rounded-2xl p-8 border-2 bg-alpine-black-secondary ${
                 plan.popular
                   ? 'border-alpine-neon-cyan/50 shadow-glow-cyan scale-105'
-                  : 'border-alpine-black-border
+                  : 'border-alpine-black-border'
               }`}
             >
               {plan.popular && (
@@ -148,7 +148,7 @@ export default function Pricing() {
               <div className="text-center mb-6">
                 <div className="text-4xl mb-3">{plan.emoji}</div>
                 <h3 className="text-xl font-display font-bold text-alpine-neon-cyan mb-4">{plan.name}</h3>
-                
+
                 <div className="mb-3">
                   <div className="text-5xl font-bold text-alpine-neon-cyan mb-1">
                     ${plan.founderPrice.toLocaleString()}
@@ -183,8 +183,8 @@ export default function Pricing() {
                   <li key={i} className="flex items-start space-x-3">
                     <Check className="w-5 h-5 text-alpine-neon-cyanflexshri-nk-0 mt-0.5" />
                     <span className={`text-alpine-text-primary text-sm ${
-                      feature.includes('LOCKED AT') 
-                        ? 'font-bold text-alpine-neon-cyantextba-se' 
+                      feature.includes('LOCKED AT')
+                        ? 'font-bold text-alpine-neon-cyantextba-se'
                         : ''
                     }`}>
                       {feature}

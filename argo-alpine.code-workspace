@@ -150,6 +150,11 @@
       "editor.rulers": [100],
     },
 
+    // isort settings
+    "isort.args": ["--profile", "black", "--line-length=100"],
+    "isort.check": true,
+    "isort.interpreter": "/opt/homebrew/bin/python3.12",
+
     // TypeScript/JavaScript settings
     "typescript.updateImportsOnFileMove.enabled": "always",
     "typescript.preferences.importModuleSpecifier": "relative",
@@ -264,6 +269,61 @@
 
     // Docker settings
     "docker.showStartPage": false,
+
+    // GitLens settings
+    "gitlens.enabled": true,
+    "gitlens.codeLens.enabled": true,
+    "gitlens.codeLens.authors.enabled": true,
+    "gitlens.codeLens.recentChange.enabled": true,
+    "gitlens.currentLine.enabled": true,
+    "gitlens.hovers.enabled": true,
+    "gitlens.statusBar.enabled": true,
+
+    // Error Lens settings
+    "errorLens.enabled": true,
+    "errorLens.enabledDiagnosticLevels": ["error", "warning"],
+
+    // Jest settings
+    "jest.runMode": "on-demand",
+    "jest.autoRun": "off",
+    "jest.showCoverageOnLoad": false,
+
+    // Playwright settings
+    "playwright.reuseBrowser": false,
+    "playwright.showTrace": false,
+
+    // SonarLint settings
+    "sonarlint.pathToNodeExecutable": "node",
+
+    // Code Spell Checker settings
+    "cSpell.enabled": true,
+    "cSpell.enableFiletypes": ["*"],
+
+    // Markdown settings
+    "markdown.extension.toc.updateOnSave": true,
+    "markdown.extension.preview.autoShowPreviewToSide": false,
+
+    // Prisma settings
+    "[prisma]": {
+      "editor.formatOnSave": true,
+      "editor.defaultFormatter": "prisma.prisma",
+    },
+
+    // YAML settings
+    "[yaml]": {
+      "editor.formatOnSave": true,
+      "editor.defaultFormatter": "redhat.vscode-yaml",
+    },
+
+    // Shell script settings
+    "[shellscript]": {
+      "editor.formatOnSave": true,
+      "editor.defaultFormatter": "mkhl.shfmt",
+    },
+    "shfmt.indent": 2,
+    "shfmt.binaryNextLine": true,
+    "shfmt.switchCaseIndent": true,
+    "shfmt.spaceRedirects": true,
 
     // Git settings - Auto features
     "git.enableSmartCommit": true,

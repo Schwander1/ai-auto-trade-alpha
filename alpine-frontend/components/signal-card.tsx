@@ -19,21 +19,21 @@ interface SignalCardProps {
 
 /**
  * SignalCard displays a trading signal with real-time updates and SHA-256 verification.
- * 
+ *
  * Displays signal information including symbol, action (BUY/SELL), entry price,
  * confidence score, and cryptographic verification status. Supports interactive
  * verification and shows outcome if the signal has been closed.
- * 
+ *
  * @param signal - Signal data from Argo backend
  * @param onVerify - Optional callback when user verifies signal hash
  * @param className - Additional Tailwind classes
  * @param showVerifyButton - Whether to show verification button (default: true)
  * @param showDetails - Whether to show detailed information (default: true)
- * 
+ *
  * @example
  * ```tsx
- * <SignalCard 
- *   signal={signalData} 
+ * <SignalCard
+ *   signal={signalData}
  *   onVerify={handleVerify}
  *   className="mb-4"
  * />
@@ -63,7 +63,7 @@ export default function SignalCard({
   const handleVerifyClick = async () => {
     setIsLoading(true)
     setVerificationError(null)
-    
+
     try {
       const result = await verifySignalHash()
       if (result.isValid) {
@@ -118,7 +118,7 @@ export default function SignalCard({
       const encoder = new TextEncoder()
       const data = encoder.encode(hashString)
       const hashBuffer = await crypto.subtle.digest('SHA-256', data)
-      
+
       // Convert to hex string
       const hashArray = Array.from(new Uint8Array(hashBuffer))
       const calculatedHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
@@ -170,8 +170,8 @@ export default function SignalCard({
 
   const getConfidenceBg = (confidence: number): string => {
     if (confidence >= 95) return 'bg-alpine-neon-cyan/10 border-alpine-neon-cyan/30'
-    if (confidence >= 90) return 'bg-alpine-neonpin-k/10 border-alpine-neonpin-k/30'
-    return 'bg-alpine-black-secondary border-alpine-black-border
+    if (confidence >= 90) return 'bg-alpine-neon-pink/10 border-alpine-neon-pink/30'
+    return 'bg-alpine-black-secondary border-alpine-black-border'
   }
 
   const getOutcomeDisplay = () => {
@@ -179,8 +179,8 @@ export default function SignalCard({
 
     const isWin = signal.outcome === 'win'
     const Icon = isWin ? CheckCircle2 : XCircle
-    const color = isWin ? 'text-alpine-neon-cyan' : 'text-alpine-semantic-error
-    const bgColor = isWin ? 'bg-alpine-neon-cyan/10' : 'bg-alpine-semantic-error10'
+    const color = isWin ? 'text-alpine-neon-cyan' : 'text-alpine-semantic-error'
+    const bgColor = isWin ? 'bg-alpine-neon-cyan/10' : 'bg-alpine-semantic-error/10'
 
     return (
       <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${bgColor}`}>
@@ -225,13 +225,13 @@ export default function SignalCard({
           {signal.action === 'BUY' ? (
             <TrendingUp className="w-5 h-5 text-alpine-neon-cyan" aria-hidden="true" />
           ) : (
-            <TrendingDown className="w-5 h-5 text-alpine-semantic-errorariahidd-en="true" />
+            <TrendingDown className="w-5 h-5 text-alpine-semantic-error" aria-hidden="true" />
           )}
           <span
             className={`px-3 py-1 rounded-lg text-sm font-bold ${
               signal.action === 'BUY'
-                ? 'bg-alpine-neon-cyan/20 text-alpine-neon-cyan border-border-alpine-neon-cyan/30'
-                : 'bg-alpine-semantic-error20 text-alpine-semantic-errorborder border-alpine-semantic-error30'
+                ? 'bg-alpine-neon-cyan/20 text-alpine-neon-cyan border border-alpine-neon-cyan/30'
+                : 'bg-alpine-semantic-error/20 text-alpine-semantic-error border border-alpine-semantic-error/30'
             }`}
           >
             {signal.action}
@@ -345,4 +345,3 @@ export default function SignalCard({
     </div>
   )
 }
-

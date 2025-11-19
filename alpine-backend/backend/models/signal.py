@@ -14,7 +14,7 @@ COMPLIANCE:
 """
 from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, Index, Text, Enum as SQLEnum, CheckConstraint, ForeignKey
 from sqlalchemy.sql import func
-from sqlalchemy.orm import relationship, validates
+from sqlalchemy.orm import relationship, validates, Mapped
 from enum import Enum as PyEnum
 from typing import Optional, List
 import time
@@ -30,7 +30,7 @@ class SignalAction(str, PyEnum):
 class Signal(Base):
     """
     Trading signal model - Immutable after creation
-    
+
     Features:
     - Immutable audit trail
     - SHA-256 verification
@@ -40,7 +40,7 @@ class Signal(Base):
     - 7-year compliance retention
     """
     __tablename__ = "signals"
-    
+
     __table_args__ = (
         # Composite index for common query pattern: active signals by confidence and date
         Index('idx_signal_active_confidence_created', 'is_active', 'confidence', 'created_at'),
@@ -55,7 +55,7 @@ class Signal(Base):
         # Check constraint for stop_loss if provided
         CheckConstraint('stop_loss IS NULL OR stop_loss > 0', name='check_stop_loss_positive'),
     )
-    
+
     id = Column(Integer, primary_key=True, index=True)
     symbol = Column(String(20), index=True, nullable=False)  # Stock symbols are typically short
     action = Column(SQLEnum(SignalAction), nullable=False, index=True)
@@ -68,25 +68,25 @@ class Signal(Base):
     is_active = Column(Boolean, default=True, index=True, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True, nullable=False)
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)  # Should never update (immutable)
-    
+
     # Optional user association (signals can be global or user-specific)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), index=True, nullable=True)
-    
+
     # Retention tracking (7-year compliance requirement)
     retention_expires_at = Column(DateTime(timezone=True), index=True, nullable=True)
-    
+
     # Hash chain for tamper detection (blockchain-style)
     previous_hash = Column(String(64), index=True, nullable=True)  # Hash of previous signal in chain
     chain_index = Column(Integer, index=True, nullable=True)  # Position in chain
-    
+
     # Latency tracking (patent claim: <500ms delivery)
     generation_latency_ms = Column(Integer, nullable=True)  # Time to generate signal
     delivery_latency_ms = Column(Integer, nullable=True)  # End-to-end delivery time
     server_timestamp = Column(Float, nullable=True)  # Unix timestamp when signal created on server
-    
+
     # Relationships
-    user: Optional["User"] = relationship("User", backref="signals", lazy="select")
-    
+    user: Mapped[Optional["User"]] = relationship("User", backref="signals", lazy="select")
+
     @validates('symbol')
     def validate_symbol(self, key: str, symbol: str) -> str:
         """Validate symbol format"""
@@ -98,12 +98,12 @@ class Signal(Base):
         if len(symbol) < 1:
             raise ValueError("Symbol cannot be empty")
         return symbol
-    
+
     @validates('rationale')
     def validate_reasoning(self, key: str, rationale: str) -> str:
         """
         Validate that reasoning is meaningful and non-empty
-        
+
         PATENT CLAIM: AI-generated reasoning for each signal must be meaningful
         """
         if not rationale or len(rationale.strip()) < 20:
@@ -112,21 +112,21 @@ class Signal(Base):
                 "This is required for patent compliance (AI-generated reasoning claim)."
             )
         return rationale.strip()
-    
+
     @validates('confidence')
     def validate_confidence(self, key: str, confidence: float) -> float:
         """Validate confidence is in valid range (0-1)"""
         if confidence < 0 or confidence > 1:
             raise ValueError("Confidence must be between 0 and 1 (0% to 100%)")
         return confidence
-    
+
     @validates('price', 'target_price', 'stop_loss')
     def validate_price(self, key: str, price: Optional[float]) -> Optional[float]:
         """Validate price is positive"""
         if price is not None and price <= 0:
             raise ValueError(f"{key} must be greater than 0")
         return price
-    
+
     @validates('verification_hash')
     def validate_verification_hash(self, key: str, verification_hash: str) -> str:
         """Validate verification hash format (SHA-256 is 64 hex characters)"""
@@ -141,22 +141,22 @@ class Signal(Base):
         except ValueError:
             raise ValueError("Verification hash must be a valid hexadecimal string")
         return verification_hash
-    
+
     def calculate_generation_latency(self) -> int:
         """Calculate generation latency if server_timestamp is available"""
         if self.server_timestamp and self.created_at:
             latency_seconds = time.time() - self.server_timestamp
             return int(latency_seconds * 1000)
         return self.generation_latency_ms or 0
-    
+
     def is_immutable(self) -> bool:
         """
         Check if signal is immutable (always True after creation)
-        
+
         PATENT CLAIM: Immutable audit trail
         """
         return True  # Signals are immutable via database triggers
-    
+
     def __repr__(self) -> str:
         """String representation for debugging"""
         return f"<Signal(id={self.id}, symbol='{self.symbol}', action='{self.action}', confidence={self.confidence}, is_active={self.is_active})>"

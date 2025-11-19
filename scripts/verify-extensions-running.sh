@@ -84,74 +84,102 @@ if [ $MISSING -gt 0 ]; then
 fi
 echo ""
 
-# Check settings.json
+# Check settings.json or workspace file
 echo "⚙️  Checking Extension Settings:"
 echo ""
 
 SETTINGS_FILE=".vscode/settings.json"
-if [ -f "$SETTINGS_FILE" ]; then
-    # Check for key extension settings
-    CHECKS=0
-    PASSED=0
-    
+WORKSPACE_FILE="argo-alpine.code-workspace"
+CHECKS=0
+PASSED=0
+
+# Check workspace file first (primary), then settings.json (fallback)
+if [ -f "$WORKSPACE_FILE" ]; then
+    SETTINGS_SOURCE="$WORKSPACE_FILE"
+    echo -e "  ${BLUE}Checking workspace file: $WORKSPACE_FILE${NC}"
+elif [ -f "$SETTINGS_FILE" ]; then
+    SETTINGS_SOURCE="$SETTINGS_FILE"
+    echo -e "  ${BLUE}Checking settings file: $SETTINGS_FILE${NC}"
+else
+    echo -e "  ${YELLOW}⚠️${NC}  Neither .vscode/settings.json nor argo-alpine.code-workspace found"
+    SETTINGS_SOURCE=""
+fi
+
+if [ -n "$SETTINGS_SOURCE" ]; then
     # Python
-    if grep -q '"python.linting.enabled": true' "$SETTINGS_FILE" 2>/dev/null; then
+    if grep -q '"python.linting.enabled": true' "$SETTINGS_SOURCE" 2>/dev/null; then
         echo -e "  ${GREEN}✅${NC} Python linting enabled"
         PASSED=$((PASSED + 1))
     else
         echo -e "  ${YELLOW}⚠️${NC}  Python linting not explicitly enabled"
     fi
     CHECKS=$((CHECKS + 1))
-    
+
     # ESLint
-    if grep -q '"eslint.enable": true' "$SETTINGS_FILE" 2>/dev/null; then
+    if grep -q '"eslint.enable": true' "$SETTINGS_SOURCE" 2>/dev/null; then
         echo -e "  ${GREEN}✅${NC} ESLint enabled"
         PASSED=$((PASSED + 1))
     else
         echo -e "  ${YELLOW}⚠️${NC}  ESLint not explicitly enabled"
     fi
     CHECKS=$((CHECKS + 1))
-    
+
     # Prettier
-    if grep -q '"prettier.enable": true' "$SETTINGS_FILE" 2>/dev/null; then
-        echo -e "  ${GREEN}✅${NC} Prettier enabled"
+    if grep -q '"prettier.enable": true\|"editor.formatOnSave": true' "$SETTINGS_SOURCE" 2>/dev/null; then
+        echo -e "  ${GREEN}✅${NC} Prettier/Formatting enabled"
         PASSED=$((PASSED + 1))
     else
-        echo -e "  ${YELLOW}⚠️${NC}  Prettier not explicitly enabled"
+        echo -e "  ${YELLOW}⚠️${NC}  Prettier/Formatting not explicitly enabled"
     fi
     CHECKS=$((CHECKS + 1))
-    
+
     # Error Lens
-    if grep -q '"errorLens.enabled": true' "$SETTINGS_FILE" 2>/dev/null; then
+    if grep -q '"errorLens.enabled": true' "$SETTINGS_SOURCE" 2>/dev/null; then
         echo -e "  ${GREEN}✅${NC} Error Lens enabled"
         PASSED=$((PASSED + 1))
     else
         echo -e "  ${YELLOW}⚠️${NC}  Error Lens not explicitly enabled"
     fi
     CHECKS=$((CHECKS + 1))
-    
+
     # GitLens
-    if grep -q '"gitlens.enabled": true' "$SETTINGS_FILE" 2>/dev/null; then
+    if grep -q '"gitlens.enabled": true' "$SETTINGS_SOURCE" 2>/dev/null; then
         echo -e "  ${GREEN}✅${NC} GitLens enabled"
         PASSED=$((PASSED + 1))
     else
         echo -e "  ${YELLOW}⚠️${NC}  GitLens not explicitly enabled"
     fi
     CHECKS=$((CHECKS + 1))
-    
+
     # Tailwind CSS
-    if grep -q '"tailwindCSS.enable": true' "$SETTINGS_FILE" 2>/dev/null; then
-        echo -e "  ${GREEN}✅${NC} Tailwind CSS enabled"
+    if grep -q '"tailwindCSS' "$SETTINGS_SOURCE" 2>/dev/null; then
+        echo -e "  ${GREEN}✅${NC} Tailwind CSS configured"
         PASSED=$((PASSED + 1))
     else
-        echo -e "  ${YELLOW}⚠️${NC}  Tailwind CSS not explicitly enabled"
+        echo -e "  ${YELLOW}⚠️${NC}  Tailwind CSS not configured"
     fi
     CHECKS=$((CHECKS + 1))
-    
+
+    # Jest
+    if grep -q '"jest\.' "$SETTINGS_SOURCE" 2>/dev/null; then
+        echo -e "  ${GREEN}✅${NC} Jest configured"
+        PASSED=$((PASSED + 1))
+    else
+        echo -e "  ${YELLOW}⚠️${NC}  Jest not configured"
+    fi
+    CHECKS=$((CHECKS + 1))
+
+    # Playwright
+    if grep -q '"playwright\.' "$SETTINGS_SOURCE" 2>/dev/null; then
+        echo -e "  ${GREEN}✅${NC} Playwright configured"
+        PASSED=$((PASSED + 1))
+    else
+        echo -e "  ${YELLOW}⚠️${NC}  Playwright not configured"
+    fi
+    CHECKS=$((CHECKS + 1))
+
     echo ""
     echo -e "  Settings configured: ${GREEN}$PASSED/$CHECKS${NC}"
-else
-    echo -e "  ${YELLOW}⚠️${NC}  .vscode/settings.json not found"
 fi
 
 echo ""
@@ -178,4 +206,3 @@ else
     echo ""
     exit 0
 fi
-

@@ -6,6 +6,9 @@ from typing import Optional
 import json
 import re
 import time
+import logging
+
+logger = logging.getLogger(__name__)
 
 from backend.core.database import get_db
 from backend.core.config import settings

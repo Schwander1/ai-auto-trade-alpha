@@ -6,8 +6,11 @@ Enhanced with complete trade lifecycle tracking
 import requests
 import os
 import sys
+import logging
 from datetime import datetime
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 # Use Argo-specific secrets manager
 try:
@@ -26,7 +29,7 @@ except ImportError:
 class LiveTracker:
     def __init__(self):
         service = "argo"
-        
+
         # Notion Pro - Try AWS Secrets Manager first, fallback to env
         if SECRETS_MANAGER_AVAILABLE:
             try:
@@ -38,9 +41,9 @@ class LiveTracker:
         else:
             self.notion_key = os.getenv('NOTION_API_KEY', '')
             self.notion_trades = os.getenv('NOTION_TRADES_DB', '')
-        
+
         self.notion_enabled = bool(self.notion_key and self.notion_trades)
-        
+
         # Tradervue Gold - Try AWS Secrets Manager first, fallback to env
         # Tradervue uses username and password (not API token)
         if SECRETS_MANAGER_AVAILABLE:
@@ -53,9 +56,9 @@ class LiveTracker:
         else:
             self.tradervue_user = os.getenv('TRADERVUE_USERNAME', '')
             self.tradervue_password = os.getenv('TRADERVUE_PASSWORD', '')
-        
+
         self.tradervue_enabled = bool(self.tradervue_user and self.tradervue_password)
-        
+
         # Power BI - Try AWS Secrets Manager first, fallback to env
         if SECRETS_MANAGER_AVAILABLE:
             try:
@@ -64,27 +67,27 @@ class LiveTracker:
                 self.powerbi_url = os.getenv('POWERBI_STREAM_URL', '')
         else:
             self.powerbi_url = os.getenv('POWERBI_STREAM_URL', '')
-        
+
         self.powerbi_enabled = bool(self.powerbi_url)
-        
+
         # Enhanced Tradervue integration (if available)
         if self.tradervue_enabled and TRADERVUE_INTEGRATION_AVAILABLE:
             try:
                 self.tradervue_integration = get_tradervue_integration()
                 self.tradervue_enhanced = self.tradervue_integration.client.enabled
             except Exception as e:
-                print(f"⚠️  Tradervue enhanced integration not available: {e}")
+                logger.warning(f"Tradervue enhanced integration not available: {e}")
                 self.tradervue_enhanced = False
                 self.tradervue_integration = None
         else:
             self.tradervue_enhanced = False
             self.tradervue_integration = None
-        
-        print(f"✅ Tracking: Notion {'✅' if self.notion_enabled else '❌'} | Tradervue {'✅' if self.tradervue_enabled else '❌'} {'(Enhanced)' if self.tradervue_enhanced else ''} | Power BI {'✅' if self.powerbi_enabled else '❌'}")
-    
+
+        logger.info(f"Tracking initialized: Notion {'enabled' if self.notion_enabled else 'disabled'} | Tradervue {'enabled' if self.tradervue_enabled else 'disabled'} {'(Enhanced)' if self.tradervue_enhanced else ''} | Power BI {'enabled' if self.powerbi_enabled else 'disabled'}")
+
     def track_signal_live(self, signal):
         """Track signal in ALL systems IMMEDIATELY"""
-        
+
         # Log to Notion Pro (customers can see transparency)
         if self.notion_enabled:
             try:
@@ -109,10 +112,10 @@ class LiveTracker:
                     },
                     timeout=5
                 )
-                print(f"✅ Notion: {signal['symbol']} logged live")
+                logger.info(f"Notion: {signal['symbol']} logged live")
             except Exception as e:
-                print(f"Notion error: {e}")
-        
+                logger.error(f"Notion error: {e}", exc_info=True)
+
         # Enhanced Tradervue tracking (if trade_id available, use enhanced integration)
         if self.tradervue_enabled:
             if self.tradervue_enhanced and signal.get('trade_id'):
@@ -124,7 +127,7 @@ class LiveTracker:
                     if trade:
                         tradervue_id = self.tradervue_integration.sync_trade_entry(trade)
                         if tradervue_id:
-                            print(f"✅ Tradervue (Enhanced): {signal['symbol']} synced live")
+                            logger.info(f"Tradervue (Enhanced): {signal['symbol']} synced live")
                         else:
                             # Fallback to basic sync
                             self._track_tradervue_basic(signal)
@@ -132,33 +135,13 @@ class LiveTracker:
                         # Fallback to basic sync
                         self._track_tradervue_basic(signal)
                 except Exception as e:
-                    print(f"Tradervue enhanced sync error: {e}")
+                    logger.error(f"Tradervue enhanced sync error: {e}", exc_info=True)
                     # Fallback to basic sync
                     self._track_tradervue_basic(signal)
             else:
                 # Basic sync (backward compatible)
                 self._track_tradervue_basic(signal)
-    
-    def _track_tradervue_basic(self, signal):
-        """Basic Tradervue tracking (backward compatible)"""
-        try:
-            requests.post(
-                "https://www.tradervue.com/api/v1/trades",
-                auth=(self.tradervue_user, self.tradervue_password),
-                json={
-                    "symbol": signal['symbol'],
-                    "quantity": signal.get('quantity', 10),
-                    "date": datetime.now().strftime("%Y-%m-%d"),
-                    "price": signal['entry_price'],
-                    "side": "B" if signal['type'] == 'long' else "SS",
-                    "notes": f"Alpine Analytics | {signal['confidence']}% | SHA256: {signal.get('hash', 'N/A')[:8]}"
-                },
-                timeout=5
-            )
-            print(f"✅ Tradervue: {signal['symbol']} synced live")
-        except Exception as e:
-            print(f"Tradervue error: {e}")
-        
+
         # Stream to Power BI (live dashboard updates)
         if self.powerbi_enabled:
             try:
@@ -173,8 +156,28 @@ class LiveTracker:
                     }],
                     timeout=5
                 )
-                print(f"✅ Power BI: {signal['symbol']} streamed")
+                logger.info(f"Power BI: {signal['symbol']} streamed")
             except Exception as e:
-                print(f"Power BI error: {e}")
+                logger.error(f"Power BI error: {e}", exc_info=True)
+
+    def _track_tradervue_basic(self, signal):
+        """Basic Tradervue tracking (backward compatible)"""
+        try:
+            requests.post(
+                "https://www.tradervue.com/api/v1/trades",
+                auth=(self.tradervue_user, self.tradervue_password),
+                json={
+                    "symbol": signal['symbol'],
+                    "quantity": signal.get('quantity', 10),
+                    "date": datetime.now().strftime("%Y-%m-%d"),
+                    "price": signal['entry_price'],
+                    "side": "B" if signal['type'] == 'long' else "SS",
+                    "notes": f"Alpine Analytics | {signal['confidence']}% | SHA256: {(signal.get('hash') or 'N/A')[:8]}"
+                },
+                timeout=5
+            )
+            logger.info(f"Tradervue: {signal['symbol']} synced live")
+        except Exception as e:
+            logger.error(f"Tradervue error: {e}", exc_info=True)
 
 tracker = LiveTracker()

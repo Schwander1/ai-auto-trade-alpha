@@ -78,7 +78,7 @@ class SignalQualityScorer:
             quality_tier = 'FAIR'
         else:
             quality_tier = 'POOR'
-        
+
         # IMPROVEMENT: Log warning for low-quality signals
         if quality_tier in ['FAIR', 'POOR']:
             logger.warning(
@@ -210,6 +210,7 @@ class SignalQualityScorer:
             logger.debug(f"Database not found: {self.db_path}, returning neutral win rate")
             return 0.5  # Neutral if no database
 
+        conn = None
         try:
             conn = sqlite3.connect(str(self.db_path), timeout=10.0)
             conn.row_factory = sqlite3.Row
@@ -233,7 +234,6 @@ class SignalQualityScorer:
             """, (symbol, cutoff_time, confidence_range[0], confidence_range[1]))
 
             row = cursor.fetchone()
-            conn.close()
 
             if row and row['total'] > 0:
                 win_rate = row['wins'] / row['total']
@@ -250,6 +250,12 @@ class SignalQualityScorer:
         except Exception as e:
             logger.error(f"Unexpected error getting historical win rate for {symbol}: {e}", exc_info=True)
             return 0.5
+        finally:
+            if conn:
+                try:
+                    conn.close()
+                except (sqlite3.Error, OSError):
+                    pass
 
     def get_quality_trend(self, hours: int = 24) -> Dict:
         """Get quality score trend over time"""

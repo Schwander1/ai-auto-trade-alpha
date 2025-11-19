@@ -6,6 +6,9 @@ process.env.NEXT_PUBLIC_ARGO_API_URL = 'http://localhost:8000'
 process.env.NEXT_PUBLIC_API_URL = 'http://localhost:9001'
 process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = 'pk_test_mock'
 
+// Mock fetch globally (can be overridden in individual tests)
+global.fetch = jest.fn()
+
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
@@ -76,4 +79,3 @@ try {
 } catch (e) {
   // Module not found, skip mock
 }
-

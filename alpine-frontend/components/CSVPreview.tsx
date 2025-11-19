@@ -265,15 +265,15 @@ export default function CSVPreview() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-alpine-text-secondary">{trade.signal}</td>
-                    <td className="px-4 py-3 text-alpine-text-secondary font-mono-textrig-ht">
+                    <td className="px-4 py-3 text-alpine-text-secondary font-mono text-right">
                       ${trade.entry_price.toFixed(2)}
                     </td>
-                    <td className="px-4 py-3 text-alpine-text-secondary font-mono-textrig-ht">
+                    <td className="px-4 py-3 text-alpine-text-secondary font-mono text-right">
                       ${trade.exit_price.toFixed(2)}
                     </td>
                     <td
                       className={`px-4 py-3 font-mono text-right font-semibold ${
-                        trade.pnl_usd >= 0 ? 'text-alpine-neon-cyan' : 'text-alpine-semantic-error
+                        trade.pnl_usd >= 0 ? 'text-alpine-neon-cyan' : 'text-alpine-semantic-error'
                       }`}
                     >
                       ${trade.pnl_usd >= 0 ? '+' : ''}
@@ -281,7 +281,7 @@ export default function CSVPreview() {
                     </td>
                     <td
                       className={`px-4 py-3 font-mono text-right font-semibold ${
-                        trade.pnl_pct >= 0 ? 'text-alpine-neon-cyan' : 'text-alpine-semantic-error
+                        trade.pnl_pct >= 0 ? 'text-alpine-neon-cyan' : 'text-alpine-semantic-error'
                       }`}
                     >
                       {trade.pnl_pct >= 0 ? '+' : ''}
@@ -292,7 +292,7 @@ export default function CSVPreview() {
                         className={`px-2 py-1 rounded text-sm font-semibold ${
                           trade.win_loss === 'WIN'
                             ? 'bg-alpine-neon-cyan/20 text-alpine-neon-cyan'
-                            : 'bg-alpine-semantic-error20 text-alpine-semantic-error
+                            : 'bg-alpine-semantic-error/20 text-alpine-semantic-error'
                         }`}
                       >
                         {trade.win_loss}
@@ -342,7 +342,7 @@ export default function CSVPreview() {
                   <span className="text-alpine-text-secondary">P&L:</span>{' '}
                   <span
                     className={
-                      trade.pnl_usd >= 0 ? 'text-alpine-neon-cyan' : 'text-alpine-semantic-error
+                      trade.pnl_usd >= 0 ? 'text-alpine-neon-cyan' : 'text-alpine-semantic-error'
                     }
                   >
                     ${trade.pnl_usd >= 0 ? '+' : ''}
@@ -354,8 +354,8 @@ export default function CSVPreview() {
                   <span
                     className={`px-2 py-1 rounded text-sm font-semibold ${
                       trade.win_loss === 'WIN'
-                        ? 'bg-alpine-semanticsucces-s20 text-alpine-semantic-success
-                        : 'bg-alpine-semantic-error20 text-alpine-semantic-error
+                        ? 'bg-alpine-semantic-success/20 text-alpine-semantic-success'
+                        : 'bg-alpine-semantic-error/20 text-alpine-semantic-error'
                     }`}
                   >
                     {trade.win_loss}
@@ -380,7 +380,7 @@ export default function CSVPreview() {
                 className="bg-alpine-black-secondary border border-alpine-black-border rounded-lg p-6"
               >
                 <Icon className="w-8 h-8 text-alpine-neon-cyan mb-4" />
-                <h3 className="text-alpine-text-primary font-boldm-b-2">{feature.title}</h3>
+                <h3 className="text-alpine-text-primary font-bold mb-2">{feature.title}</h3>
                 <p className="text-alpine-text-secondary text-sm">{feature.description}</p>
               </motion.div>
             )
@@ -401,16 +401,16 @@ export default function CSVPreview() {
                 onClick={() => setActiveTab(tab)}
                 className={`px-4 py-2 rounded font-semibold transition-colors ${
                   activeTab === tab
-                    ? 'bg-alpine-neon-cyan text-alpine-blackprimar-y'
-                    : 'bg-alpine-black-secondary text-alpine-text-secondary hover:text-alpine-text-primary
+                    ? 'bg-alpine-neon-cyan text-alpine-black-primary'
+                    : 'bg-alpine-black-secondary text-alpine-text-secondary hover:text-alpine-text-primary'
                 }`}
               >
                 {tab.toUpperCase()}
               </button>
             ))}
           </div>
-          <pre className="bg-alpine-black-primary rounded-p-4 overflow-x-auto">
-            <code className="text-alpine-text-primary text-smfont-mono">
+          <pre className="bg-alpine-black-primary rounded p-4 overflow-x-auto">
+            <code className="text-alpine-text-primary text-sm font-mono">
               {codeExamples[activeTab]}
             </code>
           </pre>
@@ -446,7 +446,7 @@ export default function CSVPreview() {
             </Button>
           </div>
           <p className="text-alpine-text-secondary text-sm mb-4">Free download. No email required.</p>
-          
+
           {/* Backtest Disclaimer */}
           <div className="mt-6 p-6 bg-alpine-orange/10 border border-alpine-orange/30 rounded-lg text-alpine-text-secondary text-sm max-w-3xl mx-auto">
             <p className="font-semibold text-alpine-orange mb-2">⚠️ Important: Backtest Disclosure</p>
@@ -464,4 +464,3 @@ export default function CSVPreview() {
     </section>
   )
 }
-

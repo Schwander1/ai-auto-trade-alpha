@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": ["frontend/**/*"],
+  "exclude": ["**/*", "!frontend/**/*"]
+}

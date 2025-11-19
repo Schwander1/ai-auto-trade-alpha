@@ -4,7 +4,7 @@ Error Handling Utilities
 Standardized error handling patterns for backtesting
 ENHANCED: Added retry logic and error recovery
 """
-from typing import Optional, TypeVar, Callable, Any, List
+from typing import Optional, TypeVar, Callable, Any, List, Dict
 from functools import wraps
 import logging
 import asyncio

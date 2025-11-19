@@ -35,11 +35,18 @@ export class SecretsManager {
     this.secretPrefix = options.secretPrefix || 'argo-alpine';
 
     // Initialize AWS client if credentials are available
+    // Note: AWS SDK v3 uses credential provider chain automatically
+    // It will try: environment variables, shared credentials file, IAM roles, etc.
     try {
-      this.client = new SecretsManagerClient({ region: this.region });
-      console.log(`AWS Secrets Manager initialized (region: ${this.region})`);
+      this.client = new SecretsManagerClient({
+        region: this.region,
+        // Let AWS SDK handle credentials automatically via default provider chain
+      });
+      // Only log if we successfully created the client
+      // Actual credential validation happens on first API call
+      console.log(`AWS Secrets Manager client created (region: ${this.region})`);
     } catch (error) {
-      console.warn('Failed to initialize AWS Secrets Manager:', error);
+      console.warn('Failed to create AWS Secrets Manager client:', error);
       if (!this.fallbackToEnv) {
         throw error;
       }
@@ -97,10 +104,26 @@ export class SecretsManager {
 
       return null;
     } catch (error: unknown) {
-      if (error instanceof Error && error.name === 'ResourceNotFoundException') {
-        console.debug(`Secret not found: ${secretName}`);
+      // Handle AWS SDK errors
+      if (error && typeof error === 'object' && 'name' in error) {
+        const errorName = error.name as string;
+        if (errorName === 'ResourceNotFoundException') {
+          console.debug(`Secret not found: ${secretName}`);
+        } else if (errorName === 'InvalidRequestException') {
+          console.error(`Invalid request for secret ${secretName}:`, error);
+        } else if (errorName === 'InvalidParameterException') {
+          console.error(`Invalid parameter for secret ${secretName}:`, error);
+        } else if (errorName === 'DecryptionFailureException') {
+          console.error(`Failed to decrypt secret ${secretName}:`, error);
+        } else if (errorName === 'InternalServiceErrorException') {
+          console.error(`AWS internal error for secret ${secretName}:`, error);
+        } else if (errorName === 'AccessDeniedException') {
+          console.error(`Access denied for secret ${secretName}:`, error);
+        } else {
+          console.error(`Error retrieving secret ${secretName}:`, error);
+        }
       } else {
-        console.error(`Error retrieving secret ${secretName}:`, error);
+        console.error(`Unexpected error retrieving secret ${secretName}:`, error);
       }
       return null;
     }
@@ -136,8 +159,19 @@ export class SecretsManager {
       return cachedValue;
     }
 
-    // Try AWS Secrets Manager
-    const awsValue = await this.getFromAws(secretName);
+    // Try AWS Secrets Manager with current prefix
+    let awsValue = await this.getFromAws(secretName);
+
+    // Backward compatibility: Try old "argo-alpine" prefix if current prefix fails
+    if (!awsValue && this.secretPrefix !== 'argo-alpine' && service) {
+      const oldSecretName = `argo-alpine/${service}/${key}`;
+      console.debug(`Trying backward-compatible secret name: ${oldSecretName}`);
+      awsValue = await this.getFromAws(oldSecretName);
+      if (awsValue) {
+        console.info(`Found secret with old prefix (argo-alpine), consider migrating to new prefix (${this.secretPrefix})`);
+      }
+    }
+
     if (awsValue) {
       try {
         const value = parseJson ? JSON.parse(awsValue) : awsValue;
@@ -227,21 +261,83 @@ export class SecretsManager {
         );
         console.log(`Updated secret: ${secretName}`);
       } catch (error: unknown) {
-        if (error instanceof Error && error.name === 'ResourceNotFoundException') {
-          // Secret doesn't exist - create it
-          const params: {
-            Name: string;
-            SecretString: string;
-            Description?: string;
-          } = {
-            Name: secretName,
-            SecretString: secretString,
-          };
-          if (description) {
-            params.Description = description;
+        // Handle AWS SDK errors
+        if (error && typeof error === 'object' && 'name' in error) {
+          const errorName = error.name as string;
+          if (errorName === 'ResourceNotFoundException') {
+            // Secret doesn't exist - create it
+            const params: {
+              Name: string;
+              SecretString: string;
+              Description?: string;
+            } = {
+              Name: secretName,
+              SecretString: secretString,
+            };
+            if (description) {
+              params.Description = description;
+            }
+            try {
+              await this.client.send(new CreateSecretCommand(params));
+              console.log(`Created secret: ${secretName}`);
+            } catch (createError: unknown) {
+              // Handle case where secret was created between check and create
+              if (createError && typeof createError === 'object' && 'name' in createError) {
+                const createErrorName = createError.name as string;
+                if (createErrorName === 'ResourceExistsException') {
+                  // Secret exists - update it
+                  await this.client.send(
+                    new PutSecretValueCommand({
+                      SecretId: secretName,
+                      SecretString: secretString,
+                    })
+                  );
+                  console.log(`Updated secret: ${secretName}`);
+                } else {
+                  throw createError;
+                }
+              } else {
+                throw createError;
+              }
+            }
+          } else if (errorName === 'AccessDeniedException') {
+            // Don't have permission to check - try to create directly
+            try {
+              const params: {
+                Name: string;
+                SecretString: string;
+                Description?: string;
+              } = {
+                Name: secretName,
+                SecretString: secretString,
+              };
+              if (description) {
+                params.Description = description;
+              }
+              await this.client.send(new CreateSecretCommand(params));
+              console.log(`Created secret: ${secretName}`);
+            } catch (createError: unknown) {
+              if (createError && typeof createError === 'object' && 'name' in createError) {
+                const createErrorName = createError.name as string;
+                if (createErrorName === 'ResourceExistsException') {
+                  // Secret exists - update it
+                  await this.client.send(
+                    new PutSecretValueCommand({
+                      SecretId: secretName,
+                      SecretString: secretString,
+                    })
+                  );
+                  console.log(`Updated secret: ${secretName}`);
+                } else {
+                  throw createError;
+                }
+              } else {
+                throw createError;
+              }
+            }
+          } else {
+            throw error;
           }
-          await this.client.send(new CreateSecretCommand(params));
-          console.log(`Created secret: ${secretName}`);
         } else {
           throw error;
         }
@@ -292,4 +388,3 @@ export async function getSecret(
 ): Promise<unknown> {
   return getSecretsManager().getSecret(key, options);
 }
-

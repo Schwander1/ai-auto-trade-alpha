@@ -18,11 +18,11 @@ class AlphaVantageDataSource:
     Weight: 25% in Alpine Analytics consensus
     Connection Pooling: HTTP session with connection reuse for better performance
     """
-    
+
     def __init__(self, api_key):
         self.api_key = api_key
         self.base_url = "https://www.alphavantage.co/query"
-        
+
         # HTTP Session with connection pooling for better performance
         self.session = requests.Session()
         retry_strategy = Retry(
@@ -39,7 +39,7 @@ class AlphaVantageDataSource:
         )
         self.session.mount("http://", adapter)
         self.session.mount("https://", adapter)
-        
+
         # OPTIMIZATION: Rate limiting and circuit breaker
         # Premium tier: 150 calls/min (was 5 calls/min on free tier)
         try:
@@ -56,7 +56,7 @@ class AlphaVantageDataSource:
         except ImportError:
             self.rate_limiter = None
             self.circuit_breaker = None
-        
+
     async def fetch_technical_indicators(self, symbol):
         """Fetch RSI, SMA, EMA for signal generation (async with connection pooling)
         Note: Alpha Vantage has limited crypto support - crypto symbols may return None
@@ -68,45 +68,45 @@ class AlphaVantageDataSource:
             # Alpha Vantage doesn't support all crypto symbols well, return None gracefully
             # Other sources (Massive.com, xAI Grok, Sonar) will handle crypto
             return None
-        
+
         try:
             indicators = {}
-            
+
             # Fetch RSI
             rsi = await self._fetch_rsi(symbol)
             if rsi is not None:
                 indicators['rsi'] = rsi
-            
+
             await asyncio.sleep(0.3)  # Rate limit: 5 calls/min (non-blocking)
-            
+
             # Fetch SMA 20
             sma_20 = await self._fetch_sma(symbol)
             if sma_20 is not None:
                 indicators['sma_20'] = sma_20
-            
+
             await asyncio.sleep(0.3)  # Rate limit (non-blocking)
-            
+
             # Fetch current price
             current_price = await self._fetch_current_price(symbol)
             if current_price is not None:
                 indicators['current_price'] = current_price
-            
+
             if indicators:
                 logger.info(f"✅ Alpha Vantage: {symbol} indicators retrieved: {list(indicators.keys())}")
             else:
                 logger.warning(f"⚠️  Alpha Vantage: {symbol} returned empty indicators dict")
             return indicators
-            
+
         except Exception as e:
             logger.error(f"❌ Alpha Vantage error for {symbol}: {e}", exc_info=True)
             return None
-    
+
     async def _fetch_rsi(self, symbol: str) -> Optional[float]:
         """Fetch RSI indicator"""
         # OPTIMIZATION: Rate limiting
         if self.rate_limiter:
             await self.rate_limiter.wait_for_permission('alpha_vantage')
-        
+
         params = {
             'function': 'RSI',
             'symbol': symbol,
@@ -115,7 +115,7 @@ class AlphaVantageDataSource:
             'series_type': 'close',
             'apikey': self.api_key
         }
-        
+
         # OPTIMIZATION: Circuit breaker protection
         if self.circuit_breaker:
             async def _fetch():
@@ -123,20 +123,20 @@ class AlphaVantageDataSource:
             response = await self.circuit_breaker.call_async(_fetch)
         else:
             response = await asyncio.to_thread(self.session.get, self.base_url, params=params, timeout=10)
-        
+
         if response.status_code == 200:
             rsi_data = response.json()
             if 'Technical Analysis: RSI' in rsi_data:
                 rsi_values = list(rsi_data['Technical Analysis: RSI'].values())
                 return float(rsi_values[0]['RSI']) if rsi_values else None
         return None
-    
+
     async def _fetch_sma(self, symbol: str) -> Optional[float]:
         """Fetch SMA 20 indicator"""
         # OPTIMIZATION: Rate limiting
         if self.rate_limiter:
             await self.rate_limiter.wait_for_permission('alpha_vantage')
-        
+
         params = {
             'function': 'SMA',
             'symbol': symbol,
@@ -145,7 +145,7 @@ class AlphaVantageDataSource:
             'series_type': 'close',
             'apikey': self.api_key
         }
-        
+
         # OPTIMIZATION: Circuit breaker protection
         if self.circuit_breaker:
             async def _fetch():
@@ -153,7 +153,7 @@ class AlphaVantageDataSource:
             response = await self.circuit_breaker.call_async(_fetch)
         else:
             response = await asyncio.to_thread(self.session.get, self.base_url, params=params, timeout=10)
-        
+
         if response.status_code == 200:
             sma_data = response.json()
             if 'Technical Analysis: SMA' in sma_data:
@@ -162,11 +162,12 @@ class AlphaVantageDataSource:
             elif 'Error Message' in sma_data:
                 logger.warning(f"⚠️  Alpha Vantage SMA error for {symbol}: {sma_data.get('Error Message')}")
             elif 'Note' in sma_data:
-                logger.debug(f"Alpha Vantage SMA rate limit note for {symbol}: {sma_data.get('Note')[:100]}")
+                note = sma_data.get('Note', '')
+                logger.debug(f"Alpha Vantage SMA rate limit note for {symbol}: {note[:100] if note else ''}")
         else:
             logger.warning(f"⚠️  Alpha Vantage SMA HTTP {response.status_code} for {symbol}")
         return None
-    
+
     async def _fetch_current_price(self, symbol: str) -> Optional[float]:
         """Fetch current price"""
         params = {
@@ -175,7 +176,7 @@ class AlphaVantageDataSource:
             'apikey': self.api_key
         }
         response = await asyncio.to_thread(self.session.get, self.base_url, params=params, timeout=10)
-        
+
         if response.status_code == 200:
             quote_data = response.json()
             if 'Global Quote' in quote_data:
@@ -183,28 +184,29 @@ class AlphaVantageDataSource:
             elif 'Error Message' in quote_data:
                 logger.warning(f"⚠️  Alpha Vantage price error for {symbol}: {quote_data.get('Error Message')}")
             elif 'Note' in quote_data:
-                logger.debug(f"Alpha Vantage price rate limit note for {symbol}: {quote_data.get('Note')[:100]}")
+                note = quote_data.get('Note', '')
+                logger.debug(f"Alpha Vantage price rate limit note for {symbol}: {note[:100] if note else ''}")
         else:
             logger.warning(f"⚠️  Alpha Vantage price HTTP {response.status_code} for {symbol}")
         return None
-    
+
     def generate_signal(self, indicators, symbol):
         """Generate LONG/SHORT/NEUTRAL signal from technical indicators"""
         if not indicators:
             return None
-        
+
         try:
             rsi = indicators.get('rsi')
             sma_20 = indicators.get('sma_20')
             current_price = indicators.get('current_price')
-            
+
             if not all([rsi, sma_20, current_price]):
                 return None
-            
+
             # IMPROVEMENT: Raise base confidence from 60% to 65% for better signal quality
             confidence = 65.0  # Base confidence
             direction = 'NEUTRAL'
-            
+
             # RSI-based signals
             if rsi < 30:  # Oversold
                 direction = 'LONG'
@@ -218,7 +220,7 @@ class AlphaVantageDataSource:
             elif rsi > 60:  # Moderately overbought
                 direction = 'SHORT'
                 confidence += 10.0
-            
+
             # Price vs SMA trend
             if current_price > sma_20:
                 if direction == 'LONG':
@@ -230,7 +232,7 @@ class AlphaVantageDataSource:
                     confidence += 15.0
                 elif direction == 'LONG':
                     confidence -= 10.0
-            
+
             # IMPROVEMENT: If still NEUTRAL but confidence is reasonable, use trend-based direction
             if direction == 'NEUTRAL' and confidence >= 60.0:
                 if current_price > sma_20:
@@ -239,16 +241,16 @@ class AlphaVantageDataSource:
                 elif current_price < sma_20:
                     direction = 'SHORT'
                     confidence += 5.0
-            
+
             # Cap confidence at 95
             confidence = min(confidence, 95.0)
-            
+
             # Only return if confidence >= 60 (matching yfinance improvement)
             # Allow signals even with lower confidence - consensus will filter them
             # Only filter out completely invalid signals (confidence < 50)
             if confidence < 50:
                 return None
-            
+
             return {
                 'direction': direction,
                 'confidence': round(confidence, 2),
@@ -260,7 +262,7 @@ class AlphaVantageDataSource:
                     'current_price': round(current_price, 2)
                 }
             }
-            
+
         except Exception as e:
             logger.error(f"Signal generation error: {e}")
             return None
