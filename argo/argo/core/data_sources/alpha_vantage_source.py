@@ -41,10 +41,13 @@ class AlphaVantageDataSource:
         self.session.mount("https://", adapter)
         
         # OPTIMIZATION: Rate limiting and circuit breaker
+        # Premium tier: 150 calls/min (was 5 calls/min on free tier)
         try:
             from argo.core.rate_limiter import get_rate_limiter
             from argo.core.circuit_breaker import CircuitBreaker, CircuitBreakerConfig
             self.rate_limiter = get_rate_limiter()
+            # Premium tier allows 150 calls/min, so we can be more aggressive
+            # Set rate limit to 2 calls/sec (120 calls/min) to stay under limit
             self.circuit_breaker = CircuitBreaker('alpha_vantage', CircuitBreakerConfig(
                 failure_threshold=5,
                 success_threshold=2,

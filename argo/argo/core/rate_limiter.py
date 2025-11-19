@@ -96,7 +96,8 @@ def get_rate_limiter() -> RateLimiter:
         _rate_limiter = RateLimiter()
         # Configure default rate limits
         _rate_limiter.configure('massive', RateLimitConfig(requests_per_second=5.0, burst_size=10))
-        _rate_limiter.configure('alpha_vantage', RateLimitConfig(requests_per_second=0.2, burst_size=5))  # 5/min
+        # Premium tier: 150 calls/min = 2.5 calls/sec, set to 2.0 calls/sec (120/min) to stay under limit
+        _rate_limiter.configure('alpha_vantage', RateLimitConfig(requests_per_second=2.0, burst_size=10))  # Premium: 150/min
         _rate_limiter.configure('xai', RateLimitConfig(requests_per_second=1.0, burst_size=5))
         _rate_limiter.configure('sonar', RateLimitConfig(requests_per_second=1.0, burst_size=5))
     return _rate_limiter
