@@ -325,7 +325,9 @@ class SignalGenerationService:
             logger.warning(
                 "⚠️  Trading engine initialized but Alpaca not connected - simulation mode"
             )
-            self.auto_execute = False
+            # FIX: Don't disable auto_execute in simulation mode - allow distributor to handle execution
+            # The execute endpoint will handle simulation mode appropriately
+            logger.info("   Auto-execute remains enabled - execution will be handled by distributor/executor endpoints")
 
     def _init_performance_tracking(self):
         """Initialize performance tracking"""
@@ -1148,7 +1150,11 @@ class SignalGenerationService:
     ) -> Dict:
         """Build final signal, apply regime adjustment, generate reasoning, and update cache"""
         # Apply regime detection and adjust confidence
+        original_confidence = consensus.get("confidence", 0)
         consensus = await self._apply_regime_adjustment(consensus, symbol, market_data_df)
+        adjusted_confidence = consensus.get("confidence", 0)
+        if abs(original_confidence - adjusted_confidence) > 0.01:
+            logger.info(f"📊 Regime adjustment for {symbol}: {original_confidence}% → {adjusted_confidence}% (regime: {consensus.get('regime', 'UNKNOWN')})")
 
         # Build final signal
         signal = self._build_signal(symbol, consensus, source_signals)
@@ -1915,11 +1921,12 @@ class SignalGenerationService:
         raw_confidence = consensus["confidence"]
         if self._confidence_calibrator:
             calibrated_confidence = self._confidence_calibrator.calibrate(raw_confidence, symbol)
-            logger.debug(
+            logger.info(
                 f"📊 Confidence calibration for {symbol}: {raw_confidence}% → {calibrated_confidence}%"
             )
         else:
             calibrated_confidence = raw_confidence
+            logger.debug(f"📊 No confidence calibrator for {symbol}, using raw: {raw_confidence}%")
 
         signal = {
             "symbol": symbol,

@@ -140,11 +140,17 @@ class SonarDataSource:
         is_crypto = self._is_crypto_symbol(symbol)
         if not is_crypto and not self._is_market_hours():
             logger.debug(f"⏭️  Market closed for {symbol} (stocks only during market hours)")
-            return self._get_cached_analysis(symbol)
+            cached = self._get_cached_analysis(symbol)
+            if cached:
+                logger.debug(f"✅ Using cached Sonar analysis for {symbol} (market closed)")
+                return cached
+            logger.debug(f"⚠️  No cached Sonar analysis for {symbol} (market closed), returning fallback")
+            return self._get_fallback_analysis('market_closed')
         
         # Check cache
         cached_analysis = self._get_cached_analysis(symbol)
         if cached_analysis:
+            logger.debug(f"✅ Using cached Sonar analysis for {symbol}")
             return cached_analysis
         
         return None
@@ -156,15 +162,24 @@ class SonarDataSource:
             headers = self._build_headers()
             payload = self._build_payload(prompt)
             
+            logger.debug(f"🔍 Fetching Sonar AI analysis for {symbol}")
             response = await self._make_api_request(headers, payload)
             
             if response.status_code == 200:
-                return self._parse_successful_response(response, symbol)
+                result = self._parse_successful_response(response, symbol)
+                if result:
+                    logger.info(f"✅ Sonar AI analysis received for {symbol}")
+                else:
+                    logger.warning(f"⚠️  Sonar AI returned empty analysis for {symbol}")
+                return result
             else:
-                return self._handle_api_error(response)
+                error_result = self._handle_api_error(response)
+                if error_result is None:
+                    logger.warning(f"⚠️  Sonar AI API error for {symbol}: HTTP {response.status_code}")
+                return error_result
                 
         except Exception as e:
-            logger.error(f"Sonar AI error for {symbol}: {e}")
+            logger.error(f"❌ Sonar AI API exception for {symbol}: {e}", exc_info=True)
             return None
     
     def _build_analysis_prompt(self, symbol: str) -> str:
