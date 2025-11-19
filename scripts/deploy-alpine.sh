@@ -106,8 +106,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - \"\${BACKEND_PORT}:8000\"
-    env_file:
-      - .env
     environment:
       - ARGO_API_URL=http://178.156.194.174:8000
       - ENVIRONMENT=production
