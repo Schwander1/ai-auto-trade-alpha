@@ -712,8 +712,8 @@ class SignalGenerationService:
                 if not feature_flags.is_enabled("chinese_models_enabled"):
                     logger.info("ℹ️  Chinese models disabled by feature flag")
                     return
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Could not check feature flags for Chinese models: {e}")
 
             config = {}
             if config_path:
@@ -1259,8 +1259,9 @@ class SignalGenerationService:
                 volatility = 0.0
 
             self._symbol_volatility[symbol] = float(volatility)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Could not calculate volatility for {symbol}: {e}")
+            self._symbol_volatility[symbol] = 0.0
 
     async def _fetch_all_source_signals(self, symbol: str) -> Tuple[Dict[str, Dict], Optional[Any]]:
         """Fetch signals from all available data sources"""
@@ -1474,8 +1475,9 @@ class SignalGenerationService:
                     "volatility": 0.02,
                     "avg_volume": 1000000,
                 }
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Could not extract market data from DataFrame for {symbol}: {e}")
+                market_data = None
 
         # Create tasks for parallel execution
         if "yfinance" in self.data_sources:
@@ -2805,10 +2807,13 @@ class SignalGenerationService:
                         signal["order_id"] = result.get("order_id")
                         signal["executor_id"] = result.get("executor_id")
                 else:
-                    logger.warning(
-                        f"⚠️  Failed to distribute to {result.get('executor_id')}: "
-                        f"{result.get('error', 'Unknown error')}"
-                    )
+                    error = result.get('error', 'Unknown error')
+                    executor_id = result.get('executor_id', 'unknown')
+                    # Don't log as warning if it's an expected failure (risk validation, etc.)
+                    if any(keyword in error.lower() for keyword in ['risk validation', 'position limits', 'market hours', 'insufficient buying power', 'trade execution failed']):
+                        logger.debug(f"⏭️  Signal not executed by {executor_id}: {error}")
+                    else:
+                        logger.warning(f"⚠️  Failed to distribute to {executor_id}: {error}")
         except Exception as e:
             logger.error(f"❌ Error distributing signal: {e}", exc_info=True)
 

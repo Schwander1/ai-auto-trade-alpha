@@ -48,7 +48,7 @@ class TradingExecutor:
         self.trading_engine = PaperTradingEngine(self.config_path)
         logger.info(f"✅ Trading engine initialized for {self.executor_id}")
     
-    def validate_signal(self, signal: Dict) -> tuple[bool, str]:
+    def validate_signal(self, signal: Dict, existing_positions: Optional[list] = None) -> tuple[bool, str]:
         """Validate signal meets executor requirements"""
         # Check confidence threshold
         min_confidence = self.trading_config.get('min_confidence', 75.0)
@@ -60,8 +60,21 @@ class TradingExecutor:
             return False, f"Confidence {signal.get('confidence')} below threshold {min_confidence}"
         
         # FIX: Alpaca does not support shorting crypto - reject SHORT crypto signals
+        # BUT allow closing existing LONG positions
         is_crypto = '-USD' in signal.get('symbol', '')
         if is_crypto and signal.get('action') == 'SELL':
+            # Check if we have an existing LONG position to close
+            if existing_positions:
+                symbol = signal.get('symbol', '')
+                existing_position = next(
+                    (p for p in existing_positions if p.get('symbol') == symbol),
+                    None
+                )
+                if existing_position and existing_position.get('side') == 'LONG':
+                    # Allow SELL if closing an existing LONG position
+                    return True, "OK"
+            
+            # Reject SELL if trying to open a new SHORT position
             return False, "Alpaca does not support shorting cryptocurrency - only LONG (BUY) positions allowed"
         
         # Prop firm specific checks
@@ -76,22 +89,22 @@ class TradingExecutor:
     
     def execute_signal(self, signal: Dict) -> Optional[str]:
         """Execute signal on this executor's account"""
-        # Validate signal
-        is_valid, reason = self.validate_signal(signal)
-        if not is_valid:
-            logger.warning(f"Signal validation failed for {self.executor_id}: {reason}")
-            return None
-        
         try:
-            # Get account and positions
+            # Get account and positions first (needed for validation)
             account = self.trading_engine.get_account_details()
             if not account:
                 logger.error(f"Failed to get account details for {self.executor_id}")
                 return None
             
-            # Get existing positions
+            # Get existing positions (needed to check if SELL is closing a position)
             positions = self.trading_engine.get_positions()
             existing_positions = [p for p in positions] if positions else []
+            
+            # Validate signal with existing positions
+            is_valid, reason = self.validate_signal(signal, existing_positions=existing_positions)
+            if not is_valid:
+                logger.warning(f"Signal validation failed for {self.executor_id}: {reason}")
+                return None
             
             # Execute trade
             order_id = self.trading_engine.execute_signal(signal, existing_positions=existing_positions)
@@ -156,14 +169,13 @@ async def execute_signal(signal: Dict):
                 "executor_id": _executor.executor_id
             }
         else:
-            return JSONResponse(
-                status_code=400,
-                content={
-                    "success": False,
-                    "error": "Trade execution failed",
-                    "executor_id": _executor.executor_id
-                }
-            )
+            # Return 200 with success=false for expected failures (not a bad request)
+            # Trade execution can fail for valid reasons: risk validation, position limits, etc.
+            return {
+                "success": False,
+                "error": "Trade execution failed (no order ID returned). This could be due to: risk validation, position limits, market hours, or insufficient buying power.",
+                "executor_id": _executor.executor_id
+            }
     except Exception as e:
         logger.error(f"Error in execute endpoint: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
