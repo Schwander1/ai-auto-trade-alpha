@@ -141,9 +141,21 @@ class ConfidenceCalibrator:
         Returns:
             Calibrated confidence score (0-100)
         """
+        # IMPROVEMENT: Don't calibrate DOWN if raw confidence is >= 70%
+        # This preserves our improved consensus confidence from the weighted consensus engine
+        # Only allow calibration if it would increase confidence or if raw confidence is low
+        if raw_confidence >= 70.0:
+            logger.debug(f"Skipping calibration for high confidence signal: {raw_confidence}% (preserving improved consensus)")
+            return raw_confidence
+        
         if self.calibration_model is None:
             # Simple calibration: adjust based on historical win rate
-            return self._simple_calibrate(raw_confidence, symbol)
+            calibrated = self._simple_calibrate(raw_confidence, symbol)
+            # Don't reduce below raw if raw is already reasonable
+            if calibrated < raw_confidence and raw_confidence >= 60.0:
+                logger.debug(f"Skipping calibration that would reduce {raw_confidence}% to {calibrated}%")
+                return raw_confidence
+            return calibrated
         
         try:
             # Use ML model for calibration
@@ -152,6 +164,11 @@ class ConfidenceCalibrator:
             
             # Clip to valid range
             calibrated_confidence = max(0.0, min(100.0, calibrated_confidence))
+            
+            # IMPROVEMENT: Don't reduce below raw if raw is already reasonable
+            if calibrated_confidence < raw_confidence and raw_confidence >= 60.0:
+                logger.debug(f"Skipping ML calibration that would reduce {raw_confidence}% to {calibrated_confidence}%")
+                return raw_confidence
             
             return round(calibrated_confidence, 2)
             
