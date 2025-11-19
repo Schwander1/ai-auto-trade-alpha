@@ -1574,7 +1574,7 @@ class SignalGenerationService:
 
             if source_name == "yfinance":
                 yfinance_attempted = True
-                if result:
+                if result and not isinstance(result, Exception):
                     signal = self.data_sources["yfinance"].generate_signal(result, symbol)
                     if signal:
                         # Ensure signal has required fields for validation
@@ -1595,7 +1595,7 @@ class SignalGenerationService:
                     logger.debug(f"⏭️  yfinance returned no indicators for {symbol}")
 
             elif source_name == "alpha_vantage":
-                if result:
+                if result and not isinstance(result, Exception):
                     signal = self.data_sources["alpha_vantage"].generate_signal(result, symbol)
                     if signal:
                         self._handle_alpha_vantage_signal(
@@ -1609,7 +1609,7 @@ class SignalGenerationService:
                     logger.info(f"⏭️  alpha_vantage returned no indicators for {symbol}")
 
             elif source_name == "x_sentiment":
-                if result:
+                if result and not isinstance(result, Exception):
                     signal = self.data_sources["x_sentiment"].generate_signal(result, symbol)
                     if signal:
                         # Ensure signal has required fields for validation
@@ -1628,7 +1628,7 @@ class SignalGenerationService:
                     logger.info(f"⏭️  xAI Grok returned no sentiment for {symbol}")
 
             elif source_name == "sonar":
-                if result:
+                if result and not isinstance(result, Exception):
                     signal = self.data_sources["sonar"].generate_signal(result, symbol)
                     if signal:
                         # Ensure signal has required fields for validation
@@ -1649,7 +1649,7 @@ class SignalGenerationService:
             elif source_name == "chinese_models":
                 # OPTIMIZATION: Handle Chinese models failures gracefully
                 # They frequently fail due to rate limits, so don't log as errors
-                if result:
+                if result and not isinstance(result, Exception):
                     # Ensure signal has required fields for validation
                     result["symbol"] = symbol
                     if "timestamp" not in result:
