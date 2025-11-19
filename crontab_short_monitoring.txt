@@ -1,0 +1,18 @@
+# SHORT Position Monitoring - Auto-generated crontab entries
+# Add these to your crontab with: crontab -e
+# Or install with: crontab /Users/dylanneuenschwander/argo-alpine-workspace/crontab_short_monitoring.txt
+
+# Monitor SHORT positions every 5 minutes
+*/5 * * * * cd /Users/dylanneuenschwander/argo-alpine-workspace && /Users/dylanneuenschwander/argo-alpine-workspace/scripts/scheduled_monitor_short.sh >> /Users/dylanneuenschwander/argo-alpine-workspace/logs/cron_short_monitor.log 2>&1
+
+# Performance report daily at 9:00 AM
+0 9 * * * cd /Users/dylanneuenschwander/argo-alpine-workspace && python3 /Users/dylanneuenschwander/argo-alpine-workspace/scripts/short_position_performance_tracker.py --output /Users/dylanneuenschwander/argo-alpine-workspace/logs/performance_$(date +\%Y\%m\%d).json >> /Users/dylanneuenschwander/argo-alpine-workspace/logs/cron_performance.log 2>&1
+
+# Alert check every hour
+0 * * * * cd /Users/dylanneuenschwander/argo-alpine-workspace && python3 /Users/dylanneuenschwander/argo-alpine-workspace/scripts/alert_short_position_issues.py --output /Users/dylanneuenschwander/argo-alpine-workspace/logs/alerts_$(date +\%Y\%m\%d_\%H\%M\%S).json >> /Users/dylanneuenschwander/argo-alpine-workspace/logs/cron_alerts.log 2>&1
+
+# Comprehensive verification daily at 8:00 AM
+0 8 * * * cd /Users/dylanneuenschwander/argo-alpine-workspace && python3 /Users/dylanneuenschwander/argo-alpine-workspace/scripts/verify_short_positions.py >> /Users/dylanneuenschwander/argo-alpine-workspace/logs/cron_verification.log 2>&1
+
+# Clean up old logs (keep 30 days) - runs daily at 2:00 AM
+0 2 * * * find /Users/dylanneuenschwander/argo-alpine-workspace/logs -name "*.log" -mtime +30 -delete && find /Users/dylanneuenschwander/argo-alpine-workspace/logs -name "*.json" -mtime +30 -delete

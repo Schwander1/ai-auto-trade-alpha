@@ -216,7 +216,14 @@ async def execute_signal(signal: Dict[str, Any]):
         existing_positions = [p for p in positions] if positions else []
         
         # Execute the signal
-        logger.info(f"🚀 Executing signal: {signal.get('symbol')} {signal.get('action')} @ ${signal.get('entry_price', 0):.2f} ({signal.get('confidence', 0):.1f}% confidence)")
+        symbol = signal.get('symbol', 'UNKNOWN')
+        action = signal.get('action', 'UNKNOWN')
+        price = signal.get('entry_price', 0)
+        confidence = signal.get('confidence', 0)
+        
+        logger.info(f"🚀 Executing signal: {symbol} {action} @ ${price:.2f} ({confidence:.1f}% confidence)")
+        logger.debug(f"   Trading engine alpaca_enabled: {signal_service.trading_engine.alpaca_enabled}")
+        logger.debug(f"   Existing positions: {len(existing_positions)}")
         
         # Add more detailed error handling
         try:
@@ -224,15 +231,49 @@ async def execute_signal(signal: Dict[str, Any]):
                 signal, 
                 existing_positions=existing_positions
             )
+            logger.debug(f"   execute_signal() returned: {order_id} (type: {type(order_id)})")
             
             if order_id:
                 logger.info(f"✅ Trade executed: Order ID {order_id}")
                 # Update signal in database with order_id if possible
                 try:
                     signal_id = signal.get('signal_id')
-                    if signal_id and hasattr(signal_service, 'tracker'):
-                        # Try to update signal with order_id
-                        pass  # Signal tracker update can be done here if needed
+                    if signal_id and hasattr(signal_service, 'tracker') and signal_service.tracker:
+                        # Update signal with order_id in database
+                        try:
+                            # Get database connection
+                            import sqlite3
+                            from pathlib import Path
+                            
+                            # Find the database
+                            db_paths = [
+                                Path('argo/data/signals.db'),
+                                Path('data/signals.db'),
+                                Path('data/signals_unified.db')
+                            ]
+                            
+                            for db_path in db_paths:
+                                if db_path.exists():
+                                    conn = sqlite3.connect(str(db_path))
+                                    cursor = conn.cursor()
+                                    
+                                    # Check if order_id column exists
+                                    cursor.execute("PRAGMA table_info(signals)")
+                                    columns = [col[1] for col in cursor.fetchall()]
+                                    
+                                    if 'order_id' in columns:
+                                        # Update signal with order_id
+                                        cursor.execute(
+                                            "UPDATE signals SET order_id = ? WHERE signal_id = ?",
+                                            (str(order_id), signal_id)
+                                        )
+                                        conn.commit()
+                                        logger.info(f"✅ Updated signal {signal_id} with order_id {order_id} in database")
+                                    
+                                    conn.close()
+                                    break
+                        except Exception as db_error:
+                            logger.warning(f"Could not update signal in database: {db_error}")
                 except Exception as e:
                     logger.debug(f"Could not update signal with order_id: {e}")
                 

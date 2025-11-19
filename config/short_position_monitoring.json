@@ -1,0 +1,70 @@
+{
+  "monitoring": {
+    "enabled": true,
+    "check_interval_seconds": 300,
+    "continuous_mode": false
+  },
+  "alerting": {
+    "enabled": true,
+    "thresholds": {
+      "execution_rate_min": 50.0,
+      "short_loss_threshold": -5.0,
+      "max_rejected_orders": 3
+    },
+    "channels": {
+      "console": true,
+      "file": true,
+      "email": false,
+      "webhook": false
+    }
+  },
+  "performance_tracking": {
+    "enabled": true,
+    "report_frequency": "daily",
+    "report_time": "09:00",
+    "retention_days": 30
+  },
+  "scheduled_tasks": {
+    "monitoring": {
+      "enabled": true,
+      "schedule": "*/5 * * * *",
+      "description": "Monitor SHORT positions every 5 minutes"
+    },
+    "alerts": {
+      "enabled": true,
+      "schedule": "0 * * * *",
+      "description": "Check for alerts every hour"
+    },
+    "performance_report": {
+      "enabled": true,
+      "schedule": "0 9 * * *",
+      "description": "Generate performance report daily at 9 AM"
+    },
+    "verification": {
+      "enabled": true,
+      "schedule": "0 8 * * *",
+      "description": "Run comprehensive verification daily at 8 AM"
+    }
+  },
+  "logging": {
+    "log_directory": "logs",
+    "log_retention_days": 30,
+    "log_level": "INFO"
+  },
+  "notifications": {
+    "email": {
+      "enabled": false,
+      "smtp_server": "",
+      "smtp_port": 587,
+      "from_address": "",
+      "to_addresses": []
+    },
+    "webhook": {
+      "enabled": false,
+      "url": "",
+      "method": "POST",
+      "headers": {}
+    }
+  }
+}
+

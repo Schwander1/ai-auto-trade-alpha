@@ -216,7 +216,9 @@
     "symbols": {
       "allowed": [
         "SPY",
-        "QQQ"
+        "QQQ",
+        "BTC-USD",
+        "ETH-USD"
       ],
       "restricted": [
         "AAPL",

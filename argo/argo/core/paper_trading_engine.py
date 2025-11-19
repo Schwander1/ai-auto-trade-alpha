@@ -521,7 +521,8 @@ class PaperTradingEngine:
                 return self._execute_sim(signal)
 
             if not self._is_trade_allowed(symbol):
-                return None
+                logger.warning(f"⚠️  Trade not allowed for {symbol} (market hours check), falling back to simulation mode")
+                return self._execute_sim(signal)
 
             # OPTIMIZATION: Use cached account data to avoid multiple API calls
             account = self._get_cached_account()
@@ -625,6 +626,16 @@ class PaperTradingEngine:
         self, signal: Dict, account, action: str, existing_positions: Optional[List[Dict]] = None
     ) -> Optional[Dict]:
         """Prepare order details including quantity and side"""
+        # FIX: If account is None or invalid, return None to trigger simulation fallback
+        if account is None:
+            logger.debug("Account is None in _prepare_order_details - will fall back to simulation")
+            return None
+        
+        # FIX: Check if account has required attributes
+        if not hasattr(account, 'buying_power') or account.buying_power is None:
+            logger.debug("Account missing buying_power attribute - will fall back to simulation")
+            return None
+        
         entry_price = signal.get("entry_price", 100)
         confidence = signal.get("confidence", 75)
         stop_price = signal.get("stop_price")
@@ -681,7 +692,10 @@ class PaperTradingEngine:
         if existing_position:
             qty = abs(int(existing_position["qty"]))
             side = OrderSide.SELL if existing_position["side"] == "LONG" else OrderSide.BUY
-            logger.info(f"🔄 Closing position: {existing_position['side']} {qty} {symbol}")
+            existing_side = existing_position.get("side", "LONG")
+            logger.info(f"🔄 Closing {existing_side} position: {qty} {symbol} @ ${entry_price:.2f}")
+            if existing_side == "SHORT":
+                logger.info(f"   📉 SHORT position close: BUY {qty} {symbol} to cover")
             return {
                 "symbol": symbol,
                 "qty": qty,
@@ -691,7 +705,12 @@ class PaperTradingEngine:
                 "place_bracket": False,
             }
         else:
+            # Opening new SHORT position
             qty, side = self._calculate_position_size(signal, account, entry_price)
+            position_value = qty * entry_price
+            logger.info(f"📉 Opening NEW SHORT position: SELL {qty} {symbol} @ ${entry_price:.2f} (${position_value:,.2f})")
+            logger.info(f"   🛡️  Stop Loss: ${stop_price:.2f} | 🎯 Take Profit: ${target_price:.2f}")
+            logger.info(f"   📊 Confidence: {signal.get('confidence', 0):.1f}% | Risk: {((stop_price - entry_price) / entry_price * 100) if stop_price else 0:.2f}%")
             return {
                 "symbol": symbol,
                 "qty": qty,
@@ -725,7 +744,12 @@ class PaperTradingEngine:
         # FIX: Check if we need to close a SHORT position
         if existing_position and existing_position.get("side", "LONG").upper() == "SHORT":
             qty = abs(int(existing_position["qty"]))
+            entry_price_short = existing_position.get("entry_price", entry_price)
+            current_price_short = existing_position.get("current_price", entry_price)
+            pnl_pct = existing_position.get("pnl_pct", 0)
             logger.info(f"🔄 Closing SHORT position: {qty} {symbol}")
+            logger.info(f"   📉 SHORT Entry: ${entry_price_short:.2f} | Current: ${current_price_short:.2f} | P&L: {pnl_pct:+.2f}%")
+            logger.info(f"   💰 BUY {qty} {symbol} @ ${entry_price:.2f} to cover SHORT position")
             return {
                 "symbol": symbol,
                 "qty": qty,
@@ -750,6 +774,10 @@ class PaperTradingEngine:
 
         # Calculate position size for new LONG position
         qty, side = self._calculate_position_size(signal, account, entry_price)
+        position_value = qty * entry_price
+        logger.info(f"📈 Opening NEW LONG position: BUY {qty} {signal['symbol']} @ ${entry_price:.2f} (${position_value:,.2f})")
+        logger.info(f"   🛡️  Stop Loss: ${stop_price:.2f} | 🎯 Take Profit: ${target_price:.2f}")
+        logger.info(f"   📊 Confidence: {confidence:.1f}% | Risk: {((entry_price - stop_price) / entry_price * 100) if stop_price else 0:.2f}%")
         return {
             "symbol": signal["symbol"],
             "qty": qty,
@@ -991,12 +1019,16 @@ class PaperTradingEngine:
                     limit_offset_pct,
                     order_details.get("symbol")  # Pass symbol for validation
                 )
+                # FIX: Crypto requires GTC time_in_force, stocks use DAY
+                is_crypto = '-USD' in order_details["symbol"] or 'USD' in order_details["symbol"]
+                time_in_force = TimeInForce.GTC if is_crypto else TimeInForce.DAY
+                
                 order_request = LimitOrderRequest(
                     symbol=order_details["symbol"],
                     qty=order_details["qty"],
                     side=order_details["side"],
                     limit_price=limit_price,
-                    time_in_force=TimeInForce.DAY,
+                    time_in_force=time_in_force,
                 )
             else:
                 # FIX: For crypto, qty can be float; for stocks, must be int
@@ -1006,11 +1038,14 @@ class PaperTradingEngine:
                     # Ensure stocks use integer quantity
                     qty = int(qty)
 
+                # FIX: Crypto requires GTC time_in_force, stocks use DAY
+                time_in_force = TimeInForce.GTC if is_crypto else TimeInForce.DAY
+
                 order_request = MarketOrderRequest(
                     symbol=order_details["symbol"],
                     qty=qty,
                     side=order_details["side"],
-                    time_in_force=TimeInForce.DAY,
+                    time_in_force=time_in_force,
                 )
 
             order = self.alpaca.submit_order(order_request)
@@ -1181,7 +1216,10 @@ class PaperTradingEngine:
                     stop_order_result = self.alpaca.submit_order(stop_order)
                     stop_order_id = stop_order_result.id
                     stop_order_success = True
-                    logger.info(f"🛡️  Stop loss order placed: {stop_order_id} @ ${stop_price:.2f}")
+                    position_type = "LONG" if side == OrderSide.BUY else "SHORT"
+                    logger.info(f"🛡️  Stop loss order placed for {position_type}: {stop_order_id} @ ${stop_price:.2f}")
+                    if position_type == "SHORT":
+                        logger.info(f"   📉 SHORT stop loss: Price rises to ${stop_price:.2f} = loss limit")
                     break  # Success, exit retry loop
                 except Exception as stop_error:
                     if attempt < max_retries - 1:
@@ -1199,7 +1237,10 @@ class PaperTradingEngine:
                     profit_order_result = self.alpaca.submit_order(profit_order)
                     profit_order_id = profit_order_result.id
                     profit_order_success = True
-                    logger.info(f"🎯 Take profit order placed: {profit_order_id} @ ${target_price:.2f}")
+                    position_type = "LONG" if side == OrderSide.BUY else "SHORT"
+                    logger.info(f"🎯 Take profit order placed for {position_type}: {profit_order_id} @ ${target_price:.2f}")
+                    if position_type == "SHORT":
+                        logger.info(f"   📉 SHORT take profit: Price falls to ${target_price:.2f} = profit target")
                     break  # Success, exit retry loop
                 except Exception as profit_error:
                     if attempt < max_retries - 1:
@@ -1314,15 +1355,17 @@ class PaperTradingEngine:
         side = order_details["side"]
 
         if order_details.get("is_closing"):
-            logger.info(f"✅ {side.value} {qty} {symbol} @ ${entry_price:.2f} (closing position)")
+            position_type = "LONG" if side == OrderSide.BUY and action == "SELL" else "SHORT"
+            logger.info(f"✅ {side.value} {qty} {symbol} @ ${entry_price:.2f} (closing {position_type} position)")
         else:
             position_value = qty * entry_price
             position_size_pct = (
                 (position_value / float(account.buying_power)) * 100 if action == "BUY" else 0
             )
             order_type = "LIMIT" if self.config.get("use_limit_orders", False) else "MARKET"
+            position_type = "LONG" if side == OrderSide.BUY else "SHORT"
             logger.info(
-                f"✅ {order_type} {side.value} {qty} {symbol} @ ${entry_price:.2f} (${position_value:,.2f}, {position_size_pct:.1f}% of buying power)"
+                f"✅ {order_type} {side.value} {qty} {symbol} @ ${entry_price:.2f} (${position_value:,.2f}, {position_size_pct:.1f}% of buying power) - Opening {position_type}"
             )
 
     def _execute_sim(self, signal):

@@ -17,9 +17,10 @@ This document explains the complete end-to-end flow of how signals are generated
 1. [System Overview](#system-overview)
 2. [Signal Generation Flow](#signal-generation-flow)
 3. [Trading Execution Flow](#trading-execution-flow)
-4. [Complete End-to-End Flow](#complete-end-to-end-flow)
-5. [Key Components](#key-components)
-6. [Configuration](#configuration)
+4. [Long and Short Position Handling](#long-and-short-position-handling)
+5. [Complete End-to-End Flow](#complete-end-to-end-flow)
+6. [Key Components](#key-components)
+7. [Configuration](#configuration)
 
 ---
 
@@ -284,7 +285,11 @@ All fetch in parallel using `asyncio.gather()`
 
 #### 5.4 Place Bracket Orders
 - **Stop Loss Order**: Closes position if price hits stop
+  - For LONG: Stop below entry price
+  - For SHORT: Stop above entry price (price rises = loss)
 - **Take Profit Order**: Closes position if price hits target
+  - For LONG: Target above entry price
+  - For SHORT: Target below entry price (price falls = profit)
 - Both placed automatically after main order
 
 #### 5.5 Retry Logic
@@ -302,6 +307,193 @@ All fetch in parallel using `asyncio.gather()`
 3. Journal trade (Tradervue integration)
 4. Update position cache
 5. Log success
+
+---
+
+## Long and Short Position Handling
+
+The system supports both **LONG** and **SHORT** trading positions. This section explains how signals are converted to positions and how position management works.
+
+### Signal to Position Mapping
+
+**Location:** `argo/argo/core/signal_generation_service.py:1924-1927`
+
+Signals are generated with a `direction` (LONG or SHORT) which is converted to an `action`:
+
+- **LONG direction** → **BUY action** → Opens LONG position
+- **SHORT direction** → **SELL action** → Opens SHORT position
+
+```python
+direction = consensus["direction"]  # "LONG" or "SHORT"
+action = "BUY" if direction == "LONG" else "SELL"
+```
+
+### Opening Positions
+
+#### LONG Positions (BUY Signals)
+
+**Location:** `argo/argo/core/paper_trading_engine.py:717-790`
+
+When a **BUY signal** is executed:
+1. Check for existing position
+2. If **SHORT position exists** → Close SHORT (BUY to cover)
+3. If **no position exists** → Open LONG (BUY to open)
+4. Place bracket orders (stop loss below entry, take profit above entry)
+
+**Example:**
+```
+BUY signal for AAPL @ $175.50
+→ Opens LONG position
+→ Stop Loss: $170.00 (below entry)
+→ Take Profit: $184.00 (above entry)
+```
+
+#### SHORT Positions (SELL Signals)
+
+**Location:** `argo/argo/core/paper_trading_engine.py:674-723`
+
+When a **SELL signal** is executed:
+1. Check for existing position
+2. If **LONG position exists** → Close LONG (SELL to close)
+3. If **no position exists** → **Open SHORT** (SELL to open)
+4. Place bracket orders (stop loss above entry, take profit below entry)
+
+**Example:**
+```
+SELL signal for SPY @ $450.00
+→ Opens SHORT position
+→ Stop Loss: $459.00 (above entry - price rises = loss)
+→ Take Profit: $441.00 (below entry - price falls = profit)
+```
+
+### Closing Positions
+
+The system intelligently handles position closing:
+
+#### Closing LONG Positions
+- **SELL signal** when LONG position exists → Closes LONG position
+- Uses SELL order to close
+
+#### Closing SHORT Positions
+- **BUY signal** when SHORT position exists → Closes SHORT position
+- Uses BUY order to cover (close) SHORT
+
+### Position Flipping
+
+The system allows flipping between LONG and SHORT:
+
+**Location:** `argo/argo/core/signal_generation_service.py:2874-2914`
+
+- **LONG → SHORT**: SELL signal when LONG exists → Closes LONG, then opens SHORT
+- **SHORT → LONG**: BUY signal when SHORT exists → Closes SHORT, then opens LONG
+
+**Example:**
+```
+Current: LONG AAPL @ $175.00
+Signal: SELL AAPL @ $180.00
+→ Closes LONG @ $180.00 (profit: +$5.00)
+→ Opens SHORT @ $180.00
+```
+
+### Position Detection
+
+**Location:** `argo/argo/core/paper_trading_engine.py:1441-1527`
+
+The system properly detects LONG vs SHORT positions from Alpaca:
+- Checks `side` attribute (enum or string)
+- Falls back to quantity sign (negative = SHORT)
+- Normalizes quantity to positive value for consistency
+
+### Risk Management for SHORT Positions
+
+**Location:** `argo/argo/core/paper_trading_engine.py:1108-1149`
+
+SHORT positions have inverted risk management:
+
+#### Stop Loss for SHORT
+- **Must be ABOVE entry price** (price rises = loss)
+- Validated: `stop_price > entry_price`
+- Example: Entry $450, Stop $459 (2% above)
+
+#### Take Profit for SHORT
+- **Must be BELOW entry price** (price falls = profit)
+- Validated: `target_price < entry_price`
+- Example: Entry $450, Target $441 (2% below)
+
+### Position Size Calculation
+
+**Location:** `argo/argo/core/paper_trading_engine.py:792-984`
+
+Position sizing works for both LONG and SHORT:
+- Uses buying power for calculation
+- Applies confidence multiplier
+- Applies volatility adjustment
+- Handles crypto (fractional) vs stocks (whole shares)
+
+### Logging and Monitoring
+
+Enhanced logging tracks SHORT positions:
+
+**Opening SHORT:**
+```
+📉 Opening NEW SHORT position: SELL 10 SPY @ $450.00 ($4,500.00)
+   🛡️  Stop Loss: $459.00 | 🎯 Take Profit: $441.00
+   📊 Confidence: 85.0% | Risk: 2.00%
+```
+
+**Closing SHORT:**
+```
+🔄 Closing SHORT position: 10 SPY
+   📉 SHORT Entry: $450.00 | Current: $441.00 | P&L: +2.00%
+   💰 BUY 10 SPY @ $441.00 to cover SHORT position
+```
+
+### Verification Tools
+
+Use these scripts to verify SHORT position handling:
+
+1. **`scripts/verify_short_positions.py`** - Comprehensive verification
+   - Checks database for SELL signals
+   - Verifies Alpaca positions
+   - Checks order history
+   - Monitors for errors
+
+2. **`scripts/test_short_position.py`** - Test SHORT opening
+   - Generates test SELL signal
+   - Executes to open SHORT
+   - Verifies position and bracket orders
+
+3. **`scripts/query_short_positions.py`** - Database queries
+   - SELL signal execution rates
+   - SHORT vs LONG comparison
+   - Symbol-specific activity
+
+### Common Scenarios
+
+#### Scenario 1: Opening SHORT from SELL Signal
+```
+1. No position exists for SPY
+2. SELL signal generated (SHORT direction)
+3. System opens SHORT position
+4. Places stop loss above entry
+5. Places take profit below entry
+```
+
+#### Scenario 2: Closing LONG with SELL Signal
+```
+1. LONG position exists for AAPL @ $175
+2. SELL signal generated
+3. System closes LONG position
+4. No new position opened
+```
+
+#### Scenario 3: Flipping LONG to SHORT
+```
+1. LONG position exists for TSLA @ $250
+2. SELL signal generated @ $255
+3. System closes LONG @ $255 (profit)
+4. System opens SHORT @ $255
+```
 
 ---
 
