@@ -2658,8 +2658,19 @@ class SignalGenerationService:
                         self._track_symbol_success(symbol, False)
                         continue
 
+                    # Double-check: ensure result is not an exception
+                    if isinstance(result, Exception):
+                        # This should have been caught above, but handle it here too
+                        if isinstance(result, (asyncio.TimeoutError, asyncio.CancelledError)):
+                            logger.debug(f"⏱️  {symbol} processing timeout/cancelled (double-check)")
+                        else:
+                            logger.error(f"Error processing {symbol}: {result}")
+                        self._track_symbol_success(symbol, False)
+                        continue
+
                     signal = result
-                    if signal:
+                    # Ensure signal is a dict before processing
+                    if signal and isinstance(signal, dict):
                         batch_successes += 1
                         self._track_symbol_success(symbol, True)
 
