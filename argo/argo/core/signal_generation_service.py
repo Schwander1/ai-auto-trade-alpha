@@ -2496,7 +2496,9 @@ class SignalGenerationService:
 
         # For SELL orders, check if we have a position to close (no buying power needed)
         if signal_action == "SELL":
-            if existing_positions:
+            # Only validate if we have existing_positions data available
+            # If existing_positions is None or empty, let execution layer handle the check
+            if existing_positions is not None and len(existing_positions) > 0:
                 existing_position = next(
                     (p for p in existing_positions if p.get("symbol") == signal.get("symbol")),
                     None,
@@ -2511,7 +2513,7 @@ class SignalGenerationService:
                         )
                     # SELL order with existing position - skip buying power validation, continue to other validations
                 else:
-                    # SELL order but no existing position - this would open a short position
+                    # SELL order but no existing position in provided list - this would open a short position
                     if is_crypto:
                         return (
                             False,
@@ -2519,14 +2521,8 @@ class SignalGenerationService:
                         )
                     # For stocks, shorting requires buying power (margin), but we'll let execution layer handle it
                     # Skip buying power check here as shorting has different requirements
-            else:
-                # SELL order but no positions available - this would open a short position
-                if is_crypto:
-                    return (
-                        False,
-                        "Alpaca does not support shorting cryptocurrency - only LONG (BUY) positions allowed",
-                    )
-                # For stocks, shorting requires buying power, but we'll let execution layer handle it
+            # If existing_positions is None or empty, don't reject here - let execution layer check
+            # This allows the execution layer to fetch positions and determine if SELL is closing a position
 
         # Only validate buying power for BUY orders
         if signal_action == "BUY":
@@ -2807,13 +2803,10 @@ class SignalGenerationService:
                         signal["order_id"] = result.get("order_id")
                         signal["executor_id"] = result.get("executor_id")
                 else:
-                    error = result.get('error', 'Unknown error')
-                    executor_id = result.get('executor_id', 'unknown')
-                    # Don't log as warning if it's an expected failure (risk validation, etc.)
-                    if any(keyword in error.lower() for keyword in ['risk validation', 'position limits', 'market hours', 'insufficient buying power', 'trade execution failed']):
-                        logger.debug(f"⏭️  Signal not executed by {executor_id}: {error}")
-                    else:
-                        logger.warning(f"⚠️  Failed to distribute to {executor_id}: {error}")
+                    logger.warning(
+                        f"⚠️  Failed to distribute to {result.get('executor_id')}: "
+                        f"{result.get('error', 'Unknown error')}"
+                    )
         except Exception as e:
             logger.error(f"❌ Error distributing signal: {e}", exc_info=True)
 
@@ -3457,8 +3450,8 @@ class SignalGenerationService:
                             # Try to get current regime from signal generation
                             # This would require access to market data, simplified for now
                             pass
-                        except Exception:
-                            pass
+                        except Exception as e:
+                            logger.debug(f"Could not get exit regime: {e}")
 
                         trade = self._performance_tracker.record_signal_exit(
                             trade_id=position["trade_id"],
@@ -3665,8 +3658,9 @@ class SignalGenerationService:
                 # For other platforms, try ps
                 result = subprocess.run(["ps", "aux"], capture_output=True, text=True, timeout=2)
                 return "Cursor" in result.stdout
-        except Exception:
+        except Exception as e:
             # If we can't check, assume Cursor is running (fail open)
+            logger.debug(f"Could not check if Cursor is running: {e}")
             return True
 
     def _is_computer_awake(self) -> bool:
@@ -3699,14 +3693,16 @@ class SignalGenerationService:
                     # If we can query IORegistry, system is likely awake
                     # More sophisticated: parse HIDIdleTime from output
                     return True
-                except Exception:
+                except Exception as e:
                     # If we can't check, assume awake (fail open)
+                    logger.debug(f"Could not check IORegistry for system awake status: {e}")
                     return True
             else:
                 # For other platforms, assume awake
                 return True
-        except Exception:
+        except Exception as e:
             # If we can't check, assume awake (fail open - better to trade than miss opportunities)
+            logger.debug(f"Could not check if computer is awake: {e}")
             return True
 
     def _should_pause_trading(self) -> bool:
