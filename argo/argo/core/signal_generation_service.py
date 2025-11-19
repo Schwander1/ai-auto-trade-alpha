@@ -1036,12 +1036,24 @@ class SignalGenerationService:
                     abs(current_price - self._last_prices[symbol]) / self._last_prices[symbol]
                 )
                 if price_change < self._price_change_threshold:
+                    # IMPROVEMENT: Check if we should still use cached signal
+                    # If consensus confidence has improved significantly, recalculate
+                    cached_signal = self._last_signals[symbol]
+                    cached_confidence = cached_signal.get("confidence", 0)
+                    
+                    # If cached confidence is low (< 70%), always recalculate to allow improvements
+                    if cached_confidence < 70.0:
+                        logger.info(
+                            f"🔄 Recalculating {symbol} despite small price change - cached confidence {cached_confidence}% < 70%"
+                        )
+                        return None
+                    
                     logger.debug(
                         f"⏭️  Skipping {symbol} - price change {price_change*100:.2f}% < {self._price_change_threshold*100}%"
                     )
                     if self.performance_metrics:
                         self.performance_metrics.record_skipped_symbol()
-                    return self._last_signals[symbol]
+                    return cached_signal
         return None
 
     def _should_exit_early_on_confidence(self, source_signals: Dict, symbol: str) -> bool:
