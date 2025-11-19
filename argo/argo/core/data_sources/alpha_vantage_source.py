@@ -88,11 +88,14 @@ class AlphaVantageDataSource:
             if current_price is not None:
                 indicators['current_price'] = current_price
             
-            logger.info(f"✅ Alpha Vantage: {symbol} indicators retrieved")
+            if indicators:
+                logger.info(f"✅ Alpha Vantage: {symbol} indicators retrieved: {list(indicators.keys())}")
+            else:
+                logger.warning(f"⚠️  Alpha Vantage: {symbol} returned empty indicators dict")
             return indicators
             
         except Exception as e:
-            logger.error(f"Alpha Vantage error for {symbol}: {e}")
+            logger.error(f"❌ Alpha Vantage error for {symbol}: {e}", exc_info=True)
             return None
     
     async def _fetch_rsi(self, symbol: str) -> Optional[float]:
@@ -153,6 +156,12 @@ class AlphaVantageDataSource:
             if 'Technical Analysis: SMA' in sma_data:
                 sma_values = list(sma_data['Technical Analysis: SMA'].values())
                 return float(sma_values[0]['SMA']) if sma_values else None
+            elif 'Error Message' in sma_data:
+                logger.warning(f"⚠️  Alpha Vantage SMA error for {symbol}: {sma_data.get('Error Message')}")
+            elif 'Note' in sma_data:
+                logger.debug(f"Alpha Vantage SMA rate limit note for {symbol}: {sma_data.get('Note')[:100]}")
+        else:
+            logger.warning(f"⚠️  Alpha Vantage SMA HTTP {response.status_code} for {symbol}")
         return None
     
     async def _fetch_current_price(self, symbol: str) -> Optional[float]:
@@ -168,6 +177,12 @@ class AlphaVantageDataSource:
             quote_data = response.json()
             if 'Global Quote' in quote_data:
                 return float(quote_data['Global Quote']['05. price'])
+            elif 'Error Message' in quote_data:
+                logger.warning(f"⚠️  Alpha Vantage price error for {symbol}: {quote_data.get('Error Message')}")
+            elif 'Note' in quote_data:
+                logger.debug(f"Alpha Vantage price rate limit note for {symbol}: {quote_data.get('Note')[:100]}")
+        else:
+            logger.warning(f"⚠️  Alpha Vantage price HTTP {response.status_code} for {symbol}")
         return None
     
     def generate_signal(self, indicators, symbol):

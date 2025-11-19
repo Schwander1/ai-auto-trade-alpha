@@ -3,8 +3,9 @@ Trading status API endpoints
 Exposes trading environment, account status, and prop firm mode information
 """
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Dict, Any
 import json
 import os
 import logging
@@ -13,10 +14,12 @@ from pathlib import Path
 try:
     from argo.core.paper_trading_engine import PaperTradingEngine
     from argo.core.environment import detect_environment, get_environment_info
+    from argo.core.signal_generation_service import get_signal_service
 except ImportError:
     # Fallback for different import paths
     from core.paper_trading_engine import PaperTradingEngine
     from core.environment import detect_environment, get_environment_info
+    from core.signal_generation_service import get_signal_service
 
 router = APIRouter(prefix="/api/v1/trading", tags=["trading"])
 logger = logging.getLogger(__name__)
@@ -141,5 +144,142 @@ async def get_trading_status():
         raise HTTPException(
             status_code=500,
             detail=f"Failed to get trading status: {str(e)}"
+        )
+
+
+@router.post("/execute")
+async def execute_signal(signal: Dict[str, Any]):
+    """
+    Execute a trading signal
+    
+    This endpoint receives signals from the Signal Distributor and executes them
+    using the signal generation service's trading engine.
+    
+    **Example Request:**
+    ```bash
+    curl -X POST "http://localhost:8000/api/v1/trading/execute" \
+         -H "Content-Type: application/json" \
+         -d '{
+           "symbol": "AAPL",
+           "action": "BUY",
+           "entry_price": 175.50,
+           "confidence": 95.5,
+           ...
+         }'
+    ```
+    
+    **Example Response:**
+    ```json
+    {
+      "success": true,
+      "order_id": "abc123",
+      "executor_id": "argo"
+    }
+    ```
+    """
+    try:
+        # Get signal generation service (which has the trading engine)
+        signal_service = get_signal_service()
+        
+        if not signal_service:
+            logger.error("Signal generation service not available")
+            return JSONResponse(
+                status_code=503,
+                content={
+                    "success": False,
+                    "error": "Signal generation service not available",
+                    "executor_id": "argo"
+                }
+            )
+        
+        # Check if trading engine is available
+        if not signal_service.trading_engine:
+            logger.warning("Trading engine not available for signal execution")
+            return JSONResponse(
+                status_code=503,
+                content={
+                    "success": False,
+                    "error": "Trading engine not available",
+                    "executor_id": "argo"
+                }
+            )
+        
+        # Get account and positions for execution
+        account = signal_service.trading_engine.get_account_details()
+        if not account:
+            logger.error("Failed to get account details")
+            return JSONResponse(
+                status_code=503,
+                content={
+                    "success": False,
+                    "error": "Failed to get account details",
+                    "executor_id": "argo"
+                }
+            )
+        
+        # Get existing positions
+        positions = signal_service.trading_engine.get_positions()
+        existing_positions = [p for p in positions] if positions else []
+        
+        # Execute the signal
+        logger.info(f"🚀 Executing signal: {signal.get('symbol')} {signal.get('action')} @ ${signal.get('entry_price', 0):.2f} ({signal.get('confidence', 0):.1f}% confidence)")
+        
+        # Add more detailed error handling
+        try:
+            order_id = signal_service.trading_engine.execute_signal(
+                signal, 
+                existing_positions=existing_positions
+            )
+            
+            if order_id:
+                logger.info(f"✅ Trade executed: Order ID {order_id}")
+                # Update signal in database with order_id if possible
+                try:
+                    signal_id = signal.get('signal_id')
+                    if signal_id and hasattr(signal_service, 'tracker'):
+                        # Try to update signal with order_id
+                        pass  # Signal tracker update can be done here if needed
+                except Exception as e:
+                    logger.debug(f"Could not update signal with order_id: {e}")
+                
+                return {
+                    "success": True,
+                    "order_id": str(order_id),
+                    "executor_id": "argo"
+                }
+            else:
+                logger.warning(f"⚠️  Trade execution returned no order ID for {signal.get('symbol')}")
+                # Check if it's a validation issue
+                error_msg = "Trade execution failed (no order ID returned). This could be due to: risk validation, position limits, market hours, or insufficient buying power."
+                return JSONResponse(
+                    status_code=400,
+                    content={
+                        "success": False,
+                        "error": error_msg,
+                        "executor_id": "argo",
+                        "symbol": signal.get('symbol'),
+                        "confidence": signal.get('confidence', 0)
+                    }
+                )
+        except Exception as exec_error:
+            logger.error(f"❌ Error during trade execution: {exec_error}", exc_info=True)
+            return JSONResponse(
+                status_code=500,
+                content={
+                    "success": False,
+                    "error": f"Execution error: {str(exec_error)}",
+                    "executor_id": "argo"
+                }
+            )
+            
+    except Exception as e:
+        logger.error(f"❌ Error executing signal: {e}", exc_info=True)
+        return JSONResponse(
+            status_code=500,
+            content={
+                "success": False,
+                "error": str(e),
+                "executor_id": "argo"
+            }
         )
 

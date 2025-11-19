@@ -1688,7 +1688,7 @@ class SignalGenerationService:
             return f"{symbol}:"
 
         signal_summary = [
-            f"{source}:{signal.get('direction', 'NEUTRAL')}:{int(signal.get('confidence', 0) // 5) * 5}"
+            f"{source}:{signal.get('direction', 'NEUTRAL')}:{int(signal.get('confidence', 0) // 1) * 1}"
             for source, signal in sorted(source_signals.items())
         ]
         return f"{symbol}:{':'.join(signal_summary)}"
