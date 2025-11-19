@@ -435,7 +435,10 @@
       "christian-kohler.path-intellisense",
 
       // Code quality
-      "sonarsource.sonarlint-vscode"
+      "sonarsource.sonarlint-vscode",
+      
+      // Shell formatting
+      "mkhl.shfmt"
     ]
   }
 }
