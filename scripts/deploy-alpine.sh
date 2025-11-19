@@ -114,6 +114,14 @@ services:
       - REDIS_PORT=6379
       - REDIS_PASSWORD=AlpineRedis2025!
       - REDIS_DB=0
+      - USE_AWS_SECRETS=false
+      - JWT_SECRET=AlpineJWTKey2025MustBeReplacedWithSecureRandomValueAtLeast32Chars
+      - STRIPE_SECRET_KEY=sk_test_placeholder_replace_with_real_key
+      - STRIPE_PUBLISHABLE_KEY=pk_test_placeholder_replace_with_real_key
+      - STRIPE_WEBHOOK_SECRET=whsec_placeholder_replace_with_real_secret
+      - EXTERNAL_SIGNAL_API_KEY=988807abc6a05772fd1900bcbfd35b6037f4f3ba4656e99e78f67b1242041736
+      - DOMAIN=91.98.153.49
+      - FRONTEND_URL=http://91.98.153.49:3000
     depends_on:
       - postgres
       - redis
