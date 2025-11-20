@@ -52,7 +52,7 @@ class StrategyBacktester(BaseBacktester):
         commission_pct: float = TransactionCostConstants.DEFAULT_COMMISSION_PCT,
         use_cost_modeling: bool = True,  # Enable realistic cost modeling
         use_enhanced_cost_model: bool = True,  # Use EnhancedTransactionCostModel (default: True)
-        min_holding_bars: int = 5  # Minimum bars before exit
+        min_holding_bars: int = None  # Minimum bars before exit (default: BacktestConstants.MIN_HOLDING_BARS)
     ):
         if initial_capital is None:
             initial_capital = BacktestConstants.DEFAULT_INITIAL_CAPITAL

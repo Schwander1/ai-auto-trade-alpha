@@ -61,16 +61,18 @@ class BacktestMetrics:
 class BaseBacktester(ABC):
     """Base class for all backtesters"""
 
-    def __init__(self, initial_capital: float = None, min_holding_bars: int = 5):
+    def __init__(self, initial_capital: float = None, min_holding_bars: int = None):
         """
         Initialize backtester
 
         Args:
             initial_capital: Starting capital (default: BacktestConstants.DEFAULT_INITIAL_CAPITAL)
-            min_holding_bars: Minimum bars before exit (default: 5)
+            min_holding_bars: Minimum bars before exit (default: BacktestConstants.MIN_HOLDING_BARS)
         """
         if initial_capital is None:
             initial_capital = BacktestConstants.DEFAULT_INITIAL_CAPITAL
+        if min_holding_bars is None:
+            min_holding_bars = BacktestConstants.MIN_HOLDING_BARS
         self.initial_capital = initial_capital
         self.capital = initial_capital
         self.positions: Dict[str, Trade] = {}

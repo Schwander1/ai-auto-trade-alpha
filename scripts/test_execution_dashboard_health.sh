@@ -4,61 +4,23 @@
 
 set -e
 
-# Colors
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+# Source shared libraries
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/lib/health_check_lib.sh"
 
 # Configuration
 ENVIRONMENT="${1:-local}"
 
+# Initialize
+reset_health_counters
+parse_environment_urls "$ENVIRONMENT"
+
+# Set admin key based on environment
 if [ "$ENVIRONMENT" = "production" ]; then
-    ARGO_URL="http://178.156.194.174:8000"
-    ALPINE_BACKEND_URL="http://91.98.153.49:8001"
-    ALPINE_FRONTEND_URL="http://91.98.153.49:3000"
     ADMIN_KEY="${ADMIN_API_KEY:-}"
 else
-    ARGO_URL="http://localhost:8000"
-    ALPINE_BACKEND_URL="http://localhost:9001"
-    ALPINE_FRONTEND_URL="http://localhost:3000"
     ADMIN_KEY="${ADMIN_API_KEY:-test-admin-key}"
 fi
-
-FAILED=0
-PASSED=0
-TOTAL=0
-
-test_endpoint() {
-    local name=$1
-    local url=$2
-    local expected_status=${3:-200}
-    local headers=${4:-""}
-
-    TOTAL=$((TOTAL + 1))
-    echo -n "  Testing $name... "
-
-    if [ -n "$headers" ]; then
-        response=$(curl -s -w "\n%{http_code}" --max-time 10 -H "$headers" "$url" 2>&1)
-    else
-        response=$(curl -s -w "\n%{http_code}" --max-time 10 "$url" 2>&1)
-    fi
-
-    http_code=$(echo "$response" | tail -n1)
-    body=$(echo "$response" | sed '$d')
-
-    if [ "$http_code" = "$expected_status" ]; then
-        echo -e "${GREEN}✅ PASS${NC} (HTTP $http_code)"
-        PASSED=$((PASSED + 1))
-        return 0
-    else
-        echo -e "${RED}❌ FAIL${NC} (HTTP $http_code, expected $expected_status)"
-        echo "    Response: $(echo "$body" | head -1)"
-        FAILED=$((FAILED + 1))
-        return 1
-    fi
-}
 
 echo "🧪 EXECUTION DASHBOARD HEALTH CHECK"
 echo "===================================="
@@ -131,18 +93,8 @@ test_endpoint "Rejection Reasons API" "$ALPINE_FRONTEND_URL/api/execution/reject
 echo ""
 
 # ===== SUMMARY =====
-echo "📊 TEST SUMMARY"
-echo "=========================="
-echo -e "Total Tests: $TOTAL"
-echo -e "${GREEN}✅ Passed: $PASSED${NC}"
-echo -e "${RED}❌ Failed: $FAILED${NC}"
-
-if [ $FAILED -eq 0 ]; then
-    echo ""
-    echo -e "${GREEN}🎉 ALL HEALTH CHECKS PASSED!${NC}"
+if print_health_summary; then
     exit 0
 else
-    echo ""
-    echo -e "${RED}⚠️  SOME HEALTH CHECKS FAILED${NC}"
     exit 1
 fi

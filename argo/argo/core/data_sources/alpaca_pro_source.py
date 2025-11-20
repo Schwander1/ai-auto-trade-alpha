@@ -228,15 +228,41 @@ class AlpacaProDataSource:
                 confidence += 5.0
 
         # IMPROVEMENT: If still NEUTRAL but confidence is reasonable, use trend-based direction
-        if direction == 'NEUTRAL' and confidence >= 60.0 and sma_20 and sma_50:
-            if current_price > sma_20:
-                direction = 'LONG'
-                confidence += 5.0
-            elif current_price < sma_20:
-                direction = 'SHORT'
-                confidence += 5.0
+        direction, confidence = self._apply_neutral_signal_override(
+            direction, confidence, current_price, sma_20, sma_50
+        )
 
         confidence = min(confidence, 95.0)
+        return direction, confidence
+
+    def _apply_neutral_signal_override(
+        self,
+        direction: str,
+        confidence: float,
+        current_price: float,
+        sma_20: Optional[float],
+        sma_50: Optional[float]
+    ) -> Tuple[str, float]:
+        """Apply trend-based direction override for NEUTRAL signals with sufficient confidence"""
+        MIN_NEUTRAL_CONFIDENCE = 60.0
+        NEUTRAL_OVERRIDE_BOOST = 5.0
+
+        # Only process if still NEUTRAL with sufficient confidence and valid SMAs
+        if direction != 'NEUTRAL':
+            return direction, confidence
+
+        if confidence < MIN_NEUTRAL_CONFIDENCE:
+            return direction, confidence
+
+        if not sma_20 or not sma_50:
+            return direction, confidence
+
+        # Use trend-based direction
+        if current_price > sma_20:
+            return 'LONG', confidence + NEUTRAL_OVERRIDE_BOOST
+        elif current_price < sma_20:
+            return 'SHORT', confidence + NEUTRAL_OVERRIDE_BOOST
+
         return direction, confidence
 
     def _build_signal_dict(self, direction: str, confidence: float, indicators: Dict) -> Dict:

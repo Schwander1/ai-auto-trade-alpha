@@ -35,10 +35,12 @@ class EnhancedBacktester(StrategyBacktester):
         spread_pct: float = TransactionCostConstants.DEFAULT_SPREAD_PCT,
         commission_pct: float = TransactionCostConstants.DEFAULT_COMMISSION_PCT,
         use_enhanced_cost_model: bool = True,  # Use enhanced cost model
-        min_holding_bars: int = 5  # Minimum bars before exit
+        min_holding_bars: int = None  # Minimum bars before exit (default: BacktestConstants.MIN_HOLDING_BARS)
     ):
         if initial_capital is None:
             initial_capital = BacktestConstants.DEFAULT_INITIAL_CAPITAL
+        if min_holding_bars is None:
+            min_holding_bars = BacktestConstants.MIN_HOLDING_BARS
         super().__init__(initial_capital, min_holding_bars=min_holding_bars)
         self.slippage_pct = slippage_pct
         self.spread_pct = spread_pct
